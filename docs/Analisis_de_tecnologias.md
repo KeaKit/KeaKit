@@ -11,20 +11,20 @@
    2.3. [Angular](#23-angular)  
    2.4. [Flutter](#24-flutter)  
    2.5. [React Native](#25-react-native)
-3. [Base de datos](#3-base-de-datos)
-   3.1. [MariaDB](#31-mariadb)
-   3.2. [PostgreSQL](#32-postgresql)
-5. [Tecnologías escogidas](#4-tecnologías-escogidas)
-6. [Plataforma(s) de despliegue](#5-plataformas-de-despliegue)
-   5.1. [Despliegue Backend](#51-despliegue-backend)
-      5.1.1. [Render](#511-render)
-      5.1.2. [Railway](#512-railway)
-   5.2. [Despliegue Frontend](#52-despliegue-frontend)
-      5.2.1. [Expo Application Services](#521-expo-application-services)
-   5.3. [Despliegue Base de Datos](#53-despliegue-base-de-datos)
-      5.3.1. [Neon.tech](#531-neontech)
-      5.3.2. [Supabase](#532-supabase)
-      5.3.3. [Render](#533-render)
+3. [Base de datos](#3-base-de-datos)  
+   3.1. [MariaDB](#31-mariadb)  
+   3.2. [PostgreSQL](#32-postgresql)  
+5. [Tecnologías escogidas](#4-tecnologías-escogidas) 
+6. [Plataforma(s) de despliegue](#5-plataformas-de-despliegue)  
+   5.1. [Despliegue Backend](#51-despliegue-backend)    
+      5.1.1. [Render](#511-render)  
+      5.1.2. [Railway](#512-railway)  
+   5.2. [Despliegue Frontend](#52-despliegue-frontend)  
+      5.2.1. [Expo Application Services](#521-expo-application-services)  
+   5.3. [Despliegue Base de Datos](#53-despliegue-base-de-datos)  
+      5.3.1. [Neon.tech](#531-neontech)  
+      5.3.2. [Supabase](#532-supabase)  
+      5.3.3. [Render](#533-render)  
 7. [Historial de versiones](#6-historial-de-versiones)
 
 
@@ -423,6 +423,6 @@ Por último, desplegar la base de datos PostgreSQL de forma independiente es el 
 | 1.1.0   | 12/02/2026 | Análisis inicial de tecnologías para base de datos (MariaDB, PostgreSQL) y plataformas de despliegue. | Marta de la Calle González |
 
 ---
-**Redactado por:** Luis Emmanuel Chavez Malave, Lucía Ponce García de Sola y Marta de la Calle González
+**Redactado por:** Luis Emmanuel Chavez Malave, Lucía Ponce García de Sola y Marta de la Calle González  
 **Fecha de redacción:** 12/02/2026  
 **Versión:** 1.1.0
