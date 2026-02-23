@@ -2,6 +2,12 @@
 
 echo "Installing global JS tooling..."
 
+# Install Backend dependencies
+cd /workspace/backend && ./mvnw install -DskipTests
+
+# Install Frontend dependencies
+cd /workspace/frontend && npm install
+
 npm install -g \
   typescript \
   eslint \
