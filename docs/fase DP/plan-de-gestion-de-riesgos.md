@@ -1,6 +1,4 @@
 # Plan de Gestión de Riesgos Corporativos
-**Proyecto:** KeaKit  
-**Fecha de actualización:** 23/02/2026  
 
 ## 1. Introducción y Objetivo
 El presente documento establece el marco de trabajo para la identificación, evaluación, mitigación y monitorización de los riesgos asociados al desarrollo y lanzamiento del producto KeaKit. Involucra tanto los aspectos tecnológicos (desarrollo, infraestructura) como los organizativos (gestión de los equipos, marketing y validación en mercado con Usuarios Piloto).
@@ -34,7 +32,18 @@ Para todos los riesgos con **Prioridad Alta y Media**, la organización está ob
 3.  **Métricas de Efectividad:** KPIs objetivos (SLAs, Tiempos de recuperación, Tasas de retención) para evaluar si el plan de contingencia ha devuelto el proyecto a la normalidad.
 
 ## 5. Roles y Responsabilidades
-* **Project Manager / Coordinador General:** Monitorización de riesgos de Estimación/Planificación y Organizativos transversales.
-* **Team Leads (Subgrupos 1-4):** Seguimiento de riesgos Organizativos a nivel operativo (reporte de horas, bloqueos, bajas de personal).
-* **Product Manager / Marketing:** Monitorización exclusiva de riesgos de Negocio y Mercado (tracción, Usuarios Piloto).
-* **CTO / Arquitecto de Software:** Responsable principal de la monitorización de riesgos Técnicos y Externos (Infraestructura, DevOps).
+* **Cualquier integrante del equipo:** Monitorización de riesgos de Estimación/Planificación y Organizativos transversales.
+* **Organizador del subgrupo (Subgrupos 1-4):** Seguimiento de riesgos Organizativos a nivel operativo (reporte de horas, bloqueos, bajas de personal).
+* **Arquitecto de Software:** Responsable principal de la monitorización de riesgos Técnicos y Externos (Infraestructura, DevOps).
+
+## 6. Historial de versiones
+
+| Versión | Fecha       | Descripción                   | Autor(es)       |
+|---------|------------|--------------------------------|------------|
+| 1.0.0   | 23/02/2026 | Añade el Plan de Gestión de Riesgos. Define la metodología de evaluación, categorización (técnicos, organizativos, etc.) y los roles del equipo para monitorizar y responder a las amenazas del proyecto. | Ismael Carrasco Mkhazni, Guillermo García León |
+
+
+---
+**Redactado por:** Ismael Carrasco Mkhazni y Guillermo García León
+**Fecha de redacción:** 23/02/2026  
+**Versión:** 1.0.0
