@@ -4,7 +4,7 @@
 
 **Fecha:** 22/02/2026  
 **Hora:** 21:00 - 22:06  
-**Lugar:** Enlace virtual
+**Lugar:** Microsoft Teams
 **Grupo convocado:** Grupo 4
 
 ## Participantes
@@ -31,14 +31,27 @@
 ## Desarrollo de la reunión
 
 ### 1. Estimación de puntos de historia
-[Descripción de lo discutido, puntos principales tratados, opiniones expresadas, etc.]
+Se estimaron las tareas asignadas al grupo 4, usando el método Planning Poker, quedando como resultado las siguientes estimaciones:
+- CU-ARRENDADOR-01 - Subida de artículos #74: 5 puntos de historia.
+- CU-ARRENDADOR-03 - Gestión de artículos subidos #75: 3 puntos de historia.
+- CU-ARRENDATARIO-05 - Seguimiento de alquileres activos #76: 4 puntos de historia.
+- CU-ADMIN-02 - Listado de usuarios #77: 2 puntos de historia.
 
 
 ### 2. Reparto de tareas
-[Descripción de lo discutido, puntos principales tratados, opiniones expresadas, etc.]
+Una vez estimadas las tareas, se ha dividido cada tarea en tres subtareas diferentes: backend, frontend y test.
+Posteriormente se han asignado las tareas entre los miembros de forma aleatoria, dando como resultado el siguiente
+reparto:
+
+| Tarea | Backend | Frontend | Test |
+|---|------------------|----------------|--------------|
+| CU-ARRENDADOR-01 #74| Jose Luis Moraza Vergara | Candela Jazmín Gutiérrez González| Ángel Amo Sanchéz |
+| CU-ARRENDADOR-03 #75| Jose Luis Moraza Vergara  | Ángel Amo Sánchez |  Paula Rosa González Paéz |
+| CU-ARRENDATARIO-05 #76 | Candela Jazmín Gutiérrez González | Paula Rosa González Paéz | Cristina Fernández Chica | 
+| CU-ADMIN-02 #77 |  Marta Aguilar Morcillo | Marta Aguilar Morcillo | Marta Aguilar Morcillo |
 
 ### 3. Ruego y preguntas
-[Otros temas tratados no incluidos en el orden del día]
+No aplica.
 
 
 
@@ -46,28 +59,32 @@
 
 | # | Acuerdo/Decisión | Responsable(s) |
 |---|------------------|----------------|
-| 1 | [Descripción del acuerdo o decisión tomada] | [Nombre] |
-| 2 | [Descripción del acuerdo o decisión tomada] | [Nombre] | 
-| 3 | [Descripción del acuerdo o decisión tomada] | [Nombre] |
+| 1 | Compromiso a realizar las tareas asignadas antes de las fechas límite | Todos los miembros |
 
 ## Tareas asignadas
 
 | # | Descripción breve | Responsable(s) | Fecha límite |
-|---|------------------|----------------|--------------|
-| 1 | [Descripción de la tarea] | [Nombre] | [DD/MM/AAAA] |
+|---|-------------------|----------------|--------------|
+| 1 | CU-ARRENDADOR-01 #74 - Backend | Jose Luis Moraza Vergara | 25/02/2026 |
+| 2 | CU-ARRENDADOR-01 #74 - Frontend | Candela Jazmín Gutiérrez González | 25/02/2026 |
+| 3 | CU-ARRENDADOR-01 #74 - Test | Ángel Amo Sanchéz | 25/02/2026 |
+| 4 | CU-ARRENDADOR-03 #75 - Backend | Jose Luis Moraza Vergara | 25/02/2026 |
+| 5 | CU-ARRENDADOR-03 #75 - Frontend | Ángel Amo Sánchez | 25/02/2026 |
+| 6 | CU-ARRENDADOR-03 #75 - Test | Paula Rosa González Paéz | 25/02/2026 |
+| 7 | CU-ARRENDATARIO-05 #76 - Backend | Candela Jazmín Gutiérrez González | 04/03/2026 |
+| 8 | CU-ARRENDATARIO-05 #76 - Frontend | Paula Rosa González Paéz | 04/03/2026 |
+| 9 | CU-ARRENDATARIO-05 #76 - Test | Cristina Fernández Chica | 04/03/2026 |
+| 10 | CU-ADMIN-02 #77 - Backend | Marta Aguilar Morcillo | 04/03/2026 |
+| 11 | CU-ADMIN-02 #77 - Frontend | Marta Aguilar Morcillo | 04/03/2026 |
+| 12 | CU-ADMIN-02 #77 - Test | Marta Aguilar Morcillo | 04/03/2026 |
 
 ## Próxima reunión
-
-**Fecha:** [DD/MM/AAAA]  
-**Hora:** [HH:MM]  
-**Lugar:** [Ubicación física / Plataforma virtual]  
+No aplica.
 
 **Temas a tratar:**
-- [Tema 1]
-- [Tema 2]
-- Seguimiento de tareas pendientes
+No aplica.
 
 ---
 
-**Acta redactada por:** [Nombre]  
-**Fecha de redacción:** [DD/MM/AAAA]
+**Acta redactada por:** [Cristina Fernández Chica, José Luis Moraza Vergara]  
+**Fecha de redacción:** [23/02/2026]
