@@ -165,3 +165,16 @@ Si quieres, puedo devolvértelo completamente corregido y pulido en versión fin
 **Objetivo del uso:** Asegurar que la versión final del documento sobre el análisis de competidores no contenga ningún error ortográfico grave.
 
 **Enlace a la conversación:** [Ver conversación](https://chatgpt.com/share/6995a278-ceac-8005-9a86-4da19e4b53e6)
+
+---
+### Interacción 3
+
+**Usuario:** Lucía Ponce García de Sola  
+**Herramienta y versión de Inteligencia Artificial utilizada:** Gemini 3 Flash
+
+**Fecha de uso:** 23/02/2026
+
+**Objetivo del uso:** Sintetizar y extraer información relevante de la transcripción de la reunión de organización realizada el 21 de febrero 2026, para ayudar en la redacción de su correspondiente acta.
+
+**Enlace a la conversación:** Gemini no permite compartir conversaciones si se utiliza un email corporativo (como los pertenecientes al dominio alum.us.es).
+
