@@ -470,8 +470,9 @@ Tras realizar un análisis exhaustivo de ventajas y desventajas sobre todas las 
 | 2.0.2 | 17/02/2026 | Pie de foto de las imágenes | Marta de la Calle González |
 | 2.1.0 | 18/02/2026 | Revision de Análisis de riesgos | Luis Emmanuel Chavez Malave |
 | 2.1.1 | 18/02/2026 | Corrección referencias obsoletas a imágenes | Rosa María Espinosa Martínez |
+| 2.2.0 | 18/02/2026 | Eliminación del análisis de riesgos de este documento | Guillermo García León |
 
 ---
 **Redactado por:** Luis Emmanuel Chavez Malave
 **Fecha de redacción:** 18/02/2026  
-**Versión:** 2.1.0
+**Versión:** 2.2.0
