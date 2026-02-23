@@ -15,8 +15,6 @@ Para facilitar la asignación de responsabilidades y el enfoque de las solucione
 * **Negocio y Mercado (NM):** Riesgos vinculados a la viabilidad del modelo de negocio, coste de adquisición de clientes (CAC), retención de usuarios piloto y la recepción general de los inversores o el mercado final.
 
 ## 3. Metodología de Evaluación
-La recopilación de riesgos se ha realizado mediante sesiones conjuntas entre el departamento técnico (CTO, Leads) y el departamento de negocio/marketing. 
-
 Cada riesgo identificado se clasifica utilizando una escala cualitativa basada en los siguientes criterios:
 
 * **Impacto (Alcance, Tiempo, Calidad):**
