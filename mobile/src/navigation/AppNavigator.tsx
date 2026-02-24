@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import LoginScreen       from '../screens/auth/LoginScreen';
 import RegisterScreen    from '../screens/auth/RegisterScreen';
+import HomeScreen from '../screens/home/HomeScreen';
 import { RootStackParamList } from '../types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -26,7 +27,7 @@ const AppNavigator: React.FC = () => {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <>
-            {/* Authenticated screens */}
+            <Stack.Screen name="Home" component={HomeScreen} />
           </>
         ) : (
           <>

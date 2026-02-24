@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   Text,
   TextInput,
@@ -17,6 +16,37 @@ import { RootStackParamList } from '../../types';
 
 type RegisterNav = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 
+type FieldErrors = {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirm?: string;
+  general?: string;
+};
+
+const parseBackendError = (err: unknown): FieldErrors => {
+  if (!(err instanceof Error)) return { general: 'Error al registrarse.' };
+
+  const message = err.message.toLowerCase();
+
+  if (message.includes('email already') || message.includes('already registered') || message.includes('duplicate'))
+    return { email: 'Este correo ya está registrado.' };
+
+  if (message.includes('invalid email') || message.includes('email format'))
+    return { email: 'El formato del correo no es válido.' };
+
+  if (message.includes('password too short') || message.includes('weak password'))
+    return { password: 'La contraseña es demasiado débil (mínimo 8 caracteres).' };
+
+  if (message.includes('network') || message.includes('fetch'))
+    return { general: 'Sin conexión. Comprueba tu red.' };
+
+  if (message.includes('too many requests') || message.includes('rate limit'))
+    return { general: 'Demasiados intentos. Espera unos minutos.' };
+
+  return { general: err.message || 'Error al registrarse.' };
+};
+
 const RegisterScreen: React.FC = () => {
   const navigation = useNavigation<RegisterNav>();
   const { signUp } = useAuth();
@@ -27,22 +57,30 @@ const RegisterScreen: React.FC = () => {
   const [confirm, setConfirm]   = useState('');
   const [loading, setLoading]   = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors]     = useState<FieldErrors>({});
+
+  const clearErrors = () => setErrors({});
 
   const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password || !confirm) {
-      Alert.alert('Error', 'Por favor completa todos los campos.');
+    const localErrors: FieldErrors = {};
+
+    if (!name.trim())    localErrors.name     = 'El nombre es obligatorio.';
+    if (!email.trim())   localErrors.email    = 'El correo es obligatorio.';
+    if (!password)       localErrors.password = 'La contraseña es obligatoria.';
+    if (!confirm)        localErrors.confirm  = 'Debes repetir la contraseña.';
+    else if (password !== confirm)
+                         localErrors.confirm  = 'Las contraseñas no coinciden.';
+
+    if (Object.keys(localErrors).length > 0) {
+      setErrors(localErrors);
       return;
     }
-    if (password !== confirm) {
-      Alert.alert('Error', 'Las contraseñas no coinciden.');
-      return;
-    }
+
     try {
       setLoading(true);
       await signUp({ name: name.trim(), email: email.trim(), password: password.trim() });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al registrarse.';
-      Alert.alert('Error', message);
+      setErrors(parseBackendError(err));
     } finally {
       setLoading(false);
     }
@@ -57,33 +95,47 @@ const RegisterScreen: React.FC = () => {
         />
       </View>
 
+      {/* Nombre */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors.name && styles.inputError]}
         placeholder="Nombre completo"
         placeholderTextColor="#999"
         value={name}
-        onChangeText={setName}
+        onChangeText={(v) => { setName(v); clearErrors(); }}
       />
+      {errors.name && (
+        <View style={styles.errorRow}>
+          <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+          <Text style={styles.errorText}>{errors.name}</Text>
+        </View>
+      )}
 
+      {/* Email */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors.email && styles.inputError]}
         placeholder="Correo electrónico"
         placeholderTextColor="#999"
         keyboardType="email-address"
         autoCapitalize="none"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(v) => { setEmail(v); clearErrors(); }}
       />
+      {errors.email && (
+        <View style={styles.errorRow}>
+          <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+          <Text style={styles.errorText}>{errors.email}</Text>
+        </View>
+      )}
 
-
+      {/* Contraseña */}
       <View style={styles.inputContainer}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.password && styles.inputError]}
           placeholder="Contraseña"
           placeholderTextColor="#999"
           secureTextEntry={!showPassword}
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(v) => { setPassword(v); clearErrors(); }}
         />
         <TouchableOpacity
           style={styles.eyeIcon}
@@ -97,17 +149,22 @@ const RegisterScreen: React.FC = () => {
           />
         </TouchableOpacity>
       </View>
+      {errors.password && (
+        <View style={styles.errorRow}>
+          <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+          <Text style={styles.errorText}>{errors.password}</Text>
+        </View>
+      )}
 
-  
-
+      {/* Repetir contraseña */}
       <View style={styles.inputContainer}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.confirm && styles.inputError]}
           placeholder="Repetir contraseña"
           placeholderTextColor="#999"
           secureTextEntry={!showPassword}
           value={confirm}
-          onChangeText={setConfirm}
+          onChangeText={(v) => { setConfirm(v); clearErrors(); }}
         />
         <TouchableOpacity
           style={styles.eyeIcon}
@@ -121,6 +178,20 @@ const RegisterScreen: React.FC = () => {
           />
         </TouchableOpacity>
       </View>
+      {errors.confirm && (
+        <View style={styles.errorRow}>
+          <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+          <Text style={styles.errorText}>{errors.confirm}</Text>
+        </View>
+      )}
+
+      {/* Error general de backend */}
+      {errors.general && (
+        <View style={styles.generalError}>
+          <Ionicons name="warning-outline" size={16} color="#d9534f" />
+          <Text style={styles.generalErrorText}>{errors.general}</Text>
+        </View>
+      )}
 
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
@@ -163,11 +234,43 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     paddingHorizontal: 16,
-    marginBottom: 14,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#ddd',
     fontSize: 16,
     color: '#333',
+  },
+  inputError: {
+    borderColor: '#d9534f',
+    backgroundColor: '#fff5f5',
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginBottom: 10,
+  },
+  errorText: {
+    color: '#d9534f',
+    fontSize: 13,
+  },
+  generalError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+    backgroundColor: '#fdf0f0',
+    borderWidth: 1,
+    borderColor: '#f5c6cb',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  generalErrorText: {
+    color: '#d9534f',
+    fontSize: 14,
+    flexShrink: 1,
   },
   button: {
     width: '100%',
