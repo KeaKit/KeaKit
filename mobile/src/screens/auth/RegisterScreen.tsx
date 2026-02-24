@@ -7,9 +7,11 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 
@@ -24,6 +26,7 @@ const RegisterScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
   const [loading, setLoading]   = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password || !confirm) {
@@ -47,7 +50,12 @@ const RegisterScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Crear Cuenta</Text>
+      <View>
+        <Image
+          source={require('../../../assets/logo.png')}
+          style={{ width: 200, height: 200, marginBottom: 50 }}
+        />
+      </View>
 
       <TextInput
         style={styles.input}
@@ -67,23 +75,52 @@ const RegisterScreen: React.FC = () => {
         onChangeText={setEmail}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        placeholderTextColor="#999"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Confirmar contraseña"
-        placeholderTextColor="#999"
-        secureTextEntry
-        value={confirm}
-        onChangeText={setConfirm}
-      />
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          placeholderTextColor="#999"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TouchableOpacity
+          style={styles.eyeIcon}
+          onPress={() => setShowPassword((prev) => !prev)}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+            size={25}
+            color="#999"
+          />
+        </TouchableOpacity>
+      </View>
+
+  
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Repetir contraseña"
+          placeholderTextColor="#999"
+          secureTextEntry={!showPassword}
+          value={confirm}
+          onChangeText={setConfirm}
+        />
+        <TouchableOpacity
+          style={styles.eyeIcon}
+          onPress={() => setShowPassword((prev) => !prev)}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+            size={25}
+            color="#999"
+          />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
@@ -135,7 +172,7 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: '#4A90E2',
+    backgroundColor: '#103a57',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -151,5 +188,15 @@ const styles = StyleSheet.create({
   link: {
     color: '#4A90E2',
     fontSize: 15,
+  },
+  inputContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 12,
+    marginBottom: 10,
   },
 });

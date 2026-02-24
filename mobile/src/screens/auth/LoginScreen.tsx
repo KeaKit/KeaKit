@@ -7,11 +7,14 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
+import Divider from '../../components/Divider';
 
 type LoginNav = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -22,6 +25,7 @@ const LoginScreen: React.FC = () => {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -41,7 +45,13 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Iniciar Sesión</Text>
+
+      <View>
+        <Image
+          source={require('../../../assets/logo.png')}
+          style={{ width: 200, height: 200, marginBottom: 50 }}
+        />
+      </View>
 
       <TextInput
         style={styles.input}
@@ -53,14 +63,27 @@ const LoginScreen: React.FC = () => {
         onChangeText={setEmail}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        placeholderTextColor="#999"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          placeholderTextColor="#999"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TouchableOpacity
+          style={styles.eyeIcon}
+          onPress={() => setShowPassword((prev) => !prev)}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+            size={25}
+            color="#999"
+          />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
@@ -70,9 +93,11 @@ const LoginScreen: React.FC = () => {
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>Entrar</Text>
+          <Text style={styles.buttonText}>Iniciar sesión</Text>
         )}
       </TouchableOpacity>
+
+      <Divider/>
 
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
@@ -112,7 +137,7 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: '#4A90E2',
+    backgroundColor: '#103a57',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -130,5 +155,16 @@ const styles = StyleSheet.create({
   link: {
     color: '#4A90E2',
     fontSize: 15,
+    marginTop: 20,
+  },
+  inputContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 12,
+    marginBottom: 10,
   },
 });
