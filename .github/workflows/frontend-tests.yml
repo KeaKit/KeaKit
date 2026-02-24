@@ -2,12 +2,8 @@ name: Frontend CI
 
 on:
   push:
-    paths:
-      - 'mobile/**'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'mobile/**'
 
 jobs:
   test-frontend:
