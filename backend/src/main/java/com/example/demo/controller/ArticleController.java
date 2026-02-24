@@ -45,4 +45,34 @@ public class ArticleController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateArticle(@PathVariable Long id, @RequestParam Long ownerId, @RequestBody Article updateData) {
+        try {
+            Article updated = articleService.update(id, ownerId, updateData);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteArticle(@PathVariable Long id, @RequestParam Long ownerId) {
+        try {
+            articleService.deleteById(id, ownerId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/toggle-rent")
+    public ResponseEntity<?> toggleRent(@PathVariable Long id, @RequestParam Long ownerId) {
+        try {
+            Article updated = articleService.toggleRent(id, ownerId);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
 }

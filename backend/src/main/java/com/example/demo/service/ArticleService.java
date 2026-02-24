@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
+import com.example.demo.model.ArticleStatus;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.UserRepository;
 
@@ -52,9 +53,25 @@ public class ArticleService {
         return articleRepository.save(article);
     }
 
-    public Article update(Long id, Article updateData) {
+    public Article update(Long id, Long ownerId, Article updateData) {
         Article article = articleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        // Cannot edit if currently rented
+        if (article.getStatus() == ArticleStatus.RENTED) {
+            throw new RuntimeException("Article is currently rented and cannot be edited");
+        }
+
+        // Only owner can edit
+        User owner = article.getOwner();
+        if (owner == null || !owner.getId().equals(ownerId)) {
+            throw new RuntimeException("Only the owner can modify this article");
+        }
+
+        // Do not allow changing status via update
+        if (updateData.getStatus() != null) {
+            throw new RuntimeException("Cannot change status via update; use toggleRent endpoint");
+        }
 
         if (updateData.getTitle() != null) article.setTitle(updateData.getTitle());
         if (updateData.getDescription() != null) article.setDescription(updateData.getDescription());
@@ -63,20 +80,49 @@ public class ArticleService {
         if (updateData.getAvailableFrom() != null) article.setAvailableFrom(updateData.getAvailableFrom());
         if (updateData.getAvailableUntil() != null) article.setAvailableUntil(updateData.getAvailableUntil());
         if (updateData.getCategory() != null) article.setCategory(updateData.getCategory());
-        if (updateData.getOwner() != null) article.setOwner(updateData.getOwner());
-
         if (updateData.getImageUrl() != null) article.setImageUrl(updateData.getImageUrl());
-        if (updateData.getStatus() != null) article.setStatus(updateData.getStatus());
         if (updateData.getPurchaseDate() != null) article.setPurchaseDate(updateData.getPurchaseDate());
 
         return articleRepository.save(article);
     }
 
-    public void deleteById(Long id) {
-        if (!articleRepository.existsById(id)) {
-            throw new RuntimeException("Article not found");
+    public void deleteById(Long id, Long ownerId) {
+        Article article = articleRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        if (article.getStatus() == ArticleStatus.RENTED) {
+            throw new RuntimeException("Article is currently rented and cannot be deleted");
         }
+
+        User owner = article.getOwner();
+        if (owner == null || !owner.getId().equals(ownerId)) {
+            throw new RuntimeException("Only the owner can delete this article");
+        }
+
         articleRepository.deleteById(id);
+    }
+
+    public Article toggleRent(Long id, Long ownerId) {
+        Article article = articleRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        User owner = article.getOwner();
+        if (owner == null || !owner.getId().equals(ownerId)) {
+            throw new RuntimeException("Only the owner can change rental status");
+        }
+
+        ArticleStatus status = article.getStatus();
+        if (status == ArticleStatus.INACTIVE) {
+            throw new RuntimeException("Inactive articles cannot be rented");
+        }
+
+        if (status == ArticleStatus.AVAILABLE) {
+            article.setStatus(ArticleStatus.RENTED);
+        } else if (status == ArticleStatus.RENTED) {
+            article.setStatus(ArticleStatus.AVAILABLE);
+        }
+
+        return articleRepository.save(article);
     }
 }
 
