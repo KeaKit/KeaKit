@@ -17,3 +17,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  jwt:
+    secret: KeaKitSecureSecretKey12345678901234567890ABCDEFGHIJKLMNOP
+    expiration: 86400000

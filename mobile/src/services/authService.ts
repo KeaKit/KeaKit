@@ -7,8 +7,23 @@ import {
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
-    const message = await res.text();
-    throw new Error(message || `HTTP ${res.status}`);
+    let errorMessage = `HTTP ${res.status}`;
+
+    try {
+      const contentType = res.headers.get('content-type');
+
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await res.json();
+        // Backend puede retornar ErrorResponse {message, status, error, ...} o Map<string, string> para validación
+        errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
+      } else {
+        errorMessage = await res.text();
+      }
+    } catch {
+      // Si falla el parseo, usar el mensaje por defecto
+    }
+
+    throw new Error(errorMessage || `HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
 }
