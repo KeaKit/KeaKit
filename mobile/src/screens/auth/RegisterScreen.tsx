@@ -36,7 +36,7 @@ const RegisterScreen: React.FC = () => {
     }
     try {
       setLoading(true);
-      await signUp({ name: name.trim(), email: email.trim(), password });
+      await signUp({ name: name.trim(), email: email.trim(), password: password.trim() });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al registrarse.';
       Alert.alert('Error', message);

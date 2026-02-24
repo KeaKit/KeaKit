@@ -6,7 +6,6 @@ public class RegisterRequest {
     private String email;
     private String password;
     private String name;
-    private UserRole role;
 
     public String getEmail() {
         return email;
@@ -32,11 +31,4 @@ public class RegisterRequest {
         this.name = name;
     }
 
-    public UserRole getRole() {
-        return role;
-    }
-
-    public void setRole(UserRole role) {
-        this.role = role;
-    }
 }

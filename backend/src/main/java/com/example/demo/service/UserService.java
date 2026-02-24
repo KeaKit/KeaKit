@@ -4,6 +4,8 @@ import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.model.User;
+import com.example.demo.model.UserRole;
+
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,8 +27,10 @@ public class UserService {
             request.getEmail(),
             request.getPassword(),
             request.getName(),
-            request.getRole()
+            UserRole.USER
         );
+
+        System.out.println("Registering user: " + user.getEmail() + ", Role: " + user.getRole());
 
         User savedUser = userRepository.save(user);
         return new UserResponse(savedUser);
