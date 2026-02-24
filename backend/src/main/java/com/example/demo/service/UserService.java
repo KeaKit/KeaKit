@@ -30,8 +30,6 @@ public class UserService {
             UserRole.USER
         );
 
-        System.out.println("Registering user: " + user.getEmail() + ", Role: " + user.getRole());
-
         User savedUser = userRepository.save(user);
         return new UserResponse(savedUser);
     }
