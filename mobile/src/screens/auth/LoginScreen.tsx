@@ -66,6 +66,7 @@ const LoginScreen: React.FC = () => {
     try {
       setLoading(true);
       await signIn({ email: email.trim(), password });
+      navigation.navigate('Home');
     } catch (err: unknown) {
       const parsed = parseBackendError(err);
       setErrors(parsed);

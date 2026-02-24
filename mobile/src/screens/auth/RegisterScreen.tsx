@@ -79,6 +79,7 @@ const RegisterScreen: React.FC = () => {
     try {
       setLoading(true);
       await signUp({ name: name.trim(), email: email.trim(), password: password.trim() });
+      navigation.navigate('Home');
     } catch (err: unknown) {
       setErrors(parseBackendError(err));
     } finally {
