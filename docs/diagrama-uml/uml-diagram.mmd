@@ -1,0 +1,127 @@
+classDiagram
+direction TB
+
+%% --- HERENCIA (primero para que Mermaid agrupe bien) ---
+Item <|-- Article
+Item <|-- Service
+Item <|-- Kit
+
+%% --- CATÁLOGO ---
+class Item {
+    <<abstract>>
+    -Long id
+    -String title
+    -String description
+    -String city
+    -Double pricePerMonth
+    -LocalDate availableFrom
+    -LocalDate availableUntil
+    -String category
+}
+class Article {
+    -String imageUrl
+    -ArticleStatus status
+    -LocalDate purchaseDate
+}
+class Service {
+    -ServiceStatus status
+}
+class Kit {
+    -List~Item~ includedItems
+}
+class Supplier {
+    -Long id
+    -String companyName
+    -String taxId
+    -String contactEmail
+    -String phone
+}
+
+%% --- USUARIOS ---
+class User {
+    -Long id
+    -String email
+    -String password
+    -String name
+    -UserRole role
+    -String phone
+    -String address
+    -String city
+}
+class PaymentData {
+    -Long id
+    -String stripeCustomerId
+    -String stripeAccountId
+    -Boolean isVerified
+}
+class Wallet {
+    -Long id
+    -Double availableBalance
+    -Double pendingBalance
+    -String currency
+}
+class WalletTransaction {
+    -Long id
+    -Double amount
+    -TransactionType type
+    -LocalDateTime createdAt
+    -String description
+}
+
+%% --- RESERVAS ---
+class Booking {
+    -Long id
+    -String name
+    -String country
+    -String city
+    -LocalDate startDate
+    -LocalDate endDate
+    -Double totalPrice
+    -String stripePaymentIntentId
+    -KitStatus status
+}
+
+%% --- ENUMERACIONES ---
+class UserRole {
+    <<enumeration>>
+    USER
+    ADMIN
+    PROVIDER
+}
+class ArticleStatus {
+    <<enumeration>>
+    AVAILABLE
+    RENTED
+    INACTIVE
+}
+class ServiceStatus {
+    <<enumeration>>
+    DRAFT
+    ACTIVE
+    UNAVAILABLE
+}
+class TransactionType {
+    <<enumeration>>
+    EARNING
+    WITHDRAWAL
+    PAYMENT
+}
+class KitStatus {
+    <<enumeration>>
+    PENDING
+    PAID
+    ACTIVE
+    COMPLETED
+    CANCELLED
+}
+
+%% --- RELACIONES ---
+User "1" *-- "0..1" PaymentData
+User "1" *-- "1" Wallet
+Wallet "1" *-- "0..*" WalletTransaction
+
+Item "0..*" --> "1" User : owner
+Service "0..*" --> "1" Supplier : provided_by
+
+Booking "0..*" --> "1" User : tenant
+Booking "0..*" --> "1..*" Item : contains
