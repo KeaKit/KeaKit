@@ -17,7 +17,7 @@ public class Article extends Item {
 
     public Article() {}
 
-    public Article(String title, String description, String city, String country, Double pricePerMonth, LocalDate availableFrom, LocalDate availableUntil, String category, User owner, String imageUrl, ArticleStatus status, LocalDate purchaseDate) {
+    public Article(String title, String description, String city, String country, Double pricePerMonth, LocalDate availableFrom, LocalDate availableUntil, Category category, User owner, String imageUrl, ArticleStatus status, LocalDate purchaseDate) {
         super(title, description, city, pricePerMonth, availableFrom, availableUntil, category, owner);
         this.imageUrl = imageUrl;
         this.status = status;
