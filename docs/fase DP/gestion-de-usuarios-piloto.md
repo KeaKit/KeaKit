@@ -9,7 +9,8 @@ Para la gestión de fechas límite y recordatorios se empleará un calendario de
 - Fechas entre las que deberán de probar las funcionalidades indicadas y contestar preguntas de la encuesta.
 - Recordatorios automáticos de cada deadline.
 
-Con el fin de garantizar el acceso al calendario, los usuarios piloto han recibido un correo con el enlace de invitación tras completar la primera encuesta. A través de este enlace podrán consultar en cualquier momento las fechas clave del sprint y recibirán notificaciones automáticas cuando se acerquen los plazos establecidos.
+Con el fin de garantizar el acceso al calendario, los usuarios piloto han recibido un correo con el enlace de invitación tras completar la primera encuesta. A través de este [enlace](https://calendar.google.com/calendar/u/4?cid=ZjE4NWQ2MzZkN2M4NDQ0NGRhNTRjOWNiNzcwNzNmNjZkZGRiMjE4NWYzMjU4N2ZlMDU1OGViNjgzMDlkOGZmM0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
+ podrán consultar en cualquier momento las fechas clave del sprint y recibirán notificaciones automáticas cuando se acerquen los plazos establecidos.
 
 ### Establecimiento de fechas de prueba
 
