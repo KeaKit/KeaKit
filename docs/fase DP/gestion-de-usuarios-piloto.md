@@ -38,6 +38,16 @@ Asimismo, se considera fundamental que los usuarios piloto perciban que su opini
 
 Si durante la fase de pruebas los usuarios piloto detectan algún bug o comportamiento inesperado, podrán reportarlo a través del portal de incidencias integrado en la aplicación. Este portal es accesible directamente desde la pantalla de soporte. Además, en los correos de aviso y recordatorio enviados a los usuarios piloto se incluirá un enlace directo al portal de incidencias.
 
+### Priorización de incidencias y feedback
+
+Para garantizar una respuesta ágil y no saturar al equipo de desarrollo, todo el feedback recibido, tanto del portal de incidencias como de las encuestas de satisfacción, se gestionará internamente, incluyendolo en un backlog, bajo la siguiente priorización:
+
+**Crítico:** Fallos técnicos severos reportados en el portal que impiden al usuario completar una acción principal (ej. error de registro, fallo en la pasarela de pago). Requieren resolución inmediata.
+
+**Importante:** Comportamientos inesperados o problemas de usabilidad que dificultan la experiencia, pero permiten terminar el proceso.
+
+**Mejora:** Sugerencias estéticas, nuevas ideas o cambios menores detectados en las encuestas o el portal.
+
 ## Beneficios
 
 Con el objetivo de incentivar la participación activa en el programa de usuarios piloto y reducir las posibles barreras de entrada, se han definido una serie de beneficios orientados a mejorar la experiencia durante la fase de pruebas.
@@ -63,5 +73,27 @@ Los usuarios piloto que participen como arrendadores contarán con ventajas dest
 - **Reconocimiento adicional en la plataforma**, mejorando la visibilidad de sus artículos en futuras versiones de la aplicación.
 
 Estos beneficios buscan recompensar la implicación de los participantes, reducir las barreras de entrada y fomentar la aportación de feedback valioso para la mejora continua del proyecto.
+
+### Entrega de beneficios
+
+Para hacer efectivos los incentivos descritos, se establecerá un proceso de entrega automatizado y vinculado a la cuenta de correo electrónico con la que el usuario piloto se haya registrado en el programa.
+
+Una vez finalizada la fase de pruebas y coincidiendo con el lanzamiento oficial de la plataforma, cada participante recibirá un correo de agradecimiento que incluirá:
+
+- **Códigos promocionales únicos:** Se generarán códigos alfanuméricos de un solo uso e intransferibles. Los usuarios (tanto arrendadores como arrendatarios) podrán introducir estos códigos en la pantalla de pago o en la configuración de sus anuncios para aplicar sus respectivas ventajas (ej. descuento en el primer alquiler o comisión del 0%).
+
+- **Activación automática de perfil:** Beneficios como la insignia de "Usuario Fundador", la cobertura de garantía total o la eliminación del depósito de seguridad, se vincularán directamente a la base de datos de las cuentas validadas. De este modo, el usuario no tendrá que realizar ninguna acción manual para disfrutarlos.
+
+- **Instrucciones y validez:** El correo detallará los pasos para canjear los códigos promocionales, así como los plazos de validez o condiciones de uso, garantizando una experiencia clara y sin fricciones.
+
+| Rol | Beneficio | Método de Entrega | Momento de Aplicación |
+| :--- | :--- | :--- | :--- |
+| **Transversal** | Insignia de "Usuario Fundador" | **Activación automática.** Actualización en la base de datos de producción. | Automático al iniciar sesión en la versión de lanzamiento. |
+| **Arrendatario** | Descuento en el primer alquiler | **Código promocional único.** Enviado por correo electrónico. | Manual. El usuario introduce el código en la pantalla de pago. |
+| **Arrendatario** | Garantías de conformidad | **Activación automática.** Configurado por defecto en las cuentas piloto. | Automático al confirmar la recepción de un kit. |
+| **Arrendatario** | Eliminación del depósito de seguridad | **Activación automática.** Validación interna en el perfil del usuario. | Automático durante el proceso de reserva. |
+| **Arrendador** | Comisión del 0% en primer alquiler | **Código promocional único.** Enviado por correo electrónico. | Manual. El usuario lo aplica al publicar el anuncio o en su panel de facturación. |
+| **Arrendador** | Cobertura de garantía total | **Activación automática.** Aplicado por defecto a los artículos piloto. | Automático desde la publicación del artículo. |
+| **Arrendador** | Reconocimiento adicional | **Activación automática.** Etiqueta visual configurada en el perfil y anuncios. | Al subir artículos para alquilar. |
 
 Para más información, consulte los documentos [incentivos para arrendatarios](../usuarios%20pilotos/estrategia-incentivos-arrendatarios.md) y [incentivos para arrendadores](../usuarios%20pilotos/estrategia-incentivos-arrendadores.md).
