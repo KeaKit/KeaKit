@@ -28,14 +28,11 @@ const parseBackendError = (err: unknown): FieldErrors => {
 
   const message = err.message.toLowerCase();
 
-  if (message.includes('user not found') || message.includes('no user'))
+  if (message.includes('user not found'))
     return { email: 'No existe una cuenta con este correo.' };
 
-  if (message.includes('wrong password') || message.includes('invalid password') || message.includes('incorrect password'))
+  if (message.includes('invalid password'))
     return { password: 'Contraseña incorrecta.' };
-
-  if (message.includes('network') || message.includes('fetch'))
-    return { general: 'Sin conexión. Comprueba tu red.' };
 
   return { general: err.message || 'Error al iniciar sesión.' };
 };
@@ -179,7 +176,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     paddingHorizontal: 16,
-    marginBottom: 10,
+    marginTop: 10,
     borderWidth: 1,
     borderColor: '#ddd',
     fontSize: 16,
@@ -194,7 +191,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 4,
-    marginBottom: 10,
+    marginTop: 2
   },
   errorText: {
     color: '#d9534f',
@@ -248,5 +245,6 @@ const styles = StyleSheet.create({
   eyeIcon: {
     position: 'absolute',
     right: 12,
+    marginTop: 12
   },
 });

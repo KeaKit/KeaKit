@@ -29,20 +29,8 @@ const parseBackendError = (err: unknown): FieldErrors => {
 
   const message = err.message.toLowerCase();
 
-  if (message.includes('email already') || message.includes('already registered') || message.includes('duplicate'))
+  if (message.includes('email already'))
     return { email: 'Este correo ya está registrado.' };
-
-  if (message.includes('invalid email') || message.includes('email format'))
-    return { email: 'El formato del correo no es válido.' };
-
-  if (message.includes('password too short') || message.includes('weak password'))
-    return { password: 'La contraseña es demasiado débil (mínimo 8 caracteres).' };
-
-  if (message.includes('network') || message.includes('fetch'))
-    return { general: 'Sin conexión. Comprueba tu red.' };
-
-  if (message.includes('too many requests') || message.includes('rate limit'))
-    return { general: 'Demasiados intentos. Espera unos minutos.' };
 
   return { general: err.message || 'Error al registrarse.' };
 };
@@ -92,11 +80,10 @@ const RegisterScreen: React.FC = () => {
       <View>
         <Image
           source={require('../../../assets/logo.png')}
-          style={{ width: 200, height: 200, marginBottom: 50 }}
+          style={{ width: 200, height: 200, marginBottom: 20 }}
         />
       </View>
 
-      {/* Nombre */}
       <TextInput
         style={[styles.input, errors.name && styles.inputError]}
         placeholder="Nombre completo"
@@ -110,8 +97,7 @@ const RegisterScreen: React.FC = () => {
           <Text style={styles.errorText}>{errors.name}</Text>
         </View>
       )}
-
-      {/* Email */}
+      
       <TextInput
         style={[styles.input, errors.email && styles.inputError]}
         placeholder="Correo electrónico"
@@ -128,7 +114,6 @@ const RegisterScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Contraseña */}
       <View style={styles.inputContainer}>
         <TextInput
           style={[styles.input, errors.password && styles.inputError]}
@@ -157,7 +142,6 @@ const RegisterScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Repetir contraseña */}
       <View style={styles.inputContainer}>
         <TextInput
           style={[styles.input, errors.confirm && styles.inputError]}
@@ -186,7 +170,6 @@ const RegisterScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Error general de backend */}
       {errors.general && (
         <View style={styles.generalError}>
           <Ionicons name="warning-outline" size={16} color="#d9534f" />
@@ -206,7 +189,7 @@ const RegisterScreen: React.FC = () => {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.goBack()}>
+      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
         <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
       </TouchableOpacity>
     </View>
@@ -235,11 +218,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     paddingHorizontal: 16,
-    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#ddd',
     fontSize: 16,
     color: '#333',
+    marginTop: 10
   },
   inputError: {
     borderColor: '#d9534f',
@@ -250,7 +233,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 4,
-    marginBottom: 10,
+    marginTop: 2,
+    height: 20,       
   },
   errorText: {
     color: '#d9534f',
@@ -266,7 +250,8 @@ const styles = StyleSheet.create({
     borderColor: '#f5c6cb',
     borderRadius: 8,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 4,
+    marginTop: 10
   },
   generalErrorText: {
     color: '#d9534f',
@@ -301,6 +286,6 @@ const styles = StyleSheet.create({
   eyeIcon: {
     position: 'absolute',
     right: 12,
-    marginBottom: 10,
+    marginTop: 12
   },
 });

@@ -5,25 +5,28 @@ import {
   UserResponse,
 } from '../types';
 
+const normalizeErrorMessage = (raw: string): string => {
+  const lower = raw.toLowerCase();
+  if (lower.includes('email should be valid'))    return 'El formato del correo no es válido.';
+  if (lower.includes('password must be at least')) return 'La contraseña es demasiado débil (mínimo 6 caracteres).';
+  return raw;
+};
+
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let errorMessage = `HTTP ${res.status}`;
 
     try {
       const contentType = res.headers.get('content-type');
-
       if (contentType && contentType.includes('application/json')) {
         const errorData = await res.json();
-        // Backend puede retornar ErrorResponse {message, status, error, ...} o Map<string, string> para validación
         errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
       } else {
         errorMessage = await res.text();
       }
-    } catch {
-      // Si falla el parseo, usar el mensaje por defecto
-    }
+    } catch {}
 
-    throw new Error(errorMessage || `HTTP ${res.status}`);
+    throw new Error(normalizeErrorMessage(errorMessage));
   }
   return res.json() as Promise<T>;
 }
