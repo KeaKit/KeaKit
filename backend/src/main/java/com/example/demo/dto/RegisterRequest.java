@@ -17,6 +17,18 @@ public class RegisterRequest {
     @NotBlank(message = "Name is required")
     private String name;
 
+    @NotBlank(message = "Phone is required")
+    private String phone;
+
+    @NotBlank(message = "Address is required")
+    private String address;
+
+    @NotBlank(message = "City is required")
+    private String city;
+
+    @NotBlank(message = "Country is required")
+    private String country;
+    
     public String getEmail() {
         return email;
     }
@@ -35,6 +47,22 @@ public class RegisterRequest {
 
     public String getName() {
         return name;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public String getCountry() {
+        return country;
     }
 
     public void setName(String name) {

@@ -86,8 +86,8 @@ const RegisterScreen: React.FC = () => {
     if (!form.address.trim())  localErrors.address  = 'La dirección es obligatoria.';
     if (!form.city.trim())     localErrors.city     = 'La ciudad es obligatoria.';
     if (!form.country.trim())  localErrors.country  = 'El país es obligatorio.';
-    if (!form.password)        localErrors.password = 'La contraseña es obligatoria.';
-    if (!form.confirm)         localErrors.confirm  = 'Debes repetir la contraseña.';
+    if (!form.password.trim()) localErrors.password = 'La contraseña es obligatoria.';
+    if (!form.confirm.trim())  localErrors.confirm  = 'Debes repetir la contraseña.';
     else if (form.password !== form.confirm)
                                localErrors.confirm  = 'Las contraseñas no coinciden.';
 
@@ -102,6 +102,10 @@ const RegisterScreen: React.FC = () => {
         name:     form.name.trim(),
         email:    form.email.trim(),
         password: form.password.trim(),
+        phone:    form.phone.trim(),
+        address:  form.address.trim(),
+        city:     form.city.trim(),
+        country:  form.country.trim(),
       });
       navigation.navigate('Home');
     } catch (err: unknown) {

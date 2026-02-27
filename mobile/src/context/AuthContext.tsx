@@ -47,6 +47,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       name:  response.name,
       email: response.email,
       token: response.token,
+      phone: response.phone,
+      address: response.address,
+      city: response.city,
+      country: response.country,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
     setUser(authUser);
@@ -56,10 +60,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const response = await registerUser(data);
     if (!response.token) throw new Error('El servidor no devolvió un token.');
     const authUser: AuthUser = {
-      id:    response.id,
-      name:  response.name,
-      email: response.email,
-      token: response.token,
+       id:    response.id,
+       name:  response.name,
+       email: response.email,
+       token: response.token,
+       phone: response.phone,
+       address: response.address,
+       city: response.city,
+       country: response.country,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
     setUser(authUser);

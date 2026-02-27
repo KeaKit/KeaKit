@@ -176,6 +176,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#333',
+    ...(({ outlineWidth: 0, outlineStyle: 'none' } as any)),
   },
   errorRow: {
     flexDirection: 'row',
