@@ -4,7 +4,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
 import com.example.demo.model.ArticleStatus;
@@ -124,5 +126,25 @@ public class ArticleService {
 
         return articleRepository.save(article);
     }
+
+    public List<UserArticle> findArticlesByUserId(Long userId) {
+
+        List<Article> articles = articleRepository.findByOwnerId(userId);
+        return articles.stream().map(article -> {
+            boolean isRented = article.getStatus() != null && 
+                               "RENTED".equalsIgnoreCase(article.getStatus().name());
+            
+            LocalDate rentedUntil = isRented ? article.getAvailableUntil() : null;
+            return new UserArticle(
+                article.getId(),
+                article.getTitle(),        // Heredado de Item
+                article.getImageUrl(),     // Propio de Article
+                article.getPricePerMonth(),// Heredado de Item
+                article.getStatus() != null ? article.getStatus().name() : "UNKNOWN",
+                rentedUntil
+            );
+        }).collect(Collectors.toList());
+    }
+    
 }
 
