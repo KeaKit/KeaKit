@@ -40,7 +40,11 @@ public class UserService {
             request.getEmail(),
             hashedPassword,
             request.getName(),
-            UserRole.USER
+            UserRole.USER,
+            request.getPhone(),
+            request.getAddress(),
+            request.getCity(),
+            request.getCountry()
         );
 
         User savedUser = userRepository.save(user);

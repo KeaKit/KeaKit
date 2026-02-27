@@ -5,6 +5,7 @@ export const API_ROUTES = {
   LOGIN:    `${BASE_URL}/api/users/login`,
   UPDATE_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
+  GET_CITIES: `${BASE_URL}/api/cities`,
 } as const;
 
 export default BASE_URL;

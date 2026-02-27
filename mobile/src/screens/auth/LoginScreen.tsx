@@ -12,7 +12,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { RootStackParamList } from '../../types';
+import { RootStackParamList } from '../../types/authTypes';
 import Divider from '../../components/Divider';
 
 type LoginNav = NativeStackNavigationProp<RootStackParamList, 'Login'>;

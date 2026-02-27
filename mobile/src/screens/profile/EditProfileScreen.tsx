@@ -13,8 +13,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { RootStackParamList } from '../../types';
+import { RootStackParamList } from '../../types/authTypes';
 import { updateProfile } from '../../services/userService';
+import { SelectPicker } from '../../components/SelectPicker';
+import { useLocationPicker } from '../../hooks/useLocationPicker';
+import { EUROPEAN_COUNTRIES } from '../../types/authTypes';
 
 type EditProfileNav = NativeStackNavigationProp<RootStackParamList, 'EditProfile'>;
 
@@ -31,8 +34,6 @@ type ProfileData = {
   name: string;
   phone: string;
   address: string;
-  city: string;
-  country: string;
 };
 
 const parseBackendError = (err: unknown): FieldErrors => {
@@ -42,15 +43,22 @@ const parseBackendError = (err: unknown): FieldErrors => {
 
 const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileNav>();
-  const { user, setUser} = useAuth(); 
+  const { user, setUser } = useAuth();
 
   const [form, setForm] = useState<ProfileData>({
     name:    user?.name    ?? '',
     phone:   user?.phone   ?? '',
     address: user?.address ?? '',
-    city:    user?.city    ?? '',
-    country: user?.country ?? '',
   });
+
+  const {
+    selectedCountry,
+    selectedCity,
+    setSelectedCity,
+    cities,
+    loadingCities,
+    onCountryChange,
+  } = useLocationPicker(user?.country ?? '', user?.city ?? '');
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors]   = useState<FieldErrors>({});
@@ -65,11 +73,11 @@ const EditProfileScreen: React.FC = () => {
   const handleSave = async () => {
     const localErrors: FieldErrors = {};
 
-    if (!form.name.trim()) localErrors.name = 'El nombre es obligatorio.';
-    if (!form.phone.trim()) localErrors.phone = 'El teléfono es obligatorio.';
+    if (!form.name.trim())    localErrors.name    = 'El nombre es obligatorio.';
+    if (!form.phone.trim())   localErrors.phone   = 'El teléfono es obligatorio.';
     if (!form.address.trim()) localErrors.address = 'La dirección es obligatoria.';
-    if (!form.city.trim()) localErrors.city = 'La ciudad es obligatoria.';
-    if (!form.country.trim()) localErrors.country = 'El país es obligatorio.';
+    if (!selectedCountry)     localErrors.country = 'El país es obligatorio.';
+    if (!selectedCity)        localErrors.city    = 'La ciudad es obligatoria.';
 
     if (Object.keys(localErrors).length > 0) {
       setErrors(localErrors);
@@ -82,8 +90,8 @@ const EditProfileScreen: React.FC = () => {
         name:    form.name.trim(),
         phone:   form.phone.trim(),
         address: form.address.trim(),
-        city:    form.city.trim(),
-        country: form.country.trim(),
+        city:    selectedCity,
+        country: selectedCountry,
       }, user!.token);
       setUser({
         ...user!,
@@ -107,26 +115,18 @@ const EditProfileScreen: React.FC = () => {
     keyboardType?: 'default' | 'phone-pad' | 'email-address';
     icon: string;
   }[] = [
-    { key: 'name',    placeholder: 'Nombre completo',   icon: 'person-outline' },
-    { key: 'phone',   placeholder: 'Teléfono',          icon: 'call-outline',      keyboardType: 'phone-pad' },
-    { key: 'address', placeholder: 'Dirección',         icon: 'home-outline' },
-    { key: 'city',    placeholder: 'Ciudad',            icon: 'business-outline' },
-    { key: 'country', placeholder: 'País',              icon: 'earth-outline' },
+    { key: 'name',    placeholder: 'Nombre completo', icon: 'person-outline' },
+    { key: 'phone',   placeholder: 'Teléfono',        icon: 'call-outline', keyboardType: 'phone-pad' },
+    { key: 'address', placeholder: 'Dirección',       icon: 'home-outline' },
   ];
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-    >
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={24} color="#103a57" />
       </TouchableOpacity>
 
-      <Image
-        source={require('../../../assets/logo.png')}
-        style={styles.logo}
-      />
+      <Image source={require('../../../assets/logo.png')} style={styles.logo} />
 
       <Text style={styles.title}>Editar perfil</Text>
       <Text style={styles.subtitle}>{user?.email}</Text>
@@ -153,6 +153,52 @@ const EditProfileScreen: React.FC = () => {
         </View>
       ))}
 
+      <View style={styles.fieldWrapper}>
+        <View style={[styles.inputContainer, errors.country && styles.inputErrorBorder]}>
+          <Ionicons name="earth-outline" size={20} color="#999" style={styles.fieldIcon} />
+          <SelectPicker
+            options={EUROPEAN_COUNTRIES}
+            selectedValue={selectedCountry}
+            placeholder="País"
+            onValueChange={(value: string) => {
+              onCountryChange(value);
+              clearErrors();
+            }}
+          />
+        </View>
+        {errors.country && (
+          <View style={styles.errorRow}>
+            <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+            <Text style={styles.errorText}>{errors.country}</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.fieldWrapper}>
+        <View style={[styles.inputContainer, errors.city && styles.inputErrorBorder]}>
+          <Ionicons name="business-outline" size={20} color="#999" style={styles.fieldIcon} />
+          {loadingCities
+            ? <ActivityIndicator size="small" color="#999" style={{ flex: 1 }} />
+            : <SelectPicker
+                options={cities.map(c => ({ label: c, value: c }))}
+                selectedValue={selectedCity}
+                placeholder={selectedCountry ? 'Ciudad' : 'Primero elige un país'}
+                disabled={cities.length === 0}
+                onValueChange={(value: string) => {
+                  setSelectedCity(value);
+                  clearErrors();
+                }}
+              />
+          }
+        </View>
+        {errors.city && (
+          <View style={styles.errorRow}>
+            <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+            <Text style={styles.errorText}>{errors.city}</Text>
+          </View>
+        )}
+      </View>
+
       {errors.general && (
         <View style={styles.generalError}>
           <Ionicons name="warning-outline" size={16} color="#d9534f" />
@@ -165,11 +211,10 @@ const EditProfileScreen: React.FC = () => {
         onPress={handleSave}
         disabled={loading}
       >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Guardar cambios</Text>
-        )}
+        {loading
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={styles.buttonText}>Guardar cambios</Text>
+        }
       </TouchableOpacity>
     </ScrollView>
   );
@@ -218,6 +263,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     marginTop: 8,
     paddingHorizontal: 12,
+    height: 50,
   },
   fieldIcon: {
     marginRight: 8,
@@ -228,9 +274,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     ...(({ outlineWidth: 0, outlineStyle: 'none' } as any)),
-
   },
   inputError: {
+    borderColor: '#d9534f',
+    backgroundColor: '#fff5f5',
+  },
+  inputErrorBorder: {
     borderColor: '#d9534f',
     backgroundColor: '#fff5f5',
   },

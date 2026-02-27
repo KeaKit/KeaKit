@@ -9,11 +9,15 @@ import {
   View,
   Image
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { RootStackParamList } from '../../types';
+import { RootStackParamList } from '../../types/authTypes';
+import { useLocationPicker } from '../../hooks/useLocationPicker';
+import { EUROPEAN_COUNTRIES } from '../../types/authTypes';
+import { SelectPicker } from '../../components/SelectPicker';
 
 type RegisterNav = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -38,7 +42,7 @@ const parseBackendError = (err: unknown): FieldErrors => {
 };
 
 type FieldConfig = {
-  key: keyof Omit<FieldErrors, 'general'>;
+  key: keyof Omit<FieldErrors, 'general' | 'country' | 'city'>;
   placeholder: string;
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences';
@@ -52,8 +56,6 @@ const FIELDS: FieldConfig[] = [
   { key: 'email',    placeholder: 'Correo electrónico', keyboardType: 'email-address', autoCapitalize: 'none', icon: 'mail-outline' },
   { key: 'phone',    placeholder: 'Teléfono',           keyboardType: 'phone-pad', icon: 'call-outline' },
   { key: 'address',  placeholder: 'Dirección',          fullWidth: true,  icon: 'home-outline' },
-  { key: 'country',  placeholder: 'País',               icon: 'earth-outline' },
-  { key: 'city',     placeholder: 'Ciudad',             icon: 'business-outline' },
   { key: 'password', placeholder: 'Contraseña',         secure: true,     icon: 'lock-closed-outline' },
   { key: 'confirm',  placeholder: 'Repetir contraseña', secure: true,     icon: 'lock-closed-outline' },
 ];
@@ -64,11 +66,20 @@ const RegisterScreen: React.FC = () => {
 
   const [form, setForm] = useState<Record<string, string>>({
     name: '', email: '', phone: '', address: '',
-    city: '', country: '', password: '', confirm: '',
+    password: '', confirm: '',
   });
   const [loading, setLoading]           = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors]             = useState<FieldErrors>({});
+
+  const {
+    selectedCountry,
+    selectedCity,
+    setSelectedCity,
+    cities,
+    loadingCities,
+    onCountryChange,
+  } = useLocationPicker();
 
   const clearErrors = () => setErrors({});
 
@@ -80,16 +91,16 @@ const RegisterScreen: React.FC = () => {
   const handleRegister = async () => {
     const localErrors: FieldErrors = {};
 
-    if (!form.name.trim())     localErrors.name     = 'El nombre es obligatorio.';
-    if (!form.email.trim())    localErrors.email    = 'El correo es obligatorio.';
-    if (!form.phone.trim())    localErrors.phone    = 'El teléfono es obligatorio.';
-    if (!form.address.trim())  localErrors.address  = 'La dirección es obligatoria.';
-    if (!form.city.trim())     localErrors.city     = 'La ciudad es obligatoria.';
-    if (!form.country.trim())  localErrors.country  = 'El país es obligatorio.';
-    if (!form.password.trim()) localErrors.password = 'La contraseña es obligatoria.';
-    if (!form.confirm.trim())  localErrors.confirm  = 'Debes repetir la contraseña.';
+    if (!form.name.trim())        localErrors.name     = 'El nombre es obligatorio.';
+    if (!form.email.trim())       localErrors.email    = 'El correo es obligatorio.';
+    if (!form.phone.trim())       localErrors.phone    = 'El teléfono es obligatorio.';
+    if (!form.address.trim())     localErrors.address  = 'La dirección es obligatoria.';
+    if (!selectedCountry)         localErrors.country  = 'El país es obligatorio.';
+    if (!selectedCity)            localErrors.city     = 'La ciudad es obligatoria.';
+    if (!form.password.trim())    localErrors.password = 'La contraseña es obligatoria.';
+    if (!form.confirm.trim())     localErrors.confirm  = 'Debes repetir la contraseña.';
     else if (form.password !== form.confirm)
-                               localErrors.confirm  = 'Las contraseñas no coinciden.';
+                                  localErrors.confirm  = 'Las contraseñas no coinciden.';
 
     if (Object.keys(localErrors).length > 0) {
       setErrors(localErrors);
@@ -104,8 +115,8 @@ const RegisterScreen: React.FC = () => {
         password: form.password.trim(),
         phone:    form.phone.trim(),
         address:  form.address.trim(),
-        city:     form.city.trim(),
-        country:  form.country.trim(),
+        city:     selectedCity,
+        country:  selectedCountry,
       });
       navigation.navigate('Home');
     } catch (err: unknown) {
@@ -125,7 +136,7 @@ const RegisterScreen: React.FC = () => {
       <View style={styles.grid}>
         {FIELDS.map(({ key, placeholder, keyboardType, autoCapitalize, secure, fullWidth, icon }) => (
           <View key={key} style={[styles.fieldWrapper, fullWidth && styles.fieldFull]}>
-            <View style={[styles.inputContainer, errors[key] && styles.inputError]}>
+            <View style={[styles.inputContainer, errors[key as keyof FieldErrors] && styles.inputError]}>
               <Ionicons name={icon as any} size={20} color="#999" style={styles.fieldIcon} />
               <TextInput
                 style={styles.input}
@@ -138,26 +149,65 @@ const RegisterScreen: React.FC = () => {
                 onChangeText={setField(key)}
               />
               {secure && (
-                <TouchableOpacity
-                  onPress={() => setShowPassword(prev => !prev)}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color="#999"
-                  />
+                <TouchableOpacity onPress={() => setShowPassword(prev => !prev)} activeOpacity={0.7}>
+                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
                 </TouchableOpacity>
               )}
             </View>
-            {errors[key] && (
+            {errors[key as keyof FieldErrors] && (
               <View style={styles.errorRow}>
                 <Ionicons name="alert-circle-outline" size={13} color="#d9534f" />
-                <Text style={styles.errorText}>{errors[key]}</Text>
+                <Text style={styles.errorText}>{errors[key as keyof FieldErrors]}</Text>
               </View>
             )}
           </View>
         ))}
+
+        <View style={styles.fieldWrapper}>
+          <View style={[styles.inputContainer, errors.country && styles.inputError]}>
+            <Ionicons name="earth-outline" size={20} color="#999" style={styles.fieldIcon} />
+            <SelectPicker
+              options={EUROPEAN_COUNTRIES}
+              selectedValue={selectedCountry}
+              placeholder="País..."
+              onValueChange={(value: string) => {
+                onCountryChange(value);
+                clearErrors();
+              }}
+            />
+          </View>
+          {errors.country && (
+            <View style={styles.errorRow}>
+              <Ionicons name="alert-circle-outline" size={13} color="#d9534f" />
+              <Text style={styles.errorText}>{errors.country}</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.fieldWrapper}>
+          <View style={[styles.inputContainer, errors.city && styles.inputError]}>
+            <Ionicons name="business-outline" size={20} color="#999" style={styles.fieldIcon} />
+            {loadingCities
+              ? <ActivityIndicator size="small" color="#999" style={{ flex: 1 }} />
+              : <SelectPicker
+                  options={cities.map(c => ({ label: c, value: c }))}
+                  selectedValue={selectedCity}
+                  placeholder={selectedCountry ? 'Ciudad...' : 'Primero elige un país'}
+                  disabled={cities.length === 0}
+                  onValueChange={(value: string) => {
+                    setSelectedCity(value);
+                    clearErrors();
+                  }}
+                />
+            }
+          </View>
+          {errors.city && (
+            <View style={styles.errorRow}>
+              <Ionicons name="alert-circle-outline" size={13} color="#d9534f" />
+              <Text style={styles.errorText}>{errors.city}</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {errors.general && (
@@ -221,6 +271,15 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     paddingHorizontal: 12,
     height: 50,
+  },
+  picker: {
+    flex: 1,
+    color: '#333',
+    height: 50,
+    borderTopColor: '#ddd',
+    borderBottomColor: '#ddd',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
   },
   fieldIcon: {
     marginRight: 8,

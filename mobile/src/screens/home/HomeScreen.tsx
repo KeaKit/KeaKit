@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../types';
+import { RootStackParamList } from '../../types/authTypes';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;

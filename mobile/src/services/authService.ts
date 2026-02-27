@@ -3,7 +3,7 @@ import {
   LoginRequest,
   RegisterRequest,
   UserResponse,
-} from '../types';
+} from '../types/authTypes';
 
 const normalizeErrorMessage = (raw: string): string => {
   const lower = raw.toLowerCase();

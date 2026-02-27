@@ -9,7 +9,7 @@ import RegisterScreen    from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/home/HomeScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
-import { RootStackParamList } from '../types';
+import { RootStackParamList } from '../types/authTypes';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
