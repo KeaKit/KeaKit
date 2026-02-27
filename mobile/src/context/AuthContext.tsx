@@ -15,6 +15,7 @@ interface AuthContextData {
   signIn(data: LoginRequest): Promise<void>;
   signUp(data: RegisterRequest): Promise<void>;
   signOut(): Promise<void>;
+  setUser(user: AuthUser): void; 
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -70,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, setUser }}>
       {children}
     </AuthContext.Provider>
   );

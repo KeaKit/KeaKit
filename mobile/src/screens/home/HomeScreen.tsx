@@ -139,8 +139,7 @@ const HomeScreen: React.FC = () => {
                   style={componentStyles.menuItem}
                   onPress={() => {
                     setShowProfileMenu(false);
-                    // TODO: Implementar pantalla de perfil
-                    console.log('Ir a perfil');
+                    navigation.navigate('Profile');
                   }}
                 >
                   <Ionicons name="person" size={24} color={Colors.primary} />
