@@ -81,6 +81,9 @@ public class UserService {
         if (updateData.getCity() != null) {
             user.setCity(updateData.getCity());
         }
+        if (updateData.getCountry() != null) {
+            user.setCountry(updateData.getCountry());
+        }
 
         User savedUser = userRepository.save(user);
         return new UserResponse(savedUser);
