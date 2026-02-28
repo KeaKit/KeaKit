@@ -110,6 +110,7 @@ export type RootStackParamList = {
   Register: undefined;
   Home: undefined;
   CreateKit: undefined;
+  Checkout: { kitId: number };
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
