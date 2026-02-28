@@ -83,7 +83,6 @@ const Field: React.FC<FieldProps> = ({
   </View>
 );
 
-// ── Pantalla principal ──────────────────────────────────────────────────────
 const UploadArticleScreen: React.FC = () => {
   const navigation = useNavigation<UploadNav>();
   const { user } = useAuth();
@@ -122,6 +121,10 @@ const UploadArticleScreen: React.FC = () => {
 
     if (!availableUntil || !dateRegex.test(availableUntil))
       newErrors.availableUntil = 'Formato: AAAA-MM-DD';
+
+    if(availableFrom < Date.now().toString().slice(0,10)) {
+      newErrors.availableFrom = 'La fecha de inicio no puede ser anterior a hoy';
+    }
 
     if (availableFrom && availableUntil && availableFrom >= availableUntil)
       newErrors.availableUntil = 'Debe ser posterior a la fecha de inicio';

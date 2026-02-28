@@ -41,6 +41,7 @@ public class ArticleService {
         if (article.getPricePerMonth() == null || article.getPricePerMonth() < 0) throw new RuntimeException("pricePerMonth must be >= 0");
 
         LocalDate from = article.getAvailableFrom();
+        if(from != null && from.isBefore(LocalDate.now())) throw new RuntimeException("availableFrom cannot be in the past");
         LocalDate until = article.getAvailableUntil();
         if (from != null && until != null && from.isAfter(until)) throw new RuntimeException("availableFrom must be before or equal to availableUntil");
 
