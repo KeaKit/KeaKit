@@ -4,7 +4,8 @@
 1. [Sprint Goal](#1-sprint-goal)
 2. [Ítems seleccionados del Product Backlog](#2-ítems-seleccionados-del-product-backlog)
 3. [Desglose en tareas](#3-desglose-en-tareas)
-4. [Historial de versiones](#4-historial-de-versiones)
+4. [Resumen carga de trabajo](#4-resumen-carga-de-trabajo)
+5. [Historial de versiones](#5-historial-de-versiones)
 
 ## 1. Sprint Goal
 
@@ -20,15 +21,22 @@
 
 *Cada PBI se descompone en tareas concretas y ejecutables.*
 
-| PBI asociado | ID Issue | Descripción | Dependencias técnicas | Estimación (horas) | Estado | Responsable |
-|--------------|----------|-------------|-----------------------|--------------------|--------|-------------|
-| XX | [#XX](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/XX) | | #YY, #ZZ | 2.5h |[To Do/In Progress/Done]| [Nombre] |
+| PBIs asociados | ID Issue | Descripción | Dependencias técnicas | Prioridad | Estimación (SP) | Estimación (horas) | Estado | Responsable |
+|----------------|----------|-------------|-----------------------|-----------|-----------------|--------------------|--------|-------------|
+| XX | [#XX](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/XX) | | #YY, #ZZ | [Alta/Media/Baja] | XX | 2.5h |[To Do/In Progress/Done]| [Nombre] |
 
-## 4. Historial de versiones
+## 4. Resumen carga de trabajo
+
+| Responsable | Horas asignadas | Story Points asignados |
+|-------------|-----------------|------------------------|
+| [Nombre]    | XXh             | XX SP                  |
+| **TOTAL SQUAD** | **XXh**     | **XX SP**              |
+
+## 5. Historial de versiones
 
 | Versión | Fecha       | Descripción                    | Autor(es)       |
 |---------|-------------|--------------------------------|-----------------|
-| X.Y.Z   | DD/MM/YYYY  |                                |                 |
+| X.Y.Z   | DD/MM/YYYY  |                                |  [Nombre completo]     |
 
 ---
 **Redactado por:** [Nombre completo]  
