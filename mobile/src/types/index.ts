@@ -44,10 +44,41 @@ export interface RatingResponse {
   createdAt: string;
 }
 
+export interface UserArticle {
+  id: number;
+  title: string;
+  imageUrl: string | null;
+  pricePerMonth: number;
+  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
+  rentedUntil: string | null;
+}
+
+export interface KitCreateRequest {
+  name: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  tenantId: number;
+  itemIds: number[];
+}
+
+export interface KitResponse {
+  id: number;
+  name: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  tenantId: number;
+  itemIds: number[];
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  Home: { user: AuthUser };
+  Home: undefined;
+  CreateKit: undefined;
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };

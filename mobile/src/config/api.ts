@@ -9,6 +9,8 @@ export const API_ROUTES = {
   GET_RATINGS_BY_USER:   (userId: number) => `${BASE_URL}/api/ratings/given/${userId}`,
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
+  CREATE_KIT: `${BASE_URL}/api/kits/create`,
+  MY_ARTICLES: (userId: number) => `${BASE_URL}/api/article/my-articles/${userId}`,
 } as const;
 
 export default BASE_URL;

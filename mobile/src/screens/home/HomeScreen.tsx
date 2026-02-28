@@ -33,7 +33,7 @@ const HomeScreen: React.FC = () => {
 
   const handleCreateKit = () => {
     console.log('Crear kit');
-    // TODO: Navegar a pantalla de crear kit
+    navigation.navigate('CreateKit');
   };
 
   const handleRentItems = () => {

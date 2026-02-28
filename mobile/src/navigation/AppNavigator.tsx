@@ -9,6 +9,7 @@ import RegisterScreen    from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/home/HomeScreen';
 import CreateRatingScreen from '../screens/ratings/CreateRatingScreen';
 import UserRatingsScreen from '../screens/ratings/UserRatingsScreen';
+import CreateKitScreen from '../screens/kit/CreateKitScreen';
 import { RootStackParamList } from '../types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -35,6 +36,7 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
         <Stack.Screen name="UserRatings" component={UserRatingsScreen} />
+        <Stack.Screen name="CreateKit" component={CreateKitScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
