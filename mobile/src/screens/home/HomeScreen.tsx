@@ -149,6 +149,22 @@ const HomeScreen: React.FC = () => {
 
                 <TouchableOpacity
                   style={componentStyles.menuItem}
+                  onPress={() => {
+                    setShowProfileMenu(false);
+                    if (user) {
+                      navigation.navigate('UserRatings', {
+                        userId: user.id,
+                        userName: user.name,
+                      });
+                    }
+                  }}
+                >
+                  <Ionicons name="star" size={24} color={Colors.warning} />
+                  <Text style={componentStyles.menuItemText}>Mis Valoraciones</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={componentStyles.menuItem}
                   onPress={handleLogout}
                 >
                   <Ionicons name="log-out" size={24} color={Colors.error} />
