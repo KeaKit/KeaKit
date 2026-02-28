@@ -96,12 +96,23 @@ export interface RatingResponse {
   createdAt: string;
 }
 
+export interface Article {
+  id: number;
+  title: string;
+  imageUrl: string | null;
+  pricePerMonth: number;
+  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
+  rentedUntil: string | null;
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
   CreateKit: undefined;
+  Checkout: { kitId: number };
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
+  MyArticles: undefined;
 };

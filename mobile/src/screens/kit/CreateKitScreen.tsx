@@ -41,7 +41,8 @@ type CatalogProduct = {
   id: number;
   title: string;
   pricePerMonth: number;
-  status: string;
+  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE' | string;
+  category?: string;
   city?: string;
   ownerName?: string;
   imageUrl?: string | null;
@@ -49,38 +50,14 @@ type CatalogProduct = {
 
 const toIsoDate = (raw: string): string | null => {
   const value = raw.trim();
-  const slashFormat = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-  const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-  let year = 0;
-  let month = 0;
-  let day = 0;
+  const dmyFormat = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = value.match(dmyFormat);
+  if (!match) return null;
 
-  const slash = value.match(slashFormat);
-  if (slash) {
-    const a = Number(slash[1]);
-    const b = Number(slash[2]);
-    year = Number(slash[3]);
-
-    const dmyValid = a >= 1 && a <= 31 && b >= 1 && b <= 12;
-    const mdyValid = a >= 1 && a <= 12 && b >= 1 && b <= 31;
-
-    if (dmyValid) {
-      day = a;
-      month = b;
-    } else if (mdyValid) {
-      month = a;
-      day = b;
-    } else {
-      return null;
-    }
-  } else {
-    const iso = value.match(isoFormat);
-    if (!iso) return null;
-    year = Number(iso[1]);
-    month = Number(iso[2]);
-    day = Number(iso[3]);
-  }
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
 
   const parsed = new Date(Date.UTC(year, month - 1, day));
   const valid =
@@ -128,6 +105,15 @@ const CreateKitScreen: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [tempSelectedIds, setTempSelectedIds] = useState<number[]>([]);
 
+  const [searchText, setSearchText] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | string>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'RENTED' | 'INACTIVE'>('ALL');
+
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [appliedCategory, setAppliedCategory] = useState<'ALL' | string>('ALL');
+  const [appliedStatus, setAppliedStatus] = useState<'ALL' | 'AVAILABLE' | 'RENTED' | 'INACTIVE'>('ALL');
+  const [hasSearched, setHasSearched] = useState(false);
+
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -168,12 +154,18 @@ const CreateKitScreen: React.FC = () => {
         },
       });
 
+      const contentType = res.headers.get('content-type') || '';
+      const text = await res.text();
+
       if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`HTTP ${res.status} ${txt}`);
+        throw new Error(`HTTP ${res.status}: ${text}`);
       }
 
-      const raw = await res.json();
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Respuesta no JSON: ${text}`);
+      }
+
+      const raw = JSON.parse(text);
 
       const mapped: CatalogProduct[] = (raw ?? [])
         .map((p: any) => ({
@@ -218,10 +210,52 @@ const CreateKitScreen: React.FC = () => {
     );
   }, [selectedProducts, monthsBetween]);
 
+  const categories = useMemo(() => {
+    const set = new Set(
+      availableProducts
+        .map((p) => p.category?.trim())
+        .filter((c): c is string => Boolean(c)),
+    );
+    return ['ALL', ...Array.from(set)];
+  }, [availableProducts]);
+
+  const filteredProducts = useMemo(() => {
+    const q = appliedSearch.trim().toLowerCase();
+
+    return availableProducts.filter((p) => {
+      const byStatus = appliedStatus === 'ALL' || p.status === appliedStatus;
+      const byCategory = appliedCategory === 'ALL' || p.category === appliedCategory;
+      const bySearch =
+        q.length === 0 ||
+        p.title.toLowerCase().includes(q) ||
+        (p.city ?? '').toLowerCase().includes(q) ||
+        (p.category ?? '').toLowerCase().includes(q);
+
+      return byStatus && byCategory && bySearch;
+    });
+  }, [availableProducts, appliedSearch, appliedCategory, appliedStatus]);
+
   const openAddProductModal = async () => {
     await loadCatalog();
     setTempSelectedIds(selectedIds);
+
+    setSearchText('');
+    setCategoryFilter('ALL');
+    setStatusFilter('ALL');
+
+    setAppliedSearch('');
+    setAppliedCategory('ALL');
+    setAppliedStatus('ALL');
+    setHasSearched(false);
+
     setCatalogModalVisible(true);
+  };
+
+  const handleApplyFilters = () => {
+    setAppliedSearch(searchText);
+    setAppliedCategory(categoryFilter);
+    setAppliedStatus(statusFilter);
+    setHasSearched(true);
   };
 
   const toggleTempSelection = (id: number) => {
@@ -328,7 +362,6 @@ const CreateKitScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={createKitStyles.headerRow}>
-          {/* TODO(Equipo): Botón volver atrás pendiente */}
           <View style={componentStyles.iconButton} />
 
           <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
@@ -572,13 +605,67 @@ const CreateKitScreen: React.FC = () => {
           <View style={createKitStyles.modalCard}>
             <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
 
+            <View style={{ gap: 8, marginBottom: 12 }}>
+              <View style={[commonStyles.input, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
+                <Ionicons name="search" size={18} color={Colors.textSecondary} />
+                <TextInput
+                  placeholder="Buscar objeto..."
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  style={{ flex: 1, color: Colors.textPrimary }}
+                />
+              </View>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {(['ALL', 'AVAILABLE', 'RENTED', 'INACTIVE'] as const).map((s) => (
+                  <TouchableOpacity
+                    key={s}
+                    onPress={() => setStatusFilter(s)}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: statusFilter === s ? Colors.primary : Colors.border,
+                      backgroundColor: statusFilter === s ? '#EAF3F8' : Colors.backgroundWhite,
+                    }}
+                  >
+                    <Text style={{ color: Colors.primary }}>{s === 'ALL' ? 'Todos' : s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {categories.map((c) => (
+                  <TouchableOpacity
+                    key={c}
+                    onPress={() => setCategoryFilter(c)}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: categoryFilter === c ? Colors.primary : Colors.border,
+                      backgroundColor: categoryFilter === c ? '#EAF3F8' : Colors.backgroundWhite,
+                    }}
+                  >
+                    <Text style={{ color: Colors.primary }}>{c === 'ALL' ? 'Todas' : c}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            <TouchableOpacity style={[commonStyles.primaryButton, { marginBottom: 12 }]} onPress={handleApplyFilters}>
+              <Text style={commonStyles.primaryButtonText}>Buscar</Text>
+            </TouchableOpacity>
+
             <ScrollView style={createKitStyles.modalList}>
-              {availableProducts.length === 0 ? (
-                <Text style={commonStyles.bodySecondary}>
-                  No hay productos disponibles.
-                </Text>
+              {!hasSearched ? (
+                <Text style={commonStyles.bodySecondary}>Configura los filtros y pulsa "Buscar".</Text>
+              ) : filteredProducts.length === 0 ? (
+                <Text style={commonStyles.bodySecondary}>No hay productos que cumplan los filtros.</Text>
               ) : (
-                availableProducts.map((p) => {
+                filteredProducts.map((p) => {
                   const checked = tempSelectedIds.includes(p.id);
                   return (
                     <Pressable
@@ -596,8 +683,10 @@ const CreateKitScreen: React.FC = () => {
 
                         {/* TODO(Equipo): Mostrar precio por objeto individual en modal */}
                         <Text style={commonStyles.caption}>
-                          {p.ownerName ? `${p.ownerName} · ` : ""}
-                          {p.city ? `${p.city}` : "Sin ciudad"}
+                          {p.ownerName ? `${p.ownerName} · ` : ''}
+                          {p.city ? `${p.city} · ` : ''}
+                          {p.category ? `${p.category} · ` : ''}
+                          €{p.pricePerMonth}
                         </Text>
                       </View>
                       <View

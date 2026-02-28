@@ -7,10 +7,11 @@ import { useAuth } from '../context/AuthContext';
 import LoginScreen       from '../screens/auth/LoginScreen';
 import RegisterScreen    from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/home/HomeScreen';
-import CreateKitScreen from '../screens/kit/CreateKitScreen';
+import MyArticlesScreen from '../screens/profile/MyArticlesScreen';
+// import CheckoutScreen from '../screens/kit/CheckoutScreen';
 import CreateRatingScreen from '../screens/ratings/CreateRatingScreen';
 import UserRatingsScreen from '../screens/ratings/UserRatingsScreen';
-
+import CreateKitScreen from '../screens/kit/CreateKitScreen';
 import { RootStackParamList } from '../types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -35,10 +36,11 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="CreateKit" component={CreateKitScreen} />
+        {/* <Stack.Screen name="Checkout" component={CheckoutScreen} /> */}
         <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
         <Stack.Screen name="UserRatings" component={UserRatingsScreen} />
-
+        <Stack.Screen name="CreateKit" component={CreateKitScreen} />
+        <Stack.Screen name="MyArticles" component={MyArticlesScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
