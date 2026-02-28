@@ -28,4 +28,5 @@ export type RootStackParamList = {
   Register: undefined;
   Home: { user: AuthUser };
   EditProfile: { user: AuthUser };
+  MyArticles: undefined;
 };
