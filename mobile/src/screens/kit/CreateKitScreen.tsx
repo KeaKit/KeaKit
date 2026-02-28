@@ -21,6 +21,7 @@ import BASE_URL from '../../config/api';
 import { RootStackParamList } from '../../types';
 import { Colors, commonStyles, componentStyles } from '../../styles';
 import { createKitStyles } from '../../styles/createKitStyles';
+import KitItemComponent from '../../components/KitItemComponent';
 
 type CreateKitNav = NativeStackNavigationProp<RootStackParamList, 'CreateKit'>;
 
@@ -92,6 +93,20 @@ const toIsoDate = (raw: string): string | null => {
   return `${year}-${mm}-${dd}`;
 };
 
+function calculateMonthsBetween(start: Date, end: Date): number {
+  // Función para calcular la duración exacta en meses del alquiler del kit
+  const years = end.getUTCFullYear() - start.getUTCFullYear();
+  const months = end.getUTCMonth() - start.getUTCMonth();
+  const days = end.getUTCDate() - start.getUTCDate();
+  
+  let totalMonths = years * 12 + months;
+  
+  const daysInMonth = 30;
+  const monthFraction = days / daysInMonth;
+  
+  return totalMonths + monthFraction;
+}
+
 const toUtcDateOnly = (isoDate: string): Date => new Date(`${isoDate}T00:00:00.000Z`);
 
 const CreateKitScreen: React.FC = () => {
@@ -112,6 +127,20 @@ const CreateKitScreen: React.FC = () => {
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+
+
+  const monthsBetween = useMemo(() => {
+    const startIso = toIsoDate(startDate);
+    const endIso = toIsoDate(endDate);
+    
+    if (!startIso || !endIso) return null;
+    
+    const start = toUtcDateOnly(startIso);
+    const end = toUtcDateOnly(endIso);
+    
+    return calculateMonthsBetween(start, end);
+  }, [startDate, endDate]);
+
 
   const clearFieldError = (field: keyof FormErrors) => {
     setErrors((prev) => ({ ...prev, [field]: undefined, general: undefined }));
@@ -335,6 +364,15 @@ const CreateKitScreen: React.FC = () => {
         />
         {errors.endDate ? <Text style={commonStyles.errorText}>{errors.endDate}</Text> : null}
 
+        {/* Duración del alquiler */}
+        {monthsBetween !== null && monthsBetween > 0 && (
+          <View style={{ marginTop: 8, marginBottom: 16 }}>
+            <Text style={commonStyles.bodySecondary}>
+              Duración: {monthsBetween.toFixed(2)} meses
+            </Text>
+          </View>
+        )}
+
         <View style={createKitStyles.productsHeader}>
           <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>Tus Productos</Text>
           <TouchableOpacity style={createKitStyles.addButton} onPress={openAddProductModal}>
@@ -346,6 +384,7 @@ const CreateKitScreen: React.FC = () => {
           <Text style={createKitStyles.counterBadgeText}>Seleccionados: {selectedIds.length}</Text>
         </View>
 
+        {/* Lista de items añadidos al kit */}
         {loadingCatalog ? (
           <View style={createKitStyles.loaderArea}>
             <ActivityIndicator color={Colors.primary} />
@@ -356,25 +395,7 @@ const CreateKitScreen: React.FC = () => {
           </Text>
         ) : (
           selectedProducts.map((item) => (
-            <View
-              key={item.id}
-              style={[componentStyles.listItem, createKitStyles.productRow, createKitStyles.productRowSelected]}
-            >
-              <View style={createKitStyles.productThumb}>
-                <Ionicons name="cube-outline" size={24} color={Colors.primary} />
-              </View>
-
-              <View style={createKitStyles.productInfo}>
-                <Text style={createKitStyles.productTitle}>{item.title}</Text>
-
-                {/* TODO(Equipo): Mostrar precio por objeto individual */}
-                <Text style={commonStyles.caption}>
-                  {item.city ? `${item.city}` : 'Sin ciudad'}
-                </Text>
-              </View>
-
-              {/* TODO(Equipo): Eliminar objetos del kit */}
-            </View>
+            <KitItemComponent key={item.id} item={item} duration={monthsBetween ?? 0} />
           ))
         )}
 
@@ -431,11 +452,22 @@ const CreateKitScreen: React.FC = () => {
                           {p.city ? `${p.city}` : 'Sin ciudad'}
                         </Text>
                       </View>
-                      <Ionicons
-                        name={checked ? 'checkmark-circle' : 'ellipse-outline'}
-                        size={22}
-                        color={checked ? Colors.success : Colors.primary}
-                      />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginRight: 8 }}>
+                          <Text style={createKitStyles.productTitle}>
+                            {p.pricePerMonth !== undefined
+                              ? `${p.pricePerMonth.toFixed(2)}€` 
+                              : 'N/A'}
+                          </Text>
+                          <Text style={commonStyles.bodySecondary}>
+                            / mes
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name={checked ? 'checkmark-circle' : 'ellipse-outline'}
+                          size={22}
+                          color={checked ? Colors.success : Colors.primary}
+                        />
+                      
                     </Pressable>
                   );
                 })
