@@ -1,18 +1,20 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.CreatePaymentIntentRequest;
+import com.example.demo.dto.CreatePaymentIntentResponse;
 import com.stripe.Stripe;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
 
     private final String stripeSecretKey;
+    private static final double DEPOSIT_RATE = 0.20;
 
     public PaymentController() {
         // Usar System.getenv() para leer la variable de entorno exportada
@@ -24,18 +26,43 @@ public class PaymentController {
     }
 
     @PostMapping("/create-payment-intent")
-    public Map<String, Object> createPaymentIntent(@RequestBody Map<String, Object> data) throws Exception {
-        long amount = ((Number) data.get("amount")).longValue(); // monto en centavos
+    public ResponseEntity<?> createPaymentIntent(@RequestBody CreatePaymentIntentRequest request) {
+        try {
+            if (request == null || request.getBaseAmount() == null) {
+                return ResponseEntity.badRequest().body("baseAmount es obligatorio (en céntimos).");
+            }
 
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount(amount)
-                .setCurrency("usd")
+            long baseAmount = request.getBaseAmount();
+            if (baseAmount <= 0) {
+                return ResponseEntity.badRequest().body("baseAmount debe ser mayor que 0.");
+            }
+
+            long depositAmount = Math.round(baseAmount * DEPOSIT_RATE);
+            long totalAmount = baseAmount + depositAmount;
+
+            PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+                .setAmount(totalAmount)
+                .setCurrency("eur")
+                .putMetadata("baseAmount", String.valueOf(baseAmount))
+                .putMetadata("depositAmount", String.valueOf(depositAmount))
+                .putMetadata("depositRate", String.valueOf(DEPOSIT_RATE))
+                .putMetadata("kitId", request.getKitId() != null ? String.valueOf(request.getKitId()) : "")
                 .build();
 
-        PaymentIntent intent = PaymentIntent.create(params);
+            PaymentIntent intent = PaymentIntent.create(params);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("clientSecret", intent.getClientSecret());
-        return response;
+            CreatePaymentIntentResponse response = new CreatePaymentIntentResponse(
+                intent.getClientSecret(),
+                baseAmount,
+                depositAmount,
+                totalAmount,
+                DEPOSIT_RATE
+            );
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error creando PaymentIntent: " + e.getMessage());
+        }
     }
 }

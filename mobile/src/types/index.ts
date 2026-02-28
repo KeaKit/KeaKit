@@ -96,12 +96,35 @@ export interface RatingResponse {
   createdAt: string;
 }
 
+export interface DraftKitPayload {
+  name: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  tenantId: number;
+  itemIds: number[];
+}
+
+export interface CreatePaymentIntentRequest {
+  baseAmount: number; 
+  kitId?: number;
+}
+
+export interface CreatePaymentIntentResponse {
+  clientSecret: string;
+  baseAmount: number;    
+  depositAmount: number; 
+  totalAmount: number;   
+  depositRate: number;   
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
   CreateKit: undefined;
-  Checkout: { kitId: number };
+  Checkout: { baseAmount: number; draftKit: DraftKitPayload; kitId?: number };
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };

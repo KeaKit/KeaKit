@@ -196,6 +196,15 @@ const CreateKitScreen: React.FC = () => {
     [availableProducts, selectedIds],
   );
 
+  const baseAmountCents = useMemo(() => {
+    const months = monthsBetween && monthsBetween > 0 ? monthsBetween : 1;
+    const total = selectedProducts.reduce(
+      (acc, item) => acc + (item.pricePerMonth ?? 0) * months,
+      0
+    );
+    return Math.round(total * 100); // total en euros, lo convertimos a céntimos para Stripe
+  }, [selectedProducts, monthsBetween]); 
+
   const categories = useMemo(() => {
     const set = new Set(
       availableProducts
@@ -289,39 +298,29 @@ const CreateKitScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!user?.id || !user.token) {
-      setErrors({ general: 'Necesitas iniciar sesión para crear un kit.' });
+      setErrors({ general: 'Necesitas iniciar sesión para pagar el kit.' });
       return;
     }
 
     const validation = validate();
     if (!validation.valid || !validation.payloadDates) return;
 
-    try {
-      setSubmitting(true);
+    const draftKit = {
+      name: name.trim(),
+      country: country.trim(),
+      city: city.trim(),
+      startDate: validation.payloadDates.startIso,
+      endDate: validation.payloadDates.endIso,
+      tenantId: user.id,
+      itemIds: selectedIds,
+    };
 
-      await createKit(
-        {
-          name: name.trim(),
-          country: country.trim(),
-          city: city.trim(),
-          startDate: validation.payloadDates.startIso,
-          endDate: validation.payloadDates.endIso,
-          tenantId: user.id,
-          itemIds: selectedIds,
-        },
-        user.token,
-      );
-
-      Alert.alert('Kit creado', 'Tu kit se ha creado correctamente.', [
-        { text: 'OK', onPress: () => navigation.navigate('Home') },
-      ]);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo crear el kit.';
-      setErrors((prev) => ({ ...prev, general: message }));
-    } finally {
-      setSubmitting(false);
-    }
+    navigation.navigate('Checkout', {
+      baseAmount: baseAmountCents,
+      draftKit,
+    });
   };
+
 
   return (
     <SafeAreaView style={commonStyles.container}>
@@ -448,7 +447,7 @@ const CreateKitScreen: React.FC = () => {
               <ActivityIndicator color={Colors.textWhite} />
             ) : (
               <Text style={[commonStyles.primaryButtonText, createKitStyles.submitButtonText]}>
-                Realizar Pedido
+                Pagar Kit
               </Text>
             )}
           </TouchableOpacity>
