@@ -187,7 +187,7 @@ const MyArticlesScreen: React.FC = () => {
         <View style={styles.headerRight} />
       </View>
 
-ç      <View style={styles.filterContainer}>
+     <View style={styles.filterContainer}>
         <TouchableOpacity
           style={[styles.filterButton, filter === 'ALL' && styles.filterButtonActive]}
           onPress={() => setFilter('ALL')}
