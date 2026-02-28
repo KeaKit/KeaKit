@@ -1,12 +1,21 @@
 package com.example.demo.dto;
 
 import com.example.demo.model.UserRole;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class RegisterRequest {
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
     private String email;
+
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
+
+    @NotBlank(message = "Name is required")
     private String name;
-    private UserRole role;
 
     public String getEmail() {
         return email;
@@ -32,11 +41,4 @@ public class RegisterRequest {
         this.name = name;
     }
 
-    public UserRole getRole() {
-        return role;
-    }
-
-    public void setRole(UserRole role) {
-        this.role = role;
-    }
 }

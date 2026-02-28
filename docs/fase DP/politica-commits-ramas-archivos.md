@@ -165,10 +165,17 @@ Mockups.md
 	> [1] Conventional Commits, "Conventional Commits Specification v1.0.0", [Online]. Available: https://www.conventionalcommits.org/en/v1.0.0/. [Accessed: 17-Feb-2026].
 
 - Generalmente, la documentación deberá hacerse en formato Markdown, salvo excepciones.
+- Historial de versiones: Todos los documentos de documentación deben incluir obligatoriamente una sección de "Historial de versiones" al final del documento, seguida de la metainformación del documento. Esta sección debe contener una tabla con las columnas: Versión, Fecha, Descripción y Autor(es). El versionado debe seguir el formato semántico (ej: 1.0.0, 1.1.0, 2.0.0), donde:
+  - El primer número se incrementa para cambios mayores o reestructuraciones
+  - El segundo número se incrementa para adiciones de contenido significativas
+  - El tercer número se incrementa para correcciones menores, erratas o ajustes
+
+## Historial de versiones
+
+| Versión | Fecha       | Descripción                   | Autor(es)       |
+|---------|-------------|-------------------------------|----------------|
+| 1.0.0   | 17/02/2026  | Creación inicial de la política de commits, ramas y archivos | Rosa María Espinosa Martínez |
+| 1.1.0   | 25/02/2026  | Añadida política obligatoria de historial de versiones para documentación | Rosa María Espinosa Martínez |
 
 ---
 [1]: Conventional Commits, "Conventional Commits Specification v1.0.0", [Online]. Available: https://www.conventionalcommits.org/en/v1.0.0/. [Accessed: 17-Feb-2026].
-
-Versión del documento: [v01.00]
-Realizada por: [Rosa María Espinosa Martínez]
-Fecha de creación: [17/02/2026]

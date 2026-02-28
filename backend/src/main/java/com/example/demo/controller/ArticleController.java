@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
@@ -73,6 +74,13 @@ public class ArticleController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/my-articles/{userId}")
+    public ResponseEntity<List<UserArticle>> getMyArticles(@PathVariable Long userId) {
+        List<UserArticle> articles = articleService.findArticlesByUserId(userId);
+        
+        return ResponseEntity.ok(articles);
     }
 
 }

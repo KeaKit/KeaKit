@@ -37,5 +37,9 @@
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  
+  "containerEnv": {
+    "WAYLAND_DISPLAY":""
+  }
 }

@@ -11,6 +11,7 @@ public class UserResponse {
     private String phone;
     private String address;
     private String city;
+    private String token;
 
     public UserResponse(User user) {
         this.id = user.getId();
@@ -20,6 +21,17 @@ public class UserResponse {
         this.phone = user.getPhone();
         this.address = user.getAddress();
         this.city = user.getCity();
+    }
+
+    public UserResponse(User user, String token) {
+        this.id = user.getId();
+        this.email = user.getEmail();
+        this.name = user.getName();
+        this.role = user.getRole();
+        this.phone = user.getPhone();
+        this.address = user.getAddress();
+        this.city = user.getCity();
+        this.token = token;
     }
 
     public Long getId() {
@@ -48,5 +60,13 @@ public class UserResponse {
 
     public String getCity() {
         return city;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

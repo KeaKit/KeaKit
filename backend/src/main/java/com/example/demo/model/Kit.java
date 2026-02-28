@@ -100,5 +100,13 @@ public class Kit {
     public void setTenant(User tenant) {
         this.tenant = tenant;
     }
+
+    public List<Item> getItems() {
+        return items;
+    }
+
+    public void setItems(List<Item> items) {
+        this.items = items;
+    }
     
 } 
