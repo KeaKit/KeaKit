@@ -23,6 +23,8 @@ import { Colors, commonStyles, componentStyles } from '../../styles';
 import { createKitStyles } from '../../styles/createKitStyles';
 import KitItemComponent from '../../components/KitItemComponent';
 
+const GUARANTEE_PERCENTAGE = 0.20; // 20% de garantía sobre el precio total del kit
+
 type CreateKitNav = NativeStackNavigationProp<RootStackParamList, 'CreateKit'>;
 
 type FormErrors = {
@@ -203,6 +205,11 @@ const CreateKitScreen: React.FC = () => {
     () => availableProducts.filter((p) => selectedIds.includes(p.id)),
     [availableProducts, selectedIds],
   );
+
+  const totalPrice = useMemo(() => {
+    if (monthsBetween === null) return 0;
+    return selectedProducts.reduce((sum, p) => sum + p.pricePerMonth * monthsBetween, 0);
+  }, [selectedProducts, monthsBetween]);
 
   const openAddProductModal = async () => {
     await loadCatalog();
@@ -402,15 +409,53 @@ const CreateKitScreen: React.FC = () => {
         {errors.items ? <Text style={commonStyles.errorText}>{errors.items}</Text> : null}
         {errors.general ? <Text style={commonStyles.errorText}>{errors.general}</Text> : null}
 
-        <View style={createKitStyles.footerRow}>
-          {/* TODO(Equipo): Mostrar precio total */}
-          <View style={{ flex: 1 }} />
+       
+      </ScrollView>
 
+      <View style={createKitStyles.footerRow}>
+        {/* Resumen de precios */}
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+            <Text style={commonStyles.caption}>
+              Subtotal productos
+            </Text>
+            <Text style={commonStyles.caption}>
+              {totalPrice.toFixed(2)}€
+            </Text>
+          </View>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Text style={commonStyles.caption}>
+              Garantía (20%)
+            </Text>
+            <Text style={commonStyles.caption}>
+              {(totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
+            </Text>
+          </View>
+
+          <View style={{ 
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderTopWidth: 1, 
+            borderTopColor: Colors.border,
+            paddingTop: 12,
+            marginBottom: 16
+          }}>
+            <Text style={[commonStyles.caption, { color: Colors.primary, fontWeight: '600', fontSize: 16 }]}>
+              Total a pagar
+            </Text>
+            <Text style={[createKitStyles.productTitle, { fontSize: 20, color: Colors.primary }]}>
+              {(totalPrice + totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
+            </Text>
+          </View>
+          
           <TouchableOpacity
             style={[
               commonStyles.primaryButton,
               createKitStyles.submitButton,
               submitting && createKitStyles.submitButtonDisabled,
+              { width: '100%' }
             ]}
             onPress={handleSubmit}
             disabled={submitting}
@@ -424,7 +469,7 @@ const CreateKitScreen: React.FC = () => {
             )}
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
 
       <Modal visible={catalogModalVisible} transparent animationType="slide">
         <View style={createKitStyles.modalOverlay}>

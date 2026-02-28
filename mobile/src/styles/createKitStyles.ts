@@ -124,6 +124,15 @@ export const createKitStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.md,
+    backgroundColor: Colors.backgroundWhite,
+    padding: 50,
+    paddingTop: 30,
+    paddingBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
 
   totalText: {
