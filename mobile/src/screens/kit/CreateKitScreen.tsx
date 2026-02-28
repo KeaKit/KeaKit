@@ -452,11 +452,22 @@ const CreateKitScreen: React.FC = () => {
                           {p.city ? `${p.city}` : 'Sin ciudad'}
                         </Text>
                       </View>
-                      <Ionicons
-                        name={checked ? 'checkmark-circle' : 'ellipse-outline'}
-                        size={22}
-                        color={checked ? Colors.success : Colors.primary}
-                      />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginRight: 8 }}>
+                          <Text style={createKitStyles.productTitle}>
+                            {p.pricePerMonth !== undefined
+                              ? `${p.pricePerMonth.toFixed(2)}€` 
+                              : 'N/A'}
+                          </Text>
+                          <Text style={commonStyles.bodySecondary}>
+                            / mes
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name={checked ? 'checkmark-circle' : 'ellipse-outline'}
+                          size={22}
+                          color={checked ? Colors.success : Colors.primary}
+                        />
+                      
                     </Pressable>
                   );
                 })
