@@ -23,6 +23,15 @@ export interface AuthUser {
   token: string;
 }
 
+export interface Article {
+  id: number;
+  title: string;
+  imageUrl: string | null;
+  pricePerMonth: number;
+  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
+  rentedUntil: string | null;
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
