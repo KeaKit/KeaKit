@@ -6,7 +6,7 @@ echo "Installing global JS tooling..."
 cd /workspace/backend && ./mvnw install -DskipTests
 
 # Install Frontend dependencies
-cd /workspace/frontend && npm install
+cd /workspace/mobile && npm install
 
 npm install -g \
   typescript \

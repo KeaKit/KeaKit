@@ -40,9 +40,6 @@ Implementar el flujo completo de creación y pago de kits personalizados para ar
 | 71     | HU   | HU-ARRENDATARIO-35 | Como arrendatario, quiero que al pagar mi kit se me cobre un 20% adicional como depósito de garantía, para asegurar la correcta devolución de los objetos alquilados. | M | 5 | To Do |
 | 72     | HU   | HU-ARRENDATARIO-36 | Como arrendatario, quiero ver claramente el importe de la garantía antes de pagar, para saber cuánto estoy pagando exactamente como depósito. | M | 2 | To Do |
 | 73     | HU   | HU-ARRENDATARIO-37 | Como arrendatario, quiero saber que el depósito del 20% me será devuelto al finalizar el alquiler si todo está en buen estado, para tener tranquilidad al realizar el pago. | M | 2 | To Do |
-| 74     | HU   | HU-ARRENDATARIO-38 | Como arrendatario, quiero poder confirmar desde la app que el objeto recibido coincide con la descripción, imágenes y estado prometido, para validar que el servicio se ha cumplido correctamente. | M | - | To Do |
-| 75     | HU   | HU-ARRENDATARIO-39 | Como arrendatario, quiero poder indicar que el objeto no cumple con lo prometido, para que se revise el caso antes de liberar el pago completo al arrendador. | M | - | To Do |
-| 77     | HU   | HU-ARRENDATARIO-41 | Como arrendatario, quiero recibir una notificación cuando se procese la devolución de mi depósito, para saber que el proceso ha finalizado correctamente. | M | - | To Do |
 
 ## 3. Desglose en tareas
 
@@ -65,8 +62,6 @@ Implementar el flujo completo de creación y pago de kits personalizados para ar
 | 71 | [#66](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/66) | Cobrar un 20% adicional como depósito de garantía | #62 | Media | 5 | 4h | To Do | Enrique |
 | 72 | [#67](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/67) | Ver importe de garantía antes del pago | #57 | Media | 2 | 1h | To Do | Enrique |
 | 41, 62 || Mostrar artículos disponibles filtrados por ciudad y categoría | #52 | Media | - | - | To Do | - |
-| 74, 75, 77 || Validar recepción del kit  | #62 | Alta | - | - | To Do | - |
-| 77 || Gestionar devolución de depósito de garantía | #117 | Alta | - | - |To Do | - |
 | - | [#69](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/69) | Organizar carpetas | - | Baja | 2 | 1h | To Do | Salma |
 | - | [#70](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/70) | Actualizar analisis-de-tecnologias.md | - | Baja | 3 | 2h | To Do | Luis Emmanuel |
 | - | [#72](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/72) | Acta reunión organización 21/02 | - | Media | 2 | 1h | Done | Lucía |
@@ -92,8 +87,9 @@ Implementar el flujo completo de creación y pago de kits personalizados para ar
 | Versión | Fecha       | Descripción                    | Autor(es)                  |
 |---------|-------------|--------------------------------|----------------------------|
 | 1.0.0   | 25/02/2026  |  Versión inicial               | Lucía Ponce García de Sola |
+| 1.1.0   | 25/02/2026  | Eliminadas HU del CU-ARRENDATARIO-06 | Lucía Ponce García de Sola |
 
 ---
 **Redactado por:** Lucía Ponce García de Sola  
 **Fecha de redacción:** 25/02/2026  
-**Versión:** 1.0.0
+**Versión:** 1.1.0
