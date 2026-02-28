@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -10,22 +10,22 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 
-import { useAuth } from '../../context/AuthContext';
-import { createKit } from '../../services/kitService';
-import BASE_URL from '../../config/api';
-import { RootStackParamList } from '../../types';
-import { Colors, commonStyles, componentStyles } from '../../styles';
-import { createKitStyles } from '../../styles/createKitStyles';
-import KitItemComponent from '../../components/KitItemComponent';
+import { useAuth } from "../../context/AuthContext";
+import { createKit } from "../../services/kitService";
+import BASE_URL from "../../config/api";
+import { RootStackParamList } from "../../types";
+import { Colors, commonStyles, componentStyles } from "../../styles";
+import { createKitStyles } from "../../styles/createKitStyles";
+import KitItemComponent from "../../components/KitItemComponent";
 
-const GUARANTEE_PERCENTAGE = 0.20; // 20% de garantía sobre el precio total del kit
+const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
 
-type CreateKitNav = NativeStackNavigationProp<RootStackParamList, 'CreateKit'>;
+type CreateKitNav = NativeStackNavigationProp<RootStackParamList, "CreateKit">;
 
 type FormErrors = {
   name?: string;
@@ -90,8 +90,8 @@ const toIsoDate = (raw: string): string | null => {
 
   if (!valid) return null;
 
-  const mm = String(month).padStart(2, '0');
-  const dd = String(day).padStart(2, '0');
+  const mm = String(month).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
   return `${year}-${mm}-${dd}`;
 };
 
@@ -100,28 +100,31 @@ function calculateMonthsBetween(start: Date, end: Date): number {
   const years = end.getUTCFullYear() - start.getUTCFullYear();
   const months = end.getUTCMonth() - start.getUTCMonth();
   const days = end.getUTCDate() - start.getUTCDate();
-  
+
   let totalMonths = years * 12 + months;
-  
+
   const daysInMonth = 30;
   const monthFraction = days / daysInMonth;
-  
+
   return totalMonths + monthFraction;
 }
 
-const toUtcDateOnly = (isoDate: string): Date => new Date(`${isoDate}T00:00:00.000Z`);
+const toUtcDateOnly = (isoDate: string): Date =>
+  new Date(`${isoDate}T00:00:00.000Z`);
 
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
   const { user } = useAuth();
 
-  const [name, setName] = useState('');
-  const [country, setCountry] = useState('');
-  const [city, setCity] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [name, setName] = useState("");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>([]);
+  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
+    [],
+  );
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [tempSelectedIds, setTempSelectedIds] = useState<number[]>([]);
 
@@ -130,19 +133,17 @@ const CreateKitScreen: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
-
   const monthsBetween = useMemo(() => {
     const startIso = toIsoDate(startDate);
     const endIso = toIsoDate(endDate);
-    
+
     if (!startIso || !endIso) return null;
-    
+
     const start = toUtcDateOnly(startIso);
     const end = toUtcDateOnly(endIso);
-    
+
     return calculateMonthsBetween(start, end);
   }, [startDate, endDate]);
-
 
   const clearFieldError = (field: keyof FormErrors) => {
     setErrors((prev) => ({ ...prev, [field]: undefined, general: undefined }));
@@ -152,7 +153,7 @@ const CreateKitScreen: React.FC = () => {
     if (!user?.token) {
       setAvailableProducts([]);
       setLoadingCatalog(false);
-      setErrors((prev) => ({ ...prev, general: 'Necesitas iniciar sesión.' }));
+      setErrors((prev) => ({ ...prev, general: "Necesitas iniciar sesión." }));
       return;
     }
 
@@ -160,9 +161,9 @@ const CreateKitScreen: React.FC = () => {
       setLoadingCatalog(true);
 
       const res = await fetch(`${BASE_URL}/api/article/all`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`,
         },
       });
@@ -177,19 +178,22 @@ const CreateKitScreen: React.FC = () => {
       const mapped: CatalogProduct[] = (raw ?? [])
         .map((p: any) => ({
           id: Number(p.id),
-          title: p.title ?? 'Sin título',
+          title: p.title ?? "Sin título",
           pricePerMonth: Number(p.pricePerMonth ?? 0),
-          status: String(p.status ?? 'AVAILABLE'),
-          city: p.city ?? '',
-          ownerName: p.owner?.name ?? '',
+          status: String(p.status ?? "AVAILABLE"),
+          city: p.city ?? "",
+          ownerName: p.owner?.name ?? "",
           imageUrl: p.imageUrl ?? null,
         }))
-        .filter((p: CatalogProduct) => p.status === 'AVAILABLE');
+        .filter((p: CatalogProduct) => p.status === "AVAILABLE");
 
       setAvailableProducts(mapped);
       setErrors((prev) => ({ ...prev, general: undefined }));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo cargar el catálogo.';
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No se pudo cargar el catálogo.";
       setErrors((prev) => ({ ...prev, general: message }));
       setAvailableProducts([]);
     } finally {
@@ -208,7 +212,10 @@ const CreateKitScreen: React.FC = () => {
 
   const totalPrice = useMemo(() => {
     if (monthsBetween === null) return 0;
-    return selectedProducts.reduce((sum, p) => sum + p.pricePerMonth * monthsBetween, 0);
+    return selectedProducts.reduce(
+      (sum, p) => sum + p.pricePerMonth * monthsBetween,
+      0,
+    );
   }, [selectedProducts, monthsBetween]);
 
   const openAddProductModal = async () => {
@@ -218,51 +225,68 @@ const CreateKitScreen: React.FC = () => {
   };
 
   const toggleTempSelection = (id: number) => {
-    setTempSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setTempSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
   };
 
   const confirmSelection = () => {
     setSelectedIds(tempSelectedIds);
-    clearFieldError('items');
+    clearFieldError("items");
     setCatalogModalVisible(false);
   };
 
-  const validate = (): { valid: boolean; payloadDates?: { startIso: string; endIso: string } } => {
+  const validate = (): {
+    valid: boolean;
+    payloadDates?: { startIso: string; endIso: string };
+  } => {
     const nextErrors: FormErrors = {};
 
-    if (!name.trim()) nextErrors.name = 'El nombre del kit es obligatorio.';
-    else if (name.trim().length < 3) nextErrors.name = 'El nombre debe tener al menos 3 caracteres.';
+    if (!name.trim()) nextErrors.name = "El nombre del kit es obligatorio.";
+    else if (name.trim().length < 3)
+      nextErrors.name = "El nombre debe tener al menos 3 caracteres.";
 
-    if (!country.trim()) nextErrors.country = 'El país es obligatorio.';
-    if (!city.trim()) nextErrors.city = 'La ciudad es obligatoria.';
+    if (!country.trim()) nextErrors.country = "El país es obligatorio.";
+    if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
 
     const startIso = toIsoDate(startDate);
     const endIso = toIsoDate(endDate);
 
-    if (!startIso) nextErrors.startDate = 'Fecha inválida. Usa DD/MM/AAAA, MM/DD/YYYY o YYYY-MM-DD.';
-    if (!endIso) nextErrors.endDate = 'Fecha inválida. Usa DD/MM/AAAA, MM/DD/YYYY o YYYY-MM-DD.';
+    if (!startIso)
+      nextErrors.startDate =
+        "Fecha inválida. Usa DD/MM/AAAA, MM/DD/YYYY o YYYY-MM-DD.";
+    if (!endIso)
+      nextErrors.endDate =
+        "Fecha inválida. Usa DD/MM/AAAA, MM/DD/YYYY o YYYY-MM-DD.";
 
     if (startIso && endIso) {
       const start = toUtcDateOnly(startIso);
       const end = toUtcDateOnly(endIso);
       const now = new Date();
-      const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      const today = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+      );
 
-      if (start < today) nextErrors.startDate = 'La fecha inicial no puede ser anterior a hoy.';
-      if (end < start) nextErrors.endDate = 'La fecha final no puede ser anterior a la inicial.';
+      if (start < today)
+        nextErrors.startDate = "La fecha inicial no puede ser anterior a hoy.";
+      if (end < start)
+        nextErrors.endDate =
+          "La fecha final no puede ser anterior a la inicial.";
     }
 
-    if (selectedIds.length === 0) nextErrors.items = 'Debes añadir al menos un producto.';
+    if (selectedIds.length === 0)
+      nextErrors.items = "Debes añadir al menos un producto.";
 
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || !startIso || !endIso) return { valid: false };
+    if (Object.keys(nextErrors).length > 0 || !startIso || !endIso)
+      return { valid: false };
 
     return { valid: true, payloadDates: { startIso, endIso } };
   };
 
   const handleSubmit = async () => {
     if (!user?.id || !user.token) {
-      setErrors({ general: 'Necesitas iniciar sesión para crear un kit.' });
+      setErrors({ general: "Necesitas iniciar sesión para crear un kit." });
       return;
     }
 
@@ -285,11 +309,12 @@ const CreateKitScreen: React.FC = () => {
         user.token,
       );
 
-      Alert.alert('Kit creado', 'Tu kit se ha creado correctamente.', [
-        { text: 'OK', onPress: () => navigation.navigate('Home') },
+      Alert.alert("Kit creado", "Tu kit se ha creado correctamente.", [
+        { text: "OK", onPress: () => navigation.navigate("Home") },
       ]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo crear el kit.';
+      const message =
+        error instanceof Error ? error.message : "No se pudo crear el kit.";
       setErrors((prev) => ({ ...prev, general: message }));
     } finally {
       setSubmitting(false);
@@ -298,12 +323,17 @@ const CreateKitScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
-      <ScrollView contentContainerStyle={createKitStyles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={createKitStyles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={createKitStyles.headerRow}>
           {/* TODO(Equipo): Botón volver atrás pendiente */}
           <View style={componentStyles.iconButton} />
 
-          <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>Crea un Kit</Text>
+          <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
+            Crea un Kit
+          </Text>
 
           <View style={componentStyles.iconButton}>
             <Ionicons name="receipt-outline" size={22} color={Colors.primary} />
@@ -311,65 +341,95 @@ const CreateKitScreen: React.FC = () => {
         </View>
 
         <TextInput
-          style={[commonStyles.input, createKitStyles.inputRounded, errors.name && commonStyles.inputError]}
+          style={[
+            commonStyles.input,
+            createKitStyles.inputRounded,
+            errors.name && commonStyles.inputError,
+          ]}
           placeholder="Nombre Kit"
           value={name}
           onChangeText={(value) => {
             setName(value);
-            clearFieldError('name');
+            clearFieldError("name");
           }}
         />
-        {errors.name ? <Text style={commonStyles.errorText}>{errors.name}</Text> : null}
+        {errors.name ? (
+          <Text style={commonStyles.errorText}>{errors.name}</Text>
+        ) : null}
 
         <View style={createKitStyles.row}>
           <View style={createKitStyles.rowItem}>
             <TextInput
-              style={[commonStyles.input, createKitStyles.inputRounded, errors.country && commonStyles.inputError]}
+              style={[
+                commonStyles.input,
+                createKitStyles.inputRounded,
+                errors.country && commonStyles.inputError,
+              ]}
               placeholder="País"
               value={country}
               onChangeText={(value) => {
                 setCountry(value);
-                clearFieldError('country');
+                clearFieldError("country");
               }}
             />
-            {errors.country ? <Text style={commonStyles.errorText}>{errors.country}</Text> : null}
+            {errors.country ? (
+              <Text style={commonStyles.errorText}>{errors.country}</Text>
+            ) : null}
           </View>
 
           <View style={createKitStyles.rowItem}>
             <TextInput
-              style={[commonStyles.input, createKitStyles.inputRounded, errors.city && commonStyles.inputError]}
+              style={[
+                commonStyles.input,
+                createKitStyles.inputRounded,
+                errors.city && commonStyles.inputError,
+              ]}
               placeholder="Ciudad"
               value={city}
               onChangeText={(value) => {
                 setCity(value);
-                clearFieldError('city');
+                clearFieldError("city");
               }}
             />
-            {errors.city ? <Text style={commonStyles.errorText}>{errors.city}</Text> : null}
+            {errors.city ? (
+              <Text style={commonStyles.errorText}>{errors.city}</Text>
+            ) : null}
           </View>
         </View>
 
         <TextInput
-          style={[commonStyles.input, createKitStyles.dateInput, errors.startDate && commonStyles.inputError]}
+          style={[
+            commonStyles.input,
+            createKitStyles.dateInput,
+            errors.startDate && commonStyles.inputError,
+          ]}
           placeholder="Fecha Inicial del Alquiler (DD/MM/AAAA)"
           value={startDate}
           onChangeText={(value) => {
             setStartDate(value);
-            clearFieldError('startDate');
+            clearFieldError("startDate");
           }}
         />
-        {errors.startDate ? <Text style={commonStyles.errorText}>{errors.startDate}</Text> : null}
+        {errors.startDate ? (
+          <Text style={commonStyles.errorText}>{errors.startDate}</Text>
+        ) : null}
 
         <TextInput
-          style={[commonStyles.input, createKitStyles.dateInput, errors.endDate && commonStyles.inputError]}
+          style={[
+            commonStyles.input,
+            createKitStyles.dateInput,
+            errors.endDate && commonStyles.inputError,
+          ]}
           placeholder="Fecha Final del Alquiler (DD/MM/AAAA)"
           value={endDate}
           onChangeText={(value) => {
             setEndDate(value);
-            clearFieldError('endDate');
+            clearFieldError("endDate");
           }}
         />
-        {errors.endDate ? <Text style={commonStyles.errorText}>{errors.endDate}</Text> : null}
+        {errors.endDate ? (
+          <Text style={commonStyles.errorText}>{errors.endDate}</Text>
+        ) : null}
 
         {/* Duración del alquiler */}
         {monthsBetween !== null && monthsBetween > 0 && (
@@ -381,14 +441,21 @@ const CreateKitScreen: React.FC = () => {
         )}
 
         <View style={createKitStyles.productsHeader}>
-          <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>Tus Productos</Text>
-          <TouchableOpacity style={createKitStyles.addButton} onPress={openAddProductModal}>
+          <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
+            Tus Productos
+          </Text>
+          <TouchableOpacity
+            style={createKitStyles.addButton}
+            onPress={openAddProductModal}
+          >
             <Text style={createKitStyles.addButtonText}>Añadir Producto +</Text>
           </TouchableOpacity>
         </View>
 
         <View style={createKitStyles.counterBadge}>
-          <Text style={createKitStyles.counterBadgeText}>Seleccionados: {selectedIds.length}</Text>
+          <Text style={createKitStyles.counterBadgeText}>
+            Seleccionados: {selectedIds.length}
+          </Text>
         </View>
 
         {/* Lista de items añadidos al kit */}
@@ -402,60 +469,84 @@ const CreateKitScreen: React.FC = () => {
           </Text>
         ) : (
           selectedProducts.map((item) => (
-            <KitItemComponent key={item.id} item={item} duration={monthsBetween ?? 0} />
+            <KitItemComponent
+              key={item.id}
+              item={item}
+              duration={monthsBetween ?? 0}
+            />
           ))
         )}
 
-        {errors.items ? <Text style={commonStyles.errorText}>{errors.items}</Text> : null}
-        {errors.general ? <Text style={commonStyles.errorText}>{errors.general}</Text> : null}
-
-       
+        {errors.items ? (
+          <Text style={commonStyles.errorText}>{errors.items}</Text>
+        ) : null}
+        {errors.general ? (
+          <Text style={commonStyles.errorText}>{errors.general}</Text>
+        ) : null}
       </ScrollView>
 
       <View style={createKitStyles.footerRow}>
         {/* Resumen de precios */}
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Text style={commonStyles.caption}>
-              Subtotal productos
-            </Text>
-            <Text style={commonStyles.caption}>
-              {totalPrice.toFixed(2)}€
-            </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 8,
+            }}
+          >
+            <Text style={commonStyles.caption}>Subtotal productos</Text>
+            <Text style={commonStyles.caption}>{totalPrice.toFixed(2)}€</Text>
           </View>
-          
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-            <Text style={commonStyles.caption}>
-              Garantía (20%)
-            </Text>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
+            <Text style={commonStyles.caption}>Garantía (20%)</Text>
             <Text style={commonStyles.caption}>
               {(totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
             </Text>
           </View>
 
-          <View style={{ 
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderTopWidth: 1, 
-            borderTopColor: Colors.border,
-            paddingTop: 12,
-            marginBottom: 16
-          }}>
-            <Text style={[commonStyles.caption, { color: Colors.primary, fontWeight: '600', fontSize: 16 }]}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderTopWidth: 1,
+              borderTopColor: Colors.border,
+              paddingTop: 12,
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={[
+                commonStyles.caption,
+                { color: Colors.primary, fontWeight: "600", fontSize: 16 },
+              ]}
+            >
               Total a pagar
             </Text>
-            <Text style={[createKitStyles.productTitle, { fontSize: 20, color: Colors.primary }]}>
+            <Text
+              style={[
+                createKitStyles.productTitle,
+                { fontSize: 20, color: Colors.primary },
+              ]}
+            >
               {(totalPrice + totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
             </Text>
           </View>
-          
+
           <TouchableOpacity
             style={[
               commonStyles.primaryButton,
               createKitStyles.submitButton,
               submitting && createKitStyles.submitButtonDisabled,
-              { width: '100%' }
+              { width: "100%" },
             ]}
             onPress={handleSubmit}
             disabled={submitting}
@@ -463,7 +554,12 @@ const CreateKitScreen: React.FC = () => {
             {submitting ? (
               <ActivityIndicator color={Colors.textWhite} />
             ) : (
-              <Text style={[commonStyles.primaryButtonText, createKitStyles.submitButtonText]}>
+              <Text
+                style={[
+                  commonStyles.primaryButtonText,
+                  createKitStyles.submitButtonText,
+                ]}
+              >
                 Realizar Pedido
               </Text>
             )}
@@ -478,41 +574,52 @@ const CreateKitScreen: React.FC = () => {
 
             <ScrollView style={createKitStyles.modalList}>
               {availableProducts.length === 0 ? (
-                <Text style={commonStyles.bodySecondary}>No hay productos disponibles.</Text>
+                <Text style={commonStyles.bodySecondary}>
+                  No hay productos disponibles.
+                </Text>
               ) : (
                 availableProducts.map((p) => {
                   const checked = tempSelectedIds.includes(p.id);
                   return (
                     <Pressable
                       key={p.id}
-                      style={[createKitStyles.modalRow, checked && createKitStyles.modalRowChecked]}
+                      style={[
+                        createKitStyles.modalRow,
+                        checked && createKitStyles.modalRowChecked,
+                      ]}
                       onPress={() => toggleTempSelection(p.id)}
                     >
                       <View style={createKitStyles.productInfo}>
-                        <Text style={createKitStyles.productTitle}>{p.title}</Text>
+                        <Text style={createKitStyles.productTitle}>
+                          {p.title}
+                        </Text>
 
                         {/* TODO(Equipo): Mostrar precio por objeto individual en modal */}
                         <Text style={commonStyles.caption}>
-                          {p.ownerName ? `${p.ownerName} · ` : ''}
-                          {p.city ? `${p.city}` : 'Sin ciudad'}
+                          {p.ownerName ? `${p.ownerName} · ` : ""}
+                          {p.city ? `${p.city}` : "Sin ciudad"}
                         </Text>
                       </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginRight: 8 }}>
-                          <Text style={createKitStyles.productTitle}>
-                            {p.pricePerMonth !== undefined
-                              ? `${p.pricePerMonth.toFixed(2)}€` 
-                              : 'N/A'}
-                          </Text>
-                          <Text style={commonStyles.bodySecondary}>
-                            / mes
-                          </Text>
-                        </View>
-                        <Ionicons
-                          name={checked ? 'checkmark-circle' : 'ellipse-outline'}
-                          size={22}
-                          color={checked ? Colors.success : Colors.primary}
-                        />
-                      
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 5,
+                          marginRight: 8,
+                        }}
+                      >
+                        <Text style={createKitStyles.productTitle}>
+                          {p.pricePerMonth !== undefined
+                            ? `${p.pricePerMonth.toFixed(2)}€`
+                            : "N/A"}
+                        </Text>
+                        <Text style={commonStyles.bodySecondary}>/ mes</Text>
+                      </View>
+                      <Ionicons
+                        name={checked ? "checkmark-circle" : "ellipse-outline"}
+                        size={22}
+                        color={checked ? Colors.success : Colors.primary}
+                      />
                     </Pressable>
                   );
                 })
