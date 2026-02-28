@@ -3,12 +3,10 @@ spring:
     name: demo
   
   datasource:
-    # 'postgres' matches the service name in your docker-compose.yml
     url: ${DB_URL:jdbc:postgresql://postgres:5432/appdb}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    username: ${DB_USERNAME:sa} 
+    password: ${DB_PASSWORD:}    
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       # 'update' automatically creates/updates tables based on your Java entities
