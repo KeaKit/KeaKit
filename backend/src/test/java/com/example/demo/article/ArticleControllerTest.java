@@ -1,0 +1,225 @@
+package com.example.demo.article;
+
+import com.example.demo.controller.ArticleController;
+import com.example.demo.model.Article;
+import com.example.demo.model.ArticleStatus;
+import com.example.demo.model.User;
+import com.example.demo.security.JwtUtil;
+import com.example.demo.service.ArticleService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(controllers = ArticleController.class, excludeAutoConfiguration = {
+        SecurityAutoConfiguration.class,
+        SecurityFilterAutoConfiguration.class
+    })
+class ArticleControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private ArticleService articleService;
+
+    @MockitoBean
+    private com.example.demo.repository.UserRepository userRepository;
+
+    @MockitoBean
+    private com.example.demo.security.CustomUserDetailsService customUserDetailsService;
+
+    @MockitoBean
+    private com.example.demo.security.TokenBlacklistService tokenBlacklistService;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    private Article sample;
+    private User owner;
+
+    @BeforeEach
+    void setUp() {
+        owner = new User();
+        owner.setId(1L);
+        owner.setName("Test Owner");
+
+        sample = new Article();
+        sample.setId(1L);
+        sample.setTitle("t");
+        sample.setDescription("d");
+        sample.setCity("c");
+        sample.setPricePerMonth(10.0);
+        sample.setStatus(ArticleStatus.AVAILABLE);
+        sample.setAvailableFrom(LocalDate.now());
+        sample.setAvailableUntil(LocalDate.now().plusDays(1));
+    }
+
+    // ------------ POST /api/article/upload ------------
+
+    @Test
+    void uploadArticle_success() throws Exception {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(articleService.save(any(Article.class))).thenReturn(sample);
+
+        mockMvc.perform(post("/api/article/upload")
+                .param("ownerId", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"t\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.title").value("t"));
+    }
+
+    @Test
+    void uploadArticle_ownerNotFound_returnsBadRequest() throws Exception {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/article/upload")
+                .param("ownerId", "99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"t\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Owner not found"));
+    }
+
+    @Test
+    void uploadArticle_serviceThrows_returnsBadRequest() throws Exception {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(articleService.save(any(Article.class))).thenThrow(new RuntimeException("Title is required"));
+
+        mockMvc.perform(post("/api/article/upload")
+                .param("ownerId", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Title is required"));
+    }
+
+    // ------------ GET /api/article/all ------------
+
+    @Test
+    void getAllArticles_success() throws Exception {
+        Article art = new Article();
+        art.setId(2L);
+        art.setTitle("second");
+        art.setStatus(ArticleStatus.RENTED);
+
+        when(articleService.findAll()).thenReturn(List.of(sample, art));
+        mockMvc.perform(get("/api/article/all"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].title").value("t"))
+            .andExpect(jsonPath("$[1].title").value("second"));
+    }
+
+    @Test
+    void getAllArticles_emptyList_returnsOk() throws Exception {
+        when(articleService.findAll()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/article/all"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void getAllArticles_serviceThrows_returnsInternalServerError() throws Exception {
+        when(articleService.findAll()).thenThrow(new RuntimeException("DB error"));
+
+        mockMvc.perform(get("/api/article/all"))
+            .andExpect(status().isInternalServerError())
+            .andExpect(content().string("DB error"));
+    }
+
+    // ------------ PUT /api/article/{id} ------------
+
+    @Test
+    void updateArticle_success() throws Exception {
+        Article returned = new Article();
+        returned.setId(1L);
+        returned.setTitle("newtitle");
+
+        when(articleService.update(eq(1L), eq(100L), any(Article.class)))
+            .thenReturn(returned);
+
+        mockMvc.perform(put("/api/article/1")
+                .param("ownerId", "100")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"newtitle\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("newtitle"));
+    }
+
+    @Test
+    void updateArticle_failureReturnsBadRequest() throws Exception {
+        when(articleService.update(eq(1L), eq(100L), any(Article.class)))
+            .thenThrow(new RuntimeException("bad"));
+
+        mockMvc.perform(put("/api/article/1")
+                .param("ownerId", "100")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"x\"}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("bad"));
+    }
+
+    // ------------ DELETE /api/article/{id} ------------
+
+    @Test
+    void deleteArticle_success() throws Exception {
+        mockMvc.perform(delete("/api/article/2")
+                .param("ownerId", "200"))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteArticle_failureReturnsBadRequest() throws Exception {
+        // Si deleteById es void, usa esta sintaxis:
+        doThrow(new RuntimeException("oops"))
+            .when(articleService).deleteById(3L, 300L);
+
+        mockMvc.perform(delete("/api/article/3")
+                .param("ownerId", "300"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("oops"));
+    }
+
+    // ------------ POST /api/article/{id}/toggle-rent ------------
+
+    @Test
+    void toggleRent_success() throws Exception {
+        Article toggled = new Article();
+        toggled.setId(5L);
+        toggled.setStatus(ArticleStatus.RENTED);
+        when(articleService.toggleRent(5L, 500L)).thenReturn(toggled);
+
+        mockMvc.perform(post("/api/article/5/toggle-rent")
+                .param("ownerId", "500"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("RENTED"));
+    }
+
+    @Test
+    void toggleRent_failure() throws Exception {
+        when(articleService.toggleRent(6L, 600L)).thenThrow(new RuntimeException("nope"));
+        mockMvc.perform(post("/api/article/6/toggle-rent")
+                .param("ownerId", "600"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("nope"));
+    }
+}
