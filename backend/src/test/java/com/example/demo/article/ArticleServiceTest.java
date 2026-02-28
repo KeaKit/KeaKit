@@ -14,6 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,6 +59,197 @@ class ArticleServiceTest {
         return a;
     }
 
+    // ------------ GET findAll -------------
+    // ─────────────────────────────────────────────
+
+    @Test
+    void findAll_returnsAllArticles() {
+        List<Article> articles = List.of(makeArticle(1L, ArticleStatus.AVAILABLE), makeArticle(2L, ArticleStatus.RENTED));
+        when(articleRepository.findAll()).thenReturn(articles);
+
+        List<Article> result = articleService.findAll();
+
+        assertThat(result).hasSize(2);
+        verify(articleRepository).findAll();
+    }
+
+    // ------------ GET findById ------------
+
+    @Test
+    void findById_found() {
+        Article a = makeArticle(1L, ArticleStatus.AVAILABLE);
+        when(articleRepository.findById(1L)).thenReturn(Optional.of(a));
+
+        Article result = articleService.findById(1L);
+
+        assertThat(result.getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void findById_notFound_throws() {
+        when(articleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.findById(99L));
+        assertThat(ex.getMessage()).contains("Article not found");
+    }
+
+    // ------------ SAVE /api/article/upload ------------
+
+    @Test
+    void save_successful() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+
+        Article result = articleService.save(a);
+
+        assertThat(result.getTitle()).isEqualTo("title");
+        verify(articleRepository).save(a);
+    }
+
+    @Test
+    void save_nullArticle_throws() {
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(null));
+        assertThat(ex.getMessage()).contains("Article payload is required");
+    }
+
+    @Test
+    void save_nullTitle_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setTitle(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("Title is required");
+    }
+
+    @Test
+    void save_blankTitle_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setTitle("   ");
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("Title is required");
+    }
+
+    @Test
+    void save_nullDescription_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setDescription(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("Description is required");
+    }
+
+    @Test
+    void save_blankDescription_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setDescription("  ");
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("Description is required");
+    }
+
+    @Test
+    void save_nullCity_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setCity(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("City is required");
+    }
+
+    @Test
+    void save_blankCity_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setCity(" ");
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("City is required");
+    }
+
+    @Test
+    void save_nullPricePerMonth_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setPricePerMonth(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("pricePerMonth must be >= 0");
+    }
+
+    @Test
+    void save_negativePricePerMonth_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setPricePerMonth(-1.0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("pricePerMonth must be >= 0");
+    }
+
+    @Test
+    void save_zeroPricePerMonth_succeeds() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setPricePerMonth(0.0);
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+
+        Article result = articleService.save(a);
+        assertThat(result.getPricePerMonth()).isEqualTo(0.0);
+    }
+
+    @Test
+    void save_availableFromAfterUntil_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setAvailableFrom(LocalDate.now().plusDays(5));
+        a.setAvailableUntil(LocalDate.now());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("availableFrom must be before or equal to availableUntil");
+    }
+
+    @Test
+    void save_availableFromEqualsUntil_succeeds() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        LocalDate today = LocalDate.now();
+        a.setAvailableFrom(today);
+        a.setAvailableUntil(today);
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+
+        Article result = articleService.save(a);
+        assertThat(result).isNotNull();
+    }
+
+    @Test
+    void save_nullOwner_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        a.setOwner(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("Owner (with valid id) is required");
+    }
+
+    @Test
+    void save_ownerWithNullId_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        User noIdOwner = new User();
+        noIdOwner.setId(null);
+        a.setOwner(noIdOwner);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("Owner (with valid id) is required");
+    }
+
+    @Test
+    void save_ownerNotFoundInDb_throws() {
+        Article a = makeArticle(null, ArticleStatus.AVAILABLE);
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(a));
+        assertThat(ex.getMessage()).contains("Owner not found");
+    }
+
+    // ------------ UPDATE /api/article/{id} ------------
+
     @Test
     void update_successful() {
         Article existing = makeArticle(2L, ArticleStatus.AVAILABLE);
@@ -72,6 +265,32 @@ class ArticleServiceTest {
         assertThat(result.getTitle()).isEqualTo("new");
         assertThat(result.getDescription()).isEqualTo("newdesc");
         verify(articleRepository).save(existing);
+    }
+
+    @Test
+    void update_allOptionalFields() {
+        Article existing = makeArticle(2L, ArticleStatus.AVAILABLE);
+        when(articleRepository.findById(2L)).thenReturn(Optional.of(existing));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+
+        Article update = new Article();
+        update.setTitle("t2");
+        update.setDescription("d2");
+        update.setCity("c2");
+        update.setPricePerMonth(200.0);
+        update.setAvailableFrom(LocalDate.now());
+        update.setAvailableUntil(LocalDate.now().plusDays(10));
+        update.setCategory("tools");
+        update.setImageUrl("http://img.com");
+        update.setPurchaseDate(LocalDate.of(2023, 1, 1));
+
+        Article result = articleService.update(2L, owner.getId(), update);
+
+        assertThat(result.getTitle()).isEqualTo("t2");
+        assertThat(result.getDescription()).isEqualTo("d2");
+        assertThat(result.getCity()).isEqualTo("c2");
+        assertThat(result.getPricePerMonth()).isEqualTo(200.0);
+        assertThat(result.getImageUrl()).isEqualTo("http://img.com");
     }
 
     @Test
@@ -114,6 +333,8 @@ class ArticleServiceTest {
         assertThat(ex.getMessage()).contains("Cannot change status");
     }
 
+    // ------------ DELETE /api/article/{id} ------------
+
     @Test
     void delete_successful() {
         Article a = makeArticle(7L, ArticleStatus.AVAILABLE);
@@ -152,6 +373,8 @@ class ArticleServiceTest {
             () -> articleService.deleteById(10L, owner.getId()));
         assertThat(ex.getMessage()).contains("Only the owner");
     }
+
+    // ------------ toggleRent ------------
 
     @Test
     void toggleRent_availableToRented() {
@@ -192,5 +415,13 @@ class ArticleServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> articleService.toggleRent(14L, owner.getId()));
         assertThat(ex.getMessage()).contains("Only the owner");
+    }
+
+    @Test
+    void toggleRent_notFound_throws() {
+        when(articleRepository.findById(99L)).thenReturn(Optional.empty());
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> articleService.toggleRent(99L, owner.getId()));
+        assertThat(ex.getMessage()).contains("Article not found");
     }
 }
