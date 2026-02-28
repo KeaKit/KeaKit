@@ -10,6 +10,7 @@ import HomeScreen from '../screens/home/HomeScreen';
 import CreateKitScreen from '../screens/kit/CreateKitScreen';
 import CreateRatingScreen from '../screens/ratings/CreateRatingScreen';
 import UserRatingsScreen from '../screens/ratings/UserRatingsScreen';
+
 import { RootStackParamList } from '../types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -37,6 +38,7 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen name="CreateKit" component={CreateKitScreen} />
         <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
         <Stack.Screen name="UserRatings" component={UserRatingsScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -23,6 +23,27 @@ export interface AuthUser {
   token: string;
 }
 
+export interface RatingCreateRequest {
+  revieweeId: number;
+  kitId: number;
+  score: number;
+  comment?: string;
+}
+
+export interface RatingResponse {
+  id: number;
+  reviewerId: number;
+  reviewerName: string;
+  revieweeId: number;
+  revieweeName: string;
+  kitId: number;
+  kitName: string;
+  score: number;
+  comment: string;
+  type: string;
+  createdAt: string;
+}
+
 export interface UserArticle {
   id: number;
   title: string;
@@ -51,6 +72,7 @@ export interface KitResponse {
   endDate: string;
   tenantId: number;
   itemIds: number[];
+
 }
 
 export interface RatingCreateRequest {
