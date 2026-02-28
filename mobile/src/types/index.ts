@@ -105,6 +105,19 @@ export interface Article {
   rentedUntil: string | null;
 }
 
+export interface ArticlePayload {
+  title: string;           
+  description: string;     
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;   
+  availableUntil: string; 
+  category: string;
+  status?: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
+  imageUrl?: string;
+  purchaseDate?: string;   
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -115,4 +128,5 @@ export type RootStackParamList = {
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
   MyArticles: undefined;
+  UploadArticle: undefined;
 };
