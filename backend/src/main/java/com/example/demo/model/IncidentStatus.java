@@ -1,6 +1,6 @@
 package com.example.demo.model;
 
-public enum IssueStatus {
+public enum IncidentStatus {
     OPEN,          
     IN_PROGRESS,   
     RESOLVED       

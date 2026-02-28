@@ -1,6 +1,6 @@
 package com.example.demo.model;
 
-public enum IssueType {
+public enum IncidentType {
     GENERAL,       
     DAMAGED_ITEM   //Arrendatario
 }
