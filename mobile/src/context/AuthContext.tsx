@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       id:    response.id,
       name:  response.name,
       email: response.email,
+      role: response.role,
       token: response.token,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
@@ -58,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       id:    response.id,
       name:  response.name,
       email: response.email,
+      role: response.role,
       token: response.token,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));

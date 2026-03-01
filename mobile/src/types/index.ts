@@ -13,6 +13,10 @@ export interface UserResponse {
   id: number;
   name: string;
   email: string;
+  role: 'ADMIN' | 'USER';
+  address?: string;
+  phone?: string;
+  city?: string;
   token?: string;
 }
 
@@ -20,6 +24,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  role: 'ADMIN' | 'USER';
   token: string;
 }
 
@@ -129,4 +134,5 @@ export type RootStackParamList = {
   UserRatings: { userId: number; userName: string };
   MyArticles: undefined;
   UploadArticle: undefined;
+  AdminUsers: undefined;
 };

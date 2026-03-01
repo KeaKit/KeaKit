@@ -12,6 +12,8 @@ import UploadArticleScreen  from '../screens/profile/UploadArticleScreen';
 import CreateRatingScreen   from '../screens/ratings/CreateRatingScreen';
 import UserRatingsScreen    from '../screens/ratings/UserRatingsScreen';
 import CreateKitScreen      from '../screens/kit/CreateKitScreen';
+import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
+import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
 
 import { RootStackParamList } from '../types';
 
@@ -39,6 +41,8 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
             <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
             <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
+            <Stack.Screen name="AdminUsers"    component={AdminUsersScreen} />
+            <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
           </>
         ) : (
           <>

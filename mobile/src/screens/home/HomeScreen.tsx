@@ -174,6 +174,21 @@ const HomeScreen: React.FC = () => {
                   <Text style={componentStyles.menuItemText}>Mis Artículos</Text>
                 </TouchableOpacity>
 
+                {user?.role === 'ADMIN' && (
+                  <TouchableOpacity
+                    style={componentStyles.menuItem}
+                    onPress={() => {
+                      setShowProfileMenu(false);
+                      navigation.navigate('AdminUsers');
+                    }}
+                  >
+                    <Ionicons name="people" size={24} color={Colors.primary} />
+                    <Text style={componentStyles.menuItemText}>
+                      Gestión de usuarios
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
                   style={componentStyles.menuItem}
                   onPress={handleLogout}
