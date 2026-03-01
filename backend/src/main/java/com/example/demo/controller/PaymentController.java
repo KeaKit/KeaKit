@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.stripe.Stripe;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -14,13 +15,12 @@ public class PaymentController {
 
     private final String stripeSecretKey;
 
-    public PaymentController() {
-        // Usar System.getenv() para leer la variable de entorno exportada
-        stripeSecretKey = System.getenv("STRIPE_SECRET_KEY");
-        if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
+    public PaymentController(@Value("${STRIPE_SECRET_KEY:}") String stripeSecretKey) {
+        this.stripeSecretKey = stripeSecretKey;
+        if (this.stripeSecretKey == null || this.stripeSecretKey.isEmpty()) {
             throw new IllegalStateException("La variable de entorno STRIPE_SECRET_KEY no está definida");
         }
-        Stripe.apiKey = stripeSecretKey;
+        Stripe.apiKey = this.stripeSecretKey;
     }
 
     @PostMapping("/create-payment-intent")
