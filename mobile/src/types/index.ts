@@ -63,17 +63,6 @@ export interface KitCreateRequest {
   itemIds: number[];
 }
 
-export interface KitResponse {
-  id: number;
-  name: string;
-  country: string;
-  city: string;
-  startDate: string;
-  endDate: string;
-  tenantId: number;
-  itemIds: number[];
-
-}
 
 export interface RatingCreateRequest {
   revieweeId: number;
@@ -118,6 +107,34 @@ export interface ArticlePayload {
   purchaseDate?: string;   
 }
 
+export interface Item {
+  id: number;
+  title: string;
+  description: string;
+  pricePerMonth: number;
+  category: string;
+}
+
+export enum KitStatus {
+  ACTIVE = 'ACTIVE',
+  FINISHED = 'FINISHED',
+  UPCOMING = 'UPCOMING',
+}
+
+export interface KitResponse {
+  id: number;
+  name: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  status: KitStatus; 
+  tenantId: number;
+  items: Item[];     
+  totalPrice: number;
+}
+
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -128,5 +145,7 @@ export type RootStackParamList = {
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
   MyArticles: undefined;
+  MyKits: undefined;
+  KitDetail: { kitId: number };
   UploadArticle: undefined;
 };

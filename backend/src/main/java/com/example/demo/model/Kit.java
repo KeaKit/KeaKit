@@ -120,5 +120,15 @@ public class Kit {
     public void setItems(List<Item> items) {
         this.items = items;
     }
+
+    @Transient
+        public Double getTotalPrice() {
+            if (this.items == null || this.items.isEmpty()) {
+                return 0.0;
+            }
+            return this.items.stream()
+                    .mapToDouble(item -> item.getPricePerMonth() != null ? item.getPricePerMonth() : 0.0)
+                    .sum();
+        }
     
 } 
