@@ -118,6 +118,16 @@ export interface ArticlePayload {
   purchaseDate?: string;   
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  description: string;
+  status: 'ACTIVE' | 'DRAFT';
+  minPrice: number;
+  maxPrice: number;
+  articleCount: number; 
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -129,4 +139,6 @@ export type RootStackParamList = {
   UserRatings: { userId: number; userName: string };
   MyArticles: undefined;
   UploadArticle: undefined;
+  Categories: undefined;
+  CategoryForm: { category?: Category , mode: 'view' | 'edit' | 'create' };
 };

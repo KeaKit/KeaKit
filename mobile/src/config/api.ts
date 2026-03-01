@@ -13,6 +13,8 @@ export const API_ROUTES = {
   MY_ARTICLES: (userId: number) => `${BASE_URL}/api/article/my-articles/${userId}`,
   UPLOAD_ARTICLE: (ownerId: number) => `${BASE_URL}/api/article/upload?ownerId=${ownerId}`,
   TOGGLE_RENT:    (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/toggle-rent?ownerId=${ownerId}`,
+  CATEGORIES: `${BASE_URL}/api/category`,
+  CATEGORY_BY_ID: (id: number) => `${BASE_URL}/api/category/${id}`,
 } as const;
 
 export default BASE_URL;

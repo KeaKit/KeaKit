@@ -281,7 +281,7 @@ class ArticleServiceTest {
         update.setPricePerMonth(200.0);
         update.setAvailableFrom(LocalDate.now());
         update.setAvailableUntil(LocalDate.now().plusDays(10));
-        update.setCategory("tools");
+   //     update.setCategory("tools");
         update.setImageUrl("http://img.com");
         update.setPurchaseDate(LocalDate.of(2023, 1, 1));
 

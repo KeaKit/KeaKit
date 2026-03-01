@@ -176,6 +176,17 @@ const HomeScreen: React.FC = () => {
 
                 <TouchableOpacity
                   style={componentStyles.menuItem}
+                  onPress={() => {
+                    setShowProfileMenu(false);
+                    navigation.navigate('Categories');
+                  }}
+                >
+                  <Ionicons name="reader" size={24} color={Colors.primary} />
+                  <Text style={componentStyles.menuItemText}>Categorías</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={componentStyles.menuItem}
                   onPress={handleLogout}
                 >
                   <Ionicons name="log-out" size={24} color={Colors.error} />
