@@ -9,6 +9,21 @@ export const API_ROUTES = {
   GET_RATINGS_BY_USER:   (userId: number) => `${BASE_URL}/api/ratings/given/${userId}`,
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
+
+  // Incidents
+  CREATE_INCIDENT:            `${BASE_URL}/api/incidents`,
+  GET_ALL_INCIDENTS:          `${BASE_URL}/api/incidents`,
+  GET_INCIDENTS_BY_USER:      (userId: number) => `${BASE_URL}/api/incidents/user/${userId}`,
+  GET_RECEIVED_INCIDENTS:     (ownerId: number) => `${BASE_URL}/api/incidents/received/${ownerId}`,
+  GET_INCIDENT:               (id: number) => `${BASE_URL}/api/incidents/${id}`,
+  UPDATE_INCIDENT:            (id: number) => `${BASE_URL}/api/incidents/${id}`,
+  RESOLVE_INCIDENT:           (id: number) => `${BASE_URL}/api/incidents/${id}/resolve`,
+  DELETE_INCIDENT:            (id: number) => `${BASE_URL}/api/incidents/${id}`,
+  GET_INCIDENT_COMMENTS:      (incidentId: number) => `${BASE_URL}/api/incidents/${incidentId}/comments`,
+  ADD_INCIDENT_COMMENT:       (incidentId: number) => `${BASE_URL}/api/incidents/${incidentId}/comments`,
+
+  // Kits / Rented items
+  GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
 } as const;
 
 export default BASE_URL;

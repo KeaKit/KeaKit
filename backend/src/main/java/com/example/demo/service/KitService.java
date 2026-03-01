@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
+import com.example.demo.dto.RentedItemResponse;
 import com.example.demo.model.Item;
 import com.example.demo.model.Kit;
 import com.example.demo.model.User;
@@ -12,6 +13,7 @@ import com.example.demo.repository.ItemRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -92,6 +94,21 @@ public class KitService {
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
             throw new RuntimeException("End date cannot be before start date");
         }
+    }
+
+    public List<Kit> findActiveKitsByTenant(Long tenantId) {
+        return kitRepository.findByTenantIdAndEndDateGreaterThanEqual(tenantId, LocalDate.now());
+    }
+
+    public List<RentedItemResponse> findRentedItemsByTenant(Long tenantId) {
+        List<Kit> activeKits = findActiveKitsByTenant(tenantId);
+        List<RentedItemResponse> result = new ArrayList<>();
+        for (Kit kit : activeKits) {
+            for (Item item : kit.getItems()) {
+                result.add(new RentedItemResponse(item, kit));
+            }
+        }
+        return result;
     }
 }
 

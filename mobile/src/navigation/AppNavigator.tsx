@@ -9,6 +9,9 @@ import RegisterScreen    from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/home/HomeScreen';
 import CreateRatingScreen from '../screens/ratings/CreateRatingScreen';
 import UserRatingsScreen from '../screens/ratings/UserRatingsScreen';
+import MyIncidentsScreen from '../screens/incidents/MyIncidentsScreen';
+import CreateIncidentScreen from '../screens/incidents/CreateIncidentScreen';
+import IncidentDetailScreen from '../screens/incidents/IncidentDetailScreen';
 import { RootStackParamList } from '../types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -35,6 +38,9 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
         <Stack.Screen name="UserRatings" component={UserRatingsScreen} />
+        <Stack.Screen name="MyIncidents" component={MyIncidentsScreen} />
+        <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
+        <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

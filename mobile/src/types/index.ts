@@ -44,6 +44,66 @@ export interface RatingResponse {
   createdAt: string;
 }
 
+// === Incidents ===
+
+export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
+export type IncidentStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+
+export interface IncidentResponse {
+  id: number;
+  title: string;
+  description: string;
+  type: IncidentType;
+  status: IncidentStatus;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  relatedItem: {
+    id: number;
+    title: string;
+    owner: {
+      id: number;
+      name: string;
+    };
+  } | null;
+}
+
+export interface IncidentCreateRequest {
+  title: string;
+  description: string;
+  type: IncidentType;
+  user: { id: number };
+  relatedItem?: { id: number } | null;
+}
+
+export interface IncidentCommentResponse {
+  id: number;
+  text: string;
+  createdAt: string;
+  author: {
+    id: number;
+    name: string;
+  };
+}
+
+export interface IncidentCommentCreateRequest {
+  text: string;
+  author: { id: number };
+}
+
+export interface RentedItemResponse {
+  itemId: number;
+  itemTitle: string;
+  ownerName: string;
+  ownerId: number;
+  kitId: number;
+  kitName: string;
+  startDate: string;
+  endDate: string;
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -51,4 +111,7 @@ export type RootStackParamList = {
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
+  MyIncidents: undefined;
+  CreateIncident: undefined;
+  IncidentDetail: { incidentId: number; isReceived: boolean };
 };

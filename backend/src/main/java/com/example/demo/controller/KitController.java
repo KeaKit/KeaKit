@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
+import com.example.demo.dto.RentedItemResponse;
 import com.example.demo.model.Kit;
 import com.example.demo.service.KitService;
 
@@ -81,6 +82,16 @@ public class KitController {
             return ResponseEntity.ok("Kit deleted successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/rented/{userId}")
+    public ResponseEntity<?> getRentedKitsByUser(@PathVariable Long userId) {
+        try {
+            List<RentedItemResponse> response = kitService.findRentedItemsByTenant(userId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
