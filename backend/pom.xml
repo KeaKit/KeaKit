@@ -107,6 +107,13 @@
 			<version>24.0.0</version>
 		</dependency>
 
+		<!-- SendGrid (correo transaccional) -->
+		<dependency>
+			<groupId>com.sendgrid</groupId>
+			<artifactId>sendgrid-java</artifactId>
+			<version>4.10.3</version>
+		</dependency>
+
 		<!-- Devtools -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

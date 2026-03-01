@@ -21,3 +21,7 @@ spring:
 jwt:
   secret: KeaKitSecureSecretKey12345678901234567890ABCDEFGHIJKLMNOP
   expiration: 86400000
+
+sendgrid:
+  api-key: ${SENDGRID_API_KEY:}
+  from-email: ${SENDGRID_FROM_EMAIL:no-reply@keakit.app}
