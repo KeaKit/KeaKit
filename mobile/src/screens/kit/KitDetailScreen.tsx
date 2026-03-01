@@ -65,10 +65,6 @@ const KitDetailScreen: React.FC = () => {
               
               const response = await fetch(`http://localhost:8080/api/kits/confirm/${kitId}`, {
                 method: 'PATCH',
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${user?.token}`,
-                },
               });
 
               if (response.ok) {
@@ -78,7 +74,6 @@ const KitDetailScreen: React.FC = () => {
                 throw new Error("Error en el servidor");
               }
             } catch (error) {
-              console.log("Éxito", "El kit ha sido confirmado correctamente.")
               Alert.alert("Aviso", "No se pudo procesar la confirmación en el servidor real.");
             } finally {
               setConfirming(false);
