@@ -13,6 +13,10 @@ export interface UserResponse {
   id: number;
   name: string;
   email: string;
+  role: 'ADMIN' | 'USER';
+  address?: string;
+  phone?: string;
+  city?: string;
   token?: string;
 }
 
@@ -20,6 +24,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  role: 'ADMIN' | 'USER';
   token: string;
 }
 
@@ -178,6 +183,8 @@ export type RootStackParamList = {
   MyKits: undefined;
   KitDetail: { kitId: number };
   UploadArticle: undefined;
+  AdminUsers: undefined;
+  AdminUserForm: { userId?: number };
   EditArticle: { article: Article };
   Categories: undefined;
   CategoryForm: { category?: Category , mode: 'view' | 'edit' | 'create' };
