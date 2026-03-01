@@ -1,6 +1,6 @@
 import { API_ROUTES } from '../config/api';
 // Asegúrate de tener la interfaz Category exportada en tu archivo types
-import { Category } from '../types';
+import { Article, Category } from '../types';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 const REQUEST_TIMEOUT_MS = 12000;
@@ -106,4 +106,21 @@ export async function deleteCategory(id: number, token: string): Promise<string>
   });
 
   return handleResponse<string>(res);
+}
+
+export async function fetchArticleCountByCategory(categoryId: number, token: string): Promise<number> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_NUMBER_OF_ARTICLES_BY_CATEGORY(categoryId), {
+    method: 'GET',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<number>(res);
+}
+
+
+export async function fetchLatestArticlesByCategory(categoryId: number, token: string): Promise<Article[]> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_LATEST_ARTICLES_BY_CATEGORY(categoryId), {
+    method: 'GET',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<Article[]>(res);
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   TextInput, ScrollView, Alert, ActivityIndicator,
@@ -8,18 +8,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { Category, RootStackParamList } from '../../types';
+// AÑADIDO: Importamos UserArticle
+import { Category, UserArticle, RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
-import { createCategory, updateCategory } from '../../services/categoryService';
+
+// AÑADIDO: Importamos las nuevas funciones del servicio
+import { 
+  createCategory, 
+  updateCategory,
+  fetchArticleCountByCategory,
+  fetchLatestArticlesByCategory 
+} from '../../services/categoryService';
+
 import { Colors, Spacing, commonStyles, FontSizes, FontWeights, BorderRadius } from '../../styles';
 
 type CategoryFormNav = NativeStackNavigationProp<RootStackParamList, 'CategoryForm'>;
 type CategoryFormRoute = RouteProp<RootStackParamList, 'CategoryForm'>;
-
-const MOCK_ARTICLES = [
-  { id: '1', title: 'Monitor 24"', badge: 'Nuevo', image: 'https://via.placeholder.com/150' },
-  { id: '2', title: 'Teclado Mecánico', badge: 'Nuevo', image: 'https://via.placeholder.com/150' },
-];
 
 const CategoryFormScreen: React.FC = () => {
   const navigation = useNavigation<CategoryFormNav>();
@@ -29,7 +33,6 @@ const CategoryFormScreen: React.FC = () => {
 
   const categoryToEdit = route.params?.category;
   
-  // NUEVO: Estado para controlar el modo de la pantalla
   const initialMode = route.params?.mode || 'create';
   const [formMode, setFormMode] = useState<'view' | 'edit' | 'create'>(initialMode);
 
@@ -40,7 +43,32 @@ const CategoryFormScreen: React.FC = () => {
   const [maxPrice, setMaxPrice] = useState(categoryToEdit?.maxPrice?.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Título dinámico para el Header
+  const [articleCount, setArticleCount] = useState<number>(categoryToEdit?.articleCount || 0);
+  const [latestArticles, setLatestArticles] = useState<UserArticle[]>([]);
+  const [isLoadingExtra, setIsLoadingExtra] = useState(false);
+
+  useEffect(() => {
+    if (categoryToEdit?.id) {
+      loadExtraData(categoryToEdit.id);
+    }
+  }, [categoryToEdit?.id]);
+
+  const loadExtraData = async (categoryId: number) => {
+    setIsLoadingExtra(true);
+    try {
+      const [count, articles] = await Promise.all([
+        fetchArticleCountByCategory(categoryId, token),
+        fetchLatestArticlesByCategory(categoryId, token)
+      ]);
+      setArticleCount(count);
+      setLatestArticles(articles);
+    } catch (error) {
+      console.warn('No se pudieron cargar los detalles extra', error);
+    } finally {
+      setIsLoadingExtra(false);
+    }
+  };
+
   const getHeaderTitle = () => {
     if (formMode === 'view') return 'Detalles de categoría';
     if (formMode === 'edit') return 'Editar categoría';
@@ -84,26 +112,31 @@ const CategoryFormScreen: React.FC = () => {
   };
 
   const toggleStatus = () => {
-    if (formMode === 'view') return; // Bloquear toggle si es solo vista
+    if (formMode === 'view') return;
     setStatus(prev => prev === 'ACTIVE' ? 'DRAFT' : 'ACTIVE');
   };
 
-  const renderArticle = ({ item }: { item: typeof MOCK_ARTICLES[0] }) => (
+  // NUEVO: Renderizado adaptado a los datos reales de 'UserArticle'
+  const renderArticle = ({ item }: { item: UserArticle }) => (
     <View style={styles.articleCard}>
-      <Image source={{ uri: item.image }} style={styles.articleImage} />
-      <View style={styles.articleInfo}>
-        <View>
-          <Text style={styles.articleTitle}>{item.title}</Text>
-          <Text style={styles.articleBadge}>{item.badge}</Text>
+      {item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
+      ) : (
+        <View style={[styles.articleImage, styles.imagePlaceholder]}>
+          <Ionicons name="image-outline" size={24} color={Colors.textLight} />
         </View>
-        <TouchableOpacity style={styles.addIconSmall}>
-          <Ionicons name="add" size={16} color={Colors.textPrimary} />
-        </TouchableOpacity>
+      )}
+      <View style={styles.articleInfo}>
+        <View style={{ flex: 1, paddingRight: Spacing.xs }}>
+          <Text style={styles.articleTitle} numberOfLines={1}>{item.title}</Text>
+          <Text style={styles.articleBadge}>
+             {item.status === 'AVAILABLE' ? 'Disponible' : item.status === 'RENTED' ? 'Alquilado' : 'Inactivo'}
+          </Text>
+        </View>
       </View>
     </View>
   );
 
-  // Booleano para saber si se puede editar o no (false en modo 'view')
   const isEditable = formMode !== 'view';
 
   return (
@@ -112,7 +145,6 @@ const CategoryFormScreen: React.FC = () => {
         <TouchableOpacity style={{ padding: Spacing.sm }} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={28} color={Colors.primary} />
         </TouchableOpacity>
-        {/* Título dinámico */}
         <Text style={commonStyles.headerTitle}>{getHeaderTitle()}</Text>
         <View style={{ width: 40 }} />
       </View>
@@ -120,7 +152,6 @@ const CategoryFormScreen: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         <View style={styles.formCard}>
-          {/* Nombre */}
           <View style={styles.inputRow}>
             <Text style={styles.inputLabel}>Nombre: </Text>
             <TextInput
@@ -134,7 +165,6 @@ const CategoryFormScreen: React.FC = () => {
           </View>
           <View style={styles.divider} />
 
-          {/* Descripción */}
           <View style={styles.inputRow}>
             <Text style={styles.inputLabel}>Descripción: </Text>
             <TextInput
@@ -149,14 +179,13 @@ const CategoryFormScreen: React.FC = () => {
           </View>
           <View style={styles.divider} />
 
-          {/* Estado */}
           <View style={styles.inputRow}>
             <Text style={styles.inputLabel}>Estado: </Text>
             <TouchableOpacity onPress={toggleStatus} disabled={!isEditable}>
               <Text style={[
                 styles.statusValue, 
                 { color: status === 'ACTIVE' ? Colors.success : Colors.warning },
-                !isEditable && { opacity: 0.7 } // Un poco más apagado en modo vista
+                !isEditable && { opacity: 0.7 }
               ]}>
                 {status === 'ACTIVE' ? 'Activo' : 'Borrador'}
               </Text>
@@ -164,7 +193,6 @@ const CategoryFormScreen: React.FC = () => {
           </View>
           <View style={styles.divider} />
 
-          {/* Rango de precios */}
           <View style={styles.inputRow}>
             <Text style={styles.inputLabel}>Rango de precios: </Text>
             <TextInput
@@ -189,14 +217,17 @@ const CategoryFormScreen: React.FC = () => {
           
           <View style={styles.divider} />
 
-          {/* Footer de la tarjeta */}
           <View style={styles.cardFooter}>
             <View style={styles.statsContainer}>
               <View style={styles.statPill}>
                 <View style={styles.statCircle}>
-                  <Text style={styles.statNumber}>{categoryToEdit ? (categoryToEdit.articleCount || 0) : 0}</Text>
+                  {isLoadingExtra ? (
+                    <ActivityIndicator size="small" color={Colors.primary} />
+                  ) : (
+                    <Text style={styles.statNumber}>{articleCount}</Text>
+                  )}
                 </View>
-                <Text style={styles.statLabel}>Artículos vendidos</Text>
+                <Text style={styles.statLabel}>Artículos publicados</Text>
               </View>
 
               <View style={styles.statPill}>
@@ -207,11 +238,10 @@ const CategoryFormScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Condicional para el Botón: Lapiz (Vista) vs Guardar (Creación/Edición) */}
             {formMode === 'view' ? (
               <TouchableOpacity 
                 style={styles.editButton} 
-                onPress={() => setFormMode('edit')} // Cambiar a modo edición
+                onPress={() => setFormMode('edit')}
               >
                 <Ionicons name="pencil" size={18} color={Colors.textWhite} style={{ marginRight: 6 }} />
                 <Text style={styles.saveButtonText}>Editar</Text>
@@ -238,23 +268,29 @@ const CategoryFormScreen: React.FC = () => {
           Últimos artículos
         </Text>
         
-        <FlatList
-          horizontal
-          data={MOCK_ARTICLES}
-          keyExtractor={item => item.id}
-          renderItem={renderArticle}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: Spacing.xl }}
-        />
+        {isLoadingExtra ? (
+          <ActivityIndicator size="small" color={Colors.primary} style={{ alignSelf: 'flex-start', marginLeft: Spacing.md }} />
+        ) : latestArticles.length > 0 ? (
+          <FlatList
+            horizontal
+            data={latestArticles}
+            keyExtractor={item => item.id.toString()}
+            renderItem={renderArticle}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: Spacing.xl }}
+          />
+        ) : (
+          <Text style={[commonStyles.bodySecondary, { marginLeft: Spacing.sm }]}>
+            Aún no hay artículos en esta categoría.
+          </Text>
+        )}
         
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-// ... Mantén el resto de estilos exactamente igual, y añade este para el botón de editar
 const styles = StyleSheet.create({
-  // ... Copia aquí los que ya tenías ...
   scrollContent: { padding: Spacing.lg, paddingBottom: 100 },
   formCard: { backgroundColor: Colors.backgroundWhite, borderRadius: BorderRadius.xl, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border, shadowColor: Colors.shadowColor || '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   inputRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.xs },
@@ -272,20 +308,12 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary, fontWeight: FontWeights.medium },
   saveButton: { backgroundColor: Colors.primaryDark || Colors.primary, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, justifyContent: 'center', alignItems: 'center' },
   saveButtonText: { color: Colors.textWhite, fontSize: FontSizes.sm, fontWeight: FontWeights.bold },
-  
-  // AÑADIDO: Estilo para el botón de editar en modo vista
-  editButton: { 
-    flexDirection: 'row', 
-    backgroundColor: Colors.primaryLight || Colors.primary, 
-    paddingHorizontal: Spacing.lg, 
-    paddingVertical: Spacing.sm, 
-    borderRadius: BorderRadius.full, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
-  
+  editButton: { flexDirection: 'row', backgroundColor: Colors.primaryLight || Colors.primary, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, justifyContent: 'center', alignItems: 'center' },
   articleCard: { width: 140, backgroundColor: Colors.backgroundWhite, borderRadius: BorderRadius.lg, padding: Spacing.sm, marginRight: Spacing.md, borderWidth: 1, borderColor: Colors.border },
   articleImage: { width: '100%', height: 90, borderRadius: BorderRadius.md, backgroundColor: Colors.borderLight, marginBottom: Spacing.sm },
+  
+  imagePlaceholder: { justifyContent: 'center', alignItems: 'center' },
+  
   articleInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   articleTitle: { fontSize: FontSizes.sm, fontWeight: FontWeights.bold, color: Colors.textPrimary },
   articleBadge: { fontSize: 10, color: Colors.textSecondary, marginTop: 2 },

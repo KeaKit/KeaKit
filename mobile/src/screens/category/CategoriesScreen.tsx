@@ -7,12 +7,19 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { Category, RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
-import { fetchAllCategories, deleteCategory } from '../../services/categoryService';
+
+import { fetchAllCategories, deleteCategory, fetchArticleCountByCategory } from '../../services/categoryService';
+
 import { Colors, Spacing, commonStyles, componentStyles, FontSizes, FontWeights, BorderRadius } from '../../styles';
 
 type CategoriesNav = NativeStackNavigationProp<RootStackParamList, 'Categories'>;
+
+interface CategoryWithCount extends Category {
+  articleCount: number;
+}
 
 const CategoriesScreen: React.FC = () => {
   const navigation = useNavigation<CategoriesNav>();
@@ -20,7 +27,9 @@ const CategoriesScreen: React.FC = () => {
   const token = (user as any)?.token || ''; 
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [categories, setCategories] = useState<Category[]>([]);
+  
+  // Usamos nuestra interfaz extendida para el estado de la lista
+  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useFocusEffect(
@@ -34,7 +43,20 @@ const CategoriesScreen: React.FC = () => {
     setIsLoading(true);
     try {
       const data = await fetchAllCategories(token);
-      setCategories(data.map(cat => ({ ...cat, articleCount: cat.articleCount || 0 })));
+      
+      const categoriesWithCounts = await Promise.all(
+        data.map(async (cat) => {
+          try {
+            const count = await fetchArticleCountByCategory(cat.id, token);
+            return { ...cat, articleCount: count }; // Combinamos la categoría con su contador
+          } catch (error) {
+            console.warn(`Error obteniendo contador para la categoría ${cat.id}`);
+            return { ...cat, articleCount: 0 }; // Si falla uno, le ponemos 0 por defecto
+          }
+        })
+      );
+
+      setCategories(categoriesWithCounts);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       Alert.alert('Error', `No se pudieron cargar: ${errorMessage}`);
@@ -43,8 +65,7 @@ const CategoriesScreen: React.FC = () => {
     }
   };
 
-  // NUEVO: Función para ir en modo Vista
-  const handleViewCategory = (category: Category) => {
+  const handleViewCategory = (category: CategoryWithCount) => {
     navigation.navigate('CategoryForm', { category, mode: 'view' });
   };
 
@@ -52,18 +73,16 @@ const CategoriesScreen: React.FC = () => {
     navigation.navigate('CategoryForm', { category: undefined, mode: 'create' });
   };
 
-  const handleEditCategory = (category: Category) => {
+  const handleEditCategory = (category: CategoryWithCount) => {
     navigation.navigate('CategoryForm', { category, mode: 'edit' });
   };
 
   const handleDeleteCategory = (categoryId: number, categoryName: string) => {
-    // 1. Extraemos la lógica de borrado para no repetirla
     const performDelete = async () => {
       try {
         await deleteCategory(categoryId, token);
         setCategories(prev => prev.filter(c => c.id !== categoryId));
       } catch (error) {
-        // También manejamos el error según la plataforma
         if (Platform.OS === 'web') {
           window.alert('Error: No se pudo eliminar la categoría.');
         } else {
@@ -72,35 +91,28 @@ const CategoriesScreen: React.FC = () => {
       }
     };
 
-    // 2. Evaluamos en qué plataforma estamos
     if (Platform.OS === 'web') {
-      // Usamos el confirm nativo del navegador
       const confirmDelete = window.confirm(`¿Deseas eliminar la categoría "${categoryName}"?`);
       if (confirmDelete) {
         performDelete();
       }
     } else {
-      // Usamos el Alert nativo para iOS y Android
       Alert.alert(
         'Eliminar categoría',
         `¿Deseas eliminar la categoría "${categoryName}"?`,
         [
           { text: 'Cancelar', style: 'cancel' },
-          { 
-            text: 'Eliminar', 
-            style: 'destructive',
-            onPress: performDelete // Llamamos a la función si el usuario acepta
-          },
+          { text: 'Eliminar', style: 'destructive', onPress: performDelete },
         ]
       );
     }
   };
 
-  const renderCategoryItem = ({ item }: { item: Category }) => (
+  const renderCategoryItem = ({ item }: { item: CategoryWithCount }) => (
     <TouchableOpacity 
       style={styles.categoryCard} 
       activeOpacity={0.7}
-      onPress={() => handleViewCategory(item)} // <-- Entrar en modo Detalles (View)
+      onPress={() => handleViewCategory(item)} 
     >
       <View style={styles.cardLeft}>
         <View style={styles.categoryAvatar} />
@@ -118,12 +130,12 @@ const CategoriesScreen: React.FC = () => {
         <View style={commonStyles.errorContainer}>
           <TouchableOpacity 
             style={componentStyles.iconButton} 
-            onPress={() => handleEditCategory(item)} // <-- Entrar directo en modo Edición
+            onPress={() => handleEditCategory(item)} 
           >
             <Ionicons name="pencil" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
 
-          {(item.articleCount === 0 || item.articleCount === undefined) && (
+          {(item.articleCount === 0) && (
             <TouchableOpacity style={componentStyles.iconButton} onPress={() => handleDeleteCategory(item.id, item.name)}>
               <Ionicons name="trash" size={20} color={Colors.textPrimary} />
             </TouchableOpacity>
@@ -178,7 +190,6 @@ const CategoriesScreen: React.FC = () => {
   );
 };
 
-// ... Mantén aquí tus estilos (styles) exactamente iguales a los que tenías
 const styles = StyleSheet.create({
   roundedSearch: { borderRadius: BorderRadius.full },
   listContainer: { paddingBottom: 100 },

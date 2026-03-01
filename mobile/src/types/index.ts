@@ -125,7 +125,6 @@ export interface Category {
   status: 'ACTIVE' | 'DRAFT';
   minPrice: number;
   maxPrice: number;
-  articleCount: number; 
 }
 
 export type RootStackParamList = {
