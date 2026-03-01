@@ -14,6 +14,9 @@ type KitItemComponentProps = {
   };
   duration?: number;
   quantity: number;
+  maxQuantity?: number;
+  onIncrease: (id: number) => void;
+  onDecrease: (id: number) => void;
   onRemove: (id: number) => void;
 };
 
@@ -21,8 +24,16 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
   item,
   duration,
   quantity,
+  maxQuantity,
+  onIncrease,
+  onDecrease,
   onRemove,
 }) => {
+  const reachedMax =
+    maxQuantity !== undefined &&
+    maxQuantity !== null &&
+    quantity >= maxQuantity;
+
   return (
     <View
       key={item.id}
@@ -55,6 +66,35 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
             ? `${(item.pricePerMonth * quantity * duration).toFixed(2)}€`
             : "N/A"}
         </Text>
+
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <TouchableOpacity
+            onPress={() => onDecrease(item.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`Reducir unidades de ${item.title}`}
+          >
+            <Ionicons
+              name="remove-circle-outline"
+              size={22}
+              color={Colors.primary}
+            />
+          </TouchableOpacity>
+
+          <Text style={createKitStyles.productTitle}>{quantity}</Text>
+
+          <TouchableOpacity
+            onPress={() => onIncrease(item.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`Aumentar unidades de ${item.title}`}
+          >
+            <Ionicons
+              name="add-circle-outline"
+              size={22}
+              color={reachedMax ? Colors.border : Colors.primary}
+            />
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity
           onPress={() => onRemove(item.id)}
           style={createKitStyles.removeItemButton}

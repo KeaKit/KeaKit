@@ -330,6 +330,31 @@ const CreateKitScreen: React.FC = () => {
     setSelectedQuantities((prev) => removeSelectedQuantity(prev, id));
   };
 
+  const changeSelectedQuantity = (
+    id: number,
+    nextQuantity: number,
+    maxQuantity: number,
+  ) => {
+    const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
+    setSelectedQuantities((prev) =>
+      upsertSelectedQuantity(prev, id, safeQuantity),
+    );
+  };
+
+  const incrementSelectedQuantity = (id: number) => {
+    const product = availableProducts.find((p) => p.id === id);
+    if (!product) return;
+    const current = selectedQuantities[id] ?? 1;
+    changeSelectedQuantity(id, current + 1, product.totalUnits);
+  };
+
+  const decrementSelectedQuantity = (id: number) => {
+    const product = availableProducts.find((p) => p.id === id);
+    if (!product) return;
+    const current = selectedQuantities[id] ?? 1;
+    changeSelectedQuantity(id, current - 1, product.totalUnits);
+  };
+
   const validate = (): {
     valid: boolean;
     payloadDates?: { startIso: string; endIso: string };
@@ -645,7 +670,10 @@ const CreateKitScreen: React.FC = () => {
               key={item.id}
               item={item}
               quantity={selectedQuantities[item.id] ?? 1}
+              maxQuantity={item.totalUnits}
               duration={monthsBetween ?? 0}
+              onIncrease={incrementSelectedQuantity}
+              onDecrease={decrementSelectedQuantity}
               onRemove={removeSelectedItem}
             />
           ))
