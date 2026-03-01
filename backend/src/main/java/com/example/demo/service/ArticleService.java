@@ -1,16 +1,22 @@
 package com.example.demo.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.demo.dto.ReturnRequest;
+import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
 import com.example.demo.model.ArticleStatus;
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
 
 @Service
@@ -18,10 +24,12 @@ public class ArticleService {
 
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
+    private final KitRepository kitRepository;
 
-    public ArticleService(ArticleRepository articleRepository, UserRepository userRepository) {
+    public ArticleService(ArticleRepository articleRepository, UserRepository userRepository, KitRepository kitRepository) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
+        this.kitRepository = kitRepository;
     }
 
     public List<Article> findAll() {
@@ -145,6 +153,56 @@ public class ArticleService {
                 rentedUntil
             );
         }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ReturnResponse processReturn(Long articleId, Long ownerId, ReturnRequest request) {
+
+        Article article = (Article) articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        if (!article.getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("Only the owner can confirm the return");
+        }
+        
+        if (article.getStatus() != ArticleStatus.RENTED) {
+            throw new RuntimeException("This article is not currently rented");
+        }
+
+        Kit activeKit = kitRepository.findActiveKitByItemId(articleId, KitStatus.ACTIVE)
+                .orElseThrow(() -> new RuntimeException("No active Kit found for this article"));
+
+        double depositAmount = article.getPricePerMonth() * 0.20;
+        
+        String resolution;
+        double amountProcessed;
+        String message;
+
+        if ("GOOD".equalsIgnoreCase(request.condition())) {
+            resolution = "DEPOSIT_RETURNED";
+            amountProcessed = depositAmount;
+            message = "Artículo devuelto en buen estado. Se devuelve el 20% de garantía (" + depositAmount + "€) al arrendatario.";
+            // TODO (Futuro): Aquí llamarías a Stripe/PayPal para devolver el dinero real al tenant
+        } else if ("DAMAGED".equalsIgnoreCase(request.condition())) {
+            resolution = "DEPOSIT_RETAINED";
+            amountProcessed = depositAmount; // Cantidad retenida
+            message = "Artículo con daños. Se retiene la garantía de " + depositAmount + "€ al arrendatario.";
+            // TODO (Futuro): Aquí transferirías el dinero retenido a la cuenta del dueño
+        } else {
+            throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
+        }
+
+        article.setStatus(ArticleStatus.AVAILABLE);
+        article.setAvailableUntil(null);
+        articleRepository.save(article);
+
+        return new ReturnResponse(
+                articleId,
+                activeKit.getTenant().getEmail(),
+                resolution,
+                amountProcessed,
+                message
+        );
     }
     
 }
