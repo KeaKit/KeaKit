@@ -99,8 +99,14 @@ export interface RatingResponse {
 export interface Article {
   id: number;
   title: string;
-  imageUrl: string | null;
+  description: string;
+  city: string;
   pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: string;
+  imageUrl: string | null;
+  purchaseDate: string | null;
   status: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
   rentedUntil: string | null;
 }
@@ -129,4 +135,5 @@ export type RootStackParamList = {
   UserRatings: { userId: number; userName: string };
   MyArticles: undefined;
   UploadArticle: undefined;
+  EditArticle: { article: Article };
 };

@@ -46,6 +46,17 @@ public class ArticleController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getArticleById(@PathVariable Long id) {
+        try {
+            Article article = articleService.findById(id);
+            return ResponseEntity.ok(article);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+    
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateArticle(@PathVariable Long id, @RequestParam Long ownerId, @RequestBody Article updateData) {
         try {

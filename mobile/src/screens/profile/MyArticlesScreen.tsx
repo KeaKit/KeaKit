@@ -8,13 +8,14 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { getMyArticles } from '../../services/articleService';
-import { Article, RootStackParamList } from '../../types';
+import { getMyArticles, deleteArticle, getArticleById } from '../../services/articleService';
+import { Article, RootStackParamList, UserArticle } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
@@ -24,11 +25,12 @@ const MyArticlesScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<MyArticlesNav>();
 
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<UserArticle[]>([]);
+  const [filteredArticles, setFilteredArticles] = useState<UserArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('ALL');
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -43,20 +45,18 @@ const MyArticlesScreen: React.FC = () => {
           setError(null);
           const data = await getMyArticles(user.id, user.token);
           setArticles(data);
-          setFilteredArticles(data);
+          setFilteredArticles(applyFilter(filter, data));
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Error al cargar artículos');
         } finally {
           setLoading(false);
         }
       };
-
       loadArticles();
     }, [user])
   );
 
-  const applyFilter = (f: FilterType, data: Article[]) => {
-    if (f === 'ALL')       return data;
+  const applyFilter = (f: FilterType, data: UserArticle[]) => {
     if (f === 'AVAILABLE') return data.filter(a => a.status === 'AVAILABLE');
     if (f === 'RENTED')    return data.filter(a => a.status === 'RENTED');
     return data;
@@ -65,6 +65,44 @@ const MyArticlesScreen: React.FC = () => {
   const handleFilter = (f: FilterType) => {
     setFilter(f);
     setFilteredArticles(applyFilter(f, articles));
+  };
+
+  const handleEdit = async (item: UserArticle) => {
+    if (!user) return;
+    try {
+      const full = await getArticleById(item.id, user.token);
+      navigation.navigate('EditArticle', { article: full });
+    } catch (err) {
+      Alert.alert('Error', 'No se pudo cargar el artículo');
+    }
+  };
+
+  const handleDelete = (item: UserArticle) => {
+    Alert.alert(
+      'Eliminar artículo',
+      `¿Seguro que quieres eliminar "${item.title}"? Esta acción no se puede deshacer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user) return;
+            try {
+              setDeletingId(item.id);
+              await deleteArticle(item.id, user.id, user.token);
+              const updated = articles.filter(a => a.id !== item.id);
+              setArticles(updated);
+              setFilteredArticles(applyFilter(filter, updated));
+            } catch (err) {
+              Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo eliminar el artículo');
+            } finally {
+              setDeletingId(null);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const formatDate = (dateString: string | null): string => {
@@ -94,37 +132,64 @@ const MyArticlesScreen: React.FC = () => {
     }
   };
 
-  const renderArticle = ({ item }: { item: Article }) => (
-    <View style={styles.articleCard}>
-      <View style={styles.imageContainer}>
-        {item.imageUrl ? (
-          <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
-        ) : (
-          <View style={styles.noImagePlaceholder}>
-            <Ionicons name="image-outline" size={40} color="#ccc" />
-          </View>
-        )}
-      </View>
-      <View style={styles.articleInfo}>
-        <Text style={styles.articleTitle} numberOfLines={2}>{item.title}</Text>
-        <View style={styles.priceRow}>
-          <Ionicons name="cash-outline" size={16} color={Colors.primary} />
-          <Text style={styles.articlePrice}>€{item.pricePerMonth.toFixed(2)}/mes</Text>
+  const renderArticle = ({ item }: { item: UserArticle }) => {
+    const isDeleting = deletingId === item.id;
+    return (
+      <TouchableOpacity style={styles.articleCard} onPress={() => handleEdit(item)} activeOpacity={0.85}>
+        <View style={styles.imageContainer}>
+          {item.imageUrl ? (
+            <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.noImagePlaceholder}>
+              <Ionicons name="image-outline" size={40} color="#ccc" />
+            </View>
+          )}
         </View>
-        <View style={styles.statusRow}>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <Text style={styles.statusText}>{translateStatus(item.status)}</Text>
+
+        <View style={styles.articleInfo}>
+          <Text style={styles.articleTitle} numberOfLines={2}>{item.title}</Text>
+          <View style={styles.priceRow}>
+            <Ionicons name="cash-outline" size={16} color={Colors.primary} />
+            <Text style={styles.articlePrice}>€{item.pricePerMonth.toFixed(2)}/mes</Text>
           </View>
+          <View style={styles.statusRow}>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+              <Text style={styles.statusText}>{translateStatus(item.status)}</Text>
+            </View>
+          </View>
+          {item.status === 'RENTED' && item.rentedUntil && (
+            <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={16} color="#666" />
+              <Text style={styles.dateText}>Hasta: {formatDate(item.rentedUntil)}</Text>
+            </View>
+          )}
         </View>
-        {item.status === 'RENTED' && item.rentedUntil && (
-          <View style={styles.dateRow}>
-            <Ionicons name="calendar-outline" size={16} color="#666" />
-            <Text style={styles.dateText}>Hasta: {formatDate(item.rentedUntil)}</Text>
-          </View>
-        )}
-      </View>
-    </View>
-  );
+
+        {/* Botones de acción */}
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => handleEdit(item)}
+            disabled={isDeleting}
+          >
+            <Ionicons name="pencil-outline" size={20} color={Colors.primary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDelete(item)}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <ActivityIndicator size="small" color="#d9534f" />
+            ) : (
+              <Ionicons name="trash-outline" size={20} color="#d9534f" />
+            )}
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
@@ -350,6 +415,23 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 13,
     color: '#666',
+  },
+  actionsContainer: {
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
+    borderLeftWidth: 1,
+    borderLeftColor: '#f0f0f0',
+  },
+  editButton: {
+    padding: Spacing.sm,
+    borderRadius: 8,
+    backgroundColor: '#e8f4fd',
+  },
+  deleteButton: {
+    padding: Spacing.sm,
+    borderRadius: 8,
+    backgroundColor: '#fdecea',
   },
   emptyContainer: {
     flex: 1,

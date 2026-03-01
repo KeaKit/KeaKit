@@ -40,6 +40,14 @@ export async function getMyArticles(
   return handleResponse<Article[]>(res);
 }
 
+export async function getArticleById(id: number, token: string): Promise<Article> {
+    const res = await fetch(API_ROUTES.GET_ARTICLE(id), {
+        method: 'GET',
+        headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    });
+    return handleResponse<Article>(res);
+}
+
 export async function uploadArticle(
   ownerId: number,
   token: string,
@@ -51,6 +59,36 @@ export async function uploadArticle(
     body: JSON.stringify(payload),
   });
   return handleResponse<Article>(res);
+}
+
+export async function updateArticle(
+  id: number,
+  ownerId: number,
+  token: string,
+  payload: Partial<ArticlePayload>,
+): Promise<Article> {
+  const res = await fetch(API_ROUTES.UPDATE_ARTICLE(id, ownerId), {
+    method: 'PUT',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<Article>(res);
+}
+
+export async function deleteArticle(
+  id: number,
+  ownerId: number,
+  token: string,
+): Promise<void> {
+  const res = await fetch(API_ROUTES.DELETE_ARTICLE(id, ownerId), {
+    method: 'DELETE',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try { errorMessage = await res.text(); } catch {}
+    throw new Error(normalizeErrorMessage(errorMessage));
+  }
 }
 
 
