@@ -474,17 +474,22 @@ const CreateKitScreen: React.FC = () => {
         contentContainerStyle={createKitStyles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={createKitStyles.headerRow}>
-          <View style={componentStyles.iconButton} />
+      <View style={createKitStyles.headerRow}>
+        {/* Botón de volver */}
+        <TouchableOpacity
+          style={componentStyles.iconButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+        </TouchableOpacity>
 
-          <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
-            Crea un Kit
-          </Text>
+        <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
+          Crea un Kit
+        </Text>
 
-          <View style={componentStyles.iconButton}>
-            <Ionicons name="receipt-outline" size={22} color={Colors.primary} />
-          </View>
-        </View>
+        {/* Mantener espacio a la derecha para centrar el título */}
+        <View style={componentStyles.iconButton} />
+      </View>
 
         <TextInput
           style={[
