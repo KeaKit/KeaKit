@@ -49,14 +49,12 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
-        <Stack.Screen name="UserRatings" component={UserRatingsScreen} />
         <Stack.Screen name="MyIncidents" component={MyIncidentsScreen} />
         <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
         <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
         <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
         <Stack.Screen name="MyKits"    component={MyKitsScreen} />
         <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
-        <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
         <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
         <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
         <Stack.Screen name="EditArticle" component={EditArticleScreen} />
