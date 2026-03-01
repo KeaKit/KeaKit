@@ -1,6 +1,7 @@
 package com.example.demo.kit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -178,5 +179,35 @@ public class KitServiceTest {
         when(itemRepository.findAllById(any())).thenReturn(List.of(article));
 
         assertThrows(RuntimeException.class, () -> kitService.create(req));
+    }
+
+    @Test
+    void createKit_withItemSelections_success() {
+        KitCreateRequest req = new KitCreateRequest();
+        req.setName("Kit con cantidades");
+
+        KitCreateRequest.KitItemSelectionRequest selection = new KitCreateRequest.KitItemSelectionRequest();
+        selection.setItemId(5L);
+        selection.setQuantity(2);
+        req.setItemSelections(List.of(selection));
+
+        Article article = new Article();
+        article.setId(5L);
+        article.setTotalUnits(3);
+
+        when(itemRepository.findAllById(any())).thenReturn(List.of(article));
+        when(kitRepository.save(any())).thenAnswer(inv -> {
+            Kit k = inv.getArgument(0);
+            k.setId(99L);
+            return k;
+        });
+
+        KitResponse res = kitService.create(req);
+
+        assertNotNull(res.getItemSelections());
+        assertEquals(1, res.getItemSelections().size());
+        assertEquals(5L, res.getItemSelections().get(0).getItemId());
+        assertEquals(2, res.getItemSelections().get(0).getQuantity());
+        assertEquals(2, res.getTotalSelectedItems());
     }
 }
