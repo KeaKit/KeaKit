@@ -11,6 +11,8 @@ export const API_ROUTES = {
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
   MY_ARTICLES: (userId: number) => `${BASE_URL}/api/article/my-articles/${userId}`,
+  UPLOAD_ARTICLE: (ownerId: number) => `${BASE_URL}/api/article/upload?ownerId=${ownerId}`,
+  TOGGLE_RENT:    (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/toggle-rent?ownerId=${ownerId}`,
 } as const;
 
 export default BASE_URL;
