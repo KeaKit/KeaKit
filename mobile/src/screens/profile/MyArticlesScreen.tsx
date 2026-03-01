@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
   TouchableOpacity,
+  Pressable,
   Image,
   Alert,
 } from 'react-native';
@@ -15,7 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getMyArticles, deleteArticle, getArticleById } from '../../services/articleService';
-import { Article, RootStackParamList, UserArticle } from '../../types';
+import { RootStackParamList, UserArticle } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
@@ -72,37 +73,34 @@ const MyArticlesScreen: React.FC = () => {
     try {
       const full = await getArticleById(item.id, user.token);
       navigation.navigate('EditArticle', { article: full });
-    } catch (err) {
+    } catch {
       Alert.alert('Error', 'No se pudo cargar el artículo');
     }
   };
 
   const handleDelete = (item: UserArticle) => {
-    Alert.alert(
-      'Eliminar artículo',
-      `¿Seguro que quieres eliminar "${item.title}"? Esta acción no se puede deshacer.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            if (!user) return;
-            try {
-              setDeletingId(item.id);
-              await deleteArticle(item.id, user.id, user.token);
-              const updated = articles.filter(a => a.id !== item.id);
-              setArticles(updated);
-              setFilteredArticles(applyFilter(filter, updated));
-            } catch (err) {
-              Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo eliminar el artículo');
-            } finally {
-              setDeletingId(null);
-            }
-          },
-        },
-      ]
-    );
+    if (item.status === 'RENTED') {
+      window.alert('Este artículo está actualmente alquilado. Espera a que finalice el alquiler para eliminarlo.');
+      return;
+    }
+
+    const confirmed = window.confirm(`¿Seguro que quieres eliminar "${item.title}"? Esta acción no se puede deshacer.`);
+    if (!confirmed) return;
+
+    (async () => {
+      if (!user) return;
+      try {
+        setDeletingId(item.id);
+        await deleteArticle(item.id, user.id, user.token);
+        const updated = articles.filter(a => a.id !== item.id);
+        setArticles(updated);
+        setFilteredArticles(applyFilter(filter, updated));
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : 'No se pudo eliminar el artículo');
+      } finally {
+        setDeletingId(null);
+      }
+    })();
   };
 
   const formatDate = (dateString: string | null): string => {
@@ -135,47 +133,52 @@ const MyArticlesScreen: React.FC = () => {
   const renderArticle = ({ item }: { item: UserArticle }) => {
     const isDeleting = deletingId === item.id;
     return (
-      <TouchableOpacity style={styles.articleCard} onPress={() => handleEdit(item)} activeOpacity={0.85}>
-        <View style={styles.imageContainer}>
-          {item.imageUrl ? (
-            <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
-          ) : (
-            <View style={styles.noImagePlaceholder}>
-              <Ionicons name="image-outline" size={40} color="#ccc" />
-            </View>
-          )}
-        </View>
-
-        <View style={styles.articleInfo}>
-          <Text style={styles.articleTitle} numberOfLines={2}>{item.title}</Text>
-          <View style={styles.priceRow}>
-            <Ionicons name="cash-outline" size={16} color={Colors.primary} />
-            <Text style={styles.articlePrice}>€{item.pricePerMonth.toFixed(2)}/mes</Text>
+      <View style={styles.articleCard}>
+        <TouchableOpacity
+          style={styles.cardPressable}
+          onPress={() => handleEdit(item)}
+          activeOpacity={0.85}
+        >
+          <View style={styles.imageContainer}>
+            {item.imageUrl ? (
+              <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
+            ) : (
+              <View style={styles.noImagePlaceholder}>
+                <Ionicons name="image-outline" size={40} color="#ccc" />
+              </View>
+            )}
           </View>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-              <Text style={styles.statusText}>{translateStatus(item.status)}</Text>
-            </View>
-          </View>
-          {item.status === 'RENTED' && item.rentedUntil && (
-            <View style={styles.dateRow}>
-              <Ionicons name="calendar-outline" size={16} color="#666" />
-              <Text style={styles.dateText}>Hasta: {formatDate(item.rentedUntil)}</Text>
-            </View>
-          )}
-        </View>
 
-        {/* Botones de acción */}
+          <View style={styles.articleInfo}>
+            <Text style={styles.articleTitle} numberOfLines={2}>{item.title}</Text>
+            <View style={styles.priceRow}>
+              <Ionicons name="cash-outline" size={16} color={Colors.primary} />
+              <Text style={styles.articlePrice}>€{item.pricePerMonth.toFixed(2)}/mes</Text>
+            </View>
+            <View style={styles.statusRow}>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+                <Text style={styles.statusText}>{translateStatus(item.status)}</Text>
+              </View>
+            </View>
+            {item.status === 'RENTED' && item.rentedUntil && (
+              <View style={styles.dateRow}>
+                <Ionicons name="calendar-outline" size={16} color="#666" />
+                <Text style={styles.dateText}>Hasta: {formatDate(item.rentedUntil)}</Text>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+
         <View style={styles.actionsContainer}>
-          <TouchableOpacity
+          <Pressable
             style={styles.editButton}
             onPress={() => handleEdit(item)}
             disabled={isDeleting}
           >
             <Ionicons name="pencil-outline" size={20} color={Colors.primary} />
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity
+          <Pressable
             style={styles.deleteButton}
             onPress={() => handleDelete(item)}
             disabled={isDeleting}
@@ -185,9 +188,9 @@ const MyArticlesScreen: React.FC = () => {
             ) : (
               <Ionicons name="trash-outline" size={20} color="#d9534f" />
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -354,6 +357,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  cardPressable: {
+    flexDirection: 'row',
+    flex: 1,
   },
   imageContainer: {
     width: 100,
