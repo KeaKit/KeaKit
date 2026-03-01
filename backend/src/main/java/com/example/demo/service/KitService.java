@@ -4,6 +4,7 @@ import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.model.Item;
 import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
@@ -44,6 +45,7 @@ public class KitService {
         kit.setCity(request.getCity());
         kit.setStartDate(request.getStartDate());
         kit.setEndDate(request.getEndDate());
+        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.UPCOMING);
 
         if (request.getTenantId() != null) {
             User tenant = userRepository.findById(request.getTenantId())
@@ -72,6 +74,7 @@ public class KitService {
         if (updateData.getCity() != null) kit.setCity(updateData.getCity());
         if (updateData.getStartDate() != null) kit.setStartDate(updateData.getStartDate());
         if (updateData.getEndDate() != null) kit.setEndDate(updateData.getEndDate());
+        if (updateData.getStatus() != null) kit.setStatus(updateData.getStatus());
         if (updateData.getTenant() != null) kit.setTenant(updateData.getTenant());
         if (updateData.getItems() != null) kit.setItems(updateData.getItems());
 
@@ -93,5 +96,22 @@ public class KitService {
             throw new RuntimeException("End date cannot be before start date");
         }
     }
+
+    public List<KitResponse> findByTenantId(Long tenantId) {
+        List<Kit> kits = kitRepository.findByTenantId(tenantId);
+        return kits.stream()
+            .map(KitResponse::new)
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    public KitResponse findTrackingKitById(Long kitId, Long tenantId) {
+        Kit kit = kitRepository.findById(kitId)
+            .orElseThrow(() -> new RuntimeException("Kit not found"));
+        if (kit.getTenant() == null || !kit.getTenant().getId().equals(tenantId)) {
+            throw new RuntimeException("Kit does not belong to the specified tenant");
+        }
+        return new KitResponse(kit);
+    }
+
 }
 
