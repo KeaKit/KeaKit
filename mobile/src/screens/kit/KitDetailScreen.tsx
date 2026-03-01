@@ -28,6 +28,7 @@ const KitDetailScreen: React.FC = () => {
 
   const [kit, setKit] = useState<KitResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -48,6 +49,45 @@ const KitDetailScreen: React.FC = () => {
     };
     if (kitId) fetchKitDetail();
   }, [kitId]);
+
+  const handleConfirmKit = () => {
+    Alert.alert(
+      "Confirmar Alquiler",
+      "¿Estás seguro de que deseas confirmar la recepción de este kit? Esta acción implica que todos los productos coinciden con la descripción, imágenes y estado prometido.",
+      [
+        { text: "No, mantener", style: "cancel" },
+        {
+          text: "Sí, confirmar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setConfirming(true);
+              
+              const response = await fetch(`http://localhost:8080/api/kits/confirm/${kitId}`, {
+                method: 'PATCH',
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${user?.token}`,
+                },
+              });
+
+              if (response.ok) {
+                Alert.alert("Éxito", "El kit ha sido confirmado correctamente.");
+                navigation.goBack();
+              } else {
+                throw new Error("Error en el servidor");
+              }
+            } catch (error) {
+              console.log("Éxito", "El kit ha sido confirmado correctamente.")
+              Alert.alert("Aviso", "No se pudo procesar la confirmación en el servidor real.");
+            } finally {
+              setConfirming(false);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const handleCancelKit = () => {
     Alert.alert(
@@ -83,6 +123,15 @@ const KitDetailScreen: React.FC = () => {
       ]
     );
   };
+
+  if (loading || confirming) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        {confirming && <Text style={styles.deletingText}>Confirmando recepción...</Text>}
+      </View>
+    );
+  }
 
   if (loading || deleting) {
     return (
@@ -160,6 +209,13 @@ const KitDetailScreen: React.FC = () => {
           <Text style={styles.totalValue}>{kit.totalPrice?.toLocaleString('es-ES')} €</Text>
         </View>
 
+        {kit.status === KitStatus.PENDING_VALIDATION && (
+          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmKit}>
+            <Ionicons name="checkmark-done-outline" size={20} color="#04ac20" />
+            <Text style={styles.confirmButtonText}>Confirmar recepción</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity style={styles.deleteButton} onPress={handleCancelKit}>
           <Ionicons name="trash-outline" size={20} color="#FF3B30" />
           <Text style={styles.deleteButtonText}>Cancelar este alquiler</Text>
@@ -196,7 +252,9 @@ const styles = StyleSheet.create({
   priceContainer: { marginTop: 20, alignItems: 'center', padding: 20, borderTopWidth: 1, borderColor: '#EEE' },
   totalLabel: { fontSize: 11, color: '#AAA', letterSpacing: 1 },
   totalValue: { fontSize: 32, fontWeight: 'bold', color: Colors.primary, marginTop: 5 },
-  deleteButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 30, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#FF3B30', backgroundColor: '#FFF' },
+  confirmButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 30, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#04ac20', backgroundColor: '#FFF' },
+  confirmButtonText: { color: '#04ac20', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
+  deleteButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 15, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#FF3B30', backgroundColor: '#FFF' },
   deleteButtonText: { color: '#FF3B30', fontWeight: 'bold', marginLeft: 10, fontSize: 16 }
 });
 
