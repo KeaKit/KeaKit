@@ -1,7 +1,10 @@
 package com.example.demo.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -9,19 +12,49 @@ import java.util.stream.Collectors;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
+import com.example.demo.model.Category;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.CategoryRepository;
 
 @Service
 public class ArticleService {
 
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ArticleService(ArticleRepository articleRepository, UserRepository userRepository) {
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
+    public ArticleService(ArticleRepository articleRepository, UserRepository userRepository, CategoryRepository categoryRepository) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
+    }
+
+
+    public Article createWithImage(Article article, MultipartFile image, Long ownerId, Long categoryId) throws IOException {
+        // Validate owner
+        User owner = userRepository.findById(ownerId)
+            .orElseThrow(() -> new RuntimeException("Owner not found"));
+        
+        // Validate category
+        Category category = categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        // Upload image to Cloudinary
+        String imageUrl = cloudinaryService.uploadImage(image);
+        
+        // Set fields
+        article.setOwner(owner);
+        article.setCategory(category);
+        article.setImageUrl(imageUrl);
+        article.setStatus(ArticleStatus.AVAILABLE);
+        
+        // Validate and save
+        return save(article);
     }
 
     public List<Article> findAll() {
@@ -108,6 +141,15 @@ public class ArticleService {
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId)) {
             throw new RuntimeException("Only the owner can delete this article");
+        }
+
+        // Delete image from Cloudinary if exists
+        if (article.getImageUrl() != null && !article.getImageUrl().isEmpty()) {
+            try {
+                cloudinaryService.deleteImage(article.getImageUrl());
+            } catch (IOException e) {
+                System.err.println("Warning: Failed to delete image from Cloudinary: " + e.getMessage());
+            }
         }
 
         articleRepository.deleteById(id);
