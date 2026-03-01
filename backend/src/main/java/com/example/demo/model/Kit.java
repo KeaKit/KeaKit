@@ -196,14 +196,18 @@ public class Kit {
         }
     }
 
-    @Transient
-        public Double getTotalPrice() {
-            if (this.items == null || this.items.isEmpty()) {
-                return 0.0;
-            }
-            return this.items.stream()
-                    .mapToDouble(item -> item.getPricePerMonth() != null ? item.getPricePerMonth() : 0.0)
-                    .sum();
-        }
-    
-} 
+@Transient
+public Double getTotalPrice() {
+    if (this.kitItems == null || this.kitItems.isEmpty()) {
+        return 0.0;
+    }
+    return this.kitItems.stream()
+            .filter(ki -> ki.getItem() != null && ki.getItem().getPricePerMonth() != null)
+            .mapToDouble(ki -> {
+                int qty = ki.getQuantity() != null ? ki.getQuantity() : 0;
+                return ki.getItem().getPricePerMonth() * qty;
+            })
+            .sum();
+}
+
+}
