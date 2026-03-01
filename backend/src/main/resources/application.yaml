@@ -8,14 +8,10 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
-  # --- CONFIGURACIÓN PARA QUE CONVIVAN ---
-  sql:
-    init:
-      mode: always # Asegura que data.sql se intente ejecutar siempre
-
   jpa:
-    defer-datasource-initialization: true # Obliga a data.sql a esperar a Hibernate
+    defer-datasource-initialization: true 
     hibernate:
+      # 'create' borra todo al iniciar. Úsalo solo en desarrollo.
       ddl-auto: create 
     show-sql: true
     properties:
@@ -26,6 +22,7 @@ jwt:
   secret: ${JWT_SECRET:KeaKitSecureSecretKey12345678901234567890ABCDEFGHIJKLMNOP}
   expiration: 86400000 
 
+# --- NUEVA SECCIÓN PARA EL ADMIN SEEDER ---
 app:
   setup:
     admin:
