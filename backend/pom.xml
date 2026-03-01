@@ -100,6 +100,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Stripe (pasarela de pago) -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>24.0.0</version>
+		</dependency>
+
 		<!-- Devtools -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
