@@ -41,6 +41,43 @@ export const createKitStyles = StyleSheet.create({
     borderWidth: 2,
   },
 
+  deliverySection: {
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+
+  deliveryOptionsRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+
+  deliveryOption: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.backgroundWhite,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    alignItems: "center",
+  },
+
+  deliveryOptionSelected: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.brandBeige,
+  },
+
+  deliveryOptionText: {
+    color: Colors.primary,
+    fontWeight: FontWeights.semibold,
+  },
+
+  meetingPointInput: {
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.backgroundWhite,
+  },
+
   productsHeader: {
     marginTop: Spacing.base,
     marginBottom: Spacing.sm,

@@ -22,9 +22,13 @@ import { RootStackParamList } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
-import { removeSelectedId } from "./createKitSelection";
+import {
+  removeSelectedQuantity,
+  upsertSelectedQuantity,
+} from "./createKitSelection";
 
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
+const PLATFORM_COURIER_PRICE = 9.99;
 
 type CreateKitNav = NativeStackNavigationProp<RootStackParamList, "CreateKit">;
 
@@ -34,9 +38,12 @@ type FormErrors = {
   city?: string;
   startDate?: string;
   endDate?: string;
+  meetingPoint?: string;
   items?: string;
   general?: string;
 };
+
+type DeliveryMethod = "COURIER" | "MEETING_POINT";
 
 type CatalogProduct = {
   id: number;
@@ -47,6 +54,7 @@ type CatalogProduct = {
   city?: string;
   ownerName?: string;
   imageUrl?: string | null;
+  totalUnits: number;
 };
 
 const toIsoDate = (raw: string): string | null => {
@@ -99,12 +107,19 @@ const CreateKitScreen: React.FC = () => {
   const [city, setCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [deliveryMethod, setDeliveryMethod] =
+    useState<DeliveryMethod>("COURIER");
+  const [meetingPoint, setMeetingPoint] = useState("");
 
   const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
     [],
   );
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [tempSelectedIds, setTempSelectedIds] = useState<number[]>([]);
+  const [selectedQuantities, setSelectedQuantities] = useState<
+    Record<number, number>
+  >({});
+  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<
+    Record<number, number>
+  >({});
 
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
@@ -178,9 +193,11 @@ const CreateKitScreen: React.FC = () => {
           title: p.title ?? "Sin título",
           pricePerMonth: Number(p.pricePerMonth ?? 0),
           status: String(p.status ?? "AVAILABLE"),
+          category: p.category ?? "",
           city: p.city ?? "",
           ownerName: p.owner?.name ?? "",
           imageUrl: p.imageUrl ?? null,
+          totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
         }))
         .filter((p: CatalogProduct) => p.status === "AVAILABLE");
 
@@ -202,6 +219,20 @@ const CreateKitScreen: React.FC = () => {
     loadCatalog();
   }, [loadCatalog]);
 
+  const selectedIds = useMemo(
+    () => Object.keys(selectedQuantities).map((id) => Number(id)),
+    [selectedQuantities],
+  );
+
+  const selectedItemsCount = useMemo(
+    () =>
+      Object.values(selectedQuantities).reduce(
+        (sum, quantity) => sum + quantity,
+        0,
+      ),
+    [selectedQuantities],
+  );
+
   const selectedProducts = useMemo(
     () => availableProducts.filter((p) => selectedIds.includes(p.id)),
     [availableProducts, selectedIds],
@@ -210,10 +241,14 @@ const CreateKitScreen: React.FC = () => {
   const totalPrice = useMemo(() => {
     if (monthsBetween === null) return 0;
     return selectedProducts.reduce(
-      (sum, p) => sum + p.pricePerMonth * monthsBetween,
+      (sum, p) =>
+        sum + p.pricePerMonth * (selectedQuantities[p.id] ?? 1) * monthsBetween,
       0,
     );
-  }, [selectedProducts, monthsBetween]);
+  }, [selectedProducts, monthsBetween, selectedQuantities]);
+
+  const courierPrice =
+    deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
   const categories = useMemo(() => {
     const set = new Set(
@@ -243,7 +278,7 @@ const CreateKitScreen: React.FC = () => {
 
   const openAddProductModal = async () => {
     await loadCatalog();
-    setTempSelectedIds(selectedIds);
+    setTempSelectedQuantities(selectedQuantities);
 
     setSearchText("");
     setCategoryFilter("ALL");
@@ -265,19 +300,59 @@ const CreateKitScreen: React.FC = () => {
   };
 
   const toggleTempSelection = (id: number) => {
-    setTempSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    setTempSelectedQuantities((prev) => {
+      const isSelected = Object.prototype.hasOwnProperty.call(prev, id);
+      if (isSelected) {
+        return removeSelectedQuantity(prev, id);
+      }
+      return upsertSelectedQuantity(prev, id, 1);
+    });
+  };
+
+  const changeTempQuantity = (
+    id: number,
+    nextQuantity: number,
+    maxQuantity: number,
+  ) => {
+    const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
+    setTempSelectedQuantities((prev) =>
+      upsertSelectedQuantity(prev, id, safeQuantity),
     );
   };
 
   const confirmSelection = () => {
-    setSelectedIds(tempSelectedIds);
+    setSelectedQuantities(tempSelectedQuantities);
     clearFieldError("items");
     setCatalogModalVisible(false);
   };
 
   const removeSelectedItem = (id: number) => {
-    setSelectedIds((prev) => removeSelectedId(prev, id));
+    setSelectedQuantities((prev) => removeSelectedQuantity(prev, id));
+  };
+
+  const changeSelectedQuantity = (
+    id: number,
+    nextQuantity: number,
+    maxQuantity: number,
+  ) => {
+    const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
+    setSelectedQuantities((prev) =>
+      upsertSelectedQuantity(prev, id, safeQuantity),
+    );
+  };
+
+  const incrementSelectedQuantity = (id: number) => {
+    const product = availableProducts.find((p) => p.id === id);
+    if (!product) return;
+    const current = selectedQuantities[id] ?? 1;
+    changeSelectedQuantity(id, current + 1, product.totalUnits);
+  };
+
+  const decrementSelectedQuantity = (id: number) => {
+    const product = availableProducts.find((p) => p.id === id);
+    if (!product) return;
+    const current = selectedQuantities[id] ?? 1;
+    changeSelectedQuantity(id, current - 1, product.totalUnits);
   };
 
   const validate = (): {
@@ -292,6 +367,9 @@ const CreateKitScreen: React.FC = () => {
 
     if (!country.trim()) nextErrors.country = "El país es obligatorio.";
     if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
+    if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
+      nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
+    }
 
     const startIso = toIsoDate(startDate);
     const endIso = toIsoDate(endDate);
@@ -318,7 +396,7 @@ const CreateKitScreen: React.FC = () => {
           "La fecha final no puede ser anterior a la inicial.";
     }
 
-    if (selectedIds.length === 0)
+    if (selectedItemsCount === 0)
       nextErrors.items = "Debes añadir al menos un producto.";
 
     setErrors(nextErrors);
@@ -347,8 +425,18 @@ const CreateKitScreen: React.FC = () => {
           city: city.trim(),
           startDate: validation.payloadDates.startIso,
           endDate: validation.payloadDates.endIso,
+          deliveryMethod,
+          meetingPoint:
+            deliveryMethod === "MEETING_POINT"
+              ? meetingPoint.trim()
+              : undefined,
           tenantId: user.id,
-          itemIds: selectedIds,
+          itemSelections: Object.entries(selectedQuantities).map(
+            ([itemId, quantity]) => ({
+              itemId: Number(itemId),
+              quantity,
+            }),
+          ),
         },
         user.token,
       );
@@ -474,6 +562,72 @@ const CreateKitScreen: React.FC = () => {
           <Text style={commonStyles.errorText}>{errors.endDate}</Text>
         ) : null}
 
+        <View style={createKitStyles.deliverySection}>
+          <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
+            Método de entrega
+          </Text>
+
+          <View style={createKitStyles.deliveryOptionsRow}>
+            <TouchableOpacity
+              style={[
+                createKitStyles.deliveryOption,
+                deliveryMethod === "COURIER" &&
+                  createKitStyles.deliveryOptionSelected,
+              ]}
+              onPress={() => {
+                setDeliveryMethod("COURIER");
+                clearFieldError("meetingPoint");
+              }}
+            >
+              <Text style={createKitStyles.deliveryOptionText}>Mensajería</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                createKitStyles.deliveryOption,
+                deliveryMethod === "MEETING_POINT" &&
+                  createKitStyles.deliveryOptionSelected,
+              ]}
+              onPress={() => {
+                setDeliveryMethod("MEETING_POINT");
+              }}
+            >
+              <Text style={createKitStyles.deliveryOptionText}>
+                Punto de encuentro
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {deliveryMethod === "MEETING_POINT" ? (
+            <>
+              <TextInput
+                style={[
+                  commonStyles.input,
+                  createKitStyles.meetingPointInput,
+                  errors.meetingPoint && commonStyles.inputError,
+                ]}
+                placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
+                value={meetingPoint}
+                onChangeText={(value) => {
+                  setMeetingPoint(value);
+                  clearFieldError("meetingPoint");
+                }}
+              />
+              {errors.meetingPoint ? (
+                <Text style={commonStyles.errorText}>
+                  {errors.meetingPoint}
+                </Text>
+              ) : null}
+            </>
+          ) : null}
+
+          {deliveryMethod === "COURIER" ? (
+            <Text style={commonStyles.bodySecondary}>
+              Tarifa de mensajería: {PLATFORM_COURIER_PRICE.toFixed(2)}€
+            </Text>
+          ) : null}
+        </View>
+
         {/* Duración del alquiler */}
         {monthsBetween !== null && monthsBetween > 0 && (
           <View style={{ marginTop: 8, marginBottom: 16 }}>
@@ -497,7 +651,7 @@ const CreateKitScreen: React.FC = () => {
 
         <View style={createKitStyles.counterBadge}>
           <Text style={createKitStyles.counterBadgeText}>
-            Seleccionados: {selectedIds.length}
+            Seleccionados: {selectedItemsCount}
           </Text>
         </View>
 
@@ -515,7 +669,11 @@ const CreateKitScreen: React.FC = () => {
             <KitItemComponent
               key={item.id}
               item={item}
+              quantity={selectedQuantities[item.id] ?? 1}
+              maxQuantity={item.totalUnits}
               duration={monthsBetween ?? 0}
+              onIncrease={incrementSelectedQuantity}
+              onDecrease={decrementSelectedQuantity}
               onRemove={removeSelectedItem}
             />
           ))
@@ -560,6 +718,17 @@ const CreateKitScreen: React.FC = () => {
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
+            <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
+            <Text style={commonStyles.caption}>{courierPrice.toFixed(2)}€</Text>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
               alignItems: "center",
               borderTopWidth: 1,
               borderTopColor: Colors.border,
@@ -581,7 +750,12 @@ const CreateKitScreen: React.FC = () => {
                 { fontSize: 20, color: Colors.primary },
               ]}
             >
-              {(totalPrice + totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
+              {(
+                totalPrice +
+                totalPrice * GUARANTEE_PERCENTAGE +
+                courierPrice
+              ).toFixed(2)}
+              €
             </Text>
           </View>
 
@@ -715,7 +889,11 @@ const CreateKitScreen: React.FC = () => {
                 </Text>
               ) : (
                 filteredProducts.map((p) => {
-                  const checked = tempSelectedIds.includes(p.id);
+                  const checked = Object.prototype.hasOwnProperty.call(
+                    tempSelectedQuantities,
+                    p.id,
+                  );
+                  const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
                   return (
                     <Pressable
                       key={p.id}
@@ -730,12 +908,14 @@ const CreateKitScreen: React.FC = () => {
                           {p.title}
                         </Text>
 
-                        {/* TODO(Equipo): Mostrar precio por objeto individual en modal */}
                         <Text style={commonStyles.caption}>
                           {p.ownerName ? `${p.ownerName} · ` : ""}
                           {p.city ? `${p.city} · ` : ""}
-                          {p.category ? `${p.category} · ` : ""}€
-                          {p.pricePerMonth}
+                          {p.category ? `${p.category} · ` : ""}
+                          {p.pricePerMonth.toFixed(2)}€ / mes
+                        </Text>
+                        <Text style={commonStyles.caption}>
+                          Unidades disponibles: {p.totalUnits}
                         </Text>
                       </View>
                       <View
@@ -746,6 +926,61 @@ const CreateKitScreen: React.FC = () => {
                           marginRight: 8,
                         }}
                       >
+                        {checked ? (
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 6,
+                              marginRight: 8,
+                            }}
+                          >
+                            <TouchableOpacity
+                              onPress={() =>
+                                changeTempQuantity(
+                                  p.id,
+                                  selectedQuantity - 1,
+                                  p.totalUnits,
+                                )
+                              }
+                              accessibilityRole="button"
+                              accessibilityLabel={`Reducir unidades de ${p.title}`}
+                            >
+                              <Ionicons
+                                name="remove-circle-outline"
+                                size={22}
+                                color={Colors.primary}
+                              />
+                            </TouchableOpacity>
+
+                            <Text style={createKitStyles.productTitle}>
+                              {selectedQuantity}
+                            </Text>
+
+                            <TouchableOpacity
+                              onPress={() =>
+                                changeTempQuantity(
+                                  p.id,
+                                  selectedQuantity + 1,
+                                  p.totalUnits,
+                                )
+                              }
+                              accessibilityRole="button"
+                              accessibilityLabel={`Aumentar unidades de ${p.title}`}
+                            >
+                              <Ionicons
+                                name="add-circle-outline"
+                                size={22}
+                                color={
+                                  selectedQuantity >= p.totalUnits
+                                    ? Colors.border
+                                    : Colors.primary
+                                }
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        ) : null}
+
                         <Text style={createKitStyles.productTitle}>
                           {p.pricePerMonth !== undefined
                             ? `${p.pricePerMonth.toFixed(2)}€`
