@@ -150,6 +150,14 @@ export interface KitResponse {
   itemSelections?: KitItemSelection[];
   totalSelectedItems?: number;
 }
+export interface Category {
+  id: number;
+  name: string;
+  description: string;
+  status: 'ACTIVE' | 'DRAFT';
+  minPrice: number;
+  maxPrice: number;
+}
 
 export type RootStackParamList = {
   Login: undefined;
@@ -164,4 +172,6 @@ export type RootStackParamList = {
   MyKits: undefined;
   KitDetail: { kitId: number };
   UploadArticle: undefined;
+  Categories: undefined;
+  CategoryForm: { category?: Category , mode: 'view' | 'edit' | 'create' };
 };

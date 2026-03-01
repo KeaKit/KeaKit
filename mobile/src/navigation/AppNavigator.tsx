@@ -15,7 +15,11 @@ import UserRatingsScreen    from '../screens/ratings/UserRatingsScreen';
 import CreateKitScreen      from '../screens/kit/CreateKitScreen';
 
 import { RootStackParamList } from '../types';
+
 import KitDetailScreen from '../screens/kit/KitDetailScreen';
+
+import CategoriesScreen from '../screens/category/CategoriesScreen';
+import CategoryFormScreen from '../screens/category/CategoryFormScreen';
 
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -43,8 +47,12 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
             <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
             <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
+
             <Stack.Screen name="KitDetail"   component={KitDetailScreen}  options={{ title: 'Detalles del Kit' }} 
 />
+            <Stack.Screen name="Categories"     component={CategoriesScreen} />
+            <Stack.Screen name="CategoryForm"     component={CategoryFormScreen} />
+
           </>
         ) : (
           <>

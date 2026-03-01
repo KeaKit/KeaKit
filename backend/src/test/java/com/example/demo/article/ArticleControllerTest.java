@@ -267,4 +267,39 @@ class ArticleControllerTest {
             .andExpect(jsonPath("$.message").value("Error fetching articles"))
             .andExpect(jsonPath("$.status").value(500));
     }
+    
+    // ------------ GET /api/article/category/{categoryId}/count ------------
+
+    @Test
+    void getArticleCountByCategory_success() throws Exception {
+        when(articleService.countArticlesByCategory(1L)).thenReturn(5L);
+
+        mockMvc.perform(get("/api/article/category/1/count"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("5"));
+    }
+
+    @Test
+    void getArticleCountByCategory_serviceThrows_returnsZero() throws Exception {
+        when(articleService.countArticlesByCategory(2L)).thenThrow(new RuntimeException("DB Error"));
+
+        mockMvc.perform(get("/api/article/category/2/count"))
+            .andExpect(status().isInternalServerError())
+            .andExpect(content().string("0"));
+    }
+
+    // ------------ GET /api/article/category/{categoryId}/latest ------------
+
+    @Test
+    void getLatestArticlesByCategory_success() throws Exception {
+        UserArticle dto = new UserArticle(10L, "Taladro de prueba", "url_img", 15.0, "AVAILABLE", null);
+
+        when(articleService.findLatestArticlesByCategory(1L)).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/article/category/1/latest"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Taladro de prueba"))
+            .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
+    }
 }

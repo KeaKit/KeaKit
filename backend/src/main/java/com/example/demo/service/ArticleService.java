@@ -155,5 +155,27 @@ public class ArticleService {
         }).collect(Collectors.toList());
     }
     
+    public long countArticlesByCategory(Long categoryId) {
+        return articleRepository.countByCategoryId(categoryId);
+    }
+
+    public List<UserArticle> findLatestArticlesByCategory(Long categoryId) {
+        List<Article> articles = articleRepository.findTop10ByCategoryIdOrderByIdDesc(categoryId);
+        
+        return articles.stream().map(article -> {
+            boolean isRented = article.getStatus() != null && 
+                               "RENTED".equalsIgnoreCase(article.getStatus().name());
+            
+            LocalDate rentedUntil = isRented ? article.getAvailableUntil() : null;
+            return new UserArticle(
+                article.getId(),
+                article.getTitle(),
+                article.getImageUrl(),
+                article.getPricePerMonth(),
+                article.getStatus() != null ? article.getStatus().name() : "UNKNOWN",
+                rentedUntil
+            );
+        }).collect(Collectors.toList());
+    }
 }
 

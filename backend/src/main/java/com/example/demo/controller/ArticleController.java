@@ -83,4 +83,24 @@ public class ArticleController {
         return ResponseEntity.ok(articles);
     }
 
+    @GetMapping("/category/{categoryId}/count")
+    public ResponseEntity<Long> getArticleCountByCategory(@PathVariable Long categoryId) {
+        try {
+            long count = articleService.countArticlesByCategory(categoryId);
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(0L);
+        }
+    }
+
+    @GetMapping("/category/{categoryId}/latest")
+    public ResponseEntity<List<UserArticle>> getLatestArticlesByCategory(@PathVariable Long categoryId) {
+        try {
+            List<UserArticle> latestArticles = articleService.findLatestArticlesByCategory(categoryId);
+            return ResponseEntity.ok(latestArticles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 }
