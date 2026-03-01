@@ -8,12 +8,15 @@ import LoginScreen          from '../screens/auth/LoginScreen';
 import RegisterScreen       from '../screens/auth/RegisterScreen';
 import HomeScreen           from '../screens/home/HomeScreen';
 import MyArticlesScreen     from '../screens/profile/MyArticlesScreen';
+import MyKitsScreen from '../screens/profile/MyKitsScreen';
 import UploadArticleScreen  from '../screens/profile/UploadArticleScreen';
 import CreateRatingScreen   from '../screens/ratings/CreateRatingScreen';
 import UserRatingsScreen    from '../screens/ratings/UserRatingsScreen';
 import CreateKitScreen      from '../screens/kit/CreateKitScreen';
 
 import { RootStackParamList } from '../types';
+import KitDetailScreen from '../screens/kit/KitDetailScreen';
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -35,10 +38,13 @@ const AppNavigator: React.FC = () => {
           <>
             <Stack.Screen name="Home"          component={HomeScreen} />
             <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
+            <Stack.Screen name="MyKits"    component={MyKitsScreen} />
             <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
             <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
             <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
             <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
+            <Stack.Screen name="KitDetail"   component={KitDetailScreen}  options={{ title: 'Detalles del Kit' }} 
+/>
           </>
         ) : (
           <>

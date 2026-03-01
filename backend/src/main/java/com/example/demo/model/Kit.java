@@ -195,5 +195,15 @@ public class Kit {
             this.kitItems.add(kitItem);
         }
     }
+
+    @Transient
+        public Double getTotalPrice() {
+            if (this.items == null || this.items.isEmpty()) {
+                return 0.0;
+            }
+            return this.items.stream()
+                    .mapToDouble(item -> item.getPricePerMonth() != null ? item.getPricePerMonth() : 0.0)
+                    .sum();
+        }
     
 } 

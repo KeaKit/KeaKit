@@ -72,21 +72,6 @@ export interface KitCreateRequest {
   itemSelections?: KitItemSelection[];
 }
 
-export interface KitResponse {
-  id: number;
-  name: string;
-  country: string;
-  city: string;
-  startDate: string;
-  endDate: string;
-  deliveryMethod: "COURIER" | "MEETING_POINT";
-  meetingPoint?: string;
-  courierPrice?: number;
-  tenantId: number;
-  itemIds: number[];
-  itemSelections?: KitItemSelection[];
-  totalSelectedItems?: number;
-}
 
 export interface RatingCreateRequest {
   revieweeId: number;
@@ -133,6 +118,39 @@ export interface ArticlePayload {
   totalUnits?: number;
 }
 
+export interface Item {
+  id: number;
+  title: string;
+  description: string;
+  pricePerMonth: number;
+  category: string;
+}
+
+export enum KitStatus {
+  ACTIVE = 'ACTIVE',
+  FINISHED = 'FINISHED',
+  UPCOMING = 'UPCOMING',
+}
+
+export interface KitResponse {
+  id: number;
+  name: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  status?: KitStatus; 
+  tenantId: number;
+  items?: Item[];    
+  itemIds?: number[]; 
+  totalPrice?: number;
+  deliveryMethod?: "COURIER" | "MEETING_POINT";
+  meetingPoint?: string;
+  courierPrice?: number;
+  itemSelections?: KitItemSelection[];
+  totalSelectedItems?: number;
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -143,5 +161,7 @@ export type RootStackParamList = {
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
   MyArticles: undefined;
+  MyKits: undefined;
+  KitDetail: { kitId: number };
   UploadArticle: undefined;
 };
