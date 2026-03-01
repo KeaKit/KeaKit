@@ -1,6 +1,7 @@
 package com.example.demo.article;
 
 import com.example.demo.controller.ArticleController;
+import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.User;
@@ -221,5 +222,49 @@ class ArticleControllerTest {
                 .param("ownerId", "600"))
             .andExpect(status().isBadRequest())
             .andExpect(content().string("nope"));
+    }
+
+    // ------------ GET /api/article/my-articles/{userId} ------------
+
+    @Test
+    void getMyArticles_success() throws Exception {
+        UserArticle dto1 = new UserArticle(
+                10L, "Taladro", "url1", 15.0, "AVAILABLE", null
+        );
+        UserArticle dto2 = new UserArticle(
+                11L, "Bicicleta", "url2", 30.0, "RENTED", LocalDate.of(2026, 12, 31)
+        );
+
+        when(articleService.findArticlesByUserId(1L)).thenReturn(List.of(dto1, dto2));
+
+        mockMvc.perform(get("/api/article/my-articles/1"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].title").value("Taladro"))
+            .andExpect(jsonPath("$[0].status").value("AVAILABLE"))
+            .andExpect(jsonPath("$[0].rentedUntil").doesNotExist())
+            .andExpect(jsonPath("$[1].title").value("Bicicleta"))
+            .andExpect(jsonPath("$[1].status").value("RENTED"))
+            .andExpect(jsonPath("$[1].rentedUntil").value("2026-12-31"));
+    }
+
+    @Test
+    void getMyArticles_emptyList_returnsOk() throws Exception {
+        when(articleService.findArticlesByUserId(2L)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/article/my-articles/2"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
+    
+    @Test
+    void getMyArticles_serviceThrows_returnsBadRequest() throws Exception {
+        when(articleService.findArticlesByUserId(3L)).thenThrow(new RuntimeException("Error fetching articles"));
+
+        mockMvc.perform(get("/api/article/my-articles/3"))
+            .andExpect(status().isInternalServerError())
+            .andExpect(jsonPath("$.message").value("Error fetching articles"))
+            .andExpect(jsonPath("$.status").value(500));
     }
 }
