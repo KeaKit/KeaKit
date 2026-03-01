@@ -464,4 +464,31 @@ class ArticleServiceTest {
         assertThat(result).isEmpty();
         assertThat(result).isNotNull();
     }
+
+    // ------------ CATEGORY METHODS ------------
+
+    @Test
+    void countArticlesByCategory_returnsCount() {
+        when(articleRepository.countByCategoryId(1L)).thenReturn(12L);
+
+        long count = articleService.countArticlesByCategory(1L);
+
+        assertThat(count).isEqualTo(12L);
+        verify(articleRepository).countByCategoryId(1L);
+    }
+
+    @Test
+    void findLatestArticlesByCategory_returnsMappedDTOs() {
+        Article a1 = makeArticle(100L, ArticleStatus.AVAILABLE);
+        a1.setTitle("Artículo Reciente");
+
+        when(articleRepository.findTop10ByCategoryIdOrderByIdDesc(1L)).thenReturn(List.of(a1));
+
+        List<UserArticle> result = articleService.findLatestArticlesByCategory(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).title()).isEqualTo("Artículo Reciente");
+        assertThat(result.get(0).status()).isEqualTo("AVAILABLE");
+        verify(articleRepository).findTop10ByCategoryIdOrderByIdDesc(1L);
+    }
 }

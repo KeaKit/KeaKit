@@ -2,6 +2,7 @@ package com.example.demo.article;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,10 +37,15 @@ class ArticleIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private CategoryRepository categoryRepository;
+    
+    @Autowired
     private ObjectMapper objectMapper;
 
     private User savedOwner;
     private Article savedArticle;
+    private Category savedCategory; 
+
 
     @BeforeEach
     void setUp() {
@@ -50,6 +56,10 @@ class ArticleIntegrationTest {
         owner.setRole(UserRole.USER);
         savedOwner = userRepository.save(owner);
 
+        Category category = new Category("Bricolaje", "Cosas de taller", 5.0, 500.0);
+        category.setStatus(CategoryStatus.ACTIVE);
+        savedCategory = categoryRepository.save(category);
+
         Article article = new Article();
         article.setTitle("Taladro");
         article.setDescription("Un taladro potente");
@@ -57,6 +67,7 @@ class ArticleIntegrationTest {
         article.setPricePerMonth(50.0);
         article.setStatus(ArticleStatus.AVAILABLE);
         article.setOwner(savedOwner);
+        article.setCategory(savedCategory); 
 
         savedArticle = articleRepository.save(article);
     }
@@ -70,6 +81,7 @@ class ArticleIntegrationTest {
         newArticle.setDescription("Escalera de aluminio");
         newArticle.setCity("Barcelona");
         newArticle.setPricePerMonth(30.0);
+        newArticle.setCategory(savedCategory);
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
@@ -163,6 +175,7 @@ class ArticleIntegrationTest {
         second.setCity("Zaragoza");
         second.setPricePerMonth(40.0);
         second.setStatus(ArticleStatus.AVAILABLE);
+        second.setCategory(savedCategory);
         second.setOwner(savedOwner);
         articleRepository.save(second);
 
@@ -338,5 +351,24 @@ class ArticleIntegrationTest {
                 .param("ownerId", savedOwner.getId().toString()))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Article not found"));
+    }
+
+    // ------------ GET "/api/article/category/{id}/count")------------
+
+    @Test
+    void testGetArticleCountByCategory_Integration() throws Exception {
+        mockMvc.perform(get("/api/article/category/" + savedCategory.getId() + "/count"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("1")); // Debe haber 1 artículo
+    }
+
+    // ------------ GET "/api/article/category/{id}/latest")------------
+
+    @Test
+    void testGetLatestArticlesByCategory_Integration() throws Exception {
+        mockMvc.perform(get("/api/article/category/" + savedCategory.getId() + "/latest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].title").value("Taladro"));
     }
 }
