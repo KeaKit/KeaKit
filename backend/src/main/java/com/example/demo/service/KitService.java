@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
+import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.Item;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
@@ -17,6 +18,8 @@ import java.util.List;
 
 @Service
 public class KitService {
+
+    private static final double PLATFORM_COURIER_PRICE = 9.99;
 
     private final KitRepository kitRepository;
     private final UserRepository userRepository;
@@ -47,6 +50,23 @@ public class KitService {
         kit.setEndDate(request.getEndDate());
         kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.UPCOMING);
 
+        DeliveryMethod deliveryMethod = request.getDeliveryMethod() != null
+            ? request.getDeliveryMethod()
+            : DeliveryMethod.COURIER;
+        kit.setDeliveryMethod(deliveryMethod);
+
+        String meetingPoint = request.getMeetingPoint() != null ? request.getMeetingPoint().trim() : null;
+        if (deliveryMethod == DeliveryMethod.MEETING_POINT && (meetingPoint == null || meetingPoint.isEmpty())) {
+            throw new RuntimeException("Meeting point is required when delivery method is MEETING_POINT");
+        }
+        kit.setMeetingPoint(deliveryMethod == DeliveryMethod.MEETING_POINT ? meetingPoint : null);
+
+        if (deliveryMethod == DeliveryMethod.COURIER) {
+            kit.setCourierPrice(PLATFORM_COURIER_PRICE);
+        } else {
+            kit.setCourierPrice(null);
+        }
+
         if (request.getTenantId() != null) {
             User tenant = userRepository.findById(request.getTenantId())
                 .orElseThrow(() -> new RuntimeException("Tenant not found"));
@@ -75,8 +95,16 @@ public class KitService {
         if (updateData.getStartDate() != null) kit.setStartDate(updateData.getStartDate());
         if (updateData.getEndDate() != null) kit.setEndDate(updateData.getEndDate());
         if (updateData.getStatus() != null) kit.setStatus(updateData.getStatus());
+        if (updateData.getDeliveryMethod() != null) kit.setDeliveryMethod(updateData.getDeliveryMethod());
+        if (updateData.getMeetingPoint() != null) kit.setMeetingPoint(updateData.getMeetingPoint());
         if (updateData.getTenant() != null) kit.setTenant(updateData.getTenant());
         if (updateData.getItems() != null) kit.setItems(updateData.getItems());
+
+        if (kit.getDeliveryMethod() == DeliveryMethod.COURIER) {
+            kit.setCourierPrice(PLATFORM_COURIER_PRICE);
+        } else {
+            kit.setCourierPrice(null);
+        }
 
         validateDates(kit.getStartDate(), kit.getEndDate());
 

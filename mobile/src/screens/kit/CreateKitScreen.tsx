@@ -25,6 +25,7 @@ import KitItemComponent from "../../components/KitItemComponent";
 import { removeSelectedId } from "./createKitSelection";
 
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
+const PLATFORM_COURIER_PRICE = 9.99;
 
 type CreateKitNav = NativeStackNavigationProp<RootStackParamList, "CreateKit">;
 
@@ -34,9 +35,12 @@ type FormErrors = {
   city?: string;
   startDate?: string;
   endDate?: string;
+  meetingPoint?: string;
   items?: string;
   general?: string;
 };
+
+type DeliveryMethod = "COURIER" | "MEETING_POINT";
 
 type CatalogProduct = {
   id: number;
@@ -99,6 +103,9 @@ const CreateKitScreen: React.FC = () => {
   const [city, setCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [deliveryMethod, setDeliveryMethod] =
+    useState<DeliveryMethod>("COURIER");
+  const [meetingPoint, setMeetingPoint] = useState("");
 
   const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
     [],
@@ -215,6 +222,9 @@ const CreateKitScreen: React.FC = () => {
     );
   }, [selectedProducts, monthsBetween]);
 
+  const courierPrice =
+    deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
+
   const categories = useMemo(() => {
     const set = new Set(
       availableProducts
@@ -292,6 +302,9 @@ const CreateKitScreen: React.FC = () => {
 
     if (!country.trim()) nextErrors.country = "El país es obligatorio.";
     if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
+    if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
+      nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
+    }
 
     const startIso = toIsoDate(startDate);
     const endIso = toIsoDate(endDate);
@@ -347,6 +360,11 @@ const CreateKitScreen: React.FC = () => {
           city: city.trim(),
           startDate: validation.payloadDates.startIso,
           endDate: validation.payloadDates.endIso,
+          deliveryMethod,
+          meetingPoint:
+            deliveryMethod === "MEETING_POINT"
+              ? meetingPoint.trim()
+              : undefined,
           tenantId: user.id,
           itemIds: selectedIds,
         },
@@ -474,6 +492,72 @@ const CreateKitScreen: React.FC = () => {
           <Text style={commonStyles.errorText}>{errors.endDate}</Text>
         ) : null}
 
+        <View style={createKitStyles.deliverySection}>
+          <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
+            Método de entrega
+          </Text>
+
+          <View style={createKitStyles.deliveryOptionsRow}>
+            <TouchableOpacity
+              style={[
+                createKitStyles.deliveryOption,
+                deliveryMethod === "COURIER" &&
+                  createKitStyles.deliveryOptionSelected,
+              ]}
+              onPress={() => {
+                setDeliveryMethod("COURIER");
+                clearFieldError("meetingPoint");
+              }}
+            >
+              <Text style={createKitStyles.deliveryOptionText}>Mensajería</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                createKitStyles.deliveryOption,
+                deliveryMethod === "MEETING_POINT" &&
+                  createKitStyles.deliveryOptionSelected,
+              ]}
+              onPress={() => {
+                setDeliveryMethod("MEETING_POINT");
+              }}
+            >
+              <Text style={createKitStyles.deliveryOptionText}>
+                Punto de encuentro
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {deliveryMethod === "MEETING_POINT" ? (
+            <>
+              <TextInput
+                style={[
+                  commonStyles.input,
+                  createKitStyles.meetingPointInput,
+                  errors.meetingPoint && commonStyles.inputError,
+                ]}
+                placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
+                value={meetingPoint}
+                onChangeText={(value) => {
+                  setMeetingPoint(value);
+                  clearFieldError("meetingPoint");
+                }}
+              />
+              {errors.meetingPoint ? (
+                <Text style={commonStyles.errorText}>
+                  {errors.meetingPoint}
+                </Text>
+              ) : null}
+            </>
+          ) : null}
+
+          {deliveryMethod === "COURIER" ? (
+            <Text style={commonStyles.bodySecondary}>
+              Tarifa de mensajería: {PLATFORM_COURIER_PRICE.toFixed(2)}€
+            </Text>
+          ) : null}
+        </View>
+
         {/* Duración del alquiler */}
         {monthsBetween !== null && monthsBetween > 0 && (
           <View style={{ marginTop: 8, marginBottom: 16 }}>
@@ -560,6 +644,17 @@ const CreateKitScreen: React.FC = () => {
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
+            <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
+            <Text style={commonStyles.caption}>{courierPrice.toFixed(2)}€</Text>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
               alignItems: "center",
               borderTopWidth: 1,
               borderTopColor: Colors.border,
@@ -581,7 +676,12 @@ const CreateKitScreen: React.FC = () => {
                 { fontSize: 20, color: Colors.primary },
               ]}
             >
-              {(totalPrice + totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
+              {(
+                totalPrice +
+                totalPrice * GUARANTEE_PERCENTAGE +
+                courierPrice
+              ).toFixed(2)}
+              €
             </Text>
           </View>
 

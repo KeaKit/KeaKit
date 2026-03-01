@@ -49,7 +49,7 @@ export interface UserArticle {
   title: string;
   imageUrl: string | null;
   pricePerMonth: number;
-  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
+  status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
 }
 
@@ -59,6 +59,8 @@ export interface KitCreateRequest {
   city: string;
   startDate: string;
   endDate: string;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint?: string;
   tenantId: number;
   itemIds: number[];
 }
@@ -70,9 +72,11 @@ export interface KitResponse {
   city: string;
   startDate: string;
   endDate: string;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint?: string;
+  courierPrice?: number;
   tenantId: number;
   itemIds: number[];
-
 }
 
 export interface RatingCreateRequest {
@@ -101,21 +105,21 @@ export interface Article {
   title: string;
   imageUrl: string | null;
   pricePerMonth: number;
-  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
+  status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
 }
 
 export interface ArticlePayload {
-  title: string;           
-  description: string;     
+  title: string;
+  description: string;
   city: string;
   pricePerMonth: number;
-  availableFrom: string;   
-  availableUntil: string; 
+  availableFrom: string;
+  availableUntil: string;
   category: string;
-  status?: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
+  status?: "AVAILABLE" | "RENTED" | "INACTIVE";
   imageUrl?: string;
-  purchaseDate?: string;   
+  purchaseDate?: string;
 }
 
 export type RootStackParamList = {

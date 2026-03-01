@@ -25,6 +25,13 @@ public class Kit {
     @Enumerated(EnumType.STRING)
     private KitStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private DeliveryMethod deliveryMethod;
+
+    private String meetingPoint;
+
+    private Double courierPrice;
+
     @ManyToOne
     @JoinColumn(name = "tenant_id")
     private User tenant;
@@ -103,6 +110,30 @@ public class Kit {
 
     public void setStatus(KitStatus status) {
         this.status = status;
+    }
+
+    public DeliveryMethod getDeliveryMethod() {
+        return deliveryMethod;
+    }
+
+    public void setDeliveryMethod(DeliveryMethod deliveryMethod) {
+        this.deliveryMethod = deliveryMethod;
+    }
+
+    public String getMeetingPoint() {
+        return meetingPoint;
+    }
+
+    public void setMeetingPoint(String meetingPoint) {
+        this.meetingPoint = meetingPoint;
+    }
+
+    public Double getCourierPrice() {
+        return courierPrice;
+    }
+
+    public void setCourierPrice(Double courierPrice) {
+        this.courierPrice = courierPrice;
     }
 
     public User getTenant() {

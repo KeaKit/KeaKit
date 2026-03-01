@@ -3,6 +3,7 @@ package com.example.demo.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.KitStatus;
 
 public class KitCreateRequest {
@@ -12,6 +13,8 @@ public class KitCreateRequest {
     private LocalDate startDate;
     private LocalDate endDate;
     private KitStatus status;
+    private DeliveryMethod deliveryMethod;
+    private String meetingPoint;
     private Long tenantId;
     private List<Long> itemIds;
 
@@ -61,6 +64,22 @@ public class KitCreateRequest {
 
     public void setStatus(KitStatus status) {
         this.status = status;
+    }
+
+    public DeliveryMethod getDeliveryMethod() {
+        return deliveryMethod;
+    }
+
+    public void setDeliveryMethod(DeliveryMethod deliveryMethod) {
+        this.deliveryMethod = deliveryMethod;
+    }
+
+    public String getMeetingPoint() {
+        return meetingPoint;
+    }
+
+    public void setMeetingPoint(String meetingPoint) {
+        this.meetingPoint = meetingPoint;
     }
 
     public Long getTenantId() { 
