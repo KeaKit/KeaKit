@@ -82,7 +82,6 @@ const toIsoDate = (raw: string): string | null => {
 };
 
 function calculateMonthsBetween(start: Date, end: Date): number {
-  // Función para calcular la duración exacta en meses del alquiler del kit
   const years = end.getUTCFullYear() - start.getUTCFullYear();
   const months = end.getUTCMonth() - start.getUTCMonth();
   const days = end.getUTCDate() - start.getUTCDate();
@@ -111,27 +110,17 @@ const CreateKitScreen: React.FC = () => {
     useState<DeliveryMethod>("COURIER");
   const [meetingPoint, setMeetingPoint] = useState("");
 
-  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
-    [],
-  );
-  const [selectedQuantities, setSelectedQuantities] = useState<
-    Record<number, number>
-  >({});
-  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<
-    Record<number, number>
-  >({});
+  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>([]);
+  const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
+  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
 
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
-  const [statusFilter, setStatusFilter] = useState<
-    "ALL" | "AVAILABLE" | "RENTED" | "INACTIVE"
-  >("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "AVAILABLE" | "RENTED" | "INACTIVE">("ALL");
 
   const [appliedSearch, setAppliedSearch] = useState("");
   const [appliedCategory, setAppliedCategory] = useState<"ALL" | string>("ALL");
-  const [appliedStatus, setAppliedStatus] = useState<
-    "ALL" | "AVAILABLE" | "RENTED" | "INACTIVE"
-  >("ALL");
+  const [appliedStatus, setAppliedStatus] = useState<"ALL" | "AVAILABLE" | "RENTED" | "INACTIVE">("ALL");
   const [hasSearched, setHasSearched] = useState(false);
 
   const [loadingCatalog, setLoadingCatalog] = useState(true);
@@ -188,17 +177,26 @@ const CreateKitScreen: React.FC = () => {
       const raw = JSON.parse(text);
 
       const mapped: CatalogProduct[] = (raw ?? [])
-        .map((p: any) => ({
-          id: Number(p.id),
-          title: p.title ?? "Sin título",
-          pricePerMonth: Number(p.pricePerMonth ?? 0),
-          status: String(p.status ?? "AVAILABLE"),
-          category: p.category ?? "",
-          city: p.city ?? "",
-          ownerName: p.owner?.name ?? "",
-          imageUrl: p.imageUrl ?? null,
-          totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
-        }))
+        .map((p: any) => {
+          let categoryName = "";
+          if (p.category && typeof p.category === "object") {
+            categoryName = p.category.name ?? "";
+          } else if (typeof p.category === "string") {
+            categoryName = p.category;
+          }
+
+          return {
+            id: Number(p.id),
+            title: p.title ?? "Sin título",
+            pricePerMonth: Number(p.pricePerMonth ?? 0),
+            status: String(p.status ?? "AVAILABLE"),
+            category: categoryName,
+            city: p.city ?? "",
+            ownerName: p.owner?.name ?? "",
+            imageUrl: p.imageUrl ?? null,
+            totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
+          };
+        })
         .filter((p: CatalogProduct) => p.status === "AVAILABLE");
 
       setAvailableProducts(mapped);
