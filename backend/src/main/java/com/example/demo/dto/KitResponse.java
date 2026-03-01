@@ -2,6 +2,7 @@ package com.example.demo.dto;
 
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
+import com.example.demo.model.DeliveryMethod;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,6 +16,8 @@ public class KitResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private KitStatus status;
+    private DeliveryMethod deliveryMethod;
+    private String meetingPoint;
     private Long tenantId;
     private List<Long> itemIds;
 
@@ -26,6 +29,8 @@ public class KitResponse {
         this.startDate = kit.getStartDate();
         this.endDate = kit.getEndDate();
         this.status = kit.getStatus();
+        this.deliveryMethod = kit.getDeliveryMethod();
+        this.meetingPoint = kit.getMeetingPoint();
         this.tenantId = kit.getTenant() != null ? kit.getTenant().getId() : null;
         this.itemIds = kit.getItems() != null
             ? kit.getItems().stream().map(item -> item.getId()).collect(Collectors.toList())
@@ -57,6 +62,14 @@ public class KitResponse {
     
     public KitStatus getStatus() {
         return status;
+    }
+
+    public DeliveryMethod getDeliveryMethod() {
+        return deliveryMethod;
+    }
+
+    public String getMeetingPoint() {
+        return meetingPoint;
     }
 
     public List<Long> getItemIds() { 
