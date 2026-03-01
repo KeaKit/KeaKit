@@ -210,4 +210,31 @@ public class KitServiceTest {
         assertEquals(2, res.getItemSelections().get(0).getQuantity());
         assertEquals(2, res.getTotalSelectedItems());
     }
+
+    @Test
+    void confirmKitStatus_whenPendingValidation_changesToActive() {
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setStatus(KitStatus.PENDING_VALIDATION);
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+        when(kitRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        kitService.confirmKitStatus(1L);
+
+        assertEquals(KitStatus.ACTIVE, kit.getStatus());
+    }
+
+    @Test
+    void confirmKitStatus_whenNotPendingValidation_throwsException() {
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setStatus(KitStatus.ACTIVE);
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
+    }
 }
