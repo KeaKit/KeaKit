@@ -2,12 +2,27 @@ import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
 import { useAuth } from '../context/AuthContext';
-import LoginScreen       from '../screens/auth/LoginScreen';
-import RegisterScreen    from '../screens/auth/RegisterScreen';
-import HomeScreen from '../screens/home/HomeScreen';
+
+import LoginScreen          from '../screens/auth/LoginScreen';
+import RegisterScreen       from '../screens/auth/RegisterScreen';
+import HomeScreen           from '../screens/home/HomeScreen';
+import MyArticlesScreen     from '../screens/profile/MyArticlesScreen';
+import MyKitsScreen from '../screens/profile/MyKitsScreen';
+import UploadArticleScreen  from '../screens/profile/UploadArticleScreen';
+import CreateRatingScreen   from '../screens/ratings/CreateRatingScreen';
+import UserRatingsScreen    from '../screens/ratings/UserRatingsScreen';
+import CreateKitScreen      from '../screens/kit/CreateKitScreen';
+
 import { RootStackParamList } from '../types';
+import EditArticleScreen from '../screens/profile/EditArticleScreen';
+
+import KitDetailScreen from '../screens/kit/KitDetailScreen';
+
+import CategoriesScreen from '../screens/category/CategoriesScreen';
+import CategoryFormScreen from '../screens/category/CategoryFormScreen';
+
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -24,13 +39,28 @@ const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{ headerShown: false }}
-        initialRouteName="Home"
-      >
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? (
+          <>
+            <Stack.Screen name="Home"          component={HomeScreen} />
+            <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
+            <Stack.Screen name="MyKits"    component={MyKitsScreen} />
+            <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
+            <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
+            <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
+            <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
+            <Stack.Screen name="EditArticle" component={EditArticleScreen} />
+            <Stack.Screen name="KitDetail" component={KitDetailScreen} />
+            <Stack.Screen name="Categories" component={CategoriesScreen} />
+            <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
+
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Login"    component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );
