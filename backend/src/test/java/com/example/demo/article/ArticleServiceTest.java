@@ -1,5 +1,6 @@
 package com.example.demo.article;
 
+import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.User;
@@ -423,5 +424,44 @@ class ArticleServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> articleService.toggleRent(99L, owner.getId()));
         assertThat(ex.getMessage()).contains("Article not found");
+    }
+
+    @Test
+    void getMyArticles_returnsMappedDTOs() {
+        Article articleAvailable = makeArticle(10L, ArticleStatus.AVAILABLE);
+        articleAvailable.setTitle("Taladro");
+        articleAvailable.setAvailableUntil(LocalDate.now().plusDays(5)); 
+
+        Article articleRented = makeArticle(11L, ArticleStatus.RENTED);
+        articleRented.setTitle("Bicicleta");
+        LocalDate rentalEndDate = LocalDate.now().plusDays(10);
+        articleRented.setAvailableUntil(rentalEndDate);
+
+        when(articleRepository.findByOwnerId(owner.getId()))
+            .thenReturn(List.of(articleAvailable, articleRented));
+
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+
+        assertThat(result).hasSize(2);
+
+        UserArticle dtoAvailable = result.get(0);
+        assertThat(dtoAvailable.title()).isEqualTo("Taladro");
+        assertThat(dtoAvailable.status()).isEqualTo("AVAILABLE");
+        assertThat(dtoAvailable.rentedUntil()).isNull();
+
+        UserArticle dtoRented = result.get(1);
+        assertThat(dtoRented.title()).isEqualTo("Bicicleta");
+        assertThat(dtoRented.status()).isEqualTo("RENTED");
+        assertThat(dtoRented.rentedUntil()).isEqualTo(rentalEndDate);
+    }
+
+    @Test
+    void getMyArticles_whenUserHasNoArticles_returnsEmptyList() {
+        when(articleRepository.findByOwnerId(owner.getId())).thenReturn(List.of());
+
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+
+        assertThat(result).isEmpty();
+        assertThat(result).isNotNull();
     }
 }
