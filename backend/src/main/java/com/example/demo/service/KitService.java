@@ -153,7 +153,14 @@ public class KitService {
         Kit kit = kitRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Kit not found"));
 
+        if (kit.getStatus() != KitStatus.PENDING_VALIDATION) {
+            throw new RuntimeException(
+                "The kit can only be confirmed if its status is PENDING_VALIDATION"
+            );
+        }
+
         kit.setStatus(KitStatus.ACTIVE);
+        kitRepository.save(kit);
     }
 
     private List<KitItem> buildKitItemsFromRequest(KitCreateRequest request) {
