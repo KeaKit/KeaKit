@@ -22,6 +22,7 @@ import { RootStackParamList } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
+import { removeSelectedId } from "./createKitSelection";
 
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
 
@@ -41,7 +42,7 @@ type CatalogProduct = {
   id: number;
   title: string;
   pricePerMonth: number;
-  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE' | string;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
   category?: string;
   city?: string;
   ownerName?: string;
@@ -105,13 +106,17 @@ const CreateKitScreen: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [tempSelectedIds, setTempSelectedIds] = useState<number[]>([]);
 
-  const [searchText, setSearchText] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<'ALL' | string>('ALL');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'RENTED' | 'INACTIVE'>('ALL');
+  const [searchText, setSearchText] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "AVAILABLE" | "RENTED" | "INACTIVE"
+  >("ALL");
 
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [appliedCategory, setAppliedCategory] = useState<'ALL' | string>('ALL');
-  const [appliedStatus, setAppliedStatus] = useState<'ALL' | 'AVAILABLE' | 'RENTED' | 'INACTIVE'>('ALL');
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [appliedCategory, setAppliedCategory] = useState<"ALL" | string>("ALL");
+  const [appliedStatus, setAppliedStatus] = useState<
+    "ALL" | "AVAILABLE" | "RENTED" | "INACTIVE"
+  >("ALL");
   const [hasSearched, setHasSearched] = useState(false);
 
   const [loadingCatalog, setLoadingCatalog] = useState(true);
@@ -154,14 +159,14 @@ const CreateKitScreen: React.FC = () => {
         },
       });
 
-      const contentType = res.headers.get('content-type') || '';
+      const contentType = res.headers.get("content-type") || "";
       const text = await res.text();
 
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${text}`);
       }
 
-      if (!contentType.includes('application/json')) {
+      if (!contentType.includes("application/json")) {
         throw new Error(`Respuesta no JSON: ${text}`);
       }
 
@@ -216,20 +221,21 @@ const CreateKitScreen: React.FC = () => {
         .map((p) => p.category?.trim())
         .filter((c): c is string => Boolean(c)),
     );
-    return ['ALL', ...Array.from(set)];
+    return ["ALL", ...Array.from(set)];
   }, [availableProducts]);
 
   const filteredProducts = useMemo(() => {
     const q = appliedSearch.trim().toLowerCase();
 
     return availableProducts.filter((p) => {
-      const byStatus = appliedStatus === 'ALL' || p.status === appliedStatus;
-      const byCategory = appliedCategory === 'ALL' || p.category === appliedCategory;
+      const byStatus = appliedStatus === "ALL" || p.status === appliedStatus;
+      const byCategory =
+        appliedCategory === "ALL" || p.category === appliedCategory;
       const bySearch =
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
-        (p.city ?? '').toLowerCase().includes(q) ||
-        (p.category ?? '').toLowerCase().includes(q);
+        (p.city ?? "").toLowerCase().includes(q) ||
+        (p.category ?? "").toLowerCase().includes(q);
 
       return byStatus && byCategory && bySearch;
     });
@@ -239,13 +245,13 @@ const CreateKitScreen: React.FC = () => {
     await loadCatalog();
     setTempSelectedIds(selectedIds);
 
-    setSearchText('');
-    setCategoryFilter('ALL');
-    setStatusFilter('ALL');
+    setSearchText("");
+    setCategoryFilter("ALL");
+    setStatusFilter("ALL");
 
-    setAppliedSearch('');
-    setAppliedCategory('ALL');
-    setAppliedStatus('ALL');
+    setAppliedSearch("");
+    setAppliedCategory("ALL");
+    setAppliedStatus("ALL");
     setHasSearched(false);
 
     setCatalogModalVisible(true);
@@ -268,6 +274,10 @@ const CreateKitScreen: React.FC = () => {
     setSelectedIds(tempSelectedIds);
     clearFieldError("items");
     setCatalogModalVisible(false);
+  };
+
+  const removeSelectedItem = (id: number) => {
+    setSelectedIds((prev) => removeSelectedId(prev, id));
   };
 
   const validate = (): {
@@ -506,6 +516,7 @@ const CreateKitScreen: React.FC = () => {
               key={item.id}
               item={item}
               duration={monthsBetween ?? 0}
+              onRemove={removeSelectedItem}
             />
           ))
         )}
@@ -606,8 +617,17 @@ const CreateKitScreen: React.FC = () => {
             <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
 
             <View style={{ gap: 8, marginBottom: 12 }}>
-              <View style={[commonStyles.input, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
-                <Ionicons name="search" size={18} color={Colors.textSecondary} />
+              <View
+                style={[
+                  commonStyles.input,
+                  { flexDirection: "row", alignItems: "center", gap: 8 },
+                ]}
+              >
+                <Ionicons
+                  name="search"
+                  size={18}
+                  color={Colors.textSecondary}
+                />
                 <TextInput
                   placeholder="Buscar objeto..."
                   value={searchText}
@@ -616,26 +636,42 @@ const CreateKitScreen: React.FC = () => {
                 />
               </View>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                {(['ALL', 'AVAILABLE', 'RENTED', 'INACTIVE'] as const).map((s) => (
-                  <TouchableOpacity
-                    key={s}
-                    onPress={() => setStatusFilter(s)}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor: statusFilter === s ? Colors.primary : Colors.border,
-                      backgroundColor: statusFilter === s ? '#EAF3F8' : Colors.backgroundWhite,
-                    }}
-                  >
-                    <Text style={{ color: Colors.primary }}>{s === 'ALL' ? 'Todos' : s}</Text>
-                  </TouchableOpacity>
-                ))}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+              >
+                {(["ALL", "AVAILABLE", "RENTED", "INACTIVE"] as const).map(
+                  (s) => (
+                    <TouchableOpacity
+                      key={s}
+                      onPress={() => setStatusFilter(s)}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 999,
+                        borderWidth: 1,
+                        borderColor:
+                          statusFilter === s ? Colors.primary : Colors.border,
+                        backgroundColor:
+                          statusFilter === s
+                            ? "#EAF3F8"
+                            : Colors.backgroundWhite,
+                      }}
+                    >
+                      <Text style={{ color: Colors.primary }}>
+                        {s === "ALL" ? "Todos" : s}
+                      </Text>
+                    </TouchableOpacity>
+                  ),
+                )}
               </ScrollView>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+              >
                 {categories.map((c) => (
                   <TouchableOpacity
                     key={c}
@@ -645,25 +681,38 @@ const CreateKitScreen: React.FC = () => {
                       paddingVertical: 8,
                       borderRadius: 999,
                       borderWidth: 1,
-                      borderColor: categoryFilter === c ? Colors.primary : Colors.border,
-                      backgroundColor: categoryFilter === c ? '#EAF3F8' : Colors.backgroundWhite,
+                      borderColor:
+                        categoryFilter === c ? Colors.primary : Colors.border,
+                      backgroundColor:
+                        categoryFilter === c
+                          ? "#EAF3F8"
+                          : Colors.backgroundWhite,
                     }}
                   >
-                    <Text style={{ color: Colors.primary }}>{c === 'ALL' ? 'Todas' : c}</Text>
+                    <Text style={{ color: Colors.primary }}>
+                      {c === "ALL" ? "Todas" : c}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
 
-            <TouchableOpacity style={[commonStyles.primaryButton, { marginBottom: 12 }]} onPress={handleApplyFilters}>
+            <TouchableOpacity
+              style={[commonStyles.primaryButton, { marginBottom: 12 }]}
+              onPress={handleApplyFilters}
+            >
               <Text style={commonStyles.primaryButtonText}>Buscar</Text>
             </TouchableOpacity>
 
             <ScrollView style={createKitStyles.modalList}>
               {!hasSearched ? (
-                <Text style={commonStyles.bodySecondary}>Configura los filtros y pulsa "Buscar".</Text>
+                <Text style={commonStyles.bodySecondary}>
+                  Configura los filtros y pulsa "Buscar".
+                </Text>
               ) : filteredProducts.length === 0 ? (
-                <Text style={commonStyles.bodySecondary}>No hay productos que cumplan los filtros.</Text>
+                <Text style={commonStyles.bodySecondary}>
+                  No hay productos que cumplan los filtros.
+                </Text>
               ) : (
                 filteredProducts.map((p) => {
                   const checked = tempSelectedIds.includes(p.id);
@@ -683,10 +732,10 @@ const CreateKitScreen: React.FC = () => {
 
                         {/* TODO(Equipo): Mostrar precio por objeto individual en modal */}
                         <Text style={commonStyles.caption}>
-                          {p.ownerName ? `${p.ownerName} · ` : ''}
-                          {p.city ? `${p.city} · ` : ''}
-                          {p.category ? `${p.category} · ` : ''}
-                          €{p.pricePerMonth}
+                          {p.ownerName ? `${p.ownerName} · ` : ""}
+                          {p.city ? `${p.city} · ` : ""}
+                          {p.category ? `${p.category} · ` : ""}€
+                          {p.pricePerMonth}
                         </Text>
                       </View>
                       <View
