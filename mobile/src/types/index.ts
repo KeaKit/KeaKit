@@ -97,9 +97,15 @@ export interface RatingResponse {
 export interface Article {
   id: number;
   title: string;
-  imageUrl: string | null;
+  description: string;
+  city: string;
   pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE";
+  availableFrom: string;
+  availableUntil: string;
+  category: string;
+  imageUrl: string | null;
+  purchaseDate: string | null;
+  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
   rentedUntil: string | null;
   totalUnits?: number;
 }
@@ -172,6 +178,7 @@ export type RootStackParamList = {
   MyKits: undefined;
   KitDetail: { kitId: number };
   UploadArticle: undefined;
+  EditArticle: { article: Article };
   Categories: undefined;
   CategoryForm: { category?: Category , mode: 'view' | 'edit' | 'create' };
 };
