@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -31,6 +32,8 @@ const KitDetailScreen: React.FC = () => {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchKitDetail = async () => {
@@ -119,6 +122,31 @@ const KitDetailScreen: React.FC = () => {
     );
   };
 
+  const handleReportProblem = () => {
+    setReportModalVisible(true);
+  };
+
+  const toggleItemSelection = (itemId: number) => {
+    setSelectedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const handleSubmitReport = () => {
+    if (selectedItems.length === 0) {
+      Alert.alert("Selecciona al menos un producto");
+      return;
+    }
+
+    console.log("Productos reportados:", selectedItems);
+
+    Alert.alert("Reporte enviado correctamente");
+    setReportModalVisible(false);
+    setSelectedItems([]);
+  };
+
   if (loading || confirming) {
     return (
       <View style={styles.centerContainer}>
@@ -147,7 +175,17 @@ const KitDetailScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle del Kit</Text>
-        <View style={{ width: 40 }} />
+        {kit.status === KitStatus.PENDING_VALIDATION && (
+        <TouchableOpacity 
+          onPress={handleReportProblem} 
+          style={styles.reportButton}
+        >
+          <Ionicons name="flag-outline" size={22} color="#FF3B30" />
+        </TouchableOpacity>
+        )}
+        {kit.status !== KitStatus.PENDING_VALIDATION && (
+          <View style={{ width: 40 }} />
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -217,6 +255,62 @@ const KitDetailScreen: React.FC = () => {
         </TouchableOpacity>
 
       </ScrollView>
+
+      <Modal
+        visible={reportModalVisible}
+        transparent
+        animationType="slide"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            
+            <Text style={styles.modalTitle}>Reportar Problema</Text>
+            <Text style={styles.modalSubtitle}>¿Qué productos no cumplen con la descripción?</Text>
+
+            <ScrollView style={{ maxHeight: 300 }}>
+              {kit.items?.map((item) => {
+                const isSelected = selectedItems.includes(item.id);
+
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[
+                      styles.modalItem,
+                      isSelected && styles.modalItemSelected
+                    ]}
+                    onPress={() => toggleItemSelection(item.id)}
+                  >
+                    <Text style={styles.modalItemText}>{item.title}</Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setReportModalVisible(false);
+                  setSelectedItems([]);
+                }}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalSubmitButton}
+                onPress={handleSubmitReport}
+              >
+                <Text style={styles.modalSubmitText}>Enviar reporte</Text>
+              </TouchableOpacity>
+            </View>
+
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -250,7 +344,20 @@ const styles = StyleSheet.create({
   confirmButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 30, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#04ac20', backgroundColor: '#FFF' },
   confirmButtonText: { color: '#04ac20', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
   deleteButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 15, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#FF3B30', backgroundColor: '#FFF' },
-  deleteButtonText: { color: '#FF3B30', fontWeight: 'bold', marginLeft: 10, fontSize: 16 }
+  deleteButtonText: { color: '#FF3B30', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
+  reportButton: { padding: 10 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 20 },
+  modalContainer: { backgroundColor: '#FFF', borderRadius: 20, padding: 20 },
+  modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
+  modalSubtitle: { fontSize: 18, marginBottom: 15, textAlign: 'center' },
+  modalItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 10, marginBottom: 8, backgroundColor: '#F7F7F7' },
+  modalItemSelected: { backgroundColor: '#E8F0FE' },
+  modalItemText: { fontSize: 14, fontWeight: '500' },
+  modalButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
+  modalCancelButton: { flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#CCC', marginRight: 10, alignItems: 'center', },
+  modalCancelText: { color: '#666', fontWeight: '600', },
+  modalSubmitButton: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: Colors.primary, alignItems: 'center' },
+  modalSubmitText: { color: '#FFF', fontWeight: 'bold' },
 });
 
 export default KitDetailScreen;
