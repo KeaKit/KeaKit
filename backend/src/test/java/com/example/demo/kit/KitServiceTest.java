@@ -11,21 +11,22 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
+import com.example.demo.model.Article;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
-import com.example.demo.model.Article;
-import com.example.demo.repository.ItemRepository;
 import com.example.demo.model.User;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.KitService;
+import com.example.demo.service.OrderConfirmationEmailService;
 
 @ExtendWith(MockitoExtension.class)
 public class KitServiceTest {
@@ -38,6 +39,9 @@ public class KitServiceTest {
 
     @Mock
     private ItemRepository itemRepository;
+
+    @Mock
+    private OrderConfirmationEmailService orderConfirmationEmailService;
 
     @InjectMocks
     private KitService kitService;
