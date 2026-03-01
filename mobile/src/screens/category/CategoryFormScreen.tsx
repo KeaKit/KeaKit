@@ -43,7 +43,7 @@ const CategoryFormScreen: React.FC = () => {
   const [maxPrice, setMaxPrice] = useState(categoryToEdit?.maxPrice?.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
 
-  const [articleCount, setArticleCount] = useState<number>(categoryToEdit?.articleCount || 0);
+  const [articleCount, setArticleCount] = useState<number>(0);
   const [latestArticles, setLatestArticles] = useState<UserArticle[]>([]);
   const [isLoadingExtra, setIsLoadingExtra] = useState(false);
 
@@ -228,13 +228,6 @@ const CategoryFormScreen: React.FC = () => {
                   )}
                 </View>
                 <Text style={styles.statLabel}>Artículos publicados</Text>
-              </View>
-
-              <View style={styles.statPill}>
-                <View style={styles.statCircle}>
-                  <Text style={styles.statNumber}>10</Text>
-                </View>
-                <Text style={styles.statLabel}>Kits</Text>
               </View>
             </View>
 
