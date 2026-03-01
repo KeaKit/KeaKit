@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native';
-import { Colors, Spacing, BorderRadius, FontSizes, FontWeights } from './theme';
+import { StyleSheet } from "react-native";
+import { Colors, Spacing, BorderRadius, FontSizes, FontWeights } from "./theme";
 
 export const createKitStyles = StyleSheet.create({
   content: {
@@ -9,9 +9,9 @@ export const createKitStyles = StyleSheet.create({
   },
 
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: Spacing.sm,
   },
 
@@ -22,7 +22,7 @@ export const createKitStyles = StyleSheet.create({
   },
 
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: Spacing.sm,
   },
 
@@ -41,12 +41,49 @@ export const createKitStyles = StyleSheet.create({
     borderWidth: 2,
   },
 
+  deliverySection: {
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+
+  deliveryOptionsRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+
+  deliveryOption: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.backgroundWhite,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    alignItems: "center",
+  },
+
+  deliveryOptionSelected: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.brandBeige,
+  },
+
+  deliveryOptionText: {
+    color: Colors.primary,
+    fontWeight: FontWeights.semibold,
+  },
+
+  meetingPointInput: {
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.backgroundWhite,
+  },
+
   productsHeader: {
     marginTop: Spacing.base,
     marginBottom: Spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 
   productsTitle: {
@@ -71,7 +108,7 @@ export const createKitStyles = StyleSheet.create({
 
   loaderArea: {
     paddingVertical: Spacing.xl,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   productRow: {
@@ -87,7 +124,7 @@ export const createKitStyles = StyleSheet.create({
 
   productRowSelected: {
     borderColor: Colors.success,
-    backgroundColor: '#F1FFF5',
+    backgroundColor: "#F1FFF5",
   },
 
   productThumb: {
@@ -97,8 +134,8 @@ export const createKitStyles = StyleSheet.create({
     backgroundColor: Colors.brandBeige,
     borderWidth: 1,
     borderColor: Colors.brandBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   productInfo: {
@@ -118,17 +155,31 @@ export const createKitStyles = StyleSheet.create({
     marginTop: 2,
   },
 
+  productPriceActions: {
+    alignItems: "flex-end",
+    justifyContent: "center",
+    gap: Spacing.sm,
+  },
+
+  removeItemButton: {
+    padding: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.backgroundWhite,
+  },
+
   footerRow: {
     marginTop: Spacing.base,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: Spacing.md,
     backgroundColor: Colors.backgroundWhite,
     padding: 50,
     paddingTop: 30,
     paddingBottom: 30,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -174,15 +225,15 @@ export const createKitStyles = StyleSheet.create({
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
   },
   modalCard: {
     backgroundColor: Colors.backgroundWhite,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     padding: Spacing.lg,
-    maxHeight: '75%',
+    maxHeight: "75%",
   },
   modalTitle: {
     fontSize: FontSizes.xl,
@@ -194,9 +245,9 @@ export const createKitStyles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   modalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: BorderRadius.md,
@@ -205,10 +256,10 @@ export const createKitStyles = StyleSheet.create({
   },
   modalRowChecked: {
     borderColor: Colors.success,
-    backgroundColor: '#F1FFF5',
+    backgroundColor: "#F1FFF5",
   },
   modalActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: Spacing.sm,
   },
   modalBtn: {

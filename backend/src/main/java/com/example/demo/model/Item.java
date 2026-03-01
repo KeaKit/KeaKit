@@ -26,7 +26,12 @@ public abstract class Item {
     protected LocalDate availableFrom;
     protected LocalDate availableUntil;
 
-    protected String category;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+
+    @Column
+    protected Integer totalUnits = 1;
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
@@ -34,7 +39,7 @@ public abstract class Item {
 
     public Item() {}
 
-    public Item (String title, String description, String city, Double pricePerMonth, LocalDate availableFrom, LocalDate availableUntil, String category, User owner) {
+    public Item (String title, String description, String city, Double pricePerMonth, LocalDate availableFrom, LocalDate availableUntil, Category category, User owner) {
         this.title = title;
         this.description = description;
         this.city = city;
@@ -101,11 +106,11 @@ public abstract class Item {
         this.availableUntil = availableUntil;
     }
 
-    public String getCategory() {
+    public Category getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 
@@ -115,5 +120,21 @@ public abstract class Item {
 
     public void setOwner(User owner) {
         this.owner = owner;
+    }
+
+    public Integer getTotalUnits() {
+        return totalUnits;
+    }
+
+    public void setTotalUnits(Integer totalUnits) {
+        this.totalUnits = totalUnits;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTotalUnits() {
+        if (totalUnits == null || totalUnits < 1) {
+            totalUnits = 1;
+        }
     }
 }

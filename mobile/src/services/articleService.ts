@@ -1,5 +1,6 @@
 import { API_ROUTES } from '../config/api';
 import { Article, ArticlePayload } from '../types';
+import { Platform } from 'react-native';
 
 const normalizeErrorMessage = (raw: string): string => {
   const lower = raw.toLowerCase();
@@ -40,6 +41,14 @@ export async function getMyArticles(
   return handleResponse<Article[]>(res);
 }
 
+export async function getArticleById(id: number, token: string): Promise<Article> {
+    const res = await fetch(API_ROUTES.GET_ARTICLE(id), {
+        method: 'GET',
+        headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    });
+    return handleResponse<Article>(res);
+}
+
 export async function uploadArticle(
   ownerId: number,
   token: string,
@@ -51,6 +60,74 @@ export async function uploadArticle(
     body: JSON.stringify(payload),
   });
   return handleResponse<Article>(res);
+}
+
+export async function uploadArticleWithImage(
+  ownerId: number,
+  categoryId: number,
+  token: string,
+  payload: ArticlePayload,
+  imageUri: string,
+  imageName: string
+): Promise<Article> {
+  const formData = new FormData();
+  
+  formData.append('data', JSON.stringify(payload));
+  
+  // Agregar archivo de imagen
+  if (Platform.OS === 'web') {
+    // Si estamos en entorno web
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+    formData.append('image', blob, imageName);
+  } else {
+    // React Native móvil
+    const imageType = imageName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+    formData.append('image', {
+      uri: imageUri,
+      type: imageType,
+      name: imageName
+    } as any);
+  }
+
+  const res = await fetch(API_ROUTES.UPLOAD_ARTICLE_WITH_IMAGE(ownerId, categoryId), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  return handleResponse<Article>(res);
+}
+
+export async function updateArticle(
+  id: number,
+  ownerId: number,
+  token: string,
+  payload: Partial<ArticlePayload>,
+): Promise<Article> {
+  const res = await fetch(API_ROUTES.UPDATE_ARTICLE(id, ownerId), {
+    method: 'PUT',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<Article>(res);
+}
+
+export async function deleteArticle(
+  id: number,
+  ownerId: number,
+  token: string,
+): Promise<void> {
+  const res = await fetch(API_ROUTES.DELETE_ARTICLE(id, ownerId), {
+    method: 'DELETE',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try { errorMessage = await res.text(); } catch {}
+    throw new Error(normalizeErrorMessage(errorMessage));
+  }
 }
 
 

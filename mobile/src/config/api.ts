@@ -16,7 +16,15 @@ export const API_ROUTES = {
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
   MY_ARTICLES: (userId: number) => `${BASE_URL}/api/article/my-articles/${userId}`,
   UPLOAD_ARTICLE: (ownerId: number) => `${BASE_URL}/api/article/upload?ownerId=${ownerId}`,
+  UPLOAD_ARTICLE_WITH_IMAGE: (ownerId: number, categoryId: number) => `${BASE_URL}/api/article/upload-with-image?ownerId=${ownerId}&categoryId=${categoryId}`,
+  GET_ARTICLE: (id: number) => `${BASE_URL}/api/article/${id}`,
+  UPDATE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
+  DELETE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
   TOGGLE_RENT:    (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/toggle-rent?ownerId=${ownerId}`,
+  CATEGORIES: `${BASE_URL}/api/category`,
+  CATEGORY_BY_ID: (id: number) => `${BASE_URL}/api/category/${id}`,
+  GET_LATEST_ARTICLES_BY_CATEGORY: (categoryId: number) => `${BASE_URL}/api/article/category/${categoryId}/latest`,
+  GET_NUMBER_OF_ARTICLES_BY_CATEGORY: (categoryId: number) => `${BASE_URL}/api/article/category/${categoryId}/count`,
 } as const;
 
 export default BASE_URL;

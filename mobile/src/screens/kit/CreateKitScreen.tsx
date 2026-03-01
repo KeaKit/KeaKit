@@ -22,8 +22,13 @@ import { RootStackParamList } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
+import {
+  removeSelectedQuantity,
+  upsertSelectedQuantity,
+} from "./createKitSelection";
 
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
+const PLATFORM_COURIER_PRICE = 9.99;
 
 type CreateKitNav = NativeStackNavigationProp<RootStackParamList, "CreateKit">;
 
@@ -33,19 +38,23 @@ type FormErrors = {
   city?: string;
   startDate?: string;
   endDate?: string;
+  meetingPoint?: string;
   items?: string;
   general?: string;
 };
+
+type DeliveryMethod = "COURIER" | "MEETING_POINT";
 
 type CatalogProduct = {
   id: number;
   title: string;
   pricePerMonth: number;
-  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE' | string;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
   category?: string;
   city?: string;
   ownerName?: string;
   imageUrl?: string | null;
+  totalUnits: number;
 };
 
 const toIsoDate = (raw: string): string | null => {
@@ -73,7 +82,6 @@ const toIsoDate = (raw: string): string | null => {
 };
 
 function calculateMonthsBetween(start: Date, end: Date): number {
-  // Función para calcular la duración exacta en meses del alquiler del kit
   const years = end.getUTCFullYear() - start.getUTCFullYear();
   const months = end.getUTCMonth() - start.getUTCMonth();
   const days = end.getUTCDate() - start.getUTCDate();
@@ -98,20 +106,21 @@ const CreateKitScreen: React.FC = () => {
   const [city, setCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [deliveryMethod, setDeliveryMethod] =
+    useState<DeliveryMethod>("COURIER");
+  const [meetingPoint, setMeetingPoint] = useState("");
 
-  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
-    [],
-  );
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [tempSelectedIds, setTempSelectedIds] = useState<number[]>([]);
+  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>([]);
+  const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
+  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
 
-  const [searchText, setSearchText] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<'ALL' | string>('ALL');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'RENTED' | 'INACTIVE'>('ALL');
+  const [searchText, setSearchText] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "AVAILABLE" | "RENTED" | "INACTIVE">("ALL");
 
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [appliedCategory, setAppliedCategory] = useState<'ALL' | string>('ALL');
-  const [appliedStatus, setAppliedStatus] = useState<'ALL' | 'AVAILABLE' | 'RENTED' | 'INACTIVE'>('ALL');
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [appliedCategory, setAppliedCategory] = useState<"ALL" | string>("ALL");
+  const [appliedStatus, setAppliedStatus] = useState<"ALL" | "AVAILABLE" | "RENTED" | "INACTIVE">("ALL");
   const [hasSearched, setHasSearched] = useState(false);
 
   const [loadingCatalog, setLoadingCatalog] = useState(true);
@@ -154,29 +163,40 @@ const CreateKitScreen: React.FC = () => {
         },
       });
 
-      const contentType = res.headers.get('content-type') || '';
+      const contentType = res.headers.get("content-type") || "";
       const text = await res.text();
 
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${text}`);
       }
 
-      if (!contentType.includes('application/json')) {
+      if (!contentType.includes("application/json")) {
         throw new Error(`Respuesta no JSON: ${text}`);
       }
 
       const raw = JSON.parse(text);
 
       const mapped: CatalogProduct[] = (raw ?? [])
-        .map((p: any) => ({
-          id: Number(p.id),
-          title: p.title ?? "Sin título",
-          pricePerMonth: Number(p.pricePerMonth ?? 0),
-          status: String(p.status ?? "AVAILABLE"),
-          city: p.city ?? "",
-          ownerName: p.owner?.name ?? "",
-          imageUrl: p.imageUrl ?? null,
-        }))
+        .map((p: any) => {
+          let categoryName = "";
+          if (p.category && typeof p.category === "object") {
+            categoryName = p.category.name ?? "";
+          } else if (typeof p.category === "string") {
+            categoryName = p.category;
+          }
+
+          return {
+            id: Number(p.id),
+            title: p.title ?? "Sin título",
+            pricePerMonth: Number(p.pricePerMonth ?? 0),
+            status: String(p.status ?? "AVAILABLE"),
+            category: categoryName,
+            city: p.city ?? "",
+            ownerName: p.owner?.name ?? "",
+            imageUrl: p.imageUrl ?? null,
+            totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
+          };
+        })
         .filter((p: CatalogProduct) => p.status === "AVAILABLE");
 
       setAvailableProducts(mapped);
@@ -197,6 +217,20 @@ const CreateKitScreen: React.FC = () => {
     loadCatalog();
   }, [loadCatalog]);
 
+  const selectedIds = useMemo(
+    () => Object.keys(selectedQuantities).map((id) => Number(id)),
+    [selectedQuantities],
+  );
+
+  const selectedItemsCount = useMemo(
+    () =>
+      Object.values(selectedQuantities).reduce(
+        (sum, quantity) => sum + quantity,
+        0,
+      ),
+    [selectedQuantities],
+  );
+
   const selectedProducts = useMemo(
     () => availableProducts.filter((p) => selectedIds.includes(p.id)),
     [availableProducts, selectedIds],
@@ -205,10 +239,14 @@ const CreateKitScreen: React.FC = () => {
   const totalPrice = useMemo(() => {
     if (monthsBetween === null) return 0;
     return selectedProducts.reduce(
-      (sum, p) => sum + p.pricePerMonth * monthsBetween,
+      (sum, p) =>
+        sum + p.pricePerMonth * (selectedQuantities[p.id] ?? 1) * monthsBetween,
       0,
     );
-  }, [selectedProducts, monthsBetween]);
+  }, [selectedProducts, monthsBetween, selectedQuantities]);
+
+  const courierPrice =
+    deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
   const categories = useMemo(() => {
     const set = new Set(
@@ -216,20 +254,21 @@ const CreateKitScreen: React.FC = () => {
         .map((p) => p.category?.trim())
         .filter((c): c is string => Boolean(c)),
     );
-    return ['ALL', ...Array.from(set)];
+    return ["ALL", ...Array.from(set)];
   }, [availableProducts]);
 
   const filteredProducts = useMemo(() => {
     const q = appliedSearch.trim().toLowerCase();
 
     return availableProducts.filter((p) => {
-      const byStatus = appliedStatus === 'ALL' || p.status === appliedStatus;
-      const byCategory = appliedCategory === 'ALL' || p.category === appliedCategory;
+      const byStatus = appliedStatus === "ALL" || p.status === appliedStatus;
+      const byCategory =
+        appliedCategory === "ALL" || p.category === appliedCategory;
       const bySearch =
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
-        (p.city ?? '').toLowerCase().includes(q) ||
-        (p.category ?? '').toLowerCase().includes(q);
+        (p.city ?? "").toLowerCase().includes(q) ||
+        (p.category ?? "").toLowerCase().includes(q);
 
       return byStatus && byCategory && bySearch;
     });
@@ -237,15 +276,15 @@ const CreateKitScreen: React.FC = () => {
 
   const openAddProductModal = async () => {
     await loadCatalog();
-    setTempSelectedIds(selectedIds);
+    setTempSelectedQuantities(selectedQuantities);
 
-    setSearchText('');
-    setCategoryFilter('ALL');
-    setStatusFilter('ALL');
+    setSearchText("");
+    setCategoryFilter("ALL");
+    setStatusFilter("ALL");
 
-    setAppliedSearch('');
-    setAppliedCategory('ALL');
-    setAppliedStatus('ALL');
+    setAppliedSearch("");
+    setAppliedCategory("ALL");
+    setAppliedStatus("ALL");
     setHasSearched(false);
 
     setCatalogModalVisible(true);
@@ -259,15 +298,59 @@ const CreateKitScreen: React.FC = () => {
   };
 
   const toggleTempSelection = (id: number) => {
-    setTempSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    setTempSelectedQuantities((prev) => {
+      const isSelected = Object.prototype.hasOwnProperty.call(prev, id);
+      if (isSelected) {
+        return removeSelectedQuantity(prev, id);
+      }
+      return upsertSelectedQuantity(prev, id, 1);
+    });
+  };
+
+  const changeTempQuantity = (
+    id: number,
+    nextQuantity: number,
+    maxQuantity: number,
+  ) => {
+    const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
+    setTempSelectedQuantities((prev) =>
+      upsertSelectedQuantity(prev, id, safeQuantity),
     );
   };
 
   const confirmSelection = () => {
-    setSelectedIds(tempSelectedIds);
+    setSelectedQuantities(tempSelectedQuantities);
     clearFieldError("items");
     setCatalogModalVisible(false);
+  };
+
+  const removeSelectedItem = (id: number) => {
+    setSelectedQuantities((prev) => removeSelectedQuantity(prev, id));
+  };
+
+  const changeSelectedQuantity = (
+    id: number,
+    nextQuantity: number,
+    maxQuantity: number,
+  ) => {
+    const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
+    setSelectedQuantities((prev) =>
+      upsertSelectedQuantity(prev, id, safeQuantity),
+    );
+  };
+
+  const incrementSelectedQuantity = (id: number) => {
+    const product = availableProducts.find((p) => p.id === id);
+    if (!product) return;
+    const current = selectedQuantities[id] ?? 1;
+    changeSelectedQuantity(id, current + 1, product.totalUnits);
+  };
+
+  const decrementSelectedQuantity = (id: number) => {
+    const product = availableProducts.find((p) => p.id === id);
+    if (!product) return;
+    const current = selectedQuantities[id] ?? 1;
+    changeSelectedQuantity(id, current - 1, product.totalUnits);
   };
 
   const validate = (): {
@@ -282,6 +365,9 @@ const CreateKitScreen: React.FC = () => {
 
     if (!country.trim()) nextErrors.country = "El país es obligatorio.";
     if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
+    if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
+      nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
+    }
 
     const startIso = toIsoDate(startDate);
     const endIso = toIsoDate(endDate);
@@ -308,7 +394,7 @@ const CreateKitScreen: React.FC = () => {
           "La fecha final no puede ser anterior a la inicial.";
     }
 
-    if (selectedIds.length === 0)
+    if (selectedItemsCount === 0)
       nextErrors.items = "Debes añadir al menos un producto.";
 
     setErrors(nextErrors);
@@ -337,8 +423,18 @@ const CreateKitScreen: React.FC = () => {
           city: city.trim(),
           startDate: validation.payloadDates.startIso,
           endDate: validation.payloadDates.endIso,
+          deliveryMethod,
+          meetingPoint:
+            deliveryMethod === "MEETING_POINT"
+              ? meetingPoint.trim()
+              : undefined,
           tenantId: user.id,
-          itemIds: selectedIds,
+          itemSelections: Object.entries(selectedQuantities).map(
+            ([itemId, quantity]) => ({
+              itemId: Number(itemId),
+              quantity,
+            }),
+          ),
         },
         user.token,
       );
@@ -464,6 +560,72 @@ const CreateKitScreen: React.FC = () => {
           <Text style={commonStyles.errorText}>{errors.endDate}</Text>
         ) : null}
 
+        <View style={createKitStyles.deliverySection}>
+          <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
+            Método de entrega
+          </Text>
+
+          <View style={createKitStyles.deliveryOptionsRow}>
+            <TouchableOpacity
+              style={[
+                createKitStyles.deliveryOption,
+                deliveryMethod === "COURIER" &&
+                  createKitStyles.deliveryOptionSelected,
+              ]}
+              onPress={() => {
+                setDeliveryMethod("COURIER");
+                clearFieldError("meetingPoint");
+              }}
+            >
+              <Text style={createKitStyles.deliveryOptionText}>Mensajería</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                createKitStyles.deliveryOption,
+                deliveryMethod === "MEETING_POINT" &&
+                  createKitStyles.deliveryOptionSelected,
+              ]}
+              onPress={() => {
+                setDeliveryMethod("MEETING_POINT");
+              }}
+            >
+              <Text style={createKitStyles.deliveryOptionText}>
+                Punto de encuentro
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {deliveryMethod === "MEETING_POINT" ? (
+            <>
+              <TextInput
+                style={[
+                  commonStyles.input,
+                  createKitStyles.meetingPointInput,
+                  errors.meetingPoint && commonStyles.inputError,
+                ]}
+                placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
+                value={meetingPoint}
+                onChangeText={(value) => {
+                  setMeetingPoint(value);
+                  clearFieldError("meetingPoint");
+                }}
+              />
+              {errors.meetingPoint ? (
+                <Text style={commonStyles.errorText}>
+                  {errors.meetingPoint}
+                </Text>
+              ) : null}
+            </>
+          ) : null}
+
+          {deliveryMethod === "COURIER" ? (
+            <Text style={commonStyles.bodySecondary}>
+              Tarifa de mensajería: {PLATFORM_COURIER_PRICE.toFixed(2)}€
+            </Text>
+          ) : null}
+        </View>
+
         {/* Duración del alquiler */}
         {monthsBetween !== null && monthsBetween > 0 && (
           <View style={{ marginTop: 8, marginBottom: 16 }}>
@@ -487,7 +649,7 @@ const CreateKitScreen: React.FC = () => {
 
         <View style={createKitStyles.counterBadge}>
           <Text style={createKitStyles.counterBadgeText}>
-            Seleccionados: {selectedIds.length}
+            Seleccionados: {selectedItemsCount}
           </Text>
         </View>
 
@@ -505,7 +667,12 @@ const CreateKitScreen: React.FC = () => {
             <KitItemComponent
               key={item.id}
               item={item}
+              quantity={selectedQuantities[item.id] ?? 1}
+              maxQuantity={item.totalUnits}
               duration={monthsBetween ?? 0}
+              onIncrease={incrementSelectedQuantity}
+              onDecrease={decrementSelectedQuantity}
+              onRemove={removeSelectedItem}
             />
           ))
         )}
@@ -549,6 +716,17 @@ const CreateKitScreen: React.FC = () => {
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
+            <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
+            <Text style={commonStyles.caption}>{courierPrice.toFixed(2)}€</Text>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
               alignItems: "center",
               borderTopWidth: 1,
               borderTopColor: Colors.border,
@@ -570,7 +748,12 @@ const CreateKitScreen: React.FC = () => {
                 { fontSize: 20, color: Colors.primary },
               ]}
             >
-              {(totalPrice + totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
+              {(
+                totalPrice +
+                totalPrice * GUARANTEE_PERCENTAGE +
+                courierPrice
+              ).toFixed(2)}
+              €
             </Text>
           </View>
 
@@ -606,8 +789,17 @@ const CreateKitScreen: React.FC = () => {
             <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
 
             <View style={{ gap: 8, marginBottom: 12 }}>
-              <View style={[commonStyles.input, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
-                <Ionicons name="search" size={18} color={Colors.textSecondary} />
+              <View
+                style={[
+                  commonStyles.input,
+                  { flexDirection: "row", alignItems: "center", gap: 8 },
+                ]}
+              >
+                <Ionicons
+                  name="search"
+                  size={18}
+                  color={Colors.textSecondary}
+                />
                 <TextInput
                   placeholder="Buscar objeto..."
                   value={searchText}
@@ -616,26 +808,42 @@ const CreateKitScreen: React.FC = () => {
                 />
               </View>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                {(['ALL', 'AVAILABLE', 'RENTED', 'INACTIVE'] as const).map((s) => (
-                  <TouchableOpacity
-                    key={s}
-                    onPress={() => setStatusFilter(s)}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor: statusFilter === s ? Colors.primary : Colors.border,
-                      backgroundColor: statusFilter === s ? '#EAF3F8' : Colors.backgroundWhite,
-                    }}
-                  >
-                    <Text style={{ color: Colors.primary }}>{s === 'ALL' ? 'Todos' : s}</Text>
-                  </TouchableOpacity>
-                ))}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+              >
+                {(["ALL", "AVAILABLE", "RENTED", "INACTIVE"] as const).map(
+                  (s) => (
+                    <TouchableOpacity
+                      key={s}
+                      onPress={() => setStatusFilter(s)}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 999,
+                        borderWidth: 1,
+                        borderColor:
+                          statusFilter === s ? Colors.primary : Colors.border,
+                        backgroundColor:
+                          statusFilter === s
+                            ? "#EAF3F8"
+                            : Colors.backgroundWhite,
+                      }}
+                    >
+                      <Text style={{ color: Colors.primary }}>
+                        {s === "ALL" ? "Todos" : s}
+                      </Text>
+                    </TouchableOpacity>
+                  ),
+                )}
               </ScrollView>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+              >
                 {categories.map((c) => (
                   <TouchableOpacity
                     key={c}
@@ -645,28 +853,45 @@ const CreateKitScreen: React.FC = () => {
                       paddingVertical: 8,
                       borderRadius: 999,
                       borderWidth: 1,
-                      borderColor: categoryFilter === c ? Colors.primary : Colors.border,
-                      backgroundColor: categoryFilter === c ? '#EAF3F8' : Colors.backgroundWhite,
+                      borderColor:
+                        categoryFilter === c ? Colors.primary : Colors.border,
+                      backgroundColor:
+                        categoryFilter === c
+                          ? "#EAF3F8"
+                          : Colors.backgroundWhite,
                     }}
                   >
-                    <Text style={{ color: Colors.primary }}>{c === 'ALL' ? 'Todas' : c}</Text>
+                    <Text style={{ color: Colors.primary }}>
+                      {c === "ALL" ? "Todas" : c}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
 
-            <TouchableOpacity style={[commonStyles.primaryButton, { marginBottom: 12 }]} onPress={handleApplyFilters}>
+            <TouchableOpacity
+              style={[commonStyles.primaryButton, { marginBottom: 12 }]}
+              onPress={handleApplyFilters}
+            >
               <Text style={commonStyles.primaryButtonText}>Buscar</Text>
             </TouchableOpacity>
 
             <ScrollView style={createKitStyles.modalList}>
               {!hasSearched ? (
-                <Text style={commonStyles.bodySecondary}>Configura los filtros y pulsa "Buscar".</Text>
+                <Text style={commonStyles.bodySecondary}>
+                  Configura los filtros y pulsa "Buscar".
+                </Text>
               ) : filteredProducts.length === 0 ? (
-                <Text style={commonStyles.bodySecondary}>No hay productos que cumplan los filtros.</Text>
+                <Text style={commonStyles.bodySecondary}>
+                  No hay productos que cumplan los filtros.
+                </Text>
               ) : (
                 filteredProducts.map((p) => {
-                  const checked = tempSelectedIds.includes(p.id);
+                  const checked = Object.prototype.hasOwnProperty.call(
+                    tempSelectedQuantities,
+                    p.id,
+                  );
+                  const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
                   return (
                     <Pressable
                       key={p.id}
@@ -681,12 +906,14 @@ const CreateKitScreen: React.FC = () => {
                           {p.title}
                         </Text>
 
-                        {/* TODO(Equipo): Mostrar precio por objeto individual en modal */}
                         <Text style={commonStyles.caption}>
-                          {p.ownerName ? `${p.ownerName} · ` : ''}
-                          {p.city ? `${p.city} · ` : ''}
-                          {p.category ? `${p.category} · ` : ''}
-                          €{p.pricePerMonth}
+                          {p.ownerName ? `${p.ownerName} · ` : ""}
+                          {p.city ? `${p.city} · ` : ""}
+                          {p.category ? `${p.category} · ` : ""}
+                          {p.pricePerMonth.toFixed(2)}€ / mes
+                        </Text>
+                        <Text style={commonStyles.caption}>
+                          Unidades disponibles: {p.totalUnits}
                         </Text>
                       </View>
                       <View
@@ -697,6 +924,61 @@ const CreateKitScreen: React.FC = () => {
                           marginRight: 8,
                         }}
                       >
+                        {checked ? (
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 6,
+                              marginRight: 8,
+                            }}
+                          >
+                            <TouchableOpacity
+                              onPress={() =>
+                                changeTempQuantity(
+                                  p.id,
+                                  selectedQuantity - 1,
+                                  p.totalUnits,
+                                )
+                              }
+                              accessibilityRole="button"
+                              accessibilityLabel={`Reducir unidades de ${p.title}`}
+                            >
+                              <Ionicons
+                                name="remove-circle-outline"
+                                size={22}
+                                color={Colors.primary}
+                              />
+                            </TouchableOpacity>
+
+                            <Text style={createKitStyles.productTitle}>
+                              {selectedQuantity}
+                            </Text>
+
+                            <TouchableOpacity
+                              onPress={() =>
+                                changeTempQuantity(
+                                  p.id,
+                                  selectedQuantity + 1,
+                                  p.totalUnits,
+                                )
+                              }
+                              accessibilityRole="button"
+                              accessibilityLabel={`Aumentar unidades de ${p.title}`}
+                            >
+                              <Ionicons
+                                name="add-circle-outline"
+                                size={22}
+                                color={
+                                  selectedQuantity >= p.totalUnits
+                                    ? Colors.border
+                                    : Colors.primary
+                                }
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        ) : null}
+
                         <Text style={createKitStyles.productTitle}>
                           {p.pricePerMonth !== undefined
                             ? `${p.pricePerMonth.toFixed(2)}€`

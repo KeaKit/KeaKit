@@ -2,7 +2,9 @@ package com.example.demo.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.persistence.*;
 
@@ -25,17 +27,19 @@ public class Kit {
     @Enumerated(EnumType.STRING)
     private KitStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private DeliveryMethod deliveryMethod;
+
+    private String meetingPoint;
+
+    private Double courierPrice;
+
     @ManyToOne
     @JoinColumn(name = "tenant_id")
     private User tenant;
 
-    @ManyToMany
-    @JoinTable(
-        name = "kit_items",
-        joinColumns = @JoinColumn(name = "kit_id"),
-        inverseJoinColumns = @JoinColumn(name = "item_id")
-    )
-    private List<Item> items = new ArrayList<>();
+    @OneToMany(mappedBy = "kit", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<KitItem> kitItems = new ArrayList<>();
 
     public Kit() {}
 
@@ -105,6 +109,30 @@ public class Kit {
         this.status = status;
     }
 
+    public DeliveryMethod getDeliveryMethod() {
+        return deliveryMethod;
+    }
+
+    public void setDeliveryMethod(DeliveryMethod deliveryMethod) {
+        this.deliveryMethod = deliveryMethod;
+    }
+
+    public String getMeetingPoint() {
+        return meetingPoint;
+    }
+
+    public void setMeetingPoint(String meetingPoint) {
+        this.meetingPoint = meetingPoint;
+    }
+
+    public Double getCourierPrice() {
+        return courierPrice;
+    }
+
+    public void setCourierPrice(Double courierPrice) {
+        this.courierPrice = courierPrice;
+    }
+
     public User getTenant() {
         return tenant;
     }
@@ -114,11 +142,72 @@ public class Kit {
     }
 
     public List<Item> getItems() {
+        List<Item> items = new ArrayList<>();
+        for (KitItem kitItem : kitItems) {
+            Item item = kitItem.getItem();
+            int quantity = kitItem.getQuantity() != null ? kitItem.getQuantity() : 0;
+            for (int i = 0; i < quantity; i++) {
+                items.add(item);
+            }
+        }
         return items;
     }
 
     public void setItems(List<Item> items) {
-        this.items = items;
+        Map<Long, Integer> quantitiesByItemId = new LinkedHashMap<>();
+        Map<Long, Item> itemById = new LinkedHashMap<>();
+
+        if (items != null) {
+            for (Item item : items) {
+                if (item == null || item.getId() == null) {
+                    continue;
+                }
+                quantitiesByItemId.put(item.getId(), quantitiesByItemId.getOrDefault(item.getId(), 0) + 1);
+                itemById.putIfAbsent(item.getId(), item);
+            }
+        }
+
+        List<KitItem> nextKitItems = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : quantitiesByItemId.entrySet()) {
+            KitItem kitItem = new KitItem();
+            kitItem.setItem(itemById.get(entry.getKey()));
+            kitItem.setQuantity(entry.getValue());
+            kitItem.setKit(this);
+            nextKitItems.add(kitItem);
+        }
+        this.kitItems = nextKitItems;
     }
-    
-} 
+
+    public List<KitItem> getKitItems() {
+        return kitItems;
+    }
+
+    public void setKitItems(List<KitItem> kitItems) {
+        this.kitItems.clear();
+        if (kitItems == null) {
+            return;
+        }
+        for (KitItem kitItem : kitItems) {
+            if (kitItem == null) {
+                continue;
+            }
+            kitItem.setKit(this);
+            this.kitItems.add(kitItem);
+        }
+    }
+
+@Transient
+public Double getTotalPrice() {
+    if (this.kitItems == null || this.kitItems.isEmpty()) {
+        return 0.0;
+    }
+    return this.kitItems.stream()
+            .filter(ki -> ki.getItem() != null && ki.getItem().getPricePerMonth() != null)
+            .mapToDouble(ki -> {
+                int qty = ki.getQuantity() != null ? ki.getQuantity() : 0;
+                return ki.getItem().getPricePerMonth() * qty;
+            })
+            .sum();
+}
+
+}

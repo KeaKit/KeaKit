@@ -11,4 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     List<Article> findByOwnerId(Long ownerId);
+
+    long countByCategoryId(Long categoryId);
+
+    List<Article> findTop10ByCategoryIdOrderByIdDesc(Long categoryId);
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { TouchableOpacity, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, commonStyles, componentStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
@@ -10,14 +10,30 @@ type KitItemComponentProps = {
     title: string;
     city?: string;
     pricePerMonth?: number;
+    totalUnits?: number;
   };
   duration?: number;
+  quantity: number;
+  maxQuantity?: number;
+  onIncrease: (id: number) => void;
+  onDecrease: (id: number) => void;
+  onRemove: (id: number) => void;
 };
 
 const KitItemComponent: React.FC<KitItemComponentProps> = ({
   item,
   duration,
+  quantity,
+  maxQuantity,
+  onIncrease,
+  onDecrease,
+  onRemove,
 }) => {
+  const reachedMax =
+    maxQuantity !== undefined &&
+    maxQuantity !== null &&
+    quantity >= maxQuantity;
+
   return (
     <View
       key={item.id}
@@ -37,20 +53,57 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
         <Text style={commonStyles.caption}>
           {item.city ? `${item.city}` : "Sin ciudad"}
         </Text>
-      </View>
 
-      {/* TODO: Añadir este precio total por item al backend para que el arrendador pueda cobrarlo */}
-      <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
-        <Text style={createKitStyles.productTitle}>
-          {item.pricePerMonth !== undefined && duration !== undefined
-            ? `${(item.pricePerMonth * duration).toFixed(2)}€`
-            : "N/A"}
+        <Text style={commonStyles.caption}>
+          Unidades seleccionadas: {quantity}
+          {item.totalUnits ? ` / ${item.totalUnits}` : ""}
         </Text>
       </View>
 
-      {/* TODO(Salma): Eliminar objetos del kit */}
-      {/*TODO(Salma): Seleccionar varias unidades de un mismo producto */}
+      <View style={createKitStyles.productPriceActions}>
+        <Text style={createKitStyles.productTitle}>
+          {item.pricePerMonth !== undefined && duration !== undefined
+            ? `${(item.pricePerMonth * quantity * duration).toFixed(2)}€`
+            : "N/A"}
+        </Text>
 
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <TouchableOpacity
+            onPress={() => onDecrease(item.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`Reducir unidades de ${item.title}`}
+          >
+            <Ionicons
+              name="remove-circle-outline"
+              size={22}
+              color={Colors.primary}
+            />
+          </TouchableOpacity>
+
+          <Text style={createKitStyles.productTitle}>{quantity}</Text>
+
+          <TouchableOpacity
+            onPress={() => onIncrease(item.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`Aumentar unidades de ${item.title}`}
+          >
+            <Ionicons
+              name="add-circle-outline"
+              size={22}
+              color={reachedMax ? Colors.border : Colors.primary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => onRemove(item.id)}
+          style={createKitStyles.removeItemButton}
+          accessibilityRole="button"
+          accessibilityLabel={`Eliminar ${item.title} del kit`}
+        >
+          <Ionicons name="trash-outline" size={20} color={Colors.error} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
