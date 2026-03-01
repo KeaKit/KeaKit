@@ -29,3 +29,7 @@ app:
       email: ${ADMIN_EMAIL:admin@example.com}
       password: ${ADMIN_PASSWORD:admin123}
       name: ${ADMIN_NAME:Admin Initial}
+
+sendgrid:
+  api-key: ${SENDGRID_API_KEY:}
+  from-email: ${SENDGRID_FROM_EMAIL:no-reply@keakit.app}
