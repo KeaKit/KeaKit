@@ -7,6 +7,27 @@ import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.KitStatus;
 
 public class KitCreateRequest {
+    public static class KitItemSelectionRequest {
+        private Long itemId;
+        private Integer quantity;
+
+        public Long getItemId() {
+            return itemId;
+        }
+
+        public void setItemId(Long itemId) {
+            this.itemId = itemId;
+        }
+
+        public Integer getQuantity() {
+            return quantity;
+        }
+
+        public void setQuantity(Integer quantity) {
+            this.quantity = quantity;
+        }
+    }
+
     private String name;
     private String country;
     private String city;
@@ -17,6 +38,7 @@ public class KitCreateRequest {
     private String meetingPoint;
     private Long tenantId;
     private List<Long> itemIds;
+    private List<KitItemSelectionRequest> itemSelections;
 
     public String getName() { 
         return name; 
@@ -96,6 +118,14 @@ public class KitCreateRequest {
 
     public void setItemIds(List<Long> itemIds) { 
         this.itemIds = itemIds; 
+    }
+
+    public List<KitItemSelectionRequest> getItemSelections() {
+        return itemSelections;
+    }
+
+    public void setItemSelections(List<KitItemSelectionRequest> itemSelections) {
+        this.itemSelections = itemSelections;
     }
 }
 

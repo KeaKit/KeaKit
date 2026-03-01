@@ -10,14 +10,17 @@ type KitItemComponentProps = {
     title: string;
     city?: string;
     pricePerMonth?: number;
+    totalUnits?: number;
   };
   duration?: number;
+  quantity: number;
   onRemove: (id: number) => void;
 };
 
 const KitItemComponent: React.FC<KitItemComponentProps> = ({
   item,
   duration,
+  quantity,
   onRemove,
 }) => {
   return (
@@ -39,12 +42,17 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
         <Text style={commonStyles.caption}>
           {item.city ? `${item.city}` : "Sin ciudad"}
         </Text>
+
+        <Text style={commonStyles.caption}>
+          Unidades seleccionadas: {quantity}
+          {item.totalUnits ? ` / ${item.totalUnits}` : ""}
+        </Text>
       </View>
 
       <View style={createKitStyles.productPriceActions}>
         <Text style={createKitStyles.productTitle}>
           {item.pricePerMonth !== undefined && duration !== undefined
-            ? `${(item.pricePerMonth * duration).toFixed(2)}€`
+            ? `${(item.pricePerMonth * quantity * duration).toFixed(2)}€`
             : "N/A"}
         </Text>
         <TouchableOpacity

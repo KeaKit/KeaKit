@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,8 @@ import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
+import com.example.demo.model.Article;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.model.User;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
@@ -31,6 +34,9 @@ public class KitServiceTest {
 
     @Mock
     private KitRepository kitRepository;
+
+    @Mock
+    private ItemRepository itemRepository;
 
     @InjectMocks
     private KitService kitService;
@@ -153,5 +159,24 @@ public class KitServiceTest {
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
 
         assertThrows(RuntimeException.class, () -> kitService.findTrackingKitById(1L, 99L));
+    }
+
+    @Test
+    void createKit_itemQuantityExceedsTotalUnits_throwsException() {
+        KitCreateRequest req = new KitCreateRequest();
+        req.setName("Kit con exceso");
+
+        KitCreateRequest.KitItemSelectionRequest selection = new KitCreateRequest.KitItemSelectionRequest();
+        selection.setItemId(5L);
+        selection.setQuantity(3);
+        req.setItemSelections(List.of(selection));
+
+        Article article = new Article();
+        article.setId(5L);
+        article.setTotalUnits(2);
+
+        when(itemRepository.findAllById(any())).thenReturn(List.of(article));
+
+        assertThrows(RuntimeException.class, () -> kitService.create(req));
     }
 }

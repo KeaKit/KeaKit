@@ -28,6 +28,9 @@ public abstract class Item {
 
     protected String category;
 
+    @Column
+    protected Integer totalUnits = 1;
+
     @ManyToOne
     @JoinColumn(name = "owner_id")
     protected User owner;
@@ -115,5 +118,21 @@ public abstract class Item {
 
     public void setOwner(User owner) {
         this.owner = owner;
+    }
+
+    public Integer getTotalUnits() {
+        return totalUnits;
+    }
+
+    public void setTotalUnits(Integer totalUnits) {
+        this.totalUnits = totalUnits;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void normalizeTotalUnits() {
+        if (totalUnits == null || totalUnits < 1) {
+            totalUnits = 1;
+        }
     }
 }

@@ -5,6 +5,7 @@ import com.example.demo.dto.KitResponse;
 import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.Item;
 import com.example.demo.model.Kit;
+import com.example.demo.model.KitItem;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
 import com.example.demo.repository.KitRepository;
@@ -14,7 +15,11 @@ import com.example.demo.repository.ItemRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class KitService {
@@ -73,10 +78,9 @@ public class KitService {
             kit.setTenant(tenant);
         }
 
-        if (request.getItemIds() != null && !request.getItemIds().isEmpty()) {
-            List<Item> items = itemRepository.findAllById(request.getItemIds());
-            
-            kit.setItems(items);
+        List<KitItem> kitItems = buildKitItemsFromRequest(request);
+        if (!kitItems.isEmpty()) {
+            kit.setKitItems(kitItems);
         }
 
         validateDates(kit.getStartDate(), kit.getEndDate());
@@ -98,7 +102,11 @@ public class KitService {
         if (updateData.getDeliveryMethod() != null) kit.setDeliveryMethod(updateData.getDeliveryMethod());
         if (updateData.getMeetingPoint() != null) kit.setMeetingPoint(updateData.getMeetingPoint());
         if (updateData.getTenant() != null) kit.setTenant(updateData.getTenant());
-        if (updateData.getItems() != null) kit.setItems(updateData.getItems());
+        if (updateData.getKitItems() != null && !updateData.getKitItems().isEmpty()) {
+            kit.setKitItems(updateData.getKitItems());
+        } else if (updateData.getItems() != null) {
+            kit.setItems(updateData.getItems());
+        }
 
         if (kit.getDeliveryMethod() == DeliveryMethod.COURIER) {
             kit.setCourierPrice(PLATFORM_COURIER_PRICE);
@@ -139,6 +147,67 @@ public class KitService {
             throw new RuntimeException("Kit does not belong to the specified tenant");
         }
         return new KitResponse(kit);
+    }
+
+    private List<KitItem> buildKitItemsFromRequest(KitCreateRequest request) {
+        Map<Long, Integer> quantitiesByItemId = new LinkedHashMap<>();
+
+        if (request.getItemSelections() != null && !request.getItemSelections().isEmpty()) {
+            for (KitCreateRequest.KitItemSelectionRequest selection : request.getItemSelections()) {
+                if (selection == null || selection.getItemId() == null) {
+                    throw new RuntimeException("Each selected item must include itemId");
+                }
+                int quantity = selection.getQuantity() != null ? selection.getQuantity() : 1;
+                if (quantity < 1) {
+                    throw new RuntimeException("Quantity must be at least 1");
+                }
+                quantitiesByItemId.merge(selection.getItemId(), quantity, Integer::sum);
+            }
+        } else if (request.getItemIds() != null && !request.getItemIds().isEmpty()) {
+            for (Long itemId : request.getItemIds()) {
+                if (itemId == null) {
+                    throw new RuntimeException("Item id cannot be null");
+                }
+                quantitiesByItemId.merge(itemId, 1, Integer::sum);
+            }
+        }
+
+        if (quantitiesByItemId.isEmpty()) {
+            return List.of();
+        }
+
+        List<Item> foundItems = itemRepository.findAllById(quantitiesByItemId.keySet());
+        Set<Long> foundItemIds = foundItems.stream()
+            .map(Item::getId)
+            .collect(Collectors.toSet());
+
+        for (Long itemId : quantitiesByItemId.keySet()) {
+            if (!foundItemIds.contains(itemId)) {
+                throw new RuntimeException("Item not found: " + itemId);
+            }
+        }
+
+        Map<Long, Item> itemById = foundItems.stream()
+            .collect(Collectors.toMap(Item::getId, item -> item));
+
+        return quantitiesByItemId.entrySet().stream()
+            .map(entry -> {
+                Item item = itemById.get(entry.getKey());
+                int requestedQuantity = entry.getValue();
+                int totalUnits = item.getTotalUnits() != null ? item.getTotalUnits() : 1;
+
+                if (requestedQuantity > totalUnits) {
+                    throw new RuntimeException(
+                        "Requested quantity for item " + item.getId() + " exceeds available units (" + totalUnits + ")"
+                    );
+                }
+
+                KitItem kitItem = new KitItem();
+                kitItem.setItem(item);
+                kitItem.setQuantity(requestedQuantity);
+                return kitItem;
+            })
+            .collect(Collectors.toList());
     }
 
 }
