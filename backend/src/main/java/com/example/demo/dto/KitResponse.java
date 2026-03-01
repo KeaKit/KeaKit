@@ -18,6 +18,7 @@ public class KitResponse {
     private KitStatus status;
     private DeliveryMethod deliveryMethod;
     private String meetingPoint;
+    private Double courierPrice;
     private Long tenantId;
     private List<Long> itemIds;
 
@@ -31,6 +32,7 @@ public class KitResponse {
         this.status = kit.getStatus();
         this.deliveryMethod = kit.getDeliveryMethod();
         this.meetingPoint = kit.getMeetingPoint();
+        this.courierPrice = kit.getCourierPrice();
         this.tenantId = kit.getTenant() != null ? kit.getTenant().getId() : null;
         this.itemIds = kit.getItems() != null
             ? kit.getItems().stream().map(item -> item.getId()).collect(Collectors.toList())
@@ -70,6 +72,10 @@ public class KitResponse {
 
     public String getMeetingPoint() {
         return meetingPoint;
+    }
+
+    public Double getCourierPrice() {
+        return courierPrice;
     }
 
     public List<Long> getItemIds() { 

@@ -24,6 +24,7 @@ import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
 
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
+const PLATFORM_COURIER_PRICE = 9.99;
 
 type CreateKitNav = NativeStackNavigationProp<RootStackParamList, "CreateKit">;
 
@@ -219,6 +220,9 @@ const CreateKitScreen: React.FC = () => {
       0,
     );
   }, [selectedProducts, monthsBetween]);
+
+  const courierPrice =
+    deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
   const categories = useMemo(() => {
     const set = new Set(
@@ -527,7 +531,7 @@ const CreateKitScreen: React.FC = () => {
                   createKitStyles.meetingPointInput,
                   errors.meetingPoint && commonStyles.inputError,
                 ]}
-                placeholder="Ej: Plaza Mayor, entrada principal"
+                placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
                 value={meetingPoint}
                 onChangeText={(value) => {
                   setMeetingPoint(value);
@@ -540,6 +544,12 @@ const CreateKitScreen: React.FC = () => {
                 </Text>
               ) : null}
             </>
+          ) : null}
+
+          {deliveryMethod === "COURIER" ? (
+            <Text style={commonStyles.bodySecondary}>
+              Tarifa de mensajería: {PLATFORM_COURIER_PRICE.toFixed(2)}€
+            </Text>
           ) : null}
         </View>
 
@@ -628,6 +638,17 @@ const CreateKitScreen: React.FC = () => {
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
+            <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
+            <Text style={commonStyles.caption}>{courierPrice.toFixed(2)}€</Text>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
               alignItems: "center",
               borderTopWidth: 1,
               borderTopColor: Colors.border,
@@ -649,7 +670,12 @@ const CreateKitScreen: React.FC = () => {
                 { fontSize: 20, color: Colors.primary },
               ]}
             >
-              {(totalPrice + totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
+              {(
+                totalPrice +
+                totalPrice * GUARANTEE_PERCENTAGE +
+                courierPrice
+              ).toFixed(2)}
+              €
             </Text>
           </View>
 

@@ -19,6 +19,8 @@ import java.util.List;
 @Service
 public class KitService {
 
+    private static final double PLATFORM_COURIER_PRICE = 9.99;
+
     private final KitRepository kitRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
@@ -59,6 +61,12 @@ public class KitService {
         }
         kit.setMeetingPoint(deliveryMethod == DeliveryMethod.MEETING_POINT ? meetingPoint : null);
 
+        if (deliveryMethod == DeliveryMethod.COURIER) {
+            kit.setCourierPrice(PLATFORM_COURIER_PRICE);
+        } else {
+            kit.setCourierPrice(null);
+        }
+
         if (request.getTenantId() != null) {
             User tenant = userRepository.findById(request.getTenantId())
                 .orElseThrow(() -> new RuntimeException("Tenant not found"));
@@ -91,6 +99,12 @@ public class KitService {
         if (updateData.getMeetingPoint() != null) kit.setMeetingPoint(updateData.getMeetingPoint());
         if (updateData.getTenant() != null) kit.setTenant(updateData.getTenant());
         if (updateData.getItems() != null) kit.setItems(updateData.getItems());
+
+        if (kit.getDeliveryMethod() == DeliveryMethod.COURIER) {
+            kit.setCourierPrice(PLATFORM_COURIER_PRICE);
+        } else {
+            kit.setCourierPrice(null);
+        }
 
         validateDates(kit.getStartDate(), kit.getEndDate());
 

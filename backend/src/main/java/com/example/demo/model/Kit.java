@@ -30,6 +30,8 @@ public class Kit {
 
     private String meetingPoint;
 
+    private Double courierPrice;
+
     @ManyToOne
     @JoinColumn(name = "tenant_id")
     private User tenant;
@@ -124,6 +126,14 @@ public class Kit {
 
     public void setMeetingPoint(String meetingPoint) {
         this.meetingPoint = meetingPoint;
+    }
+
+    public Double getCourierPrice() {
+        return courierPrice;
+    }
+
+    public void setCourierPrice(Double courierPrice) {
+        this.courierPrice = courierPrice;
     }
 
     public User getTenant() {

@@ -74,6 +74,7 @@ export interface KitResponse {
   endDate: string;
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
+  courierPrice?: number;
   tenantId: number;
   itemIds: number[];
 }
