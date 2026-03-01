@@ -63,7 +63,7 @@ public class KitServiceTest {
 
 
     @Test
-    void createKit_withoutStatus_defaultsToUpcoming() {
+    void createKit_withoutStatus_defaultsToPending() {
         KitCreateRequest req = new KitCreateRequest();
         req.setName("Kit Test");
 
@@ -75,14 +75,14 @@ public class KitServiceTest {
 
         KitResponse res = kitService.create(req);
 
-        assertEquals(KitStatus.UPCOMING, res.getStatus());
+        assertEquals(KitStatus.PENDING, res.getStatus());
     }
 
     @Test
     void updateKit_changeStatus_success() {
         Kit existing = new Kit();
         existing.setId(1L);
-        existing.setStatus(KitStatus.UPCOMING);
+        existing.setStatus(KitStatus.PENDING);
 
         Kit update = new Kit();
         update.setStatus(KitStatus.ACTIVE);
