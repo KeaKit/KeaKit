@@ -39,6 +39,12 @@ public class ItemService {
         if (updateData.getAvailableFrom() != null) item.setAvailableFrom(updateData.getAvailableFrom());
         if (updateData.getAvailableUntil() != null) item.setAvailableUntil(updateData.getAvailableUntil());
         if (updateData.getCategory() != null) item.setCategory(updateData.getCategory());
+        if (updateData.getTotalUnits() != null) {
+            if (updateData.getTotalUnits() < 1) {
+                throw new RuntimeException("totalUnits must be >= 1");
+            }
+            item.setTotalUnits(updateData.getTotalUnits());
+        }
         if (updateData.getOwner() != null) item.setOwner(updateData.getOwner());
 
         return itemRepository.save(item);

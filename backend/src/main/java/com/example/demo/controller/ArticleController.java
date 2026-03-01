@@ -46,6 +46,17 @@ public class ArticleController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getArticleById(@PathVariable Long id) {
+        try {
+            Article article = articleService.findById(id);
+            return ResponseEntity.ok(article);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+    
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateArticle(@PathVariable Long id, @RequestParam Long ownerId, @RequestBody Article updateData) {
         try {
@@ -81,6 +92,26 @@ public class ArticleController {
         List<UserArticle> articles = articleService.findArticlesByUserId(userId);
         
         return ResponseEntity.ok(articles);
+    }
+
+    @GetMapping("/category/{categoryId}/count")
+    public ResponseEntity<Long> getArticleCountByCategory(@PathVariable Long categoryId) {
+        try {
+            long count = articleService.countArticlesByCategory(categoryId);
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(0L);
+        }
+    }
+
+    @GetMapping("/category/{categoryId}/latest")
+    public ResponseEntity<List<UserArticle>> getLatestArticlesByCategory(@PathVariable Long categoryId) {
+        try {
+            List<UserArticle> latestArticles = articleService.findLatestArticlesByCategory(categoryId);
+            return ResponseEntity.ok(latestArticles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
 }

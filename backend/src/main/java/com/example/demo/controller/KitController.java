@@ -95,4 +95,24 @@ public class KitController {
         }
     }
 
+    @GetMapping("/my-kits/{tenantId}")
+    public ResponseEntity<?> getMyKits(@PathVariable Long tenantId) {
+        try {
+            List<KitResponse> response = kitService.findByTenantId(tenantId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/my-kits/{tenantId}/{kitId}")
+    public ResponseEntity<?> getMyKitTracking(@PathVariable Long tenantId, @PathVariable Long kitId) {
+        try {
+            KitResponse response = kitService.findTrackingKitById(kitId, tenantId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
 }

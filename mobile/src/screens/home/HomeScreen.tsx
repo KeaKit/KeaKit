@@ -33,7 +33,7 @@ const HomeScreen: React.FC = () => {
 
   const handleCreateKit = () => {
     console.log('Crear kit');
-    // TODO: Navegar a pantalla de crear kit
+    navigation.navigate('CreateKit');
   };
 
   const handleRentItems = () => {
@@ -161,6 +161,38 @@ const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="star" size={24} color={Colors.warning} />
                   <Text style={componentStyles.menuItemText}>Mis Valoraciones</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={componentStyles.menuItem}
+                  onPress={() => {
+                    setShowProfileMenu(false);
+                    navigation.navigate('MyArticles');
+                  }}
+                >
+                  <Ionicons name="cube" size={24} color={Colors.primary} />
+                  <Text style={componentStyles.menuItemText}>Mis Artículos</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={componentStyles.menuItem}
+                  onPress={() => {
+                    setShowProfileMenu(false);
+                    navigation.navigate('MyKits');
+                  }}
+                >
+                  <Ionicons name="cube" size={24} color={Colors.primary} />
+                  <Text style={componentStyles.menuItemText}>Mis Kits</Text>
+                </TouchableOpacity>
+              <TouchableOpacity
+                  style={componentStyles.menuItem}
+                  onPress={() => {
+                    setShowProfileMenu(false);
+                    navigation.navigate('Categories');
+                  }}
+                >
+                  <Ionicons name="reader" size={24} color={Colors.primary} />
+                  <Text style={componentStyles.menuItemText}>Categorías</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

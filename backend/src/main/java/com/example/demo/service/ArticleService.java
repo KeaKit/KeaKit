@@ -39,8 +39,11 @@ public class ArticleService {
         if (article.getDescription() == null || article.getDescription().trim().isEmpty()) throw new RuntimeException("Description is required");
         if (article.getCity() == null || article.getCity().trim().isEmpty()) throw new RuntimeException("City is required");
         if (article.getPricePerMonth() == null || article.getPricePerMonth() < 0) throw new RuntimeException("pricePerMonth must be >= 0");
+        if (article.getTotalUnits() == null) article.setTotalUnits(1);
+        if (article.getTotalUnits() < 1) throw new RuntimeException("totalUnits must be >= 1");
 
         LocalDate from = article.getAvailableFrom();
+        if(from != null && from.isBefore(LocalDate.now())) throw new RuntimeException("availableFrom cannot be in the past");
         LocalDate until = article.getAvailableUntil();
         if (from != null && until != null && from.isAfter(until)) throw new RuntimeException("availableFrom must be before or equal to availableUntil");
 
@@ -82,6 +85,12 @@ public class ArticleService {
         if (updateData.getAvailableFrom() != null) article.setAvailableFrom(updateData.getAvailableFrom());
         if (updateData.getAvailableUntil() != null) article.setAvailableUntil(updateData.getAvailableUntil());
         if (updateData.getCategory() != null) article.setCategory(updateData.getCategory());
+        if (updateData.getTotalUnits() != null) {
+            if (updateData.getTotalUnits() < 1) {
+                throw new RuntimeException("totalUnits must be >= 1");
+            }
+            article.setTotalUnits(updateData.getTotalUnits());
+        }
         if (updateData.getImageUrl() != null) article.setImageUrl(updateData.getImageUrl());
         if (updateData.getPurchaseDate() != null) article.setPurchaseDate(updateData.getPurchaseDate());
 
@@ -146,5 +155,27 @@ public class ArticleService {
         }).collect(Collectors.toList());
     }
     
+    public long countArticlesByCategory(Long categoryId) {
+        return articleRepository.countByCategoryId(categoryId);
+    }
+
+    public List<UserArticle> findLatestArticlesByCategory(Long categoryId) {
+        List<Article> articles = articleRepository.findTop10ByCategoryIdOrderByIdDesc(categoryId);
+        
+        return articles.stream().map(article -> {
+            boolean isRented = article.getStatus() != null && 
+                               "RENTED".equalsIgnoreCase(article.getStatus().name());
+            
+            LocalDate rentedUntil = isRented ? article.getAvailableUntil() : null;
+            return new UserArticle(
+                article.getId(),
+                article.getTitle(),
+                article.getImageUrl(),
+                article.getPricePerMonth(),
+                article.getStatus() != null ? article.getStatus().name() : "UNKNOWN",
+                rentedUntil
+            );
+        }).collect(Collectors.toList());
+    }
 }
 
