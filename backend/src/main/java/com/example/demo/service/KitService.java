@@ -53,7 +53,7 @@ public class KitService {
         kit.setCity(request.getCity());
         kit.setStartDate(request.getStartDate());
         kit.setEndDate(request.getEndDate());
-        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.UPCOMING);
+        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PENDING);
 
         DeliveryMethod deliveryMethod = request.getDeliveryMethod() != null
             ? request.getDeliveryMethod()
@@ -147,6 +147,20 @@ public class KitService {
             throw new RuntimeException("Kit does not belong to the specified tenant");
         }
         return new KitResponse(kit);
+    }
+
+    public void confirmKitStatus(Long id) {
+        Kit kit = kitRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Kit not found"));
+
+        if (kit.getStatus() != KitStatus.PENDING_VALIDATION) {
+            throw new RuntimeException(
+                "The kit can only be confirmed if its status is PENDING_VALIDATION"
+            );
+        }
+
+        kit.setStatus(KitStatus.ACTIVE);
+        kitRepository.save(kit);
     }
 
     private List<KitItem> buildKitItemsFromRequest(KitCreateRequest request) {

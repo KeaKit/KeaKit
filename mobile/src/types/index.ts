@@ -138,9 +138,12 @@ export interface Item {
 }
 
 export enum KitStatus {
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  PENDING_VALIDATION = 'PENDING VALIDATION',
   ACTIVE = 'ACTIVE',
-  FINISHED = 'FINISHED',
-  UPCOMING = 'UPCOMING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED'
 }
 
 export interface KitResponse {
