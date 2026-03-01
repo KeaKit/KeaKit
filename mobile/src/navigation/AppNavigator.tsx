@@ -13,6 +13,7 @@ import UploadArticleScreen  from '../screens/profile/UploadArticleScreen';
 import CreateRatingScreen   from '../screens/ratings/CreateRatingScreen';
 import UserRatingsScreen    from '../screens/ratings/UserRatingsScreen';
 import CreateKitScreen      from '../screens/kit/CreateKitScreen';
+import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
 
@@ -45,6 +46,7 @@ const AppNavigator: React.FC = () => {
         {user ? (
           <>
             <Stack.Screen name="Home"          component={HomeScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
             <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
             <Stack.Screen name="MyKits"    component={MyKitsScreen} />
             <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />

@@ -32,6 +32,12 @@ const KitDetailScreen: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
+  const formatDate = (dateString?: string | null): string => {
+    if (!dateString) return '-';
+    const parts = dateString.split('-');
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateString;
+  };
+
   useEffect(() => {
     const fetchKitDetail = async () => {
       try {
@@ -173,6 +179,16 @@ const KitDetailScreen: React.FC = () => {
           </View>
         </View>
 
+        <View style={styles.deliveryContainer}>
+          <Text style={styles.sectionTitle}>Entrega</Text>
+          <Text style={styles.deliveryDateText}>
+            Fecha estimada: {formatDate(kit.estimatedDeliveryDate)}
+          </Text>
+          {kit.deliveryNotification ? (
+            <Text style={styles.deliveryNoticeText}>{kit.deliveryNotification}</Text>
+          ) : null}
+        </View>
+
 
         <Text style={styles.sectionTitle}>Productos Incluidos</Text>
         <View style={styles.itemsContainer}>
@@ -236,6 +252,9 @@ const styles = StyleSheet.create({
   infoBox: { flex: 1 },
   label: { fontSize: 12, color: '#888', marginBottom: 4 },
   value: { fontSize: 16, fontWeight: '600' },
+  deliveryContainer: { marginBottom: 20, backgroundColor: '#F5F8FF', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E3EBFF' },
+  deliveryDateText: { fontSize: 14, color: Colors.textPrimary, fontWeight: '600' },
+  deliveryNoticeText: { fontSize: 13, color: Colors.primary, marginTop: 6, fontWeight: '700' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#333' },
   itemsContainer: { marginBottom: 20 },
   itemCard: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#fff', borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: '#F0F0F0' },

@@ -88,6 +88,12 @@ const MyKitsScreen: React.FC = () => {
             <Ionicons name="location-outline" size={13} color="#888" /> {item.city}, {item.country}
           </Text>
 
+          {item.deliveryNotification ? (
+            <Text style={styles.deliveryNoticeText}>
+              {item.deliveryNotification}
+            </Text>
+          ) : null}
+
           <View style={styles.detailsRow}>
             <View style={[styles.statusBadge, { backgroundColor: statusInfo.color }]}>
               <Text style={styles.statusText}>{statusInfo.label}</Text>
@@ -169,6 +175,7 @@ const styles = StyleSheet.create({
   kitName: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary, flex: 1, marginRight: 4 },
   priceTag: { fontSize: 14, fontWeight: 'bold', color: Colors.primary },
   locationText: { fontSize: 12, color: '#888', marginVertical: 4 },
+  deliveryNoticeText: { fontSize: 12, color: Colors.primary, marginTop: 2, marginBottom: 4, fontWeight: '600' },
   detailsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   statusText: { fontSize: 10, fontWeight: '700', color: '#fff', textTransform: 'uppercase' },

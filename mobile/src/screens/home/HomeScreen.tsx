@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../types';
+import BASE_URL from '../../config/api';
+import { KitResponse, RootStackParamList } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -21,6 +22,52 @@ const HomeScreen: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation<HomeNav>();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+
+  const parseIsoDate = (dateString?: string): Date | null => {
+    if (!dateString) return null;
+    const parsed = new Date(`${dateString}T00:00:00.000Z`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const hasUrgentDeliveryNotification = (kits: KitResponse[]): boolean => {
+    const now = new Date();
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const tomorrow = new Date(today);
+    tomorrow.setUTCDate(today.getUTCDate() + 1);
+
+    return kits.some((kit) => {
+      const estimatedDate = parseIsoDate(kit.estimatedDeliveryDate);
+      if (!estimatedDate) return false;
+      return estimatedDate >= today && estimatedDate <= tomorrow;
+    });
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadBadgeState = async () => {
+        if (!user?.id) {
+          setHasNewNotification(false);
+          return;
+        }
+
+        try {
+          const response = await fetch(`${BASE_URL}/api/kits/my-kits/${user.id}`);
+          if (!response.ok) {
+            setHasNewNotification(false);
+            return;
+          }
+
+          const kits: KitResponse[] = await response.json();
+          setHasNewNotification(hasUrgentDeliveryNotification(kits));
+        } catch {
+          setHasNewNotification(false);
+        }
+      };
+
+      loadBadgeState();
+    }, [user?.id]),
+  );
 
   const handleLogout = async () => {
     setShowProfileMenu(false);
@@ -45,7 +92,17 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.container}>
       {/* Header - usando estilos comunes */}
       <View style={commonStyles.header}>
-        <View style={styles.headerLeft} />
+        <TouchableOpacity
+          style={componentStyles.iconButton}
+          onPress={() => navigation.navigate('Notifications')}
+        >
+          <Ionicons name="mail-outline" size={24} color={Colors.primary} />
+          {hasNewNotification ? (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>1</Text>
+            </View>
+          ) : null}
+        </TouchableOpacity>
 
         {/* Logo Central - usando estilos comunes */}
         <View style={commonStyles.logoContainer}>
@@ -261,8 +318,23 @@ const HomeScreen: React.FC = () => {
 
 // Estilos locales específicos de esta pantalla (solo lo que no se puede reutilizar)
 const styles = StyleSheet.create({
-  headerLeft: {
-    width: 32, // Espaciador para centrar el logo
+  notificationBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: Colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  notificationBadgeText: {
+    color: Colors.textWhite,
+    fontSize: 10,
+    fontWeight: '700',
+    lineHeight: 12,
   },
 });
 
