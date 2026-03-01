@@ -3,12 +3,15 @@ package com.example.demo.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.example.demo.model.KitStatus;
+
 public class KitCreateRequest {
     private String name;
     private String country;
     private String city;
     private LocalDate startDate;
     private LocalDate endDate;
+    private KitStatus status;
     private Long tenantId;
     private List<Long> itemIds;
 
@@ -50,6 +53,14 @@ public class KitCreateRequest {
 
     public void setEndDate(LocalDate endDate) { 
         this.endDate = endDate; 
+    }
+
+    public KitStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(KitStatus status) {
+        this.status = status;
     }
 
     public Long getTenantId() { 

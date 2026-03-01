@@ -22,6 +22,9 @@ public class Kit {
     private LocalDate startDate;
     private LocalDate endDate;
 
+    @Enumerated(EnumType.STRING)
+    private KitStatus status;
+
     @ManyToOne
     @JoinColumn(name = "tenant_id")
     private User tenant;
@@ -36,13 +39,14 @@ public class Kit {
 
     public Kit() {}
 
-    public Kit(String name, String country, String city, LocalDate startDate, LocalDate endDate, User tenant) {
+    public Kit(String name, String country, String city, LocalDate startDate, LocalDate endDate, User tenant, KitStatus status) {
         this.name = name;
         this.country = country;
         this.city = city;
         this.startDate = startDate;
         this.endDate = endDate;
         this.tenant = tenant;
+        this.status = status;
     }
 
     public Long getId() {
@@ -91,6 +95,14 @@ public class Kit {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public KitStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(KitStatus status) {
+        this.status = status;
     }
 
     public User getTenant() {

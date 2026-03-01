@@ -1,6 +1,7 @@
 package com.example.demo.dto;
 
 import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -13,6 +14,7 @@ public class KitResponse {
     private String city;
     private LocalDate startDate;
     private LocalDate endDate;
+    private KitStatus status;
     private Long tenantId;
     private List<Long> itemIds;
 
@@ -23,6 +25,7 @@ public class KitResponse {
         this.city = kit.getCity();
         this.startDate = kit.getStartDate();
         this.endDate = kit.getEndDate();
+        this.status = kit.getStatus();
         this.tenantId = kit.getTenant() != null ? kit.getTenant().getId() : null;
         this.itemIds = kit.getItems() != null
             ? kit.getItems().stream().map(item -> item.getId()).collect(Collectors.toList())
@@ -52,6 +55,10 @@ public class KitResponse {
         return endDate; 
     }
     
+    public KitStatus getStatus() {
+        return status;
+    }
+
     public List<Long> getItemIds() { 
         return itemIds; 
     }
