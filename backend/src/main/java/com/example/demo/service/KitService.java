@@ -149,6 +149,13 @@ public class KitService {
         return new KitResponse(kit);
     }
 
+    public void confirmKitStatus(Long id) {
+        Kit kit = kitRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Kit not found"));
+
+        kit.setStatus(KitStatus.ACTIVE);
+    }
+
     private List<KitItem> buildKitItemsFromRequest(KitCreateRequest request) {
         Map<Long, Integer> quantitiesByItemId = new LinkedHashMap<>();
 
