@@ -51,13 +51,18 @@ const MyKitsScreen: React.FC = () => {
   };
 
   const getStatusInfo = (status: KitStatus) => {
-    switch (status) {
-      case KitStatus.ACTIVE: return { label: 'Activo', color: '#28a745' };
-      case KitStatus.FINISHED: return { label: 'Finalizado', color: '#6c757d' };
-      case KitStatus.UPCOMING: return { label: 'Próximamente', color: '#ffc107' };
-      default: return { label: status, color: '#999' };
-    }
-  };
+  switch (status) {
+    case KitStatus.PENDING: return { label: 'Pendiente de pago', color: '#fd7e14' };
+    case KitStatus.PAID: return { label: 'Pagado', color: '#17a2b8' };
+    case KitStatus.PENDING_VALIDATION: return { label: 'Pendiente de validación', color: '#ffc107' };
+    case KitStatus.ACTIVE: return { label: 'Activo', color: '#28a745' };
+    case KitStatus.COMPLETED: return { label: 'Completado', color: '#6c757d' };
+    case KitStatus.CANCELLED: return { label: 'Cancelado', color: '#dc3545' };
+
+    default:
+      return { label: status, color: '#999' };
+  }
+};
 
   const renderKit = ({ item }: { item: KitResponse }) => {
     const statusInfo = getStatusInfo(item.status);
@@ -76,7 +81,7 @@ const MyKitsScreen: React.FC = () => {
         <View style={styles.kitInfo}>
           <View style={styles.titleRow}>
             <Text style={styles.kitName} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.priceTag}>{item.totalPrice.toLocaleString('es-ES')}€</Text>
+            <Text style={styles.priceTag}>{item.totalPrice?.toLocaleString('es-ES')}€</Text>
           </View>
 
           <Text style={styles.locationText}>

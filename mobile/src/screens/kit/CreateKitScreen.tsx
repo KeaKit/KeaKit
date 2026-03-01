@@ -39,6 +39,7 @@ type FormErrors = {
   startDate?: string;
   endDate?: string;
   meetingPoint?: string;
+  courierAddress?: string;
   items?: string;
   general?: string;
 };
@@ -109,18 +110,29 @@ const CreateKitScreen: React.FC = () => {
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>("COURIER");
   const [meetingPoint, setMeetingPoint] = useState("");
+  const [courierAddress, setCourierAddress] = useState("");
 
-  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>([]);
-  const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
-  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
+  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
+    [],
+  );
+  const [selectedQuantities, setSelectedQuantities] = useState<
+    Record<number, number>
+  >({});
+  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<
+    Record<number, number>
+  >({});
 
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "AVAILABLE" | "RENTED" | "INACTIVE">("ALL");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "AVAILABLE" | "RENTED" | "INACTIVE"
+  >("ALL");
 
   const [appliedSearch, setAppliedSearch] = useState("");
   const [appliedCategory, setAppliedCategory] = useState<"ALL" | string>("ALL");
-  const [appliedStatus, setAppliedStatus] = useState<"ALL" | "AVAILABLE" | "RENTED" | "INACTIVE">("ALL");
+  const [appliedStatus, setAppliedStatus] = useState<
+    "ALL" | "AVAILABLE" | "RENTED" | "INACTIVE"
+  >("ALL");
   const [hasSearched, setHasSearched] = useState(false);
 
   const [loadingCatalog, setLoadingCatalog] = useState(true);
@@ -368,6 +380,9 @@ const CreateKitScreen: React.FC = () => {
     if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
       nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
     }
+    if (deliveryMethod === "COURIER" && !courierAddress.trim()) {
+      nextErrors.courierAddress = "Debes indicar una Dirección de entrega.";
+    }
 
     const startIso = toIsoDate(startDate);
     const endIso = toIsoDate(endDate);
@@ -428,6 +443,8 @@ const CreateKitScreen: React.FC = () => {
             deliveryMethod === "MEETING_POINT"
               ? meetingPoint.trim()
               : undefined,
+          courierAddress:
+            deliveryMethod === "COURIER" ? courierAddress.trim() : undefined,
           tenantId: user.id,
           itemSelections: Object.entries(selectedQuantities).map(
             ([itemId, quantity]) => ({
@@ -575,6 +592,7 @@ const CreateKitScreen: React.FC = () => {
               onPress={() => {
                 setDeliveryMethod("COURIER");
                 clearFieldError("meetingPoint");
+                clearFieldError("courierAddress");
               }}
             >
               <Text style={createKitStyles.deliveryOptionText}>Mensajería</Text>
@@ -588,6 +606,8 @@ const CreateKitScreen: React.FC = () => {
               ]}
               onPress={() => {
                 setDeliveryMethod("MEETING_POINT");
+                clearFieldError("meetingPoint");
+                clearFieldError("courierAddress");
               }}
             >
               <Text style={createKitStyles.deliveryOptionText}>
@@ -614,6 +634,29 @@ const CreateKitScreen: React.FC = () => {
               {errors.meetingPoint ? (
                 <Text style={commonStyles.errorText}>
                   {errors.meetingPoint}
+                </Text>
+              ) : null}
+            </>
+          ) : null}
+
+          {deliveryMethod === "COURIER" ? (
+            <>
+              <TextInput
+                style={[
+                  commonStyles.input,
+                  createKitStyles.meetingPointInput,
+                  errors.courierAddress && commonStyles.inputError,
+                ]}
+                placeholder="Dirección de entrega"
+                value={courierAddress}
+                onChangeText={(value) => {
+                  setCourierAddress(value);
+                  clearFieldError("courierAddress");
+                }}
+              />
+              {errors.courierAddress ? (
+                <Text style={commonStyles.errorText}>
+                  {errors.courierAddress}
                 </Text>
               ) : null}
             </>

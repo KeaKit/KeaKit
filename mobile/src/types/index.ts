@@ -13,7 +13,7 @@ export interface UserResponse {
   id: number;
   name: string;
   email: string;
-  role: 'ADMIN' | 'USER';
+  role: "ADMIN" | "USER";
   address?: string;
   phone?: string;
   city?: string;
@@ -24,7 +24,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
-  role: 'ADMIN' | 'USER';
+  role: "ADMIN" | "USER";
   token: string;
 }
 
@@ -72,11 +72,11 @@ export interface KitCreateRequest {
   endDate: string;
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
+  courierAddress?: string;
   tenantId: number;
   itemIds?: number[];
   itemSelections?: KitItemSelection[];
 }
-
 
 export interface RatingCreateRequest {
   revieweeId: number;
@@ -110,7 +110,7 @@ export interface Article {
   category: string;
   imageUrl: string | null;
   purchaseDate: string | null;
-  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE';
+  status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
   totalUnits?: number;
 }
@@ -138,9 +138,12 @@ export interface Item {
 }
 
 export enum KitStatus {
-  ACTIVE = 'ACTIVE',
-  FINISHED = 'FINISHED',
-  UPCOMING = 'UPCOMING',
+  PENDING = "PENDING",
+  PAID = "PAID",
+  PENDING_VALIDATION = "PENDING VALIDATION",
+  ACTIVE = "ACTIVE",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
 }
 
 export interface KitResponse {
@@ -150,10 +153,10 @@ export interface KitResponse {
   city: string;
   startDate: string;
   endDate: string;
-  status?: KitStatus; 
+  status?: KitStatus;
   tenantId: number;
-  items?: Item[];    
-  itemIds?: number[]; 
+  items?: Item[];
+  itemIds?: number[];
   totalPrice?: number;
   deliveryMethod?: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
@@ -165,7 +168,7 @@ export interface Category {
   id: number;
   name: string;
   description: string;
-  status: 'ACTIVE' | 'DRAFT';
+  status: "ACTIVE" | "DRAFT";
   minPrice: number;
   maxPrice: number;
 }
@@ -187,5 +190,5 @@ export type RootStackParamList = {
   AdminUserForm: { userId?: number };
   EditArticle: { article: Article };
   Categories: undefined;
-  CategoryForm: { category?: Category , mode: 'view' | 'edit' | 'create' };
+  CategoryForm: { category?: Category; mode: "view" | "edit" | "create" };
 };

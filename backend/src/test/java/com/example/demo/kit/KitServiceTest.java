@@ -11,21 +11,22 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
+import com.example.demo.model.Article;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
-import com.example.demo.model.Article;
-import com.example.demo.repository.ItemRepository;
 import com.example.demo.model.User;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.KitService;
+import com.example.demo.service.OrderConfirmationEmailService;
 
 @ExtendWith(MockitoExtension.class)
 public class KitServiceTest {
@@ -38,6 +39,9 @@ public class KitServiceTest {
 
     @Mock
     private ItemRepository itemRepository;
+
+    @Mock
+    private OrderConfirmationEmailService orderConfirmationEmailService;
 
     @InjectMocks
     private KitService kitService;
@@ -63,7 +67,7 @@ public class KitServiceTest {
 
 
     @Test
-    void createKit_withoutStatus_defaultsToUpcoming() {
+    void createKit_withoutStatus_defaultsToPending() {
         KitCreateRequest req = new KitCreateRequest();
         req.setName("Kit Test");
 
@@ -75,14 +79,14 @@ public class KitServiceTest {
 
         KitResponse res = kitService.create(req);
 
-        assertEquals(KitStatus.UPCOMING, res.getStatus());
+        assertEquals(KitStatus.PENDING, res.getStatus());
     }
 
     @Test
     void updateKit_changeStatus_success() {
         Kit existing = new Kit();
         existing.setId(1L);
-        existing.setStatus(KitStatus.UPCOMING);
+        existing.setStatus(KitStatus.PENDING);
 
         Kit update = new Kit();
         update.setStatus(KitStatus.ACTIVE);
@@ -209,5 +213,32 @@ public class KitServiceTest {
         assertEquals(5L, res.getItemSelections().get(0).getItemId());
         assertEquals(2, res.getItemSelections().get(0).getQuantity());
         assertEquals(2, res.getTotalSelectedItems());
+    }
+
+    @Test
+    void confirmKitStatus_whenPendingValidation_changesToActive() {
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setStatus(KitStatus.PENDING_VALIDATION);
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+        when(kitRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        kitService.confirmKitStatus(1L);
+
+        assertEquals(KitStatus.ACTIVE, kit.getStatus());
+    }
+
+    @Test
+    void confirmKitStatus_whenNotPendingValidation_throwsException() {
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setStatus(KitStatus.ACTIVE);
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
     }
 }

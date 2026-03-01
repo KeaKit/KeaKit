@@ -2,6 +2,7 @@ package com.example.demo.kit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -78,13 +79,13 @@ public class KitControllerTest {
     @Test
     void getKit_success_returnsStatus() throws Exception {
         Kit kit = new Kit();
-        kit.setStatus(KitStatus.FINISHED);
+        kit.setStatus(KitStatus.COMPLETED);
 
         when(kitService.findById(1L)).thenReturn(new KitResponse(kit));
 
         mockMvc.perform(get("/api/kits/1"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("FINISHED"));
+            .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
 
     @Test
@@ -120,5 +121,23 @@ public class KitControllerTest {
 
         mockMvc.perform(get("/api/kits/my-kits/10/1"))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void confirmKitStatus_success_returnsOk() throws Exception {
+        mockMvc.perform(patch("/api/kits/confirm/1"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("Kit status confirmed succesfully"));
+    }
+
+    @Test
+    void confirmKitStatus_error_returnsNotFound() throws Exception {
+        doThrow(new RuntimeException("Kit not found"))
+            .when(kitService)
+            .confirmKitStatus(1L);
+
+        mockMvc.perform(patch("/api/kits/confirm/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string("Kit not found"));
     }
 }
