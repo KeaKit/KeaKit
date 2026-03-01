@@ -22,6 +22,7 @@ import { RootStackParamList } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
+import { removeSelectedId } from "./createKitSelection";
 
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
 
@@ -276,7 +277,7 @@ const CreateKitScreen: React.FC = () => {
   };
 
   const removeSelectedItem = (id: number) => {
-    setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
+    setSelectedIds((prev) => removeSelectedId(prev, id));
   };
 
   const validate = (): {
