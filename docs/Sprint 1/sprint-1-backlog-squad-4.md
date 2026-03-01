@@ -46,8 +46,9 @@
 |  [#162](https://github.com/KeaKit/KeaKit/issues/162)    | DOCS   | - | Realizar planificación de usuarios piloto SPRINT 1 | M | 2 | Done | Candela Jazmín Gutiérrez González  |
 | [#178](https://github.com/KeaKit/KeaKit/issues/178)     | DOCS   | - | Retrospectiva Sprint 1. | M | 3 | ToDo | Cristina Fernández Chica | 
 | [#180](https://github.com/KeaKit/KeaKit/issues/180)     | DOCS   | - | Vídeo demo Sprint 1. | M | 2 | ToDo |  José Luis Moraza Vergara |
-| [#180](https://github.com/KeaKit/KeaKit/issues/180)     | DOCS   | - | Vídeo demo Sprint 1. | M | 4 | ToDo |  Paula Rosa González Páez y Cristina Fernández Chica + integrante equipo 1 |
+| [#180](https://github.com/KeaKit/KeaKit/issues/180)     | DOCS   | - |  Gantt Sprint 2 y Sprint 3. | M | 4 | ToDo |  Paula Rosa González Páez y Cristina Fernández Chica + integrante equipo 1 |
 | [#122](https://github.com/KeaKit/KeaKit/issues/122)     | DOCS   | - | Realizar presentación 26/02/2026. | M | 8 | Done |  Marta Aguilar Morcillo |
+| [#187](https://github.com/KeaKit/KeaKit/issues/187)     | DOCS   | - | Acta reunión organización 27/02. | S | 1 | Done |  Cristina Fernández Chica |
 
 
 ## 3. Desglose en tareas
@@ -59,12 +60,12 @@
 | [#126](https://github.com/KeaKit/KeaKit/issues/126)  | CU-ARRENDADOR-01 - Frontend     | High |  3  | In Progress |Candela Jazmín Gutiérrez González|
 | [#127](https://github.com/KeaKit/KeaKit/issues/127)  | CU-ARRENDADOR-01 - Test     | Mid |   1   | Done |Ángel Amo Sánchez|
 | [#128](https://github.com/KeaKit/KeaKit/issues/128)  | CU-ARRENDADOR-03 - Backend     | High |   1 | Done |José Luis Moraza Vergara|
-| [#129](https://github.com/KeaKit/KeaKit/issues/129)  | CU-ARRENDADOR-03 - Frontend     | High | 3   | In Progress |Ángel Amo Sánchez|
+| [#129](https://github.com/KeaKit/KeaKit/issues/129)  | CU-ARRENDADOR-03 - Frontend     | High | 3   | Done |Candela Jazmín Gutiérrez González|
 | [#130](https://github.com/KeaKit/KeaKit/issues/130)  | CU-ARRENDADOR-03 - Test     | Mid |   1  | Done |Paula Rosa González Páez|
-| [#131](https://github.com/KeaKit/KeaKit/issues/131)  | CU-ARRENDATARIO-05 - Backend     | High |  2  | ToDo |Candela Jazmín Gutiérrez González|
-| [#133](https://github.com/KeaKit/KeaKit/issues/132)  | CU-ARRENDATARIO-05 - Frontend     | High | 3  |ToDo |Paula Rosa González Páez|
-| [#133](https://github.com/KeaKit/KeaKit/issues/133)  | CU-ARRENDATARIO-05 - Test     | Mid |    2   | ToDo |Cristina Fernández Chica|
-| [#123](https://github.com/KeaKit/KeaKit/issues/123)  | CU-ADMIN-02 - Backend y Frontend     | High |  1    | In Progress |Marta Aguilar Morcillo|
+| [#131](https://github.com/KeaKit/KeaKit/issues/131)  | CU-ARRENDATARIO-05 - Backend     | High |  2  | Done | Ángel Amo Sánchez|
+| [#133](https://github.com/KeaKit/KeaKit/issues/132)  | CU-ARRENDATARIO-05 - Frontend     | High | 3  | Done |Paula Rosa González Páez|
+| [#133](https://github.com/KeaKit/KeaKit/issues/133)  | CU-ARRENDATARIO-05 - Test     | Mid |    2   | Done |Cristina Fernández Chica|
+| [#123](https://github.com/KeaKit/KeaKit/issues/123)  | CU-ADMIN-02 - Backend y Frontend     | High |  1    | Done |Marta Aguilar Morcillo|
 | [#124](https://github.com/KeaKit/KeaKit/issues/124)  | CU-ADMIN-02 - Test     | Mid |   1   | In Progress |Marta Aguilar Morcillo|
 
 
@@ -73,10 +74,10 @@
 | Responsable       | Story Points asignados |
 |-------------------|------------------------|
 | Marta Aguilar Morcillo           | 16 SP                  |
-| Ángel Amo Sánchez         | 5 SP                  |
+| Ángel Amo Sánchez         | 4 SP                  |
 | Cristina Fernández Chica      | 12 SP                  |
 | Paula Rosa González Páez     | 9 SP                   |
-| Candela Jazmín Gutiérrez González   | 13 SP                  |
+| Candela Jazmín Gutiérrez González   | 14 SP                  |
 | José Luis Moraza Vergara     | 11 SP                   |
 | **TOTAL EQUIPO**   | **66 SP**              |
 
@@ -85,8 +86,9 @@
 | Versión | Fecha       | Descripción                    | Autor(es)                  |
 |---------|-------------|--------------------------------|----------------------------|
 | 1.0.0   | 25/02/2026  |  Versión inicial               | Cristina Fernández Chica |
+| 1.0.1   | 01/03/2026  |  Adición de tareas no incluidas e intercambio de tareas entre dos miebros            | Cristina Fernández Chica |
 
 ---
 **Redactado por:** Cristina Fernández Chica
-**Fecha de redacción:** 28/02/2026  
-**Versión:** 1.0.0
+**Fecha de redacción:** 01/03/2026  
+**Versión:** 1.0.1
