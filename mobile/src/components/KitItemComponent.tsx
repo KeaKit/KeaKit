@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { TouchableOpacity, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, commonStyles, componentStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
@@ -12,11 +12,13 @@ type KitItemComponentProps = {
     pricePerMonth?: number;
   };
   duration?: number;
+  onRemove: (id: number) => void;
 };
 
 const KitItemComponent: React.FC<KitItemComponentProps> = ({
   item,
   duration,
+  onRemove,
 }) => {
   return (
     <View
@@ -39,18 +41,21 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
         </Text>
       </View>
 
-      {/* TODO: Añadir este precio total por item al backend para que el arrendador pueda cobrarlo */}
-      <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
+      <View style={createKitStyles.productPriceActions}>
         <Text style={createKitStyles.productTitle}>
           {item.pricePerMonth !== undefined && duration !== undefined
             ? `${(item.pricePerMonth * duration).toFixed(2)}€`
             : "N/A"}
         </Text>
+        <TouchableOpacity
+          onPress={() => onRemove(item.id)}
+          style={createKitStyles.removeItemButton}
+          accessibilityRole="button"
+          accessibilityLabel={`Eliminar ${item.title} del kit`}
+        >
+          <Ionicons name="trash-outline" size={20} color={Colors.error} />
+        </TouchableOpacity>
       </View>
-
-      {/* TODO(Salma): Eliminar objetos del kit */}
-      {/*TODO(Salma): Seleccionar varias unidades de un mismo producto */}
-
     </View>
   );
 };
