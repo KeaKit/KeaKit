@@ -45,6 +45,7 @@ class RatingServiceTest {
     private User owner;
     private Kit kit;
 
+
     @BeforeEach
     void setUp() {
         tenant = new User("tenant@test.com", "password", "Tenant", UserRole.USER);
@@ -62,7 +63,7 @@ class RatingServiceTest {
         List<Item> items = new ArrayList<>();
         items.add(article);
 
-        kit = new Kit("Test Kit", "Spain", "Madrid", LocalDate.now(), LocalDate.now().plusDays(7), tenant);
+        kit = new Kit("Test Kit", "Spain", "Madrid", LocalDate.now(), LocalDate.now().plusDays(7), tenant, KitStatus.ACTIVE);
         kit.setId(1L);
         kit.setItems(items);
     }
