@@ -2,7 +2,9 @@ package com.example.demo.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.persistence.*;
 
@@ -36,13 +38,8 @@ public class Kit {
     @JoinColumn(name = "tenant_id")
     private User tenant;
 
-    @ManyToMany
-    @JoinTable(
-        name = "kit_items",
-        joinColumns = @JoinColumn(name = "kit_id"),
-        inverseJoinColumns = @JoinColumn(name = "item_id")
-    )
-    private List<Item> items = new ArrayList<>();
+    @OneToMany(mappedBy = "kit", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<KitItem> kitItems = new ArrayList<>();
 
     public Kit() {}
 
@@ -145,11 +142,58 @@ public class Kit {
     }
 
     public List<Item> getItems() {
+        List<Item> items = new ArrayList<>();
+        for (KitItem kitItem : kitItems) {
+            Item item = kitItem.getItem();
+            int quantity = kitItem.getQuantity() != null ? kitItem.getQuantity() : 0;
+            for (int i = 0; i < quantity; i++) {
+                items.add(item);
+            }
+        }
         return items;
     }
 
     public void setItems(List<Item> items) {
-        this.items = items;
+        Map<Long, Integer> quantitiesByItemId = new LinkedHashMap<>();
+        Map<Long, Item> itemById = new LinkedHashMap<>();
+
+        if (items != null) {
+            for (Item item : items) {
+                if (item == null || item.getId() == null) {
+                    continue;
+                }
+                quantitiesByItemId.put(item.getId(), quantitiesByItemId.getOrDefault(item.getId(), 0) + 1);
+                itemById.putIfAbsent(item.getId(), item);
+            }
+        }
+
+        List<KitItem> nextKitItems = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : quantitiesByItemId.entrySet()) {
+            KitItem kitItem = new KitItem();
+            kitItem.setItem(itemById.get(entry.getKey()));
+            kitItem.setQuantity(entry.getValue());
+            kitItem.setKit(this);
+            nextKitItems.add(kitItem);
+        }
+        this.kitItems = nextKitItems;
+    }
+
+    public List<KitItem> getKitItems() {
+        return kitItems;
+    }
+
+    public void setKitItems(List<KitItem> kitItems) {
+        this.kitItems.clear();
+        if (kitItems == null) {
+            return;
+        }
+        for (KitItem kitItem : kitItems) {
+            if (kitItem == null) {
+                continue;
+            }
+            kitItem.setKit(this);
+            this.kitItems.add(kitItem);
+        }
     }
     
 } 

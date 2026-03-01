@@ -51,6 +51,12 @@ export interface UserArticle {
   pricePerMonth: number;
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
+  totalUnits?: number;
+}
+
+export interface KitItemSelection {
+  itemId: number;
+  quantity: number;
 }
 
 export interface KitCreateRequest {
@@ -62,7 +68,8 @@ export interface KitCreateRequest {
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
   tenantId: number;
-  itemIds: number[];
+  itemIds?: number[];
+  itemSelections?: KitItemSelection[];
 }
 
 export interface KitResponse {
@@ -77,6 +84,8 @@ export interface KitResponse {
   courierPrice?: number;
   tenantId: number;
   itemIds: number[];
+  itemSelections?: KitItemSelection[];
+  totalSelectedItems?: number;
 }
 
 export interface RatingCreateRequest {
@@ -107,6 +116,7 @@ export interface Article {
   pricePerMonth: number;
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
+  totalUnits?: number;
 }
 
 export interface ArticlePayload {
@@ -120,6 +130,7 @@ export interface ArticlePayload {
   status?: "AVAILABLE" | "RENTED" | "INACTIVE";
   imageUrl?: string;
   purchaseDate?: string;
+  totalUnits?: number;
 }
 
 export type RootStackParamList = {
