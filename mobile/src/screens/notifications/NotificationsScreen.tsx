@@ -25,7 +25,10 @@ import {
   componentStyles,
 } from "../../styles";
 
-type NotificationsNav = NativeStackNavigationProp<RootStackParamList, "Notifications">;
+type NotificationsNav = NativeStackNavigationProp<
+  RootStackParamList,
+  "Notifications"
+>;
 
 type NotificationItem = {
   id: string;
@@ -37,7 +40,9 @@ type NotificationItem = {
 const formatDate = (dateString?: string): string => {
   if (!dateString) return "";
   const parts = dateString.split("-");
-  return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateString;
+  return parts.length === 3
+    ? `${parts[2]}/${parts[1]}/${parts[0]}`
+    : dateString;
 };
 
 const parseIsoDate = (dateString?: string): Date | null => {
@@ -54,7 +59,9 @@ const addDays = (date: Date, days: number): Date => {
 
 const buildNotifications = (kits: KitResponse[]): NotificationItem[] => {
   const now = new Date();
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const today = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
   const minDate = today;
   const maxDate = addDays(today, 1);
 
@@ -106,7 +113,9 @@ const NotificationsScreen: React.FC = () => {
           setLoading(true);
           setError(null);
 
-          const response = await fetch(`${BASE_URL}/api/kits/my-kits/${user.id}`);
+          const response = await fetch(
+            `${BASE_URL}/api/kits/my-kits/${user.id}`,
+          );
           if (!response.ok) {
             const text = await response.text();
             throw new Error(text || `HTTP ${response.status}`);
@@ -115,7 +124,10 @@ const NotificationsScreen: React.FC = () => {
           const kits: KitResponse[] = await response.json();
           setNotifications(buildNotifications(kits));
         } catch (err) {
-          const message = err instanceof Error ? err.message : "No se pudieron cargar las notificaciones.";
+          const message =
+            err instanceof Error
+              ? err.message
+              : "No se pudieron cargar las notificaciones.";
           setError(message);
           setNotifications([]);
         } finally {
@@ -131,7 +143,9 @@ const NotificationsScreen: React.FC = () => {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.title}</Text>
-        {item.dateLabel ? <Text style={styles.cardDate}>{item.dateLabel}</Text> : null}
+        {item.dateLabel ? (
+          <Text style={styles.cardDate}>{item.dateLabel}</Text>
+        ) : null}
       </View>
       <Text style={styles.cardMessage}>{item.message}</Text>
     </View>
@@ -162,8 +176,14 @@ const NotificationsScreen: React.FC = () => {
         </View>
       ) : notifications.length === 0 ? (
         <View style={styles.centerContent}>
-          <Ionicons name="mail-open-outline" size={48} color={Colors.textSecondary} />
-          <Text style={styles.emptyText}>No tienes notificaciones por ahora.</Text>
+          <Ionicons
+            name="mail-open-outline"
+            size={48}
+            color={Colors.textSecondary}
+          />
+          <Text style={styles.emptyText}>
+            No tienes notificaciones por ahora.
+          </Text>
         </View>
       ) : (
         <FlatList

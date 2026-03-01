@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,21 +9,21 @@ import {
   ActivityIndicator,
   Image,
   Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList, KitResponse, KitStatus } from '../../types';
-import { Colors, Spacing, commonStyles } from '../../styles';
-import { useAuth } from '../../context/AuthContext';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRoute, useNavigation } from "@react-navigation/native";
+import { RouteProp } from "@react-navigation/native";
+import { RootStackParamList, KitResponse, KitStatus } from "../../types";
+import { Colors, Spacing, commonStyles } from "../../styles";
+import { useAuth } from "../../context/AuthContext";
 
-type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
+type KitDetailRouteProp = RouteProp<RootStackParamList, "KitDetail">;
 
 const KitDetailScreen: React.FC = () => {
   const route = useRoute<KitDetailRouteProp>();
   const navigation = useNavigation();
   const { user } = useAuth();
-  
+
   const kitId = route.params?.kitId;
 
   const [kit, setKit] = useState<KitResponse | null>(null);
@@ -33,9 +33,11 @@ const KitDetailScreen: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
 
   const formatDate = (dateString?: string | null): string => {
-    if (!dateString) return '-';
-    const parts = dateString.split('-');
-    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateString;
+    if (!dateString) return "-";
+    const parts = dateString.split("-");
+    return parts.length === 3
+      ? `${parts[2]}/${parts[1]}/${parts[0]}`
+      : dateString;
   };
 
   useEffect(() => {
@@ -43,7 +45,7 @@ const KitDetailScreen: React.FC = () => {
       try {
         setLoading(true);
         const response = await fetch(`http://10.0.2.2:8080/api/kits/${kitId}`);
-        if (!response.ok) throw new Error('Error al obtener kit');
+        if (!response.ok) throw new Error("Error al obtener kit");
         const data = await response.json();
         setKit(data);
       } catch (e) {
@@ -68,25 +70,34 @@ const KitDetailScreen: React.FC = () => {
           onPress: async () => {
             try {
               setConfirming(true);
-              
-              const response = await fetch(`http://localhost:8080/api/kits/confirm/${kitId}`, {
-                method: 'PATCH',
-              });
+
+              const response = await fetch(
+                `http://localhost:8080/api/kits/confirm/${kitId}`,
+                {
+                  method: "PATCH",
+                },
+              );
 
               if (response.ok) {
-                Alert.alert("Éxito", "El kit ha sido confirmado correctamente.");
+                Alert.alert(
+                  "Éxito",
+                  "El kit ha sido confirmado correctamente.",
+                );
                 navigation.goBack();
               } else {
                 throw new Error("Error en el servidor");
               }
             } catch (error) {
-              Alert.alert("Aviso", "No se pudo procesar la confirmación en el servidor real.");
+              Alert.alert(
+                "Aviso",
+                "No se pudo procesar la confirmación en el servidor real.",
+              );
             } finally {
               setConfirming(false);
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -102,11 +113,13 @@ const KitDetailScreen: React.FC = () => {
           onPress: async () => {
             try {
               setDeleting(true);
-              
-         
-              const response = await fetch(`http://10.0.2.2:8080/api/kits/${kitId}`, {
-                method: 'DELETE',
-              });
+
+              const response = await fetch(
+                `http://10.0.2.2:8080/api/kits/${kitId}`,
+                {
+                  method: "DELETE",
+                },
+              );
 
               if (response.ok) {
                 Alert.alert("Éxito", "El kit ha sido cancelado correctamente.");
@@ -115,13 +128,16 @@ const KitDetailScreen: React.FC = () => {
                 throw new Error("Error en el servidor");
               }
             } catch (error) {
-              Alert.alert("Aviso", "No se pudo procesar el borrado en el servidor real.");
+              Alert.alert(
+                "Aviso",
+                "No se pudo procesar el borrado en el servidor real.",
+              );
             } finally {
               setDeleting(false);
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -129,7 +145,9 @@ const KitDetailScreen: React.FC = () => {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        {confirming && <Text style={styles.deletingText}>Confirmando recepción...</Text>}
+        {confirming && (
+          <Text style={styles.deletingText}>Confirmando recepción...</Text>
+        )}
       </View>
     );
   }
@@ -147,17 +165,21 @@ const KitDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
-
       <View style={commonStyles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle del Kit</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.mainCard}>
           <View style={styles.iconCircle}>
             <Ionicons name="briefcase" size={40} color={Colors.primary} />
@@ -185,10 +207,11 @@ const KitDetailScreen: React.FC = () => {
             Fecha estimada: {formatDate(kit.estimatedDeliveryDate)}
           </Text>
           {kit.deliveryNotification ? (
-            <Text style={styles.deliveryNoticeText}>{kit.deliveryNotification}</Text>
+            <Text style={styles.deliveryNoticeText}>
+              {kit.deliveryNotification}
+            </Text>
           ) : null}
         </View>
-
 
         <Text style={styles.sectionTitle}>Productos Incluidos</Text>
         <View style={styles.itemsContainer}>
@@ -196,32 +219,43 @@ const KitDetailScreen: React.FC = () => {
             <View key={item.id} style={styles.itemCard}>
               <View style={styles.itemInfo}>
                 <Text style={styles.itemName}>{item.title}</Text>
-                <Text style={styles.itemMeta}>{item.category} • {item.pricePerMonth}€/mes</Text>
+                <Text style={styles.itemMeta}>
+                  {item.category} • {item.pricePerMonth}€/mes
+                </Text>
               </View>
               <Ionicons name="cube-outline" size={20} color="#DDD" />
             </View>
           ))}
 
           {kit.items && kit.items.length > 3 && (
-            <TouchableOpacity 
-              style={styles.verMasBtn} 
+            <TouchableOpacity
+              style={styles.verMasBtn}
               onPress={() => setExpanded(!expanded)}
             >
               <Text style={styles.verMasText}>
                 {expanded ? "Ver menos" : `Ver ${kit.items.length - 3} más...`}
               </Text>
-              <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color="#666" />
+              <Ionicons
+                name={expanded ? "chevron-up" : "chevron-down"}
+                size={16}
+                color="#666"
+              />
             </TouchableOpacity>
           )}
         </View>
 
         <View style={styles.priceContainer}>
           <Text style={styles.totalLabel}>TOTAL MENSUAL ESTIMADO</Text>
-          <Text style={styles.totalValue}>{kit.totalPrice?.toLocaleString('es-ES')} €</Text>
+          <Text style={styles.totalValue}>
+            {kit.totalPrice?.toLocaleString("es-ES")} €
+          </Text>
         </View>
 
         {kit.status === KitStatus.PENDING_VALIDATION && (
-          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmKit}>
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={handleConfirmKit}
+          >
             <Ionicons name="checkmark-done-outline" size={20} color="#04ac20" />
             <Text style={styles.confirmButtonText}>Confirmar recepción</Text>
           </TouchableOpacity>
@@ -231,45 +265,162 @@ const KitDetailScreen: React.FC = () => {
           <Ionicons name="trash-outline" size={20} color="#FF3B30" />
           <Text style={styles.deleteButtonText}>Cancelar este alquiler</Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
-  deletingText: { marginTop: 10, color: '#666', fontWeight: '500' },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.textPrimary },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  deletingText: { marginTop: 10, color: "#666", fontWeight: "500" },
+  headerTitle: { fontSize: 18, fontWeight: "bold", color: Colors.textPrimary },
   backButton: { padding: 10 },
   scrollContent: { padding: 20 },
-  mainCard: { alignItems: 'center', marginBottom: 25 },
-  iconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#F0F4FF', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
-  kitNameText: { fontSize: 22, fontWeight: 'bold', color: '#333', textAlign: 'center' },
-  statusBadge: { backgroundColor: '#E8F0FE', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginTop: 8 },
-  statusText: { color: Colors.primary, fontWeight: 'bold', fontSize: 12, textTransform: 'uppercase' },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30, backgroundColor: '#F9F9F9', padding: 15, borderRadius: 15 },
+  mainCard: { alignItems: "center", marginBottom: 25 },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#F0F4FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  kitNameText: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+  },
+  statusBadge: {
+    backgroundColor: "#E8F0FE",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  statusText: {
+    color: Colors.primary,
+    fontWeight: "bold",
+    fontSize: 12,
+    textTransform: "uppercase",
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 30,
+    backgroundColor: "#F9F9F9",
+    padding: 15,
+    borderRadius: 15,
+  },
   infoBox: { flex: 1 },
-  label: { fontSize: 12, color: '#888', marginBottom: 4 },
-  value: { fontSize: 16, fontWeight: '600' },
-  deliveryContainer: { marginBottom: 20, backgroundColor: '#F5F8FF', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E3EBFF' },
-  deliveryDateText: { fontSize: 14, color: Colors.textPrimary, fontWeight: '600' },
-  deliveryNoticeText: { fontSize: 13, color: Colors.primary, marginTop: 6, fontWeight: '700' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#333' },
+  label: { fontSize: 12, color: "#888", marginBottom: 4 },
+  value: { fontSize: 16, fontWeight: "600" },
+  deliveryContainer: {
+    marginBottom: 20,
+    backgroundColor: "#F5F8FF",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E3EBFF",
+  },
+  deliveryDateText: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontWeight: "600",
+  },
+  deliveryNoticeText: {
+    fontSize: 13,
+    color: Colors.primary,
+    marginTop: 6,
+    fontWeight: "700",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#333",
+  },
   itemsContainer: { marginBottom: 20 },
-  itemCard: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#fff', borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: '#F0F0F0' },
+  itemCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
+  },
   itemInfo: { flex: 1 },
-  itemName: { fontSize: 15, fontWeight: '600', color: '#333' },
-  itemMeta: { fontSize: 12, color: '#777', marginTop: 2 },
-  verMasBtn: { flexDirection: 'row', alignSelf: 'center', alignItems: 'center', marginTop: 5, padding: 8 },
-  verMasText: { fontSize: 14, color: '#666', fontWeight: '600', marginRight: 5 },
-  priceContainer: { marginTop: 20, alignItems: 'center', padding: 20, borderTopWidth: 1, borderColor: '#EEE' },
-  totalLabel: { fontSize: 11, color: '#AAA', letterSpacing: 1 },
-  totalValue: { fontSize: 32, fontWeight: 'bold', color: Colors.primary, marginTop: 5 },
-  confirmButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 30, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#04ac20', backgroundColor: '#FFF' },
-  confirmButtonText: { color: '#04ac20', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
-  deleteButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 15, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#FF3B30', backgroundColor: '#FFF' },
-  deleteButtonText: { color: '#FF3B30', fontWeight: 'bold', marginLeft: 10, fontSize: 16 }
+  itemName: { fontSize: 15, fontWeight: "600", color: "#333" },
+  itemMeta: { fontSize: 12, color: "#777", marginTop: 2 },
+  verMasBtn: {
+    flexDirection: "row",
+    alignSelf: "center",
+    alignItems: "center",
+    marginTop: 5,
+    padding: 8,
+  },
+  verMasText: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "600",
+    marginRight: 5,
+  },
+  priceContainer: {
+    marginTop: 20,
+    alignItems: "center",
+    padding: 20,
+    borderTopWidth: 1,
+    borderColor: "#EEE",
+  },
+  totalLabel: { fontSize: 11, color: "#AAA", letterSpacing: 1 },
+  totalValue: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: Colors.primary,
+    marginTop: 5,
+  },
+  confirmButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 30,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#04ac20",
+    backgroundColor: "#FFF",
+  },
+  confirmButtonText: {
+    color: "#04ac20",
+    fontWeight: "bold",
+    marginLeft: 10,
+    fontSize: 16,
+  },
+  deleteButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 15,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#FF3B30",
+    backgroundColor: "#FFF",
+  },
+  deleteButtonText: {
+    color: "#FF3B30",
+    fontWeight: "bold",
+    marginLeft: 10,
+    fontSize: 16,
+  },
 });
 
 export default KitDetailScreen;
