@@ -40,7 +40,11 @@ public class UserService {
             request.getEmail(),
             hashedPassword,
             request.getName(),
-            UserRole.USER
+            UserRole.USER,
+            request.getPhone(),
+            request.getAddress(),
+            request.getCity(),
+            request.getCountry()
         );
 
         User savedUser = userRepository.save(user);
@@ -80,6 +84,9 @@ public class UserService {
         }
         if (updateData.getCity() != null) {
             user.setCity(updateData.getCity());
+        }
+        if (updateData.getCountry() != null) {
+            user.setCountry(updateData.getCountry());
         }
 
         User savedUser = userRepository.save(user);

@@ -15,7 +15,8 @@ import UserRatingsScreen    from '../screens/ratings/UserRatingsScreen';
 import CreateKitScreen      from '../screens/kit/CreateKitScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
-
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import { RootStackParamList } from '../types';
 import EditArticleScreen from '../screens/profile/EditArticleScreen';
 
@@ -45,6 +46,8 @@ const AppNavigator: React.FC = () => {
         {user ? (
           <>
             <Stack.Screen name="Home"          component={HomeScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
             <Stack.Screen name="MyKits"    component={MyKitsScreen} />
             <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
@@ -64,6 +67,7 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen name="Login"    component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
           </>
+        
         )}
       </Stack.Navigator>
     </NavigationContainer>

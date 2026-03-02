@@ -49,11 +49,16 @@ class ArticleIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        articleRepository.deleteAll();
         User owner = new User();
         owner.setName("Juan");
         owner.setEmail("juan@example.com");
         owner.setPassword("123");
         owner.setRole(UserRole.USER);
+        owner.setCountry("España");
+        owner.setCity("Sevilla");
+        owner.setAddress("Calle 123 matame otra vez");
+        owner.setPhone("123456789");
         savedOwner = userRepository.save(owner);
 
         Category category = new Category("Bricolaje", "Cosas de taller", 5.0, 500.0);
