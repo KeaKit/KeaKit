@@ -86,10 +86,10 @@ class ArticleIntegrationTest {
         newArticle.setDescription("Escalera de aluminio");
         newArticle.setCity("Barcelona");
         newArticle.setPricePerMonth(30.0);
-        newArticle.setCategory(savedCategory);
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isCreated())
@@ -107,6 +107,7 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", "999999")
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isBadRequest())
@@ -122,6 +123,7 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isBadRequest())
@@ -138,6 +140,7 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isBadRequest())
@@ -156,6 +159,7 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isBadRequest())

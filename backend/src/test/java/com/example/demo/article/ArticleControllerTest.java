@@ -4,6 +4,7 @@ import com.example.demo.controller.ArticleController;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleStatus;
+import com.example.demo.model.Category;
 import com.example.demo.model.User;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.service.ArticleService;
@@ -50,6 +51,9 @@ class ArticleControllerTest {
     private com.example.demo.security.TokenBlacklistService tokenBlacklistService;
 
     @MockitoBean
+    private com.example.demo.repository.CategoryRepository categoryRepository;
+
+    @MockitoBean
     private JwtUtil jwtUtil;
 
     private Article sample;
@@ -60,7 +64,7 @@ class ArticleControllerTest {
         owner = new User();
         owner.setId(1L);
         owner.setName("Test Owner");
-
+        when(categoryRepository.findById(any())).thenReturn(Optional.of(new Category()));
         sample = new Article();
         sample.setId(1L);
         sample.setTitle("t");
@@ -81,6 +85,7 @@ class ArticleControllerTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", "1")
+                .param("categoryId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"t\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
             .andExpect(status().isCreated())
@@ -93,6 +98,7 @@ class ArticleControllerTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", "99")
+                .param("categoryId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"t\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
             .andExpect(status().isBadRequest())
@@ -106,6 +112,7 @@ class ArticleControllerTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", "1")
+                .param("categoryId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
             .andExpect(status().isBadRequest())
