@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Devolución del depósito realizada</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
+  <h2>Depósito devuelto correctamente</h2>
+  
+  <p>Hola {{tenantName}},</p>
+  
+  <p>
+    Queremos informarte de que la devolución del depósito correspondiente a tu kit 
+    <strong>{{kitName}}</strong> se ha realizado correctamente.
+  </p>
+
+  <ul>
+    <li><strong>ID del kit:</strong> {{kitId}}</li>
+    <li><strong>Destino:</strong> {{kitCity}}, {{kitCountry}}</li>
+    <li><strong>Fechas del alquiler:</strong> {{kitStartDate}} - {{kitEndDate}}</li>
+    <li><strong>Importe del depósito devuelto:</strong> {{depositAmount}} €</li>
+  </ul>
+
+  <p>
+    Gracias por haber confiado en KeaKit. ¡Esperamos verte de nuevo pronto!
+  </p>
+</body>
+</html>

@@ -25,6 +25,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.DepositRefundEmailService;
 import com.example.demo.service.KitService;
 import com.example.demo.service.OrderConfirmationEmailService;
 
@@ -42,6 +43,9 @@ public class KitServiceTest {
 
     @Mock
     private OrderConfirmationEmailService orderConfirmationEmailService;
+
+    @Mock
+    private DepositRefundEmailService depositRefundEmailService;
 
     @InjectMocks
     private KitService kitService;
