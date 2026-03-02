@@ -12,7 +12,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { RootStackParamList } from '../../types/authTypes';
+import { RootStackParamList } from '../../types';
 import Divider from '../../components/Divider';
 
 type LoginNav = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -69,6 +69,9 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="#103a57" />
+      </TouchableOpacity>
 
       <Image
         source={require('../../../assets/logo.png')}
@@ -227,5 +230,9 @@ const styles = StyleSheet.create({
     color: '#4A90E2',
     fontSize: 15,
     marginTop: 20,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 8,
   },
 });

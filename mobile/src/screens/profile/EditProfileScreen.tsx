@@ -13,11 +13,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { RootStackParamList } from '../../types/authTypes';
+import { RootStackParamList } from '../../types';
 import { updateProfile } from '../../services/userService';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
-import { EUROPEAN_COUNTRIES } from '../../types/authTypes';
+import { EUROPEAN_COUNTRIES } from '../../types';
 
 type EditProfileNav = NativeStackNavigationProp<RootStackParamList, 'EditProfile'>;
 

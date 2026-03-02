@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginUser, registerUser } from '../services/authService';
-import { AuthUser, LoginRequest, RegisterRequest } from '../types/authTypes';
+import { AuthUser, LoginRequest, RegisterRequest } from '../types';
 
 interface AuthContextData {
   user: AuthUser | null;

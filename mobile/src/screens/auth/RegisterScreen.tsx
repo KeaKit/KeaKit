@@ -14,9 +14,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { RootStackParamList } from '../../types/authTypes';
+import { RootStackParamList } from '../../types';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
-import { EUROPEAN_COUNTRIES } from '../../types/authTypes';
+import { EUROPEAN_COUNTRIES } from '../../types';
 import { SelectPicker } from '../../components/SelectPicker';
 
 type RegisterNav = NativeStackNavigationProp<RootStackParamList, 'Register'>;
@@ -128,6 +128,9 @@ const RegisterScreen: React.FC = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="#103a57" />
+      </TouchableOpacity>
       <Image
         source={require('../../../assets/logo.png')}
         style={styles.logo}
@@ -169,7 +172,7 @@ const RegisterScreen: React.FC = () => {
             <SelectPicker
               options={EUROPEAN_COUNTRIES}
               selectedValue={selectedCountry}
-              placeholder="País..."
+              placeholder="País"
               onValueChange={(value: string) => {
                 onCountryChange(value);
                 clearErrors();
@@ -192,7 +195,7 @@ const RegisterScreen: React.FC = () => {
               : <SelectPicker
                   options={cities.map(c => ({ label: c, value: c }))}
                   selectedValue={selectedCity}
-                  placeholder={selectedCountry ? 'Ciudad...' : 'Primero elige un país'}
+                  placeholder={selectedCountry ? 'Ciudad' : 'Primero elige un país'}
                   disabled={cities.length === 0}
                   onValueChange={(value: string) => {
                     setSelectedCity(value);
@@ -258,6 +261,8 @@ const styles = StyleSheet.create({
   },
   fieldWrapper: {
     width: '49.65%',
+    minWidth: 280, 
+    flexGrow: 1,
   },
   fieldFull: {
     width: '100%',
@@ -340,5 +345,9 @@ const styles = StyleSheet.create({
   link: {
     color: '#4A90E2',
     fontSize: 15,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 8,
   },
 });

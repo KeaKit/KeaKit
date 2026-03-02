@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -6,10 +6,9 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-// TODO: Añadir alguna forma de llegar más rápido a la ciudad deseada (la api devuelve cientas de ciudades).
 
 type Option = { label: string; value: string };
 
@@ -19,6 +18,7 @@ type Props = {
   onValueChange: (value: string) => void;
   placeholder: string;
   disabled?: boolean;
+  searchable?: boolean; 
 };
 
 export const SelectPicker: React.FC<Props> = ({
@@ -27,10 +27,23 @@ export const SelectPicker: React.FC<Props> = ({
   onValueChange,
   placeholder,
   disabled = false,
+  searchable,
 }) => {
   const [visible, setVisible] = useState(false);
+  const [query, setQuery] = useState('');
+  const searchRef = useRef<TextInput>(null);
+
+  const isSearchable = searchable ?? options.length > 20;
+
+  const filtered = isSearchable && query.trim()
+    ? options.filter(o => o.label.toLowerCase().startsWith(query.toLowerCase()))
+    : options;
 
   const selectedLabel = options.find(o => o.value === selectedValue)?.label;
+
+  useEffect(() => {
+    if (!visible) setQuery('');
+  }, [visible]);
 
   return (
     <>
@@ -51,19 +64,49 @@ export const SelectPicker: React.FC<Props> = ({
           activeOpacity={1}
           onPress={() => setVisible(false)}
         >
-          <View style={styles.sheet}>
+          <TouchableOpacity activeOpacity={1} style={styles.sheet}>
+            {isSearchable && (
+              <View style={styles.searchContainer}>
+                <Ionicons name="search-outline" size={18} color="#999" />
+                <TextInput
+                  ref={searchRef}
+                  style={styles.searchInput}
+                  placeholder="Buscar..."
+                  placeholderTextColor="#999"
+                  value={query}
+                  onChangeText={setQuery}
+                  autoCorrect={false}
+                  autoFocus
+                />
+                {query.length > 0 && (
+                  <TouchableOpacity onPress={() => setQuery('')}>
+                    <Ionicons name="close-circle" size={18} color="#999" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
             <FlatList
-              data={options}
+              data={filtered}
               keyExtractor={item => item.value}
+              keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={[styles.option, item.value === selectedValue && styles.optionSelected]}
+                  style={[
+                    styles.option,
+                    item.value === selectedValue && styles.optionSelected,
+                  ]}
                   onPress={() => {
                     onValueChange(item.value);
                     setVisible(false);
                   }}
                 >
-                  <Text style={[styles.optionText, item.value === selectedValue && styles.optionTextSelected]}>
+                  <Text
+                    style={[
+                      styles.optionText,
+                      item.value === selectedValue && styles.optionTextSelected,
+                    ]}
+                  >
                     {item.label}
                   </Text>
                   {item.value === selectedValue && (
@@ -71,8 +114,11 @@ export const SelectPicker: React.FC<Props> = ({
                   )}
                 </TouchableOpacity>
               )}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>Sin resultados para "{query}"</Text>
+              }
             />
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
     </>
@@ -80,52 +126,74 @@ export const SelectPicker: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  trigger: {
-    flex: 1,
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 50,
+    gap: 8,
+    marginHorizontal: 16,
+    marginVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#f2f2f2',
+    borderRadius: 10,
+    height: 44,
   },
-  triggerDisabled: {
-    opacity: 0.5,
-  },
-  triggerText: {
+  searchInput: {
+    flex: 1,
     fontSize: 15,
     color: '#333',
-    flex: 1,
+    ...(({ outlineWidth: 0, outlineStyle: 'none' } as any)),
+
   },
-  placeholder: {
+  emptyText: {
+    textAlign: 'center',
     color: '#999',
+    padding: 20,
+    fontSize: 14,
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
+  trigger: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    height: 50 },
+  triggerDisabled: { 
+    opacity: 0.5 
   },
-  sheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '60%',
-    paddingVertical: 8,
+  triggerText: { 
+    fontSize: 15, 
+    color: '#333', 
+    flex: 1 
   },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+  placeholder: { 
+    color: '#999' 
   },
-  optionSelected: {
-    backgroundColor: '#f0f5f9',
+  overlay: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.4)', 
+    justifyContent: 'flex-end' 
   },
-  optionText: {
-    fontSize: 15,
-    color: '#333',
+  sheet: { 
+    backgroundColor: '#fff', 
+    borderTopLeftRadius: 16, 
+    borderTopRightRadius: 16, 
+    maxHeight: '60%', 
+    paddingVertical: 8 
   },
-  optionTextSelected: {
-    color: '#103a57',
-    fontWeight: '600',
+  option: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 20, 
+    paddingVertical: 14 
   },
+  optionSelected: { 
+    backgroundColor: '#f0f5f9' 
+  },
+  optionText: { 
+    fontSize: 15, 
+    color: '#333' 
+  },
+  optionTextSelected: { 
+    color: '#103a57', 
+    fontWeight: '600' },
 });
