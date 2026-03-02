@@ -39,7 +39,11 @@ public class AdminSeeder implements CommandLineRunner {
                 adminEmail,
                 passwordEncoder.encode(adminRawPassword), // Hasheamos aquí
                 adminName,
-                UserRole.ADMIN
+                UserRole.ADMIN,
+                "123456789", 
+                "Admin address",
+                "Admin city",
+                "Admin country"  
             );
 
             userRepository.save(admin);
