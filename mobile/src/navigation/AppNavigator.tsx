@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 
+import CheckoutScreen from '../screens/kit/CheckoutScreen';
 import LoginScreen          from '../screens/auth/LoginScreen';
 import RegisterScreen       from '../screens/auth/RegisterScreen';
 import HomeScreen           from '../screens/home/HomeScreen';
@@ -51,6 +52,7 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
             <Stack.Screen name="MyKits"    component={MyKitsScreen} />
             <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
             <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
             <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
             <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
