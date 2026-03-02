@@ -68,6 +68,8 @@ type CatalogProduct = {
   availabilityMessage?: string;
 };
 
+
+
 const toIsoDate = (raw: string): string | null => {
   const value = raw.trim();
 
@@ -137,7 +139,7 @@ const CreateKitScreen: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
   const [showOnlyMyCity, setShowOnlyMyCity] = useState(false);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
-
+  const [confirmVisible, setConfirmVisible] = useState(false);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -400,6 +402,9 @@ const CreateKitScreen: React.FC = () => {
 
     return { valid: true, payloadDates: { startIso, endIso } };
   };
+
+
+
 
   const handleSubmit = async () => {
     if (!user?.id || !user.token) {
@@ -814,7 +819,7 @@ const CreateKitScreen: React.FC = () => {
 
           <Button
             mode="contained"
-            onPress={handleSubmit}
+            onPress={() => setConfirmVisible(true)}
             disabled={submitting}
             loading={submitting}
             icon="cart-outline"
@@ -847,6 +852,74 @@ const CreateKitScreen: React.FC = () => {
         startDate={startDate}
         endDate={endDate}
       />
+
+      <Modal
+      visible={confirmVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setConfirmVisible(false)}
+    >
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.4)",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 20,
+        }}
+      >
+        <View
+          style={{
+            width: "100%",
+            backgroundColor: "white",
+            borderRadius: 16,
+            padding: 20,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "bold",
+              marginBottom: 10,
+              color: "#111",
+            }}
+          >
+            Depósito de garantía
+          </Text>
+
+          <Text style={{ fontSize: 15, color: "#444", marginBottom: 20 }}>
+            Recuerda que el 20%  se retendrá como garantía y se te devolverá
+            cuando el kit sea devuelto en buen estado.
+          </Text>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              gap: 10,
+            }}
+          >
+            <Button
+              mode="outlined"
+              onPress={() => setConfirmVisible(false)}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              mode="contained"
+              onPress={() => {
+                setConfirmVisible(false);
+                handleSubmit();
+              }}
+            >
+              Aceptar
+            </Button>
+          </View>
+        </View>
+      </View>
+    </Modal>
+
     </SafeAreaView>
     </PaperProvider>
   );
