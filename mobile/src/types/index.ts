@@ -252,7 +252,6 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   CreateKit: undefined;
-  Profile: undefined; 
   Checkout: {
   kitData: {
     name: string;
