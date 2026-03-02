@@ -1,3 +1,4 @@
+/*
 -- 1. Insertar Categorías (Importante: El status debe coincidir con el check constraint)
 INSERT INTO categories (name, description, status, min_price, max_price) VALUES
 ('Herramientas', 'Equipos para construcción', 'ACTIVE', 5.0, 500.0),
@@ -27,3 +28,4 @@ INSERT INTO kits (name, city, country, status, tenant_id, start_date, end_date, 
 
 -- 6. Relacionar Items con el Kit (kit_items)
 INSERT INTO kit_items (kit_id, item_id, quantity) VALUES (1, 1, 1);
+*/
