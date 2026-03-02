@@ -1,5 +1,14 @@
 package com.example.demo.service;
 
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.model.DeliveryMethod;
@@ -8,18 +17,9 @@ import com.example.demo.model.Kit;
 import com.example.demo.model.KitItem;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.ItemRepository;
-
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class KitService {
@@ -29,11 +29,18 @@ public class KitService {
     private final KitRepository kitRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
+    private final OrderConfirmationEmailService orderConfirmationEmailService;
 
-    public KitService(KitRepository kitRepository, UserRepository userRepository, ItemRepository itemRepository) {
+    public KitService(
+        KitRepository kitRepository,
+        UserRepository userRepository,
+        ItemRepository itemRepository,
+        OrderConfirmationEmailService orderConfirmationEmailService
+    ) {
         this.kitRepository = kitRepository;
         this.userRepository = userRepository;
         this.itemRepository = itemRepository;
+        this.orderConfirmationEmailService = orderConfirmationEmailService;
     }
 
     public List<Kit> findAll() {
@@ -161,7 +168,8 @@ public class KitService {
         }
 
         kit.setStatus(KitStatus.ACTIVE);
-        kitRepository.save(kit);
+        Kit savedKit = kitRepository.save(kit);
+        orderConfirmationEmailService.sendOrderConfirmation(savedKit);
     }
 
     private List<KitItem> buildKitItemsFromRequest(KitCreateRequest request) {

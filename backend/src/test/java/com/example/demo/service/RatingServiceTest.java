@@ -48,10 +48,10 @@ class RatingServiceTest {
 
     @BeforeEach
     void setUp() {
-        tenant = new User("tenant@test.com", "password", "Tenant", UserRole.USER);
+        tenant = new User("tenant@test.com", "password", "Tenant", UserRole.USER, "", "", "", "");
         tenant.setId(1L);
 
-        owner = new User("owner@test.com", "password", "Owner", UserRole.USER);
+        owner = new User("owner@test.com", "password", "Owner", UserRole.USER, "", "", "", "");
         owner.setId(2L);
 
         Article article = new Article();
@@ -153,7 +153,7 @@ class RatingServiceTest {
 
     @Test
     void create_reviewerNotParty_throwsInvalidRatingException() {
-        User stranger = new User("stranger@test.com", "password", "Stranger", UserRole.USER);
+        User stranger = new User("stranger@test.com", "password", "Stranger", UserRole.USER, "", "", "", "");
         stranger.setId(3L);
 
         RatingCreateRequest request = new RatingCreateRequest();

@@ -3,7 +3,9 @@ const BASE_URL = 'http://localhost:8080';
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
   LOGIN:    `${BASE_URL}/api/users/login`,
+  UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
+  GET_CITIES: `${BASE_URL}/api/cities`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   DELETE_USER: (id: number) => `${BASE_URL}/api/admin/users/${id}`,
   CREATE_USER: `${BASE_URL}/api/admin/users`,       // POST
