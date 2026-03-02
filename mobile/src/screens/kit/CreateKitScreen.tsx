@@ -22,7 +22,7 @@ registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
-import BASE_URL from "../../config/api";
+import { API_ROUTES } from "../../config/api";
 import { RootStackParamList } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
@@ -54,6 +54,7 @@ type DeliveryMethod = "COURIER" | "MEETING_POINT";
 
 type CatalogProduct = {
   id: number;
+  itemType: "ARTICLE" | "SERVICE" | string;
   title: string;
   pricePerMonth: number;
   status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
@@ -177,7 +178,7 @@ const CreateKitScreen: React.FC = () => {
     try {
       setLoadingCatalog(true);
 
-      const res = await fetch(`${BASE_URL}/api/article/all`, {
+      const res = await fetch(API_ROUTES.ALL_ITEMS, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -198,32 +199,23 @@ const CreateKitScreen: React.FC = () => {
 
       const raw = JSON.parse(text);
 
-      const mapped: CatalogProduct[] = (raw ?? [])
-        .map((p: any) => {
-          let categoryName = "";
-          if (p.category && typeof p.category === "object") {
-            categoryName = p.category.name ?? "";
-          } else if (typeof p.category === "string") {
-            categoryName = p.category;
-          }
-
-          return {
-            id: Number(p.id),
-            title: p.title ?? "Sin título",
-            pricePerMonth: Number(p.pricePerMonth ?? 0),
-            status: String(p.status ?? "AVAILABLE"),
-            category: categoryName,
-            city: p.city ?? "",
-            ownerName: p.owner?.name ?? "",
-            imageUrl: p.imageUrl ?? null,
-            totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
-            availableFrom: p.availableFrom ?? null,
-            availableUntil: p.availableUntil ?? null,
-          };
-        })
-        .filter((p: CatalogProduct) => p.status === "AVAILABLE");
+      const mapped: CatalogProduct[] = (raw ?? []).map((p: any) => ({
+        id: Number(p.id),
+        itemType: String(p.itemType ?? "ARTICLE"),
+        title: p.title ?? "Sin título",
+        pricePerMonth: Number(p.pricePerMonth ?? 0),
+        status: String(p.status ?? "AVAILABLE"), // para SERVICE llega null, lo normalizamos
+        category: typeof p.category === "string" ? p.category : (p.category?.name ?? ""),
+        city: p.city ?? "",
+        ownerName: p.ownerName ?? "",
+        imageUrl: p.imageUrl ?? null,
+        totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
+        availableFrom: p.availableFrom ?? null,
+        availableUntil: p.availableUntil ?? null,
+      }));
 
       setAvailableProducts(mapped);
+
       setErrors((prev) => ({ ...prev, general: undefined }));
     } catch (error) {
       const message =
@@ -285,9 +277,8 @@ const CreateKitScreen: React.FC = () => {
     const q = searchText.trim().toLowerCase();
 
     return availableProducts.filter((p) => {
-      const notInactive = p.status !== "INACTIVE";
-      const byCategory =
-        categoryFilter === "ALL" || p.category === categoryFilter;
+      const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
+      const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
       const byCity = !showOnlyMyCity || !city.trim() || (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
       const bySearch =
         q.length === 0 ||
