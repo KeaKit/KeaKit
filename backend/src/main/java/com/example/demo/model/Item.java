@@ -1,6 +1,8 @@
 package com.example.demo.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.*;
 
@@ -36,6 +38,9 @@ public abstract class Item {
     @ManyToOne
     @JoinColumn(name = "owner_id")
     protected User owner;
+
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<KitItem> kitItems = new ArrayList<>();
 
     public Item() {}
 
