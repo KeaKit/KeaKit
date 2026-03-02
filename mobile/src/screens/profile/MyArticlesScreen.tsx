@@ -73,8 +73,9 @@ const MyArticlesScreen: React.FC = () => {
     try {
       const full = await getArticleById(item.id, user.token);
       navigation.navigate('EditArticle', { article: full });
-    } catch {
-      Alert.alert('Error', 'No se pudo cargar el artículo');
+    } catch (err: any) {
+      console.log('Error en handleEdit:', err);
+      Alert.alert('Error', err.message || 'No se pudo cargar el artículo');
     }
   };
 

@@ -49,6 +49,10 @@ class KitIntegrationTest {
         tenant.setEmail("cris@example.com");
         tenant.setPassword("123");
         tenant.setRole(UserRole.USER);
+        tenant.setCountry("España");
+        tenant.setCity("Sevilla");
+        tenant.setAddress("Calle 123 matame otra vez");
+        tenant.setPhone("223456789");
         tenant = userRepository.save(tenant);
 
         savedKit = new Kit();
@@ -76,7 +80,7 @@ class KitIntegrationTest {
             "city": "Madrid",
             "startDate": "2024-05-01",
             "endDate": "2024-05-10",
-            "status": "UPCOMING",
+            "status": "PENDING",
             "tenantId": %d
         }
         """.formatted(tenant.getId());
@@ -85,7 +89,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("UPCOMING"))
+                .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.name").value("Kit Nuevo"));
     }
 
@@ -130,7 +134,7 @@ class KitIntegrationTest {
     void testUpdateKit_changeStatus() throws Exception {
         String json = """
         {
-            "status": "FINISHED"
+            "status": "COMPLETED"
         }
         """;
 
@@ -138,10 +142,10 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("FINISHED"));
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
 
         Kit updated = kitRepository.findById(savedKit.getId()).orElseThrow();
-        assertThat(updated.getStatus()).isEqualTo(KitStatus.FINISHED);
+        assertThat(updated.getStatus()).isEqualTo(KitStatus.COMPLETED);
     }
 
     @Test

@@ -1,0 +1,16 @@
+package com.example.demo.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import com.example.demo.model.KitItem;
+
+@Repository
+public interface KitItemRepository extends JpaRepository<KitItem, Long> {
+    
+    @Query("SELECT ki FROM KitItem ki WHERE ki.item.id = :itemId")
+    List<KitItem> findByItemId(Long itemId);
+}

@@ -49,11 +49,16 @@ class ArticleIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        articleRepository.deleteAll();
         User owner = new User();
         owner.setName("Juan");
         owner.setEmail("juan@example.com");
         owner.setPassword("123");
         owner.setRole(UserRole.USER);
+        owner.setCountry("España");
+        owner.setCity("Sevilla");
+        owner.setAddress("Calle 123 matame otra vez");
+        owner.setPhone("123456789");
         savedOwner = userRepository.save(owner);
 
         Category category = new Category("Bricolaje", "Cosas de taller", 5.0, 500.0);
@@ -81,10 +86,10 @@ class ArticleIntegrationTest {
         newArticle.setDescription("Escalera de aluminio");
         newArticle.setCity("Barcelona");
         newArticle.setPricePerMonth(30.0);
-        newArticle.setCategory(savedCategory);
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isCreated())
@@ -102,6 +107,7 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", "999999")
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isBadRequest())
@@ -117,6 +123,7 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isBadRequest())
@@ -133,6 +140,7 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isBadRequest())
@@ -151,6 +159,7 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
                 .andExpect(status().isBadRequest())

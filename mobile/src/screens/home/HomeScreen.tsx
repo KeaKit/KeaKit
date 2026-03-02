@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Modal,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
+import { getWalletByUserId } from '../../services/walletService';
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -21,6 +23,27 @@ const HomeScreen: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation<HomeNav>();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [availableBalance, setAvailableBalance] = useState<number | null>(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (user?.id && user?.token) {
+        setLoadingBalance(true);
+        try {
+          const wallet = await getWalletByUserId(user.id, user.token);
+          setAvailableBalance(wallet.availableBalance);
+        } catch (error) {
+          console.error('Error al cargar el saldo:', error);
+          setAvailableBalance(null);
+        } finally {
+          setLoadingBalance(false);
+        }
+      }
+    };
+
+    fetchBalance();
+  }, [user?.id, user?.token]);
 
   const handleLogout = async () => {
     setShowProfileMenu(false);
@@ -38,7 +61,7 @@ const HomeScreen: React.FC = () => {
 
   const handleRentItems = () => {
     console.log('Poner a alquilar objetos');
-    // TODO: Navegar a pantalla de subir artículos
+    navigation.navigate('UploadArticle');
   };
 
   return (
@@ -79,6 +102,20 @@ const HomeScreen: React.FC = () => {
               ? 'Gestiona tus kits y alquileres'
               : 'Crea kits y alquila objetos fácilmente'}
           </Text>
+          
+          {/* Mostrar saldo disponible */}
+          {user && (
+            <View style={styles.balanceContainer}>
+              <Text style={styles.balanceLabel}>Saldo disponible:</Text>
+              {loadingBalance ? (
+                <ActivityIndicator size="small" color={Colors.primary} />
+              ) : (
+                <Text style={styles.balanceAmount}>
+                  {availableBalance !== null ? `${availableBalance.toFixed(2)}€` : 'No disponible'}
+                </Text>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Botones Principales - usando estilos de componentes */}
@@ -139,8 +176,7 @@ const HomeScreen: React.FC = () => {
                   style={componentStyles.menuItem}
                   onPress={() => {
                     setShowProfileMenu(false);
-                    // TODO: Implementar pantalla de perfil
-                    console.log('Ir a perfil');
+                    navigation.navigate('Profile');
                   }}
                 >
                   <Ionicons name="person" size={24} color={Colors.primary} />
@@ -173,6 +209,21 @@ const HomeScreen: React.FC = () => {
                   <Ionicons name="cube" size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Mis Artículos</Text>
                 </TouchableOpacity>
+
+                {user?.role === 'ADMIN' && (
+                  <TouchableOpacity
+                    style={componentStyles.menuItem}
+                    onPress={() => {
+                      setShowProfileMenu(false);
+                      navigation.navigate('AdminUsers');
+                    }}
+                  >
+                    <Ionicons name="people" size={24} color={Colors.primary} />
+                    <Text style={componentStyles.menuItemText}>
+                      Gestión de usuarios
+                    </Text>
+                  </TouchableOpacity>
+                )}
 
                 <TouchableOpacity
                   style={componentStyles.menuItem}
@@ -259,6 +310,26 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   headerLeft: {
     width: 32, // Espaciador para centrar el logo
+  },
+  balanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  balanceLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginRight: 8,
+  },
+  balanceAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.primary,
   },
 });
 

@@ -1,5 +1,15 @@
 package com.example.demo.service;
 
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.model.DeliveryMethod;
@@ -9,19 +19,11 @@ import com.example.demo.model.Kit;
 import com.example.demo.model.KitItem;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
+import com.example.demo.model.Wallet;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.ItemRepository;
-
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.LinkedHashMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.example.demo.repository.WalletRepository;
 
 @Service
 public class KitService {
@@ -31,11 +33,22 @@ public class KitService {
     private final KitRepository kitRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
+    private final OrderConfirmationEmailService orderConfirmationEmailService;
 
-    public KitService(KitRepository kitRepository, UserRepository userRepository, ItemRepository itemRepository) {
+    private final WalletRepository walletRepository;
+
+    public KitService(
+        KitRepository kitRepository,
+        UserRepository userRepository,
+        ItemRepository itemRepository,
+        OrderConfirmationEmailService orderConfirmationEmailService,
+        WalletRepository walletRepository
+    ) {
         this.kitRepository = kitRepository;
         this.userRepository = userRepository;
         this.itemRepository = itemRepository;
+        this.orderConfirmationEmailService = orderConfirmationEmailService;
+        this.walletRepository = walletRepository;
     }
 
     public List<Kit> findAll() {
@@ -48,6 +61,7 @@ public class KitService {
         return new KitResponse(kit);
     }
 
+    @Transactional
     public KitResponse create(KitCreateRequest request) {
         Kit kit = new Kit();
         kit.setName(request.getName());
@@ -55,7 +69,7 @@ public class KitService {
         kit.setCity(request.getCity());
         kit.setStartDate(request.getStartDate());
         kit.setEndDate(request.getEndDate());
-        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.UPCOMING);
+        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PAID); //se crea cuando se paga
 
         DeliveryMethod deliveryMethod = request.getDeliveryMethod() != null
             ? request.getDeliveryMethod()
@@ -88,6 +102,21 @@ public class KitService {
         validateDates(kit.getStartDate(), kit.getEndDate());
 
         Kit savedKit = kitRepository.save(kit);
+        for (KitItem kitItem : savedKit.getKitItems()) {
+    Item item = kitItem.getItem();
+    User owner = item.getOwner(); // asumiendo que Item tiene referencia a su dueño
+    if (owner != null) {
+        Wallet ownerWallet = walletRepository.findByUserId(owner.getId());
+
+        // Precio total del item: precio por unidad * cantidad
+        double totalAmount = item.getPricePerMonth() * kitItem.getQuantity();
+
+        // Sumar a la wallet disponible
+        ownerWallet.setAvailableBalance(ownerWallet.getAvailableBalance() + totalAmount);
+
+        walletRepository.save(ownerWallet);
+    }
+}
         return new KitResponse(savedKit);
     }
 
@@ -164,6 +193,21 @@ public class KitService {
             throw new RuntimeException("Kit does not belong to the specified tenant");
         }
         return new KitResponse(kit);
+    }
+
+    public void confirmKitStatus(Long id) {
+        Kit kit = kitRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Kit not found"));
+
+        if (kit.getStatus() != KitStatus.PENDING_VALIDATION) {
+            throw new RuntimeException(
+                "The kit can only be confirmed if its status is PENDING_VALIDATION"
+            );
+        }
+
+        kit.setStatus(KitStatus.ACTIVE);
+        Kit savedKit = kitRepository.save(kit);
+        orderConfirmationEmailService.sendOrderConfirmation(savedKit);
     }
 
     private List<KitItem> buildKitItemsFromRequest(KitCreateRequest request) {

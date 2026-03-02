@@ -1,7 +1,13 @@
 package com.example.demo.model;
 
 public enum KitStatus {
+    PENDING,
+    PAID,
+    PENDING_VALIDATION,
     ACTIVE,
-    FINISHED,
+    COMPLETED,
+    CANCELLED,
     UPCOMING,
+    FINISHED,
 }
+

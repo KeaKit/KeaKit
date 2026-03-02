@@ -18,3 +18,6 @@ jwt:
   expiration: 86400000
 
 STRIPE_SECRET_KEY: sk_test_mock_key_for_testing_only
+CLOUDINARY_CLOUD_NAME: dummy
+CLOUDINARY_API_KEY: dummy
+CLOUDINARY_API_SECRET: dummy

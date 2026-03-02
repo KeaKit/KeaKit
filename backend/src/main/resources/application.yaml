@@ -3,21 +3,33 @@ spring:
     name: demo
   
   datasource:
-    # 'postgres' matches the service name in your docker-compose.yml
     url: ${DB_URL:jdbc:postgresql://postgres:5432/appdb}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
+    defer-datasource-initialization: true 
     hibernate:
-      # 'update' automatically creates/updates tables based on your Java entities
-      ddl-auto: update
+      # 'create' borra todo al iniciar. Úsalo solo en desarrollo.
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
 
 jwt:
-  secret: KeaKitSecureSecretKey12345678901234567890ABCDEFGHIJKLMNOP
-  expiration: 86400000
+  secret: ${JWT_SECRET:KeaKitSecureSecretKey12345678901234567890ABCDEFGHIJKLMNOP}
+  expiration: 86400000 
+
+# --- NUEVA SECCIÓN PARA EL ADMIN SEEDER ---
+app:
+  setup:
+    admin:
+      email: ${ADMIN_EMAIL:admin@example.com}
+      password: ${ADMIN_PASSWORD:admin123}
+      name: ${ADMIN_NAME:Admin Initial}
+
+sendgrid:
+  api-key: ${SENDGRID_API_KEY:}
+  from-email: ${SENDGRID_FROM_EMAIL:no-reply@keakit.app}

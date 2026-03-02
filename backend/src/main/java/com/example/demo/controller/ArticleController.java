@@ -3,12 +3,16 @@ package com.example.demo.controller;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
+import com.example.demo.model.Category;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.CategoryRepository;
 import com.example.demo.service.ArticleService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,14 +25,39 @@ public class ArticleController {
     private ArticleService articleService;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @PostMapping(value = "/upload-with-image", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> uploadArticleWithImage(
+            @RequestParam Long ownerId,
+            @RequestParam Long categoryId,
+            @RequestPart("data") String dataJson,
+            @RequestPart("image") MultipartFile image) {
+        try {
+            Article article = objectMapper.readValue(dataJson, Article.class);
+            
+            Article saved = articleService.createWithImage(article, image, ownerId, categoryId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadArticle(@RequestParam Long ownerId, @RequestBody Article article) {
+    public ResponseEntity<?> uploadArticle(@RequestParam Long ownerId, @RequestParam Long categoryId, @RequestBody Article article) {
         try {
             User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new RuntimeException("Owner not found"));
 
+            Category category = categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new RuntimeException("Category not found"));
+
             article.setOwner(owner);
+            article.setCategory(category);
+
             Article saved = articleService.save(article);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (Exception e) {
