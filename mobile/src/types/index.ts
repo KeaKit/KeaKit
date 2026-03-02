@@ -192,7 +192,25 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   CreateKit: undefined;
-  Checkout: { kitId: number };
+  Profile: undefined; 
+  Checkout: {
+  kitData: {
+    name: string;
+    country: string;
+    city: string;
+    startDate: string;
+    endDate: string;
+    deliveryMethod: "COURIER" | "MEETING_POINT";
+    meetingPoint?: string;
+    courierAddress?: string;
+    items: {
+      id: number;
+      quantity: number;
+      pricePerMonth: number;
+      ownerId: number;
+    }[];
+  };
+};
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
