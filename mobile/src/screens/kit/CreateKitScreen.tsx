@@ -14,6 +14,11 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { DatePickerModal } from "react-native-paper-dates";
+import { es, registerTranslation } from "react-native-paper-dates";
+import { Provider as PaperProvider, MD3LightTheme, TextInput as PaperTextInput, Button, SegmentedButtons } from "react-native-paper";
+
+registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
@@ -105,8 +110,9 @@ const CreateKitScreen: React.FC = () => {
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>("COURIER");
   const [meetingPoint, setMeetingPoint] = useState("");
@@ -141,13 +147,18 @@ const CreateKitScreen: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
 
   const monthsBetween = useMemo(() => {
-    const startIso = toIsoDate(startDate);
-    const endIso = toIsoDate(endDate);
+    if (!startDate || !endDate) return null;
 
-    if (!startIso || !endIso) return null;
-
-    const start = toUtcDateOnly(startIso);
-    const end = toUtcDateOnly(endIso);
+    const start = new Date(
+      Date.UTC(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate(),
+      ),
+    );
+    const end = new Date(
+      Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()),
+    );
 
     return calculateMonthsBetween(start, end);
   }, [startDate, endDate]);
@@ -381,40 +392,22 @@ const CreateKitScreen: React.FC = () => {
       nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
     }
     if (deliveryMethod === "COURIER" && !courierAddress.trim()) {
-      nextErrors.courierAddress = "Debes indicar una Dirección de entrega.";
+      nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
     }
 
-    const startIso = toIsoDate(startDate);
-    const endIso = toIsoDate(endDate);
-
-    if (!startIso)
-      nextErrors.startDate =
-        "Fecha inválida. Usa DD/MM/AAAA, MM/DD/YYYY o YYYY-MM-DD.";
-    if (!endIso)
-      nextErrors.endDate =
-        "Fecha inválida. Usa DD/MM/AAAA, MM/DD/YYYY o YYYY-MM-DD.";
-
-    if (startIso && endIso) {
-      const start = toUtcDateOnly(startIso);
-      const end = toUtcDateOnly(endIso);
-      const now = new Date();
-      const today = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-      );
-
-      if (start < today)
-        nextErrors.startDate = "La fecha inicial no puede ser anterior a hoy.";
-      if (end < start)
-        nextErrors.endDate =
-          "La fecha final no puede ser anterior a la inicial.";
-    }
+    if (!startDate)
+      nextErrors.startDate = "Debes seleccionar una fecha inicial.";
+    if (!endDate) nextErrors.endDate = "Debes seleccionar una fecha final.";
 
     if (selectedItemsCount === 0)
       nextErrors.items = "Debes añadir al menos un producto.";
 
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || !startIso || !endIso)
+    if (Object.keys(nextErrors).length > 0 || !startDate || !endDate)
       return { valid: false };
+
+    const startIso = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}`;
+    const endIso = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`;
 
     return { valid: true, payloadDates: { startIso, endIso } };
   };
@@ -468,8 +461,26 @@ const CreateKitScreen: React.FC = () => {
     }
   };
 
+  const customTheme = {
+    ...MD3LightTheme,
+    colors: {
+      ...MD3LightTheme.colors,
+      primary: Colors.primary,
+      onPrimary: '#FFFFFF',
+      primaryContainer: '#E3F2FD',
+      onPrimaryContainer: Colors.primary,
+      surface: '#FFFFFF',
+      onSurface: '#1C1B1F',
+      surfaceVariant: '#E7E0EC',
+      onSurfaceVariant: '#49454F',
+      secondaryContainer: '#E3F2FD',
+      onSecondaryContainer: Colors.primary,
+    },
+  };
+
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <PaperProvider theme={customTheme}>
+      <SafeAreaView style={commonStyles.container}>
       <ScrollView
         contentContainerStyle={createKitStyles.content}
         keyboardShouldPersistTaps="handled"
@@ -491,18 +502,18 @@ const CreateKitScreen: React.FC = () => {
         <View style={componentStyles.iconButton} />
       </View>
 
-        <TextInput
-          style={[
-            commonStyles.input,
-            createKitStyles.inputRounded,
-            errors.name && commonStyles.inputError,
-          ]}
-          placeholder="Nombre Kit"
+        <PaperTextInput
+          mode="outlined"
+          label="Nombre del Kit"
           value={name}
           onChangeText={(value) => {
             setName(value);
             clearFieldError("name");
           }}
+          error={!!errors.name}
+          style={{ backgroundColor: Colors.backgroundWhite }}
+          outlineColor={Colors.border}
+          activeOutlineColor={Colors.primary}
         />
         {errors.name ? (
           <Text style={commonStyles.errorText}>{errors.name}</Text>
@@ -510,37 +521,37 @@ const CreateKitScreen: React.FC = () => {
 
         <View style={createKitStyles.row}>
           <View style={createKitStyles.rowItem}>
-            <TextInput
-              style={[
-                commonStyles.input,
-                createKitStyles.inputRounded,
-                errors.country && commonStyles.inputError,
-              ]}
-              placeholder="País"
+            <PaperTextInput
+              mode="outlined"
+              label="País"
               value={country}
               onChangeText={(value) => {
                 setCountry(value);
                 clearFieldError("country");
               }}
+              error={!!errors.country}
+              style={{ backgroundColor: Colors.backgroundWhite }}
+              outlineColor={Colors.border}
+              activeOutlineColor={Colors.primary}
             />
             {errors.country ? (
               <Text style={commonStyles.errorText}>{errors.country}</Text>
             ) : null}
           </View>
-
+         
           <View style={createKitStyles.rowItem}>
-            <TextInput
-              style={[
-                commonStyles.input,
-                createKitStyles.inputRounded,
-                errors.city && commonStyles.inputError,
-              ]}
-              placeholder="Ciudad"
+            <PaperTextInput
+              mode="outlined"
+              label="Ciudad"
               value={city}
               onChangeText={(value) => {
                 setCity(value);
                 clearFieldError("city");
               }}
+              error={!!errors.city}
+              style={{ backgroundColor: Colors.backgroundWhite }}
+              outlineColor={Colors.border}
+              activeOutlineColor={Colors.primary}
             />
             {errors.city ? (
               <Text style={commonStyles.errorText}>{errors.city}</Text>
@@ -548,93 +559,103 @@ const CreateKitScreen: React.FC = () => {
           </View>
         </View>
 
-        <TextInput
+        <TouchableOpacity
           style={[
             commonStyles.input,
             createKitStyles.dateInput,
-            errors.startDate && commonStyles.inputError,
+            (errors.startDate || errors.endDate) && commonStyles.inputError,
+            { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
           ]}
-          placeholder="Fecha Inicial del Alquiler (DD/MM/AAAA)"
-          value={startDate}
-          onChangeText={(value) => {
-            setStartDate(value);
-            clearFieldError("startDate");
+          onPress={() => setShowDateRangePicker(true)}
+        >
+          <Text
+            style={[
+              { color: startDate && endDate ? Colors.textPrimary : Colors.textSecondary },
+            ]}
+          >
+            {startDate && endDate
+              ? `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${startDate.getFullYear()} - ${String(endDate.getDate()).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${endDate.getFullYear()}`
+              : "Selecciona rango de fechas del alquiler"}
+          </Text>
+          <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
+        </TouchableOpacity>
+        <DatePickerModal
+          locale="es"
+          mode="range"
+          visible={showDateRangePicker}
+          onDismiss={() => setShowDateRangePicker(false)}
+          startDate={startDate || undefined}
+          endDate={endDate || undefined}
+          onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
+            setShowDateRangePicker(false);
+            if (params.startDate && params.endDate) {
+              setStartDate(params.startDate);
+              setEndDate(params.endDate);
+              clearFieldError("startDate");
+              clearFieldError("endDate");
+            }
           }}
+          validRange={{ startDate: new Date() }}
         />
         {errors.startDate ? (
           <Text style={commonStyles.errorText}>{errors.startDate}</Text>
         ) : null}
-
-        <TextInput
-          style={[
-            commonStyles.input,
-            createKitStyles.dateInput,
-            errors.endDate && commonStyles.inputError,
-          ]}
-          placeholder="Fecha Final del Alquiler (DD/MM/AAAA)"
-          value={endDate}
-          onChangeText={(value) => {
-            setEndDate(value);
-            clearFieldError("endDate");
-          }}
-        />
         {errors.endDate ? (
           <Text style={commonStyles.errorText}>{errors.endDate}</Text>
         ) : null}
+
+        {/* Duración del alquiler */}
+        {monthsBetween !== null && monthsBetween > 0 && (
+          <View style={{ marginTop: 8, marginBottom: 16 }}>
+            <Text style={commonStyles.bodySecondary}>
+              Duración: {monthsBetween.toFixed(2)} meses
+            </Text>
+          </View>
+        )}
 
         <View style={createKitStyles.deliverySection}>
           <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
             Método de entrega
           </Text>
 
-          <View style={createKitStyles.deliveryOptionsRow}>
-            <TouchableOpacity
-              style={[
-                createKitStyles.deliveryOption,
-                deliveryMethod === "COURIER" &&
-                  createKitStyles.deliveryOptionSelected,
-              ]}
-              onPress={() => {
-                setDeliveryMethod("COURIER");
-                clearFieldError("meetingPoint");
-                clearFieldError("courierAddress");
-              }}
-            >
-              <Text style={createKitStyles.deliveryOptionText}>Mensajería</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                createKitStyles.deliveryOption,
-                deliveryMethod === "MEETING_POINT" &&
-                  createKitStyles.deliveryOptionSelected,
-              ]}
-              onPress={() => {
-                setDeliveryMethod("MEETING_POINT");
-                clearFieldError("meetingPoint");
-                clearFieldError("courierAddress");
-              }}
-            >
-              <Text style={createKitStyles.deliveryOptionText}>
-                Punto de encuentro
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <SegmentedButtons
+            value={deliveryMethod}
+            onValueChange={(value) => {
+              setDeliveryMethod(value as DeliveryMethod);
+              clearFieldError("meetingPoint");
+              clearFieldError("courierAddress");
+            }}
+            buttons={[
+              {
+                value: 'COURIER',
+                label: 'Mensajería',
+                icon: 'truck-delivery',
+              },
+              {
+                value: 'MEETING_POINT',
+                label: 'Punto de encuentro',
+                icon: 'map-marker',
+              },
+            ]}
+            style={{ marginVertical: 12 }}
+          />
 
           {deliveryMethod === "MEETING_POINT" ? (
             <>
-              <TextInput
-                style={[
-                  commonStyles.input,
-                  createKitStyles.meetingPointInput,
-                  errors.meetingPoint && commonStyles.inputError,
-                ]}
+              <PaperTextInput
+                mode="outlined"
+                label="Punto de encuentro"
                 placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
                 value={meetingPoint}
                 onChangeText={(value) => {
                   setMeetingPoint(value);
                   clearFieldError("meetingPoint");
                 }}
+                error={!!errors.meetingPoint}
+                style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
+                outlineColor={Colors.border}
+                activeOutlineColor={Colors.primary}
+                multiline
               />
               {errors.meetingPoint ? (
                 <Text style={commonStyles.errorText}>
@@ -646,18 +667,19 @@ const CreateKitScreen: React.FC = () => {
 
           {deliveryMethod === "COURIER" ? (
             <>
-              <TextInput
-                style={[
-                  commonStyles.input,
-                  createKitStyles.meetingPointInput,
-                  errors.courierAddress && commonStyles.inputError,
-                ]}
-                placeholder="Dirección de entrega"
+              <PaperTextInput
+                mode="outlined"
+                label="Dirección de entrega"
                 value={courierAddress}
                 onChangeText={(value) => {
                   setCourierAddress(value);
                   clearFieldError("courierAddress");
                 }}
+                error={!!errors.courierAddress}
+                style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
+                outlineColor={Colors.border}
+                activeOutlineColor={Colors.primary}
+                multiline
               />
               {errors.courierAddress ? (
                 <Text style={commonStyles.errorText}>
@@ -669,30 +691,26 @@ const CreateKitScreen: React.FC = () => {
 
           {deliveryMethod === "COURIER" ? (
             <Text style={commonStyles.bodySecondary}>
-              Tarifa de mensajería: {PLATFORM_COURIER_PRICE.toFixed(2)}€
+              Se aplicará una tarifa fija de mensajería de {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
             </Text>
           ) : null}
         </View>
 
-        {/* Duración del alquiler */}
-        {monthsBetween !== null && monthsBetween > 0 && (
-          <View style={{ marginTop: 8, marginBottom: 16 }}>
-            <Text style={commonStyles.bodySecondary}>
-              Duración: {monthsBetween.toFixed(2)} meses
-            </Text>
-          </View>
-        )}
+        
 
         <View style={createKitStyles.productsHeader}>
           <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
             Tus Productos
           </Text>
-          <TouchableOpacity
-            style={createKitStyles.addButton}
+          <Button
+            mode="contained"
             onPress={openAddProductModal}
+            icon="plus"
+            compact
+            style={{ borderRadius: 8 }}
           >
-            <Text style={createKitStyles.addButtonText}>Añadir Producto +</Text>
-          </TouchableOpacity>
+            Añadir Producto
+          </Button>
         </View>
 
         <View style={createKitStyles.counterBadge}>
@@ -805,29 +823,17 @@ const CreateKitScreen: React.FC = () => {
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={[
-              commonStyles.primaryButton,
-              createKitStyles.submitButton,
-              submitting && createKitStyles.submitButtonDisabled,
-              { width: "100%" },
-            ]}
+          <Button
+            mode="contained"
             onPress={handleSubmit}
             disabled={submitting}
+            loading={submitting}
+            icon="cart-outline"
+            style={{ borderRadius: 8 }}
+            contentStyle={{ paddingVertical: 8 }}
           >
-            {submitting ? (
-              <ActivityIndicator color={Colors.textWhite} />
-            ) : (
-              <Text
-                style={[
-                  commonStyles.primaryButtonText,
-                  createKitStyles.submitButtonText,
-                ]}
-              >
-                Realizar Pedido
-              </Text>
-            )}
-          </TouchableOpacity>
+            Realizar Pedido
+          </Button>
         </View>
       </View>
 
@@ -837,24 +843,17 @@ const CreateKitScreen: React.FC = () => {
             <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
 
             <View style={{ gap: 8, marginBottom: 12 }}>
-              <View
-                style={[
-                  commonStyles.input,
-                  { flexDirection: "row", alignItems: "center", gap: 8 },
-                ]}
-              >
-                <Ionicons
-                  name="search"
-                  size={18}
-                  color={Colors.textSecondary}
-                />
-                <TextInput
-                  placeholder="Buscar objeto..."
-                  value={searchText}
-                  onChangeText={setSearchText}
-                  style={{ flex: 1, color: Colors.textPrimary }}
-                />
-              </View>
+              <PaperTextInput
+                mode="outlined"
+                label="Buscar objeto"
+                placeholder="Buscar objeto..."
+                value={searchText}
+                onChangeText={setSearchText}
+                left={<PaperTextInput.Icon icon="magnify" />}
+                style={{ backgroundColor: Colors.backgroundWhite }}
+                outlineColor={Colors.border}
+                activeOutlineColor={Colors.primary}
+              />
 
               <ScrollView
                 horizontal
@@ -917,12 +916,15 @@ const CreateKitScreen: React.FC = () => {
               </ScrollView>
             </View>
 
-            <TouchableOpacity
-              style={[commonStyles.primaryButton, { marginBottom: 12 }]}
+            <Button
+              mode="contained"
               onPress={handleApplyFilters}
+              icon="magnify"
+              style={{ marginBottom: 12, borderRadius: 8 }}
+              contentStyle={{ paddingVertical: 4 }}
             >
-              <Text style={commonStyles.primaryButtonText}>Buscar</Text>
-            </TouchableOpacity>
+              Buscar
+            </Button>
 
             <ScrollView style={createKitStyles.modalList}>
               {!hasSearched ? (
@@ -1046,24 +1048,30 @@ const CreateKitScreen: React.FC = () => {
             </ScrollView>
 
             <View style={createKitStyles.modalActions}>
-              <TouchableOpacity
-                style={[commonStyles.outlineButton, createKitStyles.modalBtn]}
+              <Button
+                mode="outlined"
                 onPress={() => setCatalogModalVisible(false)}
+                style={[createKitStyles.modalBtn, { borderRadius: 8 }]}
+                contentStyle={{ paddingVertical: 4 }}
               >
-                <Text style={commonStyles.outlineButtonText}>Cancelar</Text>
-              </TouchableOpacity>
+                Cancelar
+              </Button>
 
-              <TouchableOpacity
-                style={[commonStyles.primaryButton, createKitStyles.modalBtn]}
+              <Button
+                mode="contained"
                 onPress={confirmSelection}
+                icon="check"
+                style={[createKitStyles.modalBtn, { borderRadius: 8 }]}
+                contentStyle={{ paddingVertical: 4 }}
               >
-                <Text style={commonStyles.primaryButtonText}>Añadir</Text>
-              </TouchableOpacity>
+                Añadir
+              </Button>
             </View>
           </View>
         </View>
       </Modal>
     </SafeAreaView>
+    </PaperProvider>
   );
 };
 
