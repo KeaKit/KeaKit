@@ -7,5 +7,7 @@ public enum KitStatus {
     ACTIVE,
     COMPLETED,
     CANCELLED,
+    UPCOMING,
+    FINISHED,
 }
 

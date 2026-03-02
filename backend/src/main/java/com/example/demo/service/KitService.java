@@ -60,6 +60,7 @@ public class KitService {
         kit.setCity(request.getCity());
         kit.setStartDate(request.getStartDate());
         kit.setEndDate(request.getEndDate());
+        kit.setOrderDate(LocalDate.now());
         kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PENDING);
 
         DeliveryMethod deliveryMethod = request.getDeliveryMethod() != null
