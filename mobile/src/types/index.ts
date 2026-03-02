@@ -116,7 +116,7 @@ export interface Article {
   pricePerMonth: number;
   availableFrom: string;
   availableUntil: string;
-  category: string;
+  category: Category;
   imageUrl: string | null;
   purchaseDate: string | null;
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
@@ -131,7 +131,7 @@ export interface ArticlePayload {
   pricePerMonth: number;
   availableFrom: string;
   availableUntil: string;
-  category: string;
+  category: Category;
   status?: "AVAILABLE" | "RENTED" | "INACTIVE";
   imageUrl?: string;
   purchaseDate?: string;
@@ -189,9 +189,28 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
+  Profile: undefined;
   Notifications: undefined;
   CreateKit: undefined;
-  Checkout: { kitId: number };
+  Profile: undefined; 
+  Checkout: {
+  kitData: {
+    name: string;
+    country: string;
+    city: string;
+    startDate: string;
+    endDate: string;
+    deliveryMethod: "COURIER" | "MEETING_POINT";
+    meetingPoint?: string;
+    courierAddress?: string;
+    items: {
+      id: number;
+      quantity: number;
+      pricePerMonth: number;
+      ownerId: number;
+    }[];
+  };
+};
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };

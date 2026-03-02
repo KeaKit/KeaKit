@@ -69,9 +69,9 @@ public class KitServiceTest {
         assertEquals(KitStatus.ACTIVE, res.getStatus());
     }
 
-
+    //ahora se crean pagados
     @Test
-    void createKit_withoutStatus_defaultsToPending() {
+    void createKit_withoutStatus_defaultsToPaid() {
         KitCreateRequest req = new KitCreateRequest();
         req.setName("Kit Test");
 
@@ -83,7 +83,7 @@ public class KitServiceTest {
 
         KitResponse res = kitService.create(req);
 
-        assertEquals(KitStatus.PENDING, res.getStatus());
+        assertEquals(KitStatus.PAID, res.getStatus());
     }
 
     @Test

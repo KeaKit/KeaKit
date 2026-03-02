@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,16 +15,12 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { updateArticle } from '../../services/articleService';
-import { ArticlePayload, RootStackParamList } from '../../types';
+import { fetchAllCategories } from '../../services/categoryService';
+import { ArticlePayload, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 
 type EditNav   = NativeStackNavigationProp<RootStackParamList, 'EditArticle'>;
 type EditRoute = RouteProp<RootStackParamList, 'EditArticle'>;
-
-const CATEGORIES = [
-  'Herramientas', 'Electrónica', 'Deportes', 'Hogar',
-  'Jardinería', 'Música', 'Fotografía', 'Automoción', 'Otros',
-];
 
 interface FieldProps {
   label: string;
@@ -82,13 +78,32 @@ const EditArticleScreen: React.FC = () => {
   const [pricePerMonth,  setPricePerMonth]  = useState(String(article.pricePerMonth ?? ''));
   const [availableFrom,  setAvailableFrom]  = useState(article.availableFrom ?? '');
   const [availableUntil, setAvailableUntil] = useState(article.availableUntil ?? '');
-  const [category,       setCategory]       = useState(article.category ?? '');
+  const [category,       setCategory]       = useState<Category | null>(article.category ?? null);
   const [imageUrl,       setImageUrl]       = useState(article.imageUrl ?? '');
   const [purchaseDate,   setPurchaseDate]   = useState(article.purchaseDate ?? '');
 
   const [loading,      setLoading]      = useState(false);
   const [errors,       setErrors]       = useState<Record<string, string>>({});
   const [categoryOpen, setCategoryOpen] = useState(false);
+  
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (!user?.token) return;
+      try {
+        const data = await fetchAllCategories(user.token);
+        const activeCategories = data.filter(c => c.status === 'ACTIVE');
+        setDbCategories(activeCategories);
+      } catch (err) {
+        Alert.alert('Aviso', 'No se pudieron cargar las categorías del servidor.');
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    loadCategories();
+  }, [user?.token]);
 
   const clearError = (key: string) =>
     setErrors((prev) => ({ ...prev, [key]: '' }));
@@ -102,8 +117,14 @@ const EditArticleScreen: React.FC = () => {
     if (!city.trim())        newErrors.city        = 'La ciudad es obligatoria';
     if (!category)           newErrors.category    = 'Selecciona una categoría';
 
-    if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0)
+    if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0) {
       newErrors.pricePerMonth = 'Introduce un precio válido';
+    } else if (category) {
+      const price = Number(pricePerMonth);
+      if (price < category.minPrice || price > category.maxPrice) {
+         newErrors.pricePerMonth = `El precio debe estar entre ${category.minPrice}€ y ${category.maxPrice}€ para esta categoría`;
+      }
+    }
 
     if (!availableFrom || !dateRegex.test(availableFrom))
       newErrors.availableFrom = 'Formato: AAAA-MM-DD';
@@ -136,7 +157,7 @@ const EditArticleScreen: React.FC = () => {
         pricePerMonth: Number(pricePerMonth),
         availableFrom,
         availableUntil,
-        category,
+        category:      { id: category!.id } as any,
         ...(imageUrl.trim()     && { imageUrl:     imageUrl.trim() }),
         ...(purchaseDate.trim() && { purchaseDate: purchaseDate.trim() }),
       };
@@ -182,12 +203,16 @@ const EditArticleScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>Categoría</Text>
           <TouchableOpacity
             style={[commonStyles.input, styles.categorySelector, errors.category ? commonStyles.inputError : null]}
-            onPress={() => setCategoryOpen((o) => !o)}
+            onPress={() => !loadingCategories && setCategoryOpen((o) => !o)}
             activeOpacity={0.8}
           >
-            <Text style={[styles.categorySelectorText, !category && { color: Colors.textSecondary }]}>
-              {category || 'Selecciona una categoría'}
-            </Text>
+            {loadingCategories ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Text style={[styles.categorySelectorText, !category && { color: Colors.textSecondary }]}>
+                {category ? category.name : 'Selecciona una categoría'}
+              </Text>
+            )}
             <Ionicons name={categoryOpen ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textSecondary} />
           </TouchableOpacity>
           {!!errors.category && (
@@ -196,24 +221,34 @@ const EditArticleScreen: React.FC = () => {
               <Text style={commonStyles.errorText}>{errors.category}</Text>
             </View>
           )}
-          {categoryOpen && (
+          {categoryOpen && dbCategories.length > 0 && (
             <View style={styles.categoryDropdown}>
-              {CATEGORIES.map((cat, index) => (
+              {dbCategories.map((cat, index) => (
                 <TouchableOpacity
-                  key={cat}
+                  key={cat.id}
                   style={[
                     styles.categoryOption,
-                    index === CATEGORIES.length - 1 && { borderBottomWidth: 0 },
-                    category === cat && styles.categoryOptionSelected,
+                    index === dbCategories.length - 1 && { borderBottomWidth: 0 },
+                    category?.id === cat.id && styles.categoryOptionSelected,
                   ]}
-                  onPress={() => { setCategory(cat); setCategoryOpen(false); clearError('category'); }}
+                  onPress={() => {
+                    setCategory(cat);
+                    setCategoryOpen(false);
+                    clearError('category');
+                    clearError('pricePerMonth');
+                  }}
                 >
-                  <Text style={[styles.categoryOptionText, category === cat && styles.categoryOptionTextSelected]}>
-                    {cat}
+                  <Text style={[styles.categoryOptionText, category?.id === cat.id && styles.categoryOptionTextSelected]}>
+                    {cat.name}
                   </Text>
-                  {category === cat && <Ionicons name="checkmark" size={18} color={Colors.primary} />}
+                  {category?.id === cat.id && <Ionicons name="checkmark" size={18} color={Colors.primary} />}
                 </TouchableOpacity>
               ))}
+            </View>
+          )}
+          {categoryOpen && dbCategories.length === 0 && !loadingCategories && (
+            <View style={[styles.categoryDropdown, { padding: Spacing.md }]}>
+               <Text style={commonStyles.bodySecondary}>No hay categorías disponibles.</Text>
             </View>
           )}
         </View>

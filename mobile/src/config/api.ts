@@ -17,7 +17,7 @@ export const API_ROUTES = {
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
   MY_ARTICLES: (userId: number) => `${BASE_URL}/api/article/my-articles/${userId}`,
-  UPLOAD_ARTICLE: (ownerId: number) => `${BASE_URL}/api/article/upload?ownerId=${ownerId}`,
+  UPLOAD_ARTICLE: (ownerId: number,categoryId: number) => `${BASE_URL}/api/article/upload?ownerId=${ownerId}&categoryId=${categoryId}`,
   UPLOAD_ARTICLE_WITH_IMAGE: (ownerId: number, categoryId: number) => `${BASE_URL}/api/article/upload-with-image?ownerId=${ownerId}&categoryId=${categoryId}`,
   GET_ARTICLE: (id: number) => `${BASE_URL}/api/article/${id}`,
   UPDATE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,

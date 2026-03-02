@@ -155,7 +155,6 @@ const UploadArticleScreen: React.FC = () => {
     if (!description.trim()) newErrors.description = 'La descripción es obligatoria';
     if (!city.trim())        newErrors.city        = 'La ciudad es obligatoria';
     if (!selectedCategory)   newErrors.category    = 'Selecciona una categoría';
-    if (!selectedImage)      newErrors.image       = 'Añade una foto del artículo';
 
     if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0) {
       newErrors.pricePerMonth = 'Introduce un precio válido';
@@ -211,7 +210,7 @@ const UploadArticleScreen: React.FC = () => {
         await uploadArticleWithImage(user.id, selectedCategory!.id, user.token, payload, selectedImage.uri, selectedImage.name);
       } else {
         // En teoría validation previene caer aquí, pero como fallback
-        await uploadArticle(user.id, user.token, payload);
+        await uploadArticle(user.id, selectedCategory!.id, user.token, payload);
       }
       navigation.goBack();
     } catch (error: any) {
@@ -314,7 +313,7 @@ const UploadArticleScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Información adicional</Text>
           
-          <Text style={styles.label}>Foto del artículo</Text>
+          <Text style={styles.label}>Foto del artículo (opcional)</Text>
           <View style={styles.imageSelectorContainer}>
             {selectedImage ? (
               <View style={styles.selectedImageContainer}>

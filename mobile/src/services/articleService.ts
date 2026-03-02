@@ -51,10 +51,11 @@ export async function getArticleById(id: number, token: string): Promise<Article
 
 export async function uploadArticle(
   ownerId: number,
+  categoryId: number,
   token: string,
   payload: ArticlePayload,
 ): Promise<Article> {
-  const res = await fetch(API_ROUTES.UPLOAD_ARTICLE(ownerId), {
+  const res = await fetch(API_ROUTES.UPLOAD_ARTICLE(ownerId,categoryId), {
     method: 'POST',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
