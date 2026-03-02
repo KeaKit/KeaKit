@@ -21,6 +21,7 @@ import { RootStackParamList } from '../types';
 import EditArticleScreen from '../screens/profile/EditArticleScreen';
 
 import KitDetailScreen from '../screens/kit/KitDetailScreen';
+import PaymentScreen from '../screens/kit/PaymentScreen';
 
 import CategoriesScreen from '../screens/category/CategoriesScreen';
 import CategoryFormScreen from '../screens/category/CategoryFormScreen';
@@ -58,6 +59,7 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
             <Stack.Screen name="EditArticle" component={EditArticleScreen} />
             <Stack.Screen name="KitDetail" component={KitDetailScreen} />
+            <Stack.Screen name="Payment" component={PaymentScreen} />
             <Stack.Screen name="Categories" component={CategoriesScreen} />
             <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
 

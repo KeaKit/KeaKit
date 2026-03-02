@@ -29,6 +29,9 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private PaymentService paymentService;
+
     public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserAlreadyExistsException("Email already exists");
@@ -48,6 +51,15 @@ public class UserService {
         );
 
         User savedUser = userRepository.save(user);
+
+        // Crear wallet y payment data automáticamente
+        try {
+            paymentService.createWallet(savedUser);
+            paymentService.createPaymentData(savedUser);
+        } catch (Exception e) {
+            System.err.println("Error creando wallet/payment data: " + e.getMessage());
+        }
+
         String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole());
         return new UserResponse(savedUser, token);
     }

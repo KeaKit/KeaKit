@@ -249,6 +249,23 @@ const KitDetailScreen: React.FC = () => {
           </TouchableOpacity>
         )}
 
+        {kit.status === KitStatus.PENDING && (
+          <TouchableOpacity 
+            style={styles.payButton}
+            onPress={() => {
+              (navigation as any).navigate('Payment', {
+                kitId: kit.id,
+                kitName: kit.name,
+                amount: kit.totalPrice || 0,
+                tenantId: user?.id || 0,
+              });
+            }}
+          >
+            <Ionicons name="card-outline" size={20} color="#FFF" />
+            <Text style={styles.payButtonText}>Pagar Kit</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity style={styles.deleteButton} onPress={handleCancelKit}>
           <Ionicons name="trash-outline" size={20} color="#FF3B30" />
           <Text style={styles.deleteButtonText}>Cancelar este alquiler</Text>
@@ -343,6 +360,8 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: 32, fontWeight: 'bold', color: Colors.primary, marginTop: 5 },
   confirmButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 30, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#04ac20', backgroundColor: '#FFF' },
   confirmButtonText: { color: '#04ac20', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
+  payButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 30, padding: 16, borderRadius: 12, backgroundColor: Colors.primary },
+  payButtonText: { color: '#FFF', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
   deleteButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 15, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#FF3B30', backgroundColor: '#FFF' },
   deleteButtonText: { color: '#FF3B30', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
   reportButton: { padding: 10 },

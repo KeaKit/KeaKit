@@ -35,6 +35,12 @@ public class User {
     @Column(nullable = false)
     private String country;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Wallet wallet;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PaymentData paymentData;
+
     public User() {}
 
     public User(String email, String password, String name, UserRole role, String phone, String address, String city, String country) {
@@ -118,5 +124,21 @@ public class User {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public Wallet getWallet() {
+        return wallet;
+    }
+
+    public void setWallet(Wallet wallet) {
+        this.wallet = wallet;
+    }
+
+    public PaymentData getPaymentData() {
+        return paymentData;
+    }
+
+    public void setPaymentData(PaymentData paymentData) {
+        this.paymentData = paymentData;
     }
 }

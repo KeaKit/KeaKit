@@ -34,6 +34,16 @@ public class Kit {
 
     private Double courierPrice;
 
+    @Column(nullable = false)
+    private Double totalPrice = 0.0;
+
+    @Column
+    private String stripePaymentIntentId;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
     @ManyToOne
     @JoinColumn(name = "tenant_id")
     private User tenant;
@@ -139,6 +149,26 @@ public class Kit {
 
     public void setTenant(User tenant) {
         this.tenant = tenant;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
+    }
+
+    public void setTotalPrice(Double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public String getStripePaymentIntentId() {
+        return stripePaymentIntentId;
+    }
+
+    public void setStripePaymentIntentId(String stripePaymentIntentId) {
+        this.stripePaymentIntentId = stripePaymentIntentId;
     }
 
     public List<Item> getItems() {
