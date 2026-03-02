@@ -125,7 +125,11 @@ public class ArticleService {
         if (updateData.getPricePerMonth() != null) article.setPricePerMonth(updateData.getPricePerMonth());
         if (updateData.getAvailableFrom() != null) article.setAvailableFrom(updateData.getAvailableFrom());
         if (updateData.getAvailableUntil() != null) article.setAvailableUntil(updateData.getAvailableUntil());
-        if (updateData.getCategory() != null) article.setCategory(updateData.getCategory());
+        if (updateData.getCategory() != null && updateData.getCategory().getId() != null) {
+            Category category = categoryRepository.findById(updateData.getCategory().getId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+            article.setCategory(category);
+        }
         if (updateData.getTotalUnits() != null) {
             if (updateData.getTotalUnits() < 1) {
                 throw new RuntimeException("totalUnits must be >= 1");
