@@ -3,18 +3,24 @@ package com.example.demo.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.demo.dto.ReturnRequest;
+import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
 import com.example.demo.model.Category;
 import com.example.demo.model.ArticleStatus;
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.CategoryRepository;
 
@@ -27,10 +33,12 @@ public class ArticleService {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+    private final KitRepository kitRepository;
 
-    public ArticleService(ArticleRepository articleRepository, UserRepository userRepository, CategoryRepository categoryRepository) {
+    public ArticleService(ArticleRepository articleRepository, UserRepository userRepository, KitRepository kitRepository, CategoryRepository categoryRepository) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
+        this.kitRepository = kitRepository;
         this.categoryRepository = categoryRepository;
     }
 
@@ -117,7 +125,11 @@ public class ArticleService {
         if (updateData.getPricePerMonth() != null) article.setPricePerMonth(updateData.getPricePerMonth());
         if (updateData.getAvailableFrom() != null) article.setAvailableFrom(updateData.getAvailableFrom());
         if (updateData.getAvailableUntil() != null) article.setAvailableUntil(updateData.getAvailableUntil());
-        if (updateData.getCategory() != null) article.setCategory(updateData.getCategory());
+        if (updateData.getCategory() != null && updateData.getCategory().getId() != null) {
+            Category category = categoryRepository.findById(updateData.getCategory().getId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+            article.setCategory(category);
+        }
         if (updateData.getTotalUnits() != null) {
             if (updateData.getTotalUnits() < 1) {
                 throw new RuntimeException("totalUnits must be >= 1");
@@ -195,6 +207,56 @@ public class ArticleService {
                 rentedUntil
             );
         }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ReturnResponse processReturn(Long articleId, Long ownerId, ReturnRequest request) {
+
+        Article article = (Article) articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        if (!article.getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("Only the owner can confirm the return");
+        }
+        
+        if (article.getStatus() != ArticleStatus.RENTED) {
+            throw new RuntimeException("This article is not currently rented");
+        }
+
+        Kit activeKit = kitRepository.findActiveKitByItemId(articleId, KitStatus.ACTIVE)
+                .orElseThrow(() -> new RuntimeException("No active Kit found for this article"));
+
+        double depositAmount = article.getPricePerMonth() * 0.20;
+        
+        String resolution;
+        double amountProcessed;
+        String message;
+
+        if ("GOOD".equalsIgnoreCase(request.condition())) {
+            resolution = "DEPOSIT_RETURNED";
+            amountProcessed = depositAmount;
+            message = "Artículo devuelto en buen estado. Se devuelve el 20% de garantía (" + depositAmount + "€) al arrendatario.";
+            // TODO: Llamar a Stripe para transferir el dinero de vuelta al arrendatario
+        } else if ("DAMAGED".equalsIgnoreCase(request.condition())) {
+            resolution = "DEPOSIT_RETAINED";
+            amountProcessed = depositAmount; // Cantidad retenida
+            message = "Artículo con daños. Se retiene la garantía de " + depositAmount + "€ al arrendatario.";
+            // TODO: Transferir el dinero retenido a la cuenta del dueño
+        } else {
+            throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
+        }
+
+        article.setStatus(ArticleStatus.AVAILABLE);
+        article.setAvailableUntil(null);
+        articleRepository.save(article);
+
+        return new ReturnResponse(
+                articleId,
+                activeKit.getTenant().getEmail(),
+                resolution,
+                amountProcessed,
+                message
+        );
     }
     
     public long countArticlesByCategory(Long categoryId) {

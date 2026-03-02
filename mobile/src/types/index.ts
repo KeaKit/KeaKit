@@ -160,8 +160,11 @@ export interface KitResponse {
   name: string;
   country: string;
   city: string;
+  orderDate?: string;
   startDate: string;
   endDate: string;
+  estimatedDeliveryDate?: string;
+  deliveryNotification?: string;
   status?: KitStatus;
   tenantId: number;
   items?: Item[];
@@ -186,6 +189,7 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
+  Notifications: undefined;
   CreateKit: undefined;
   Profile: undefined; 
   Checkout: {
