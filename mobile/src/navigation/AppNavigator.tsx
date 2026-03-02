@@ -73,26 +73,6 @@ const AppNavigator: React.FC = () => {
           </>
         
         )}
-      <Stack.Navigator
-        screenOptions={{ headerShown: false }}
-        initialRouteName="Home"
-      >
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
-        <Stack.Screen name="MyIncidents" component={MyIncidentsScreen} />
-        <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
-        <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
-        <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
-        <Stack.Screen name="MyKits"    component={MyKitsScreen} />
-        <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
-        <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
-        <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
-        <Stack.Screen name="EditArticle" component={EditArticleScreen} />
-        <Stack.Screen name="KitDetail" component={KitDetailScreen} />
-        <Stack.Screen name="Categories" component={CategoriesScreen} />
-        <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
