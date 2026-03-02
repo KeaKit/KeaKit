@@ -3,6 +3,7 @@ package com.example.demo.category;
 import com.example.demo.model.Category;
 import com.example.demo.model.CategoryStatus;
 import com.example.demo.repository.CategoryRepository;
+import com.example.demo.repository.ItemRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
@@ -31,12 +33,17 @@ class CategoryIntegrationTest {
     private CategoryRepository categoryRepository;
 
     @Autowired
+    private ItemRepository itemRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     private Category savedCategory;
 
     @BeforeEach
     void setUp() {
+        itemRepository.deleteAll();
+        categoryRepository.deleteAll();
         Category category = new Category("Electrónica", "Dispositivos informáticos", 10.0, 2000.0);
         category.setStatus(CategoryStatus.ACTIVE);
         savedCategory = categoryRepository.save(category);
@@ -57,6 +64,7 @@ class CategoryIntegrationTest {
     @Test
     void testGetAllCategories_Integration() throws Exception {
         mockMvc.perform(get("/api/category"))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].name").value("Electrónica"));

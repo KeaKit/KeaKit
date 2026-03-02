@@ -3,7 +3,7 @@ spring:
     name: demo
   
   datasource:
-    url: ${DB_URL:jdbc:postgresql://postgres-1:5432/appdb}
+    url: ${DB_URL:jdbc:postgresql://postgres:5432/appdb}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -12,7 +12,7 @@ spring:
     defer-datasource-initialization: true 
     hibernate:
       # 'create' borra todo al iniciar. Úsalo solo en desarrollo.
-      ddl-auto: create 
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
