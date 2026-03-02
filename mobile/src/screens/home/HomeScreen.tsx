@@ -38,7 +38,7 @@ const HomeScreen: React.FC = () => {
 
   const handleRentItems = () => {
     console.log('Poner a alquilar objetos');
-    // TODO: Navegar a pantalla de subir artículos
+    navigation.navigate('UploadArticle');
   };
 
   return (
