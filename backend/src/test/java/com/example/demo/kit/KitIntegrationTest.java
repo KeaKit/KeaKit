@@ -49,6 +49,10 @@ class KitIntegrationTest {
         tenant.setEmail("cris@example.com");
         tenant.setPassword("123");
         tenant.setRole(UserRole.USER);
+        tenant.setCountry("España");
+        tenant.setCity("Sevilla");
+        tenant.setAddress("Calle 123 matame otra vez");
+        tenant.setPhone("223456789");
         tenant = userRepository.save(tenant);
 
         savedKit = new Kit();
