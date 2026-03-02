@@ -10,6 +10,7 @@ import {
   Image,
   Alert,
   Modal,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -24,6 +25,8 @@ const KitDetailScreen: React.FC = () => {
   const route = useRoute<KitDetailRouteProp>();
   const navigation = useNavigation();
   const { user } = useAuth();
+  const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
+  const BASE = `http://${host}:8080`;
   
   const kitId = route.params?.kitId;
 
@@ -39,7 +42,7 @@ const KitDetailScreen: React.FC = () => {
     const fetchKitDetail = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://10.0.2.2:8080/api/kits/${kitId}`);
+        const response = await fetch(`${BASE}/api/kits/${kitId}`);
         if (!response.ok) throw new Error('Error al obtener kit');
         const data = await response.json();
         setKit(data);
@@ -66,7 +69,7 @@ const KitDetailScreen: React.FC = () => {
             try {
               setConfirming(true);
               
-              const response = await fetch(`http://localhost:8080/api/kits/confirm/${kitId}`, {
+              const response = await fetch(`${BASE}/api/kits/confirm/${kitId}`, {
                 method: 'PATCH',
               });
 
@@ -101,7 +104,7 @@ const KitDetailScreen: React.FC = () => {
               setDeleting(true);
               
          
-              const response = await fetch(`http://10.0.2.2:8080/api/kits/${kitId}`, {
+              const response = await fetch(`${BASE}/api/kits/${kitId}`, {
                 method: 'DELETE',
               });
 

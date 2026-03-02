@@ -1,12 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  SafeAreaView,
-  TouchableOpacity,
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, SafeAreaView, TouchableOpacity, Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
@@ -18,32 +11,51 @@ import { Colors, Spacing, commonStyles } from "../../styles";
 type MyKitsNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 
 const MyKitsScreen: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigation = useNavigation<MyKitsNav>();
 
   const [kits, setKits] = useState<KitResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const loadKits = useCallback(async () => {
+    console.log('[MyKits] loadKits called — user:', user?.id, 'authLoading:', authLoading);
+    if (!user) {
+      console.log('[MyKits] no user, stopping loader');
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
+      const url = `http://${host}:8080/api/kits/my-kits/${user.id}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      const data = await response.json();
+      setKits(data);
+    } catch (err) {
+      console.log('[MyKits] error:', err);
+      setError("Error al cargar alquileres");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      loadKits();
+    }
+  }, [authLoading, loadKits]);
+
   useFocusEffect(
     useCallback(() => {
-      const loadKits = async () => {
-        if (!user) return;
-        try {
-          setLoading(true);
-          const response = await fetch(
-            `http://10.0.2.2:8080/api/kits/my-kits/${user.id}`,
-          );
-          const data = await response.json();
-          setKits(data);
-        } catch (err) {
-          setError("Error al cargar alquileres");
-        } finally {
-          setLoading(false);
-        }
-      };
-      loadKits();
-    }, [user]),
+      if (!authLoading) {
+        loadKits();
+      }
+    }, [authLoading, loadKits]),
   );
 
   const formatDate = (dateString: string | null): string => {
@@ -75,7 +87,9 @@ const MyKitsScreen: React.FC = () => {
   };
 
   const renderKit = ({ item }: { item: KitResponse }) => {
-    const statusInfo = getStatusInfo(item.status);
+    const statusInfo = item.status
+      ? getStatusInfo(item.status)
+      : { label: "Desconocido", color: "#999" };
 
     return (
       <TouchableOpacity
