@@ -21,6 +21,7 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
+            KitItemRepository kitItemRepo,
             RatingRepository ratingRepo,
             PasswordEncoder passwordEncoder) {
         return args -> {
@@ -91,8 +92,18 @@ public class DatabaseSeeder {
             myKit.setEndDate(LocalDate.now().plusMonths(1));
             kitRepo.save(myKit);
 
-            // Nota: Para kit_items, si no tienes un KitItemRepository inyectado, 
-            // asegúrate de tener CascadeType.ALL en la relación dentro de Kit.
+            // 5.1 KitItems (relación intermedia)
+            KitItem kitItem1 = new KitItem();
+            kitItem1.setKit(myKit);
+            kitItem1.setItem(laptop);
+            kitItem1.setQuantity(1);
+            kitItemRepo.save(kitItem1);
+
+            KitItem kitItem2 = new KitItem();
+            kitItem2.setKit(myKit);
+            kitItem2.setItem(setupService);
+            kitItem2.setQuantity(1);
+            kitItemRepo.save(kitItem2);
 
             // 6. Rating
             Rating feedback = new Rating();
