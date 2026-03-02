@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.example.demo.dto.CountriesNowResponse;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ public class CityService {
             .retrieve()
             .bodyToMono(CountriesNowResponse.class)
             .map(CountriesNowResponse::data)
+            .map(cities -> cities.stream().sorted(Comparator.naturalOrder()).toList())
             .defaultIfEmpty(List.of())
             .block();
     }
