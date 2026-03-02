@@ -182,12 +182,12 @@ public class ArticleService {
             resolution = "DEPOSIT_RETURNED";
             amountProcessed = depositAmount;
             message = "Artículo devuelto en buen estado. Se devuelve el 20% de garantía (" + depositAmount + "€) al arrendatario.";
-            // TODO (Futuro): Aquí llamarías a Stripe/PayPal para devolver el dinero real al tenant
+            // TODO: Llamar a Stripe para transferir el dinero de vuelta al arrendatario
         } else if ("DAMAGED".equalsIgnoreCase(request.condition())) {
             resolution = "DEPOSIT_RETAINED";
             amountProcessed = depositAmount; // Cantidad retenida
             message = "Artículo con daños. Se retiene la garantía de " + depositAmount + "€ al arrendatario.";
-            // TODO (Futuro): Aquí transferirías el dinero retenido a la cuenta del dueño
+            // TODO: Transferir el dinero retenido a la cuenta del dueño
         } else {
             throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
         }
