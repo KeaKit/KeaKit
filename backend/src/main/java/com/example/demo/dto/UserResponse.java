@@ -11,6 +11,7 @@ public class UserResponse {
     private String phone;
     private String address;
     private String city;
+    private String country;
     private String token;
 
     public UserResponse(User user) {
@@ -21,6 +22,7 @@ public class UserResponse {
         this.phone = user.getPhone();
         this.address = user.getAddress();
         this.city = user.getCity();
+        this.country = user.getCountry();
     }
 
     public UserResponse(User user, String token) {
@@ -31,6 +33,7 @@ public class UserResponse {
         this.phone = user.getPhone();
         this.address = user.getAddress();
         this.city = user.getCity();
+        this.country = user.getCountry();
         this.token = token;
     }
 
@@ -60,6 +63,10 @@ public class UserResponse {
 
     public String getCity() {
         return city;
+    }
+
+    public String getCountry() {
+        return country;
     }
 
     public String getToken() {

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, TextInput, Alert, ActivityIndicator,
+  ScrollView, TextInput, Alert, ActivityIndicator, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
-import { uploadArticle } from '../../services/articleService';
+import { uploadArticle, uploadArticleWithImage } from '../../services/articleService';
 import { fetchAllCategories } from '../../services/categoryService';
 import { ArticlePayload, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
@@ -69,7 +70,7 @@ const UploadArticleScreen: React.FC = () => {
   const [pricePerMonth, setPricePerMonth] = useState('');
   const [availableFrom, setAvailableFrom] = useState('');
   const [availableUntil, setAvailableUntil] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [selectedImage, setSelectedImage] = useState<{ uri: string; name: string } | null>(null);
   const [purchaseDate, setPurchaseDate] = useState('');
 
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
@@ -96,6 +97,53 @@ const UploadArticleScreen: React.FC = () => {
     loadCategories();
   }, [token]);
 
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const fileName = asset.uri.split('/').pop() || 'image.jpg';
+        setSelectedImage({ uri: asset.uri, name: fileName });
+        clearError('image');
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'No se pudo seleccionar la imagen');
+    }
+  };
+
+  const takePicture = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permiso requerido', 'Se requiere acceso a la cámara para tomar fotos');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const fileName = `photo_${Date.now()}.jpg`;
+        setSelectedImage({ uri: asset.uri, name: fileName });
+        clearError('image');
+      }
+    } catch (error) {
+      console.error('Error taking picture:', error);
+      Alert.alert('Error', 'No se pudo tomar la foto');
+    }
+  };
+
   const clearError = (key: string) =>
     setErrors((prev) => ({ ...prev, [key]: '' }));
 
@@ -107,6 +155,7 @@ const UploadArticleScreen: React.FC = () => {
     if (!description.trim()) newErrors.description = 'La descripción es obligatoria';
     if (!city.trim())        newErrors.city        = 'La ciudad es obligatoria';
     if (!selectedCategory)   newErrors.category    = 'Selecciona una categoría';
+    if (!selectedImage)      newErrors.image       = 'Añade una foto del artículo';
 
     if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0) {
       newErrors.pricePerMonth = 'Introduce un precio válido';
@@ -155,11 +204,15 @@ const UploadArticleScreen: React.FC = () => {
         availableUntil,
         category:      { id: selectedCategory!.id } as any, 
         status:        'AVAILABLE',
-        ...(imageUrl.trim()     && { imageUrl:     imageUrl.trim() }),
         ...(purchaseDate.trim() && { purchaseDate: purchaseDate.trim() }),
       };
 
-      await uploadArticle(user.id, user.token, payload);
+      if (selectedImage) {
+        await uploadArticleWithImage(user.id, selectedCategory!.id, user.token, payload, selectedImage.uri, selectedImage.name);
+      } else {
+        // En teoría validation previene caer aquí, pero como fallback
+        await uploadArticle(user.id, user.token, payload);
+      }
       navigation.goBack();
     } catch (error: any) {
       Alert.alert('Error', error.message ?? 'No se pudo subir el artículo');
@@ -260,7 +313,45 @@ const UploadArticleScreen: React.FC = () => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Información adicional</Text>
-          <Field label="URL de imagen" value={imageUrl} onChange={(t) => { setImageUrl(t); clearError('imageUrl'); }} placeholder="https://..." optional error={errors.imageUrl} />
+          
+          <Text style={styles.label}>Foto del artículo</Text>
+          <View style={styles.imageSelectorContainer}>
+            {selectedImage ? (
+              <View style={styles.selectedImageContainer}>
+                <Image source={{ uri: selectedImage.uri }} style={styles.imagePreview} />
+                <TouchableOpacity
+                  style={styles.changeImageButton}
+                  onPress={() => setSelectedImage(null)}
+                >
+                  <Ionicons name="close-circle" size={24} color={Colors.error} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={[styles.imagePlaceholder, errors.image ? { borderColor: Colors.error } : null]}>
+                <Ionicons name="image-outline" size={40} color={Colors.textSecondary} />
+                <Text style={styles.placeholderText}>Sube una foto de tu artículo</Text>
+              </View>
+            )}
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
+                <Ionicons name="images" size={20} color={Colors.primary} />
+                <Text style={styles.imageButtonText}>Galería</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.imageButton} onPress={takePicture}>
+                <Ionicons name="camera" size={20} color={Colors.primary} />
+                <Text style={styles.imageButtonText}>Cámara</Text>
+              </TouchableOpacity>
+            </View>
+            {!!errors.image && (
+              <View style={[commonStyles.errorContainer, { marginTop: Spacing.xs }]}>
+                <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                <Text style={commonStyles.errorText}>{errors.image}</Text>
+              </View>
+            )}
+          </View>
+
           <Field label="Fecha de compra" value={purchaseDate} onChange={(t) => { setPurchaseDate(t); clearError('purchaseDate'); }} placeholder="AAAA-MM-DD" optional error={errors.purchaseDate} />
         </View>
 
@@ -301,7 +392,17 @@ const styles = StyleSheet.create({
   submitContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   buttonDisabled: { opacity: 0.6 },
   
-  helperText: { fontSize: 12, color: Colors.textSecondary, fontStyle: 'italic', marginTop: -4 }
+  helperText: { fontSize: 12, color: Colors.textSecondary, fontStyle: 'italic', marginTop: -4 },
+
+  imageSelectorContainer: { gap: Spacing.sm },
+  selectedImageContainer: { position: 'relative', height: 250, width: '100%', borderRadius: 12, overflow: 'hidden', marginBottom: Spacing.sm, backgroundColor: Colors.border },
+  imagePreview: { width: '100%', height: '100%', resizeMode: 'contain' },
+  changeImageButton: { position: 'absolute', top: Spacing.sm, right: Spacing.sm, backgroundColor: Colors.backgroundWhite, borderRadius: 12 },
+  imagePlaceholder: { height: 180, width: '100%', backgroundColor: Colors.background, borderRadius: 12, borderWidth: 2, borderColor: Colors.border, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.sm },
+  placeholderText: { color: Colors.textSecondary, fontSize: 14, marginTop: Spacing.sm },
+  buttonRow: { flexDirection: 'row', gap: Spacing.md },
+  imageButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: Spacing.md, paddingHorizontal: Spacing.base, borderRadius: 8, backgroundColor: Colors.border, borderWidth: 1, borderColor: Colors.primary },
+  imageButtonText: { color: Colors.primary, fontSize: 14, fontWeight: '600' },
 });
 
 export default UploadArticleScreen;

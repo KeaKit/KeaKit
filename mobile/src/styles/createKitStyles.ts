@@ -233,7 +233,7 @@ export const createKitStyles = StyleSheet.create({
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     padding: Spacing.lg,
-    maxHeight: "75%",
+    maxHeight: "90%",
   },
   modalTitle: {
     fontSize: FontSizes.xl,

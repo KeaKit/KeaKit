@@ -139,8 +139,7 @@ const HomeScreen: React.FC = () => {
                   style={componentStyles.menuItem}
                   onPress={() => {
                     setShowProfileMenu(false);
-                    // TODO: Implementar pantalla de perfil
-                    console.log('Ir a perfil');
+                    navigation.navigate('Profile');
                   }}
                 >
                   <Ionicons name="person" size={24} color={Colors.primary} />
@@ -173,6 +172,21 @@ const HomeScreen: React.FC = () => {
                   <Ionicons name="cube" size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Mis Artículos</Text>
                 </TouchableOpacity>
+
+                {user?.role === 'ADMIN' && (
+                  <TouchableOpacity
+                    style={componentStyles.menuItem}
+                    onPress={() => {
+                      setShowProfileMenu(false);
+                      navigation.navigate('AdminUsers');
+                    }}
+                  >
+                    <Ionicons name="people" size={24} color={Colors.primary} />
+                    <Text style={componentStyles.menuItemText}>
+                      Gestión de usuarios
+                    </Text>
+                  </TouchableOpacity>
+                )}
 
                 <TouchableOpacity
                   style={componentStyles.menuItem}

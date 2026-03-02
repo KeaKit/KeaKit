@@ -14,6 +14,11 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { DatePickerModal } from "react-native-paper-dates";
+import { es, registerTranslation } from "react-native-paper-dates";
+import { Provider as PaperProvider, MD3LightTheme, TextInput as PaperTextInput, Button, SegmentedButtons } from "react-native-paper";
+
+registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
@@ -22,6 +27,7 @@ import { RootStackParamList } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
+import { ProductSelectionModal } from "../../components/ProductSelectionModal";
 import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
@@ -39,6 +45,7 @@ type FormErrors = {
   startDate?: string;
   endDate?: string;
   meetingPoint?: string;
+  courierAddress?: string;
   items?: string;
   general?: string;
 };
@@ -55,7 +62,13 @@ type CatalogProduct = {
   ownerName?: string;
   imageUrl?: string | null;
   totalUnits: number;
+  availableFrom?: string;
+  availableUntil?: string;
+  isAvailable?: boolean;
+  availabilityMessage?: string;
 };
+
+
 
 const toIsoDate = (raw: string): string | null => {
   const value = raw.trim();
@@ -104,38 +117,47 @@ const CreateKitScreen: React.FC = () => {
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>("COURIER");
   const [meetingPoint, setMeetingPoint] = useState("");
+  const [courierAddress, setCourierAddress] = useState("");
 
-  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>([]);
-  const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
-  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
+  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
+    [],
+  );
+  const [selectedQuantities, setSelectedQuantities] = useState<
+    Record<number, number>
+  >({});
+  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<
+    Record<number, number>
+  >({});
 
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "AVAILABLE" | "RENTED" | "INACTIVE">("ALL");
-
-  const [appliedSearch, setAppliedSearch] = useState("");
-  const [appliedCategory, setAppliedCategory] = useState<"ALL" | string>("ALL");
-  const [appliedStatus, setAppliedStatus] = useState<"ALL" | "AVAILABLE" | "RENTED" | "INACTIVE">("ALL");
-  const [hasSearched, setHasSearched] = useState(false);
-
+  const [showOnlyMyCity, setShowOnlyMyCity] = useState(false);
+  const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
+  const [confirmVisible, setConfirmVisible] = useState(false);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
   const monthsBetween = useMemo(() => {
-    const startIso = toIsoDate(startDate);
-    const endIso = toIsoDate(endDate);
+    if (!startDate || !endDate) return null;
 
-    if (!startIso || !endIso) return null;
-
-    const start = toUtcDateOnly(startIso);
-    const end = toUtcDateOnly(endIso);
+    const start = new Date(
+      Date.UTC(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate(),
+      ),
+    );
+    const end = new Date(
+      Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()),
+    );
 
     return calculateMonthsBetween(start, end);
   }, [startDate, endDate]);
@@ -195,6 +217,8 @@ const CreateKitScreen: React.FC = () => {
             ownerName: p.owner?.name ?? "",
             imageUrl: p.imageUrl ?? null,
             totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
+            availableFrom: p.availableFrom ?? null,
+            availableUntil: p.availableUntil ?? null,
           };
         })
         .filter((p: CatalogProduct) => p.status === "AVAILABLE");
@@ -258,21 +282,22 @@ const CreateKitScreen: React.FC = () => {
   }, [availableProducts]);
 
   const filteredProducts = useMemo(() => {
-    const q = appliedSearch.trim().toLowerCase();
+    const q = searchText.trim().toLowerCase();
 
     return availableProducts.filter((p) => {
-      const byStatus = appliedStatus === "ALL" || p.status === appliedStatus;
+      const notInactive = p.status !== "INACTIVE";
       const byCategory =
-        appliedCategory === "ALL" || p.category === appliedCategory;
+        categoryFilter === "ALL" || p.category === categoryFilter;
+      const byCity = !showOnlyMyCity || !city.trim() || (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
       const bySearch =
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
         (p.city ?? "").toLowerCase().includes(q) ||
         (p.category ?? "").toLowerCase().includes(q);
 
-      return byStatus && byCategory && bySearch;
+      return notInactive && byCategory && byCity && bySearch;
     });
-  }, [availableProducts, appliedSearch, appliedCategory, appliedStatus]);
+  }, [availableProducts, searchText, categoryFilter, showOnlyMyCity, city]);
 
   const openAddProductModal = async () => {
     await loadCatalog();
@@ -280,21 +305,10 @@ const CreateKitScreen: React.FC = () => {
 
     setSearchText("");
     setCategoryFilter("ALL");
-    setStatusFilter("ALL");
-
-    setAppliedSearch("");
-    setAppliedCategory("ALL");
-    setAppliedStatus("ALL");
-    setHasSearched(false);
+    setShowOnlyMyCity(city.trim().length > 0);
+    setShowOnlyAvailable(true);
 
     setCatalogModalVisible(true);
-  };
-
-  const handleApplyFilters = () => {
-    setAppliedSearch(searchText);
-    setAppliedCategory(categoryFilter);
-    setAppliedStatus(statusFilter);
-    setHasSearched(true);
   };
 
   const toggleTempSelection = (id: number) => {
@@ -368,41 +382,29 @@ const CreateKitScreen: React.FC = () => {
     if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
       nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
     }
-
-    const startIso = toIsoDate(startDate);
-    const endIso = toIsoDate(endDate);
-
-    if (!startIso)
-      nextErrors.startDate =
-        "Fecha inválida. Usa DD/MM/AAAA, MM/DD/YYYY o YYYY-MM-DD.";
-    if (!endIso)
-      nextErrors.endDate =
-        "Fecha inválida. Usa DD/MM/AAAA, MM/DD/YYYY o YYYY-MM-DD.";
-
-    if (startIso && endIso) {
-      const start = toUtcDateOnly(startIso);
-      const end = toUtcDateOnly(endIso);
-      const now = new Date();
-      const today = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-      );
-
-      if (start < today)
-        nextErrors.startDate = "La fecha inicial no puede ser anterior a hoy.";
-      if (end < start)
-        nextErrors.endDate =
-          "La fecha final no puede ser anterior a la inicial.";
+    if (deliveryMethod === "COURIER" && !courierAddress.trim()) {
+      nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
     }
+
+    if (!startDate)
+      nextErrors.startDate = "Debes seleccionar una fecha inicial.";
+    if (!endDate) nextErrors.endDate = "Debes seleccionar una fecha final.";
 
     if (selectedItemsCount === 0)
       nextErrors.items = "Debes añadir al menos un producto.";
 
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || !startIso || !endIso)
+    if (Object.keys(nextErrors).length > 0 || !startDate || !endDate)
       return { valid: false };
+
+    const startIso = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}`;
+    const endIso = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`;
 
     return { valid: true, payloadDates: { startIso, endIso } };
   };
+
+
+
 
   const handleSubmit = async () => {
     if (!user?.id || !user.token) {
@@ -428,6 +430,8 @@ const CreateKitScreen: React.FC = () => {
             deliveryMethod === "MEETING_POINT"
               ? meetingPoint.trim()
               : undefined,
+          courierAddress:
+            deliveryMethod === "COURIER" ? courierAddress.trim() : undefined,
           tenantId: user.id,
           itemSelections: Object.entries(selectedQuantities).map(
             ([itemId, quantity]) => ({
@@ -451,36 +455,59 @@ const CreateKitScreen: React.FC = () => {
     }
   };
 
+  const customTheme = {
+    ...MD3LightTheme,
+    colors: {
+      ...MD3LightTheme.colors,
+      primary: Colors.primary,
+      onPrimary: '#FFFFFF',
+      primaryContainer: '#E3F2FD',
+      onPrimaryContainer: Colors.primary,
+      surface: '#FFFFFF',
+      onSurface: '#1C1B1F',
+      surfaceVariant: '#E7E0EC',
+      onSurfaceVariant: '#49454F',
+      secondaryContainer: '#E3F2FD',
+      onSecondaryContainer: Colors.primary,
+    },
+  };
+
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <PaperProvider theme={customTheme}>
+      <SafeAreaView style={commonStyles.container}>
       <ScrollView
         contentContainerStyle={createKitStyles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={createKitStyles.headerRow}>
-          <View style={componentStyles.iconButton} />
+      <View style={createKitStyles.headerRow}>
+        {/* Botón de volver */}
+        <TouchableOpacity
+          style={componentStyles.iconButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+        </TouchableOpacity>
 
-          <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
-            Crea un Kit
-          </Text>
+        <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
+          Crea un Kit
+        </Text>
 
-          <View style={componentStyles.iconButton}>
-            <Ionicons name="receipt-outline" size={22} color={Colors.primary} />
-          </View>
-        </View>
+        {/* Mantener espacio a la derecha para centrar el título */}
+        <View style={componentStyles.iconButton} />
+      </View>
 
-        <TextInput
-          style={[
-            commonStyles.input,
-            createKitStyles.inputRounded,
-            errors.name && commonStyles.inputError,
-          ]}
-          placeholder="Nombre Kit"
+        <PaperTextInput
+          mode="outlined"
+          label="Nombre del Kit"
           value={name}
           onChangeText={(value) => {
             setName(value);
             clearFieldError("name");
           }}
+          error={!!errors.name}
+          style={{ backgroundColor: Colors.backgroundWhite }}
+          outlineColor={Colors.border}
+          activeOutlineColor={Colors.primary}
         />
         {errors.name ? (
           <Text style={commonStyles.errorText}>{errors.name}</Text>
@@ -488,37 +515,37 @@ const CreateKitScreen: React.FC = () => {
 
         <View style={createKitStyles.row}>
           <View style={createKitStyles.rowItem}>
-            <TextInput
-              style={[
-                commonStyles.input,
-                createKitStyles.inputRounded,
-                errors.country && commonStyles.inputError,
-              ]}
-              placeholder="País"
+            <PaperTextInput
+              mode="outlined"
+              label="País"
               value={country}
               onChangeText={(value) => {
                 setCountry(value);
                 clearFieldError("country");
               }}
+              error={!!errors.country}
+              style={{ backgroundColor: Colors.backgroundWhite }}
+              outlineColor={Colors.border}
+              activeOutlineColor={Colors.primary}
             />
             {errors.country ? (
               <Text style={commonStyles.errorText}>{errors.country}</Text>
             ) : null}
           </View>
-
+         
           <View style={createKitStyles.rowItem}>
-            <TextInput
-              style={[
-                commonStyles.input,
-                createKitStyles.inputRounded,
-                errors.city && commonStyles.inputError,
-              ]}
-              placeholder="Ciudad"
+            <PaperTextInput
+              mode="outlined"
+              label="Ciudad"
               value={city}
               onChangeText={(value) => {
                 setCity(value);
                 clearFieldError("city");
               }}
+              error={!!errors.city}
+              style={{ backgroundColor: Colors.backgroundWhite }}
+              outlineColor={Colors.border}
+              activeOutlineColor={Colors.primary}
             />
             {errors.city ? (
               <Text style={commonStyles.errorText}>{errors.city}</Text>
@@ -526,105 +553,50 @@ const CreateKitScreen: React.FC = () => {
           </View>
         </View>
 
-        <TextInput
+        <TouchableOpacity
           style={[
             commonStyles.input,
             createKitStyles.dateInput,
-            errors.startDate && commonStyles.inputError,
+            (errors.startDate || errors.endDate) && commonStyles.inputError,
+            { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
           ]}
-          placeholder="Fecha Inicial del Alquiler (DD/MM/AAAA)"
-          value={startDate}
-          onChangeText={(value) => {
-            setStartDate(value);
-            clearFieldError("startDate");
+          onPress={() => setShowDateRangePicker(true)}
+        >
+          <Text
+            style={[
+              { color: startDate && endDate ? Colors.textPrimary : Colors.textSecondary },
+            ]}
+          >
+            {startDate && endDate
+              ? `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${startDate.getFullYear()} - ${String(endDate.getDate()).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${endDate.getFullYear()}`
+              : "Selecciona rango de fechas del alquiler"}
+          </Text>
+          <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
+        </TouchableOpacity>
+        <DatePickerModal
+          locale="es"
+          mode="range"
+          visible={showDateRangePicker}
+          onDismiss={() => setShowDateRangePicker(false)}
+          startDate={startDate || undefined}
+          endDate={endDate || undefined}
+          onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
+            setShowDateRangePicker(false);
+            if (params.startDate && params.endDate) {
+              setStartDate(params.startDate);
+              setEndDate(params.endDate);
+              clearFieldError("startDate");
+              clearFieldError("endDate");
+            }
           }}
+          validRange={{ startDate: new Date() }}
         />
         {errors.startDate ? (
           <Text style={commonStyles.errorText}>{errors.startDate}</Text>
         ) : null}
-
-        <TextInput
-          style={[
-            commonStyles.input,
-            createKitStyles.dateInput,
-            errors.endDate && commonStyles.inputError,
-          ]}
-          placeholder="Fecha Final del Alquiler (DD/MM/AAAA)"
-          value={endDate}
-          onChangeText={(value) => {
-            setEndDate(value);
-            clearFieldError("endDate");
-          }}
-        />
         {errors.endDate ? (
           <Text style={commonStyles.errorText}>{errors.endDate}</Text>
         ) : null}
-
-        <View style={createKitStyles.deliverySection}>
-          <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
-            Método de entrega
-          </Text>
-
-          <View style={createKitStyles.deliveryOptionsRow}>
-            <TouchableOpacity
-              style={[
-                createKitStyles.deliveryOption,
-                deliveryMethod === "COURIER" &&
-                  createKitStyles.deliveryOptionSelected,
-              ]}
-              onPress={() => {
-                setDeliveryMethod("COURIER");
-                clearFieldError("meetingPoint");
-              }}
-            >
-              <Text style={createKitStyles.deliveryOptionText}>Mensajería</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                createKitStyles.deliveryOption,
-                deliveryMethod === "MEETING_POINT" &&
-                  createKitStyles.deliveryOptionSelected,
-              ]}
-              onPress={() => {
-                setDeliveryMethod("MEETING_POINT");
-              }}
-            >
-              <Text style={createKitStyles.deliveryOptionText}>
-                Punto de encuentro
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {deliveryMethod === "MEETING_POINT" ? (
-            <>
-              <TextInput
-                style={[
-                  commonStyles.input,
-                  createKitStyles.meetingPointInput,
-                  errors.meetingPoint && commonStyles.inputError,
-                ]}
-                placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
-                value={meetingPoint}
-                onChangeText={(value) => {
-                  setMeetingPoint(value);
-                  clearFieldError("meetingPoint");
-                }}
-              />
-              {errors.meetingPoint ? (
-                <Text style={commonStyles.errorText}>
-                  {errors.meetingPoint}
-                </Text>
-              ) : null}
-            </>
-          ) : null}
-
-          {deliveryMethod === "COURIER" ? (
-            <Text style={commonStyles.bodySecondary}>
-              Tarifa de mensajería: {PLATFORM_COURIER_PRICE.toFixed(2)}€
-            </Text>
-          ) : null}
-        </View>
 
         {/* Duración del alquiler */}
         {monthsBetween !== null && monthsBetween > 0 && (
@@ -635,16 +607,104 @@ const CreateKitScreen: React.FC = () => {
           </View>
         )}
 
+        <View style={createKitStyles.deliverySection}>
+          <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
+            Método de entrega
+          </Text>
+
+          <SegmentedButtons
+            value={deliveryMethod}
+            onValueChange={(value) => {
+              setDeliveryMethod(value as DeliveryMethod);
+              clearFieldError("meetingPoint");
+              clearFieldError("courierAddress");
+            }}
+            buttons={[
+              {
+                value: 'COURIER',
+                label: 'Mensajería',
+                icon: 'truck-delivery',
+              },
+              {
+                value: 'MEETING_POINT',
+                label: 'Punto de encuentro',
+                icon: 'map-marker',
+              },
+            ]}
+            style={{ marginVertical: 12 }}
+          />
+
+          {deliveryMethod === "MEETING_POINT" ? (
+            <>
+              <PaperTextInput
+                mode="outlined"
+                label="Punto de encuentro"
+                placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
+                value={meetingPoint}
+                onChangeText={(value) => {
+                  setMeetingPoint(value);
+                  clearFieldError("meetingPoint");
+                }}
+                error={!!errors.meetingPoint}
+                style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
+                outlineColor={Colors.border}
+                activeOutlineColor={Colors.primary}
+                multiline
+              />
+              {errors.meetingPoint ? (
+                <Text style={commonStyles.errorText}>
+                  {errors.meetingPoint}
+                </Text>
+              ) : null}
+            </>
+          ) : null}
+
+          {deliveryMethod === "COURIER" ? (
+            <>
+              <PaperTextInput
+                mode="outlined"
+                label="Dirección de entrega"
+                value={courierAddress}
+                onChangeText={(value) => {
+                  setCourierAddress(value);
+                  clearFieldError("courierAddress");
+                }}
+                error={!!errors.courierAddress}
+                style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
+                outlineColor={Colors.border}
+                activeOutlineColor={Colors.primary}
+                multiline
+              />
+              {errors.courierAddress ? (
+                <Text style={commonStyles.errorText}>
+                  {errors.courierAddress}
+                </Text>
+              ) : null}
+            </>
+          ) : null}
+
+          {deliveryMethod === "COURIER" ? (
+            <Text style={commonStyles.bodySecondary}>
+              Se aplicará una tarifa fija de mensajería de {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
+            </Text>
+          ) : null}
+        </View>
+
+        
+
         <View style={createKitStyles.productsHeader}>
           <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
             Tus Productos
           </Text>
-          <TouchableOpacity
-            style={createKitStyles.addButton}
+          <Button
+            mode="contained"
             onPress={openAddProductModal}
+            icon="plus"
+            compact
+            style={{ borderRadius: 8 }}
           >
-            <Text style={createKitStyles.addButtonText}>Añadir Producto +</Text>
-          </TouchableOpacity>
+            Añadir Producto
+          </Button>
         </View>
 
         <View style={createKitStyles.counterBadge}>
@@ -757,265 +817,111 @@ const CreateKitScreen: React.FC = () => {
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={[
-              commonStyles.primaryButton,
-              createKitStyles.submitButton,
-              submitting && createKitStyles.submitButtonDisabled,
-              { width: "100%" },
-            ]}
-            onPress={handleSubmit}
+          <Button
+            mode="contained"
+            onPress={() => setConfirmVisible(true)}
             disabled={submitting}
+            loading={submitting}
+            icon="cart-outline"
+            style={{ borderRadius: 8 }}
+            contentStyle={{ paddingVertical: 8 }}
           >
-            {submitting ? (
-              <ActivityIndicator color={Colors.textWhite} />
-            ) : (
-              <Text
-                style={[
-                  commonStyles.primaryButtonText,
-                  createKitStyles.submitButtonText,
-                ]}
-              >
-                Realizar Pedido
-              </Text>
-            )}
-          </TouchableOpacity>
+            Realizar Pedido
+          </Button>
         </View>
       </View>
 
-      <Modal visible={catalogModalVisible} transparent animationType="slide">
-        <View style={createKitStyles.modalOverlay}>
-          <View style={createKitStyles.modalCard}>
-            <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
+      <ProductSelectionModal
+        visible={catalogModalVisible}
+        onDismiss={() => setCatalogModalVisible(false)}
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
+        categories={categories}
+        filteredProducts={filteredProducts}
+        tempSelectedQuantities={tempSelectedQuantities}
+        onToggleSelection={toggleTempSelection}
+        onChangeQuantity={changeTempQuantity}
+        onConfirm={confirmSelection}
+        userCity={city.trim()}
+        showOnlyMyCity={showOnlyMyCity}
+        onToggleMyCity={setShowOnlyMyCity}
+        showOnlyAvailable={showOnlyAvailable}
+        onToggleAvailable={setShowOnlyAvailable}
+        startDate={startDate}
+        endDate={endDate}
+      />
 
-            <View style={{ gap: 8, marginBottom: 12 }}>
-              <View
-                style={[
-                  commonStyles.input,
-                  { flexDirection: "row", alignItems: "center", gap: 8 },
-                ]}
-              >
-                <Ionicons
-                  name="search"
-                  size={18}
-                  color={Colors.textSecondary}
-                />
-                <TextInput
-                  placeholder="Buscar objeto..."
-                  value={searchText}
-                  onChangeText={setSearchText}
-                  style={{ flex: 1, color: Colors.textPrimary }}
-                />
-              </View>
+      <Modal
+      visible={confirmVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setConfirmVisible(false)}
+    >
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.4)",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 20,
+        }}
+      >
+        <View
+          style={{
+            width: "100%",
+            backgroundColor: "white",
+            borderRadius: 16,
+            padding: 20,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "bold",
+              marginBottom: 10,
+              color: "#111",
+            }}
+          >
+            Depósito de garantía
+          </Text>
 
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8 }}
-              >
-                {(["ALL", "AVAILABLE", "RENTED", "INACTIVE"] as const).map(
-                  (s) => (
-                    <TouchableOpacity
-                      key={s}
-                      onPress={() => setStatusFilter(s)}
-                      style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 999,
-                        borderWidth: 1,
-                        borderColor:
-                          statusFilter === s ? Colors.primary : Colors.border,
-                        backgroundColor:
-                          statusFilter === s
-                            ? "#EAF3F8"
-                            : Colors.backgroundWhite,
-                      }}
-                    >
-                      <Text style={{ color: Colors.primary }}>
-                        {s === "ALL" ? "Todos" : s}
-                      </Text>
-                    </TouchableOpacity>
-                  ),
-                )}
-              </ScrollView>
+          <Text style={{ fontSize: 15, color: "#444", marginBottom: 20 }}>
+            Recuerda que el 20%  se retendrá como garantía y se te devolverá
+            cuando el kit sea devuelto en buen estado.
+          </Text>
 
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8 }}
-              >
-                {categories.map((c) => (
-                  <TouchableOpacity
-                    key={c}
-                    onPress={() => setCategoryFilter(c)}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor:
-                        categoryFilter === c ? Colors.primary : Colors.border,
-                      backgroundColor:
-                        categoryFilter === c
-                          ? "#EAF3F8"
-                          : Colors.backgroundWhite,
-                    }}
-                  >
-                    <Text style={{ color: Colors.primary }}>
-                      {c === "ALL" ? "Todas" : c}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-
-            <TouchableOpacity
-              style={[commonStyles.primaryButton, { marginBottom: 12 }]}
-              onPress={handleApplyFilters}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              gap: 10,
+            }}
+          >
+            <Button
+              mode="outlined"
+              onPress={() => setConfirmVisible(false)}
             >
-              <Text style={commonStyles.primaryButtonText}>Buscar</Text>
-            </TouchableOpacity>
+              Cancelar
+            </Button>
 
-            <ScrollView style={createKitStyles.modalList}>
-              {!hasSearched ? (
-                <Text style={commonStyles.bodySecondary}>
-                  Configura los filtros y pulsa "Buscar".
-                </Text>
-              ) : filteredProducts.length === 0 ? (
-                <Text style={commonStyles.bodySecondary}>
-                  No hay productos que cumplan los filtros.
-                </Text>
-              ) : (
-                filteredProducts.map((p) => {
-                  const checked = Object.prototype.hasOwnProperty.call(
-                    tempSelectedQuantities,
-                    p.id,
-                  );
-                  const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
-                  return (
-                    <Pressable
-                      key={p.id}
-                      style={[
-                        createKitStyles.modalRow,
-                        checked && createKitStyles.modalRowChecked,
-                      ]}
-                      onPress={() => toggleTempSelection(p.id)}
-                    >
-                      <View style={createKitStyles.productInfo}>
-                        <Text style={createKitStyles.productTitle}>
-                          {p.title}
-                        </Text>
-
-                        <Text style={commonStyles.caption}>
-                          {p.ownerName ? `${p.ownerName} · ` : ""}
-                          {p.city ? `${p.city} · ` : ""}
-                          {p.category ? `${p.category} · ` : ""}
-                          {p.pricePerMonth.toFixed(2)}€ / mes
-                        </Text>
-                        <Text style={commonStyles.caption}>
-                          Unidades disponibles: {p.totalUnits}
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 5,
-                          marginRight: 8,
-                        }}
-                      >
-                        {checked ? (
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              gap: 6,
-                              marginRight: 8,
-                            }}
-                          >
-                            <TouchableOpacity
-                              onPress={() =>
-                                changeTempQuantity(
-                                  p.id,
-                                  selectedQuantity - 1,
-                                  p.totalUnits,
-                                )
-                              }
-                              accessibilityRole="button"
-                              accessibilityLabel={`Reducir unidades de ${p.title}`}
-                            >
-                              <Ionicons
-                                name="remove-circle-outline"
-                                size={22}
-                                color={Colors.primary}
-                              />
-                            </TouchableOpacity>
-
-                            <Text style={createKitStyles.productTitle}>
-                              {selectedQuantity}
-                            </Text>
-
-                            <TouchableOpacity
-                              onPress={() =>
-                                changeTempQuantity(
-                                  p.id,
-                                  selectedQuantity + 1,
-                                  p.totalUnits,
-                                )
-                              }
-                              accessibilityRole="button"
-                              accessibilityLabel={`Aumentar unidades de ${p.title}`}
-                            >
-                              <Ionicons
-                                name="add-circle-outline"
-                                size={22}
-                                color={
-                                  selectedQuantity >= p.totalUnits
-                                    ? Colors.border
-                                    : Colors.primary
-                                }
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        ) : null}
-
-                        <Text style={createKitStyles.productTitle}>
-                          {p.pricePerMonth !== undefined
-                            ? `${p.pricePerMonth.toFixed(2)}€`
-                            : "N/A"}
-                        </Text>
-                        <Text style={commonStyles.bodySecondary}>/ mes</Text>
-                      </View>
-                      <Ionicons
-                        name={checked ? "checkmark-circle" : "ellipse-outline"}
-                        size={22}
-                        color={checked ? Colors.success : Colors.primary}
-                      />
-                    </Pressable>
-                  );
-                })
-              )}
-            </ScrollView>
-
-            <View style={createKitStyles.modalActions}>
-              <TouchableOpacity
-                style={[commonStyles.outlineButton, createKitStyles.modalBtn]}
-                onPress={() => setCatalogModalVisible(false)}
-              >
-                <Text style={commonStyles.outlineButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[commonStyles.primaryButton, createKitStyles.modalBtn]}
-                onPress={confirmSelection}
-              >
-                <Text style={commonStyles.primaryButtonText}>Añadir</Text>
-              </TouchableOpacity>
-            </View>
+            <Button
+              mode="contained"
+              onPress={() => {
+                setConfirmVisible(false);
+                handleSubmit();
+              }}
+            >
+              Aceptar
+            </Button>
           </View>
         </View>
-      </Modal>
+      </View>
+    </Modal>
+
     </SafeAreaView>
+    </PaperProvider>
   );
 };
 

@@ -27,7 +27,7 @@ public abstract class Item {
     protected LocalDate availableUntil;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category", referencedColumnName = "name", nullable = false)
     private Category category;
 
     @Column

@@ -25,15 +25,11 @@ type FieldErrors = {
 
 const parseBackendError = (err: unknown): FieldErrors => {
   if (!(err instanceof Error)) return { general: 'Error al iniciar sesión.' };
-
   const message = err.message.toLowerCase();
-
   if (message.includes('user not found'))
     return { email: 'No existe una cuenta con este correo.' };
-
   if (message.includes('invalid password'))
     return { password: 'Contraseña incorrecta.' };
-
   return { general: err.message || 'Error al iniciar sesión.' };
 };
 
@@ -41,11 +37,11 @@ const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginNav>();
   const { signIn } = useAuth();
 
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [loading, setLoading]           = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors]     = useState<FieldErrors>({});
+  const [errors, setErrors]             = useState<FieldErrors>({});
 
   const clearErrors = () => setErrors({});
 
@@ -54,7 +50,7 @@ const LoginScreen: React.FC = () => {
 
     if (!email.trim() || !password.trim()) {
       setErrors({
-        email: !email.trim() ? 'El correo es obligatorio.' : undefined,
+        email:    !email.trim()    ? 'El correo es obligatorio.'    : undefined,
         password: !password.trim() ? 'La contraseña es obligatoria.' : undefined,
       });
       return;
@@ -65,8 +61,7 @@ const LoginScreen: React.FC = () => {
       await signIn({ email: email.trim(), password });
       navigation.navigate('Home');
     } catch (err: unknown) {
-      const parsed = parseBackendError(err);
-      setErrors(parsed);
+      setErrors(parseBackendError(err));
     } finally {
       setLoading(false);
     }
@@ -74,23 +69,27 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="#103a57" />
+      </TouchableOpacity>
 
-      <View>
-        <Image
-          source={require('../../../assets/logo.png')}
-          style={{ width: 200, height: 200, marginBottom: 50 }}
+      <Image
+        source={require('../../../assets/logo.png')}
+        style={{ width: 200, height: 200, marginBottom: 50 }}
+      />
+
+      <View style={[styles.inputContainer, errors.email && styles.inputError]}>
+        <Ionicons name="mail-outline" size={20} color="#999" style={styles.fieldIcon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Correo electrónico"
+          placeholderTextColor="#999"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={(v) => { setEmail(v); clearErrors(); }}
         />
       </View>
-
-      <TextInput
-        style={[styles.input, errors.email && styles.inputError]}
-        placeholder="Correo electrónico"
-        placeholderTextColor="#999"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={(v) => { setEmail(v); clearErrors(); }}
-      />
       {errors.email && (
         <View style={styles.errorRow}>
           <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
@@ -98,25 +97,18 @@ const LoginScreen: React.FC = () => {
         </View>
       )}
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, errors.password && styles.inputError]}>
+        <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.fieldIcon} />
         <TextInput
-          style={[styles.input, errors.password && styles.inputError]}
+          style={styles.input}
           placeholder="Contraseña"
           placeholderTextColor="#999"
           secureTextEntry={!showPassword}
           value={password}
           onChangeText={(v) => { setPassword(v); clearErrors(); }}
         />
-        <TouchableOpacity
-          style={styles.eyeIcon}
-          onPress={() => setShowPassword((prev) => !prev)}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-            size={25}
-            color="#999"
-          />
+        <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)} activeOpacity={0.7}>
+          <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
         </TouchableOpacity>
       </View>
       {errors.password && (
@@ -138,11 +130,10 @@ const LoginScreen: React.FC = () => {
         onPress={handleLogin}
         disabled={loading}
       >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Iniciar sesión</Text>
-        )}
+        {loading
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={styles.buttonText}>Iniciar sesión</Text>
+        }
       </TouchableOpacity>
 
       <Divider />
@@ -150,6 +141,7 @@ const LoginScreen: React.FC = () => {
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
       </TouchableOpacity>
+
     </View>
   );
 };
@@ -164,34 +156,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     padding: 24,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 32,
-    color: '#333',
-  },
-  input: {
+  inputContainer: {
     width: '100%',
-    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 10,
-    paddingHorizontal: 16,
-    marginTop: 10,
     borderWidth: 1,
     borderColor: '#ddd',
-    fontSize: 16,
-    color: '#333',
+    paddingHorizontal: 12,
+    height: 50,
+    marginTop: 10,
   },
   inputError: {
     borderColor: '#d9534f',
     backgroundColor: '#fff5f5',
+  },
+  fieldIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    ...(({ outlineWidth: 0, outlineStyle: 'none' } as any)),
   },
   errorRow: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 4,
-    marginTop: 2
+    marginTop: 2,
   },
   errorText: {
     color: '#d9534f',
@@ -225,9 +220,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 20,
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
+  buttonDisabled: { opacity: 0.6 },
   buttonText: {
     color: '#fff',
     fontSize: 17,
@@ -238,14 +231,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginTop: 20,
   },
-  inputContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 12,
-    marginTop: 12
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 8,
   },
 });
