@@ -27,6 +27,7 @@ import { RootStackParamList } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
+import { ProductSelectionModal } from "../../components/ProductSelectionModal";
 import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
@@ -61,6 +62,10 @@ type CatalogProduct = {
   ownerName?: string;
   imageUrl?: string | null;
   totalUnits: number;
+  availableFrom?: string;
+  availableUntil?: string;
+  isAvailable?: boolean;
+  availabilityMessage?: string;
 };
 
 const toIsoDate = (raw: string): string | null => {
@@ -130,16 +135,8 @@ const CreateKitScreen: React.FC = () => {
 
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
-  const [statusFilter, setStatusFilter] = useState<
-    "ALL" | "AVAILABLE" | "RENTED" | "INACTIVE"
-  >("ALL");
-
-  const [appliedSearch, setAppliedSearch] = useState("");
-  const [appliedCategory, setAppliedCategory] = useState<"ALL" | string>("ALL");
-  const [appliedStatus, setAppliedStatus] = useState<
-    "ALL" | "AVAILABLE" | "RENTED" | "INACTIVE"
-  >("ALL");
-  const [hasSearched, setHasSearched] = useState(false);
+  const [showOnlyMyCity, setShowOnlyMyCity] = useState(false);
+  const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
 
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
@@ -218,6 +215,8 @@ const CreateKitScreen: React.FC = () => {
             ownerName: p.owner?.name ?? "",
             imageUrl: p.imageUrl ?? null,
             totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
+            availableFrom: p.availableFrom ?? null,
+            availableUntil: p.availableUntil ?? null,
           };
         })
         .filter((p: CatalogProduct) => p.status === "AVAILABLE");
@@ -281,21 +280,22 @@ const CreateKitScreen: React.FC = () => {
   }, [availableProducts]);
 
   const filteredProducts = useMemo(() => {
-    const q = appliedSearch.trim().toLowerCase();
+    const q = searchText.trim().toLowerCase();
 
     return availableProducts.filter((p) => {
-      const byStatus = appliedStatus === "ALL" || p.status === appliedStatus;
+      const notInactive = p.status !== "INACTIVE";
       const byCategory =
-        appliedCategory === "ALL" || p.category === appliedCategory;
+        categoryFilter === "ALL" || p.category === categoryFilter;
+      const byCity = !showOnlyMyCity || !city.trim() || (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
       const bySearch =
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
         (p.city ?? "").toLowerCase().includes(q) ||
         (p.category ?? "").toLowerCase().includes(q);
 
-      return byStatus && byCategory && bySearch;
+      return notInactive && byCategory && byCity && bySearch;
     });
-  }, [availableProducts, appliedSearch, appliedCategory, appliedStatus]);
+  }, [availableProducts, searchText, categoryFilter, showOnlyMyCity, city]);
 
   const openAddProductModal = async () => {
     await loadCatalog();
@@ -303,21 +303,10 @@ const CreateKitScreen: React.FC = () => {
 
     setSearchText("");
     setCategoryFilter("ALL");
-    setStatusFilter("ALL");
-
-    setAppliedSearch("");
-    setAppliedCategory("ALL");
-    setAppliedStatus("ALL");
-    setHasSearched(false);
+    setShowOnlyMyCity(city.trim().length > 0);
+    setShowOnlyAvailable(true);
 
     setCatalogModalVisible(true);
-  };
-
-  const handleApplyFilters = () => {
-    setAppliedSearch(searchText);
-    setAppliedCategory(categoryFilter);
-    setAppliedStatus(statusFilter);
-    setHasSearched(true);
   };
 
   const toggleTempSelection = (id: number) => {
@@ -837,239 +826,27 @@ const CreateKitScreen: React.FC = () => {
         </View>
       </View>
 
-      <Modal visible={catalogModalVisible} transparent animationType="slide">
-        <View style={createKitStyles.modalOverlay}>
-          <View style={createKitStyles.modalCard}>
-            <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
-
-            <View style={{ gap: 8, marginBottom: 12 }}>
-              <PaperTextInput
-                mode="outlined"
-                label="Buscar objeto"
-                placeholder="Buscar objeto..."
-                value={searchText}
-                onChangeText={setSearchText}
-                left={<PaperTextInput.Icon icon="magnify" />}
-                style={{ backgroundColor: Colors.backgroundWhite }}
-                outlineColor={Colors.border}
-                activeOutlineColor={Colors.primary}
-              />
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8 }}
-              >
-                {(["ALL", "AVAILABLE", "RENTED", "INACTIVE"] as const).map(
-                  (s) => (
-                    <TouchableOpacity
-                      key={s}
-                      onPress={() => setStatusFilter(s)}
-                      style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 999,
-                        borderWidth: 1,
-                        borderColor:
-                          statusFilter === s ? Colors.primary : Colors.border,
-                        backgroundColor:
-                          statusFilter === s
-                            ? "#EAF3F8"
-                            : Colors.backgroundWhite,
-                      }}
-                    >
-                      <Text style={{ color: Colors.primary }}>
-                        {s === "ALL" ? "Todos" : s}
-                      </Text>
-                    </TouchableOpacity>
-                  ),
-                )}
-              </ScrollView>
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8 }}
-              >
-                {categories.map((c) => (
-                  <TouchableOpacity
-                    key={c}
-                    onPress={() => setCategoryFilter(c)}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor:
-                        categoryFilter === c ? Colors.primary : Colors.border,
-                      backgroundColor:
-                        categoryFilter === c
-                          ? "#EAF3F8"
-                          : Colors.backgroundWhite,
-                    }}
-                  >
-                    <Text style={{ color: Colors.primary }}>
-                      {c === "ALL" ? "Todas" : c}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-
-            <Button
-              mode="contained"
-              onPress={handleApplyFilters}
-              icon="magnify"
-              style={{ marginBottom: 12, borderRadius: 8 }}
-              contentStyle={{ paddingVertical: 4 }}
-            >
-              Buscar
-            </Button>
-
-            <ScrollView style={createKitStyles.modalList}>
-              {!hasSearched ? (
-                <Text style={commonStyles.bodySecondary}>
-                  Configura los filtros y pulsa "Buscar".
-                </Text>
-              ) : filteredProducts.length === 0 ? (
-                <Text style={commonStyles.bodySecondary}>
-                  No hay productos que cumplan los filtros.
-                </Text>
-              ) : (
-                filteredProducts.map((p) => {
-                  const checked = Object.prototype.hasOwnProperty.call(
-                    tempSelectedQuantities,
-                    p.id,
-                  );
-                  const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
-                  return (
-                    <Pressable
-                      key={p.id}
-                      style={[
-                        createKitStyles.modalRow,
-                        checked && createKitStyles.modalRowChecked,
-                      ]}
-                      onPress={() => toggleTempSelection(p.id)}
-                    >
-                      <View style={createKitStyles.productInfo}>
-                        <Text style={createKitStyles.productTitle}>
-                          {p.title}
-                        </Text>
-
-                        <Text style={commonStyles.caption}>
-                          {p.ownerName ? `${p.ownerName} · ` : ""}
-                          {p.city ? `${p.city} · ` : ""}
-                          {p.category ? `${p.category} · ` : ""}
-                          {p.pricePerMonth.toFixed(2)}€ / mes
-                        </Text>
-                        <Text style={commonStyles.caption}>
-                          Unidades disponibles: {p.totalUnits}
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 5,
-                          marginRight: 8,
-                        }}
-                      >
-                        {checked ? (
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              gap: 6,
-                              marginRight: 8,
-                            }}
-                          >
-                            <TouchableOpacity
-                              onPress={() =>
-                                changeTempQuantity(
-                                  p.id,
-                                  selectedQuantity - 1,
-                                  p.totalUnits,
-                                )
-                              }
-                              accessibilityRole="button"
-                              accessibilityLabel={`Reducir unidades de ${p.title}`}
-                            >
-                              <Ionicons
-                                name="remove-circle-outline"
-                                size={22}
-                                color={Colors.primary}
-                              />
-                            </TouchableOpacity>
-
-                            <Text style={createKitStyles.productTitle}>
-                              {selectedQuantity}
-                            </Text>
-
-                            <TouchableOpacity
-                              onPress={() =>
-                                changeTempQuantity(
-                                  p.id,
-                                  selectedQuantity + 1,
-                                  p.totalUnits,
-                                )
-                              }
-                              accessibilityRole="button"
-                              accessibilityLabel={`Aumentar unidades de ${p.title}`}
-                            >
-                              <Ionicons
-                                name="add-circle-outline"
-                                size={22}
-                                color={
-                                  selectedQuantity >= p.totalUnits
-                                    ? Colors.border
-                                    : Colors.primary
-                                }
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        ) : null}
-
-                        <Text style={createKitStyles.productTitle}>
-                          {p.pricePerMonth !== undefined
-                            ? `${p.pricePerMonth.toFixed(2)}€`
-                            : "N/A"}
-                        </Text>
-                        <Text style={commonStyles.bodySecondary}>/ mes</Text>
-                      </View>
-                      <Ionicons
-                        name={checked ? "checkmark-circle" : "ellipse-outline"}
-                        size={22}
-                        color={checked ? Colors.success : Colors.primary}
-                      />
-                    </Pressable>
-                  );
-                })
-              )}
-            </ScrollView>
-
-            <View style={createKitStyles.modalActions}>
-              <Button
-                mode="outlined"
-                onPress={() => setCatalogModalVisible(false)}
-                style={[createKitStyles.modalBtn, { borderRadius: 8 }]}
-                contentStyle={{ paddingVertical: 4 }}
-              >
-                Cancelar
-              </Button>
-
-              <Button
-                mode="contained"
-                onPress={confirmSelection}
-                icon="check"
-                style={[createKitStyles.modalBtn, { borderRadius: 8 }]}
-                contentStyle={{ paddingVertical: 4 }}
-              >
-                Añadir
-              </Button>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <ProductSelectionModal
+        visible={catalogModalVisible}
+        onDismiss={() => setCatalogModalVisible(false)}
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
+        categories={categories}
+        filteredProducts={filteredProducts}
+        tempSelectedQuantities={tempSelectedQuantities}
+        onToggleSelection={toggleTempSelection}
+        onChangeQuantity={changeTempQuantity}
+        onConfirm={confirmSelection}
+        userCity={city.trim()}
+        showOnlyMyCity={showOnlyMyCity}
+        onToggleMyCity={setShowOnlyMyCity}
+        showOnlyAvailable={showOnlyAvailable}
+        onToggleAvailable={setShowOnlyAvailable}
+        startDate={startDate}
+        endDate={endDate}
+      />
     </SafeAreaView>
     </PaperProvider>
   );
