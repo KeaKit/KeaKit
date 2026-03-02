@@ -109,12 +109,8 @@ const CheckoutScreen: React.FC = () => {
        console.log("➡️ Navegando a Home...");
 
       // 👇 Navegación directa a Home
-      Alert.alert("Éxito", "Kit creado y pagado correctamente", [
-        {
-          text: "OK",
-          onPress: () => navigation.navigate("Home"),
-        },
-      ]);
+      navigation.navigate("MyKits");
+
       console.log("🏁 Navegación ejecutada");
     } catch (error) {
       console.log("🔥 ERROR en createKit:", error);
@@ -126,6 +122,17 @@ const CheckoutScreen: React.FC = () => {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }}>
+      {/* HEADER CON FLECHA */}
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+        <Ionicons
+          name="arrow-back"
+          size={24}
+          onPress={() => navigation.goBack()}
+          style={{ marginRight: 8 }}
+        />
+        <Text style={{ fontSize: 18, fontWeight: "bold" }}>Pago</Text>
+      </View>
+
       {/* RESUMEN */}
       <Text style={[commonStyles.subtitle, { marginBottom: 12 }]}>
         Resumen de precios

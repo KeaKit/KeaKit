@@ -68,7 +68,7 @@ public class KitService {
         kit.setCity(request.getCity());
         kit.setStartDate(request.getStartDate());
         kit.setEndDate(request.getEndDate());
-        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PENDING);
+        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PAID); //se crea cuando se paga
 
         DeliveryMethod deliveryMethod = request.getDeliveryMethod() != null
             ? request.getDeliveryMethod()
