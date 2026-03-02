@@ -39,11 +39,11 @@ sus artículos y gestionar el fin del alquiler de estos, e implementar un sistem
 | 01, 69 | [#109](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/109) | Backend apartado de Soporte y Formulario de Incidencias | #107 | 3h |To Do| Ismael |
 | 01, 69 | [#110](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/110) | Testing apartado de Soporte y Formulario de Incidencias | | 2h |To Do| Ismael |
 | 05, 20 | [#111](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/111) | Backend Listado de artículos subidos | | 3h |To Do| Germán |
-| 05, 20 | [#112](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/112) | Frontend Listado de artículos subidos | | 3h |To Do| Guillermo García |
+| 05, 20 | [#112](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/112) | Frontend Listado de artículos subidos | | 3h |To Do| Rosa |
 | 05, 20 | [#113](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/113) | Testing Listado de artículos subidos | | 2h |To Do| Germán |
 | 79, 80, 81, 87, 88 | [#114](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/114) | Backend Gestión de categorías | | 3h |To Do| Ismael |
 | 79, 80, 81, 87, 88 | [#115](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/115) | Frontend Gestión de categorías | | 3h |To Do| Guillermo García |
-| 79, 80, 81, 87, 88 | [#116](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/116) | Testing Gestión de categorías | | 2h |To Do| Rosa |
+| 79, 80, 81, 87, 88 | [#116](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/116) | Testing Gestión de categorías | | 2h |To Do| Guillermo García |
 | 34, 35, 76 | [#117](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/117) | Backend Gestión de fin de alquiler | | 3h |To Do| Germán |
 | 34, 35, 76 | [#118](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/118) | Frontend Gestión de fin de alquiler | | 3h |To Do| Samuel |
 | 34, 35, 76 | [#119](https://app.zenhub.com/workspaces/keakit-6999a958ea1b41001cb6e269/issues/gh/keakit/keakit/119) | Testing Gestión de fin de alquiler | | 2h |To Do| Rosa |
@@ -53,8 +53,8 @@ sus artículos y gestionar el fin del alquiler de estos, e implementar un sistem
 | Versión | Fecha       | Descripción                    | Autor(es)       |
 |---------|-------------|--------------------------------|-----------------|
 | 1.0.0   | 25/02/2026  | Primera versión del documento  | Guillermo García León |
-
+| 1.2.0   | 02/03/2026  | Cambio de tareas  | Guillermo García León |
 ---
 **Redactado por:** [Guillermo García León]  
 **Fecha de redacción:** [25/02/2026]  
-**Versión:** [1.0.0 ]
+**Versión:** [1.2.0 ]
