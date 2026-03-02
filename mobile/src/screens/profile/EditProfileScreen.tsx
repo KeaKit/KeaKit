@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
@@ -43,12 +43,16 @@ const parseBackendError = (err: unknown): FieldErrors => {
 
 const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileNav>();
+  const route = useRoute();
   const { user, setUser } = useAuth();
+  
+  const routeParams = (route.params as { user?: typeof user } | undefined);
+  const profileUser = routeParams?.user || user;
 
   const [form, setForm] = useState<ProfileData>({
-    name:    user?.name    ?? '',
-    phone:   user?.phone   ?? '',
-    address: user?.address ?? '',
+    name:    profileUser?.name    ?? '',
+    phone:   profileUser?.phone   ?? '',
+    address: profileUser?.address ?? '',
   });
 
   const {
@@ -58,7 +62,7 @@ const EditProfileScreen: React.FC = () => {
     cities,
     loadingCities,
     onCountryChange,
-  } = useLocationPicker(user?.country ?? '', user?.city ?? '');
+  } = useLocationPicker(profileUser?.country ?? '', profileUser?.city ?? '');
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors]   = useState<FieldErrors>({});
@@ -86,13 +90,13 @@ const EditProfileScreen: React.FC = () => {
 
     try {
       setLoading(true);
-      const updatedUser = await updateProfile(user!.id, {
+      const updatedUser = await updateProfile(profileUser!.id, {
         name:    form.name.trim(),
         phone:   form.phone.trim(),
         address: form.address.trim(),
         city:    selectedCity,
         country: selectedCountry,
-      }, user!.token);
+      }, profileUser!.token);
       setUser({
         ...user!,
         name:    updatedUser.name,
@@ -129,7 +133,7 @@ const EditProfileScreen: React.FC = () => {
       <Image source={require('../../../assets/logo.png')} style={styles.logo} />
 
       <Text style={styles.title}>Editar perfil</Text>
-      <Text style={styles.subtitle}>{user?.email}</Text>
+      <Text style={styles.subtitle}>{profileUser?.email}</Text>
 
       {fields.map(({ key, placeholder, keyboardType, icon }) => (
         <View key={key} style={styles.fieldWrapper}>
