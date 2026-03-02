@@ -12,6 +12,8 @@
 | `**ndela.rivera.per*****` | Nomada | Alto | Dispuesto a pagar mas. |
 | `**orai*****` | Erasmus | Alto | Busca precio. |
 | `**oralarcon*****` | Erasmus | Alto | Valora el ahorro y la sostenibilidad de la idea. |
+| `**inzeats*****` | Erasmus | Alto | Valora el ahorro y la sostenibilidad de la idea. |
+| `**co_3012*****` | Erasmus | Alto | Busca terminar de equipar su hogar temporal. |
 
 ### Arrend0adores (Oferta)
 *Usuarios con objetos disponibles.*
