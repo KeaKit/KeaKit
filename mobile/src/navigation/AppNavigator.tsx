@@ -64,14 +64,15 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen name="KitDetail" component={KitDetailScreen} />
             <Stack.Screen name="Categories" component={CategoriesScreen} />
             <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
-
+            <Stack.Screen name="MyIncidents" component={MyIncidentsScreen} />
+            <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
+            <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
           </>
         ) : (
           <>
             <Stack.Screen name="Login"    component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
           </>
-        
         )}
       </Stack.Navigator>
     </NavigationContainer>
