@@ -5,6 +5,7 @@ import com.example.demo.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,14 +21,15 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
-            RatingRepository ratingRepo) {
+            RatingRepository ratingRepo,
+            PasswordEncoder passwordEncoder) {
         return args -> {
             
             // 1. Usuarios
             User owner = new User();
             owner.setName("Carlos Owner");
             owner.setEmail("owner@example.com");
-            owner.setPassword("{noop}password123");
+            owner.setPassword(passwordEncoder.encode("password123"));
             owner.setRole(UserRole.USER);
             owner.setCountry("España");
             owner.setCity("Sevilla");
@@ -38,7 +40,7 @@ public class DatabaseSeeder {
             User tenant = new User();
             tenant.setName("Lucía Renter");
             tenant.setEmail("tenant@example.com");
-            tenant.setPassword("{noop}password123");
+            tenant.setPassword(passwordEncoder.encode("password123"));
             tenant.setRole(UserRole.USER);
             tenant.setCountry("España");
             tenant.setCity("Sevilla");
