@@ -33,6 +33,7 @@ import {
   upsertSelectedQuantity,
 } from "./createKitSelection";
 
+const COMISION = 0.2; // 20% de comisión sobre el precio total del kit
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
 const PLATFORM_COURIER_PRICE = 9.99;
 
@@ -406,7 +407,7 @@ const CreateKitScreen: React.FC = () => {
 
 
 
-  const handleSubmit = async () => {
+    const handleSubmit = () => {
     if (!user?.id || !user.token) {
       setErrors({ general: "Necesitas iniciar sesión para crear un kit." });
       return;
@@ -415,44 +416,27 @@ const CreateKitScreen: React.FC = () => {
     const validation = validate();
     if (!validation.valid || !validation.payloadDates) return;
 
-    try {
-      setSubmitting(true);
+    // Prepara los items con precio y ownerId
+    const itemsPayload = selectedProducts.map((p) => ({
+      id: p.id,
+      quantity: selectedQuantities[p.id] ?? 1,
+      pricePerMonth: p.pricePerMonth,
+      ownerId: p.ownerName ? p.id : 0, // aquí deberías mapear al ID real del dueño
+    }));
 
-      await createKit(
-        {
-          name: name.trim(),
-          country: country.trim(),
-          city: city.trim(),
-          startDate: validation.payloadDates.startIso,
-          endDate: validation.payloadDates.endIso,
-          deliveryMethod,
-          meetingPoint:
-            deliveryMethod === "MEETING_POINT"
-              ? meetingPoint.trim()
-              : undefined,
-          courierAddress:
-            deliveryMethod === "COURIER" ? courierAddress.trim() : undefined,
-          tenantId: user.id,
-          itemSelections: Object.entries(selectedQuantities).map(
-            ([itemId, quantity]) => ({
-              itemId: Number(itemId),
-              quantity,
-            }),
-          ),
-        },
-        user.token,
-      );
-
-      Alert.alert("Kit creado", "Tu kit se ha creado correctamente.", [
-        { text: "OK", onPress: () => navigation.navigate("Home") },
-      ]);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "No se pudo crear el kit.";
-      setErrors((prev) => ({ ...prev, general: message }));
-    } finally {
-      setSubmitting(false);
-    }
+    navigation.navigate("Checkout", {
+      kitData: {
+        name: name.trim(),
+        country: country.trim(),
+        city: city.trim(),
+        startDate: validation.payloadDates.startIso,
+        endDate: validation.payloadDates.endIso,
+        deliveryMethod,
+        meetingPoint: deliveryMethod === "MEETING_POINT" ? meetingPoint.trim() : undefined,
+        courierAddress: deliveryMethod === "COURIER" ? courierAddress.trim() : undefined,
+        items: itemsPayload,
+      },
+    });
   };
 
   const customTheme = {
@@ -771,6 +755,19 @@ const CreateKitScreen: React.FC = () => {
               {(totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
             </Text>
           </View>
+          
+                    <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
+            <Text style={commonStyles.caption}>Comisión (20%)</Text>
+            <Text style={commonStyles.caption}>
+              {(totalPrice * COMISION).toFixed(2)}€
+            </Text>
+          </View>
 
           <View
             style={{
@@ -811,6 +808,7 @@ const CreateKitScreen: React.FC = () => {
               {(
                 totalPrice +
                 totalPrice * GUARANTEE_PERCENTAGE +
+                + totalPrice*COMISION +
                 courierPrice
               ).toFixed(2)}
               €

@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
@@ -17,9 +18,11 @@ import com.example.demo.model.Kit;
 import com.example.demo.model.KitItem;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
+import com.example.demo.model.Wallet;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.WalletRepository;
 
 @Service
 public class KitService {
@@ -31,16 +34,20 @@ public class KitService {
     private final ItemRepository itemRepository;
     private final OrderConfirmationEmailService orderConfirmationEmailService;
 
+    private final WalletRepository walletRepository;
+
     public KitService(
         KitRepository kitRepository,
         UserRepository userRepository,
         ItemRepository itemRepository,
-        OrderConfirmationEmailService orderConfirmationEmailService
+        OrderConfirmationEmailService orderConfirmationEmailService,
+        WalletRepository walletRepository
     ) {
         this.kitRepository = kitRepository;
         this.userRepository = userRepository;
         this.itemRepository = itemRepository;
         this.orderConfirmationEmailService = orderConfirmationEmailService;
+        this.walletRepository = walletRepository;
     }
 
     public List<Kit> findAll() {
@@ -53,6 +60,7 @@ public class KitService {
         return new KitResponse(kit);
     }
 
+    @Transactional
     public KitResponse create(KitCreateRequest request) {
         Kit kit = new Kit();
         kit.setName(request.getName());
@@ -93,6 +101,21 @@ public class KitService {
         validateDates(kit.getStartDate(), kit.getEndDate());
 
         Kit savedKit = kitRepository.save(kit);
+        for (KitItem kitItem : savedKit.getKitItems()) {
+    Item item = kitItem.getItem();
+    User owner = item.getOwner(); // asumiendo que Item tiene referencia a su dueño
+    if (owner != null) {
+        Wallet ownerWallet = walletRepository.findByUserId(owner.getId());
+
+        // Precio total del item: precio por unidad * cantidad
+        double totalAmount = item.getPricePerMonth() * kitItem.getQuantity();
+
+        // Sumar a la wallet disponible
+        ownerWallet.setAvailableBalance(ownerWallet.getAvailableBalance() + totalAmount);
+
+        walletRepository.save(ownerWallet);
+    }
+}
         return new KitResponse(savedKit);
     }
 

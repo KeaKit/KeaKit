@@ -5,11 +5,12 @@ import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
-
+import com.example.demo.model.Wallet;
 import com.example.demo.exception.InvalidCredentialsException;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.WalletRepository;
 import com.example.demo.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,9 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+   @Autowired
+    private WalletRepository walletRepository;
 
     public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -48,6 +52,9 @@ public class UserService {
         );
 
         User savedUser = userRepository.save(user);
+        Wallet wallet = new Wallet(savedUser);
+        walletRepository.save(wallet);
+
         String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole());
         return new UserResponse(savedUser, token);
     }
