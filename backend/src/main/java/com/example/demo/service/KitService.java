@@ -25,6 +25,7 @@ import com.example.demo.repository.UserRepository;
 public class KitService {
 
     private static final double PLATFORM_COURIER_PRICE = 9.99;
+    private static final int DELIVERY_LEAD_DAYS = 7;
 
     private final KitRepository kitRepository;
     private final UserRepository userRepository;
@@ -61,6 +62,7 @@ public class KitService {
         kit.setStartDate(request.getStartDate());
         kit.setEndDate(request.getEndDate());
         kit.setOrderDate(LocalDate.now());
+        kit.setArrivalDate(resolveArrivalDate(request.getArrivalDate(), kit.getOrderDate(), kit.getStartDate()));
         kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PENDING);
 
         DeliveryMethod deliveryMethod = request.getDeliveryMethod() != null
@@ -106,6 +108,11 @@ public class KitService {
         if (updateData.getCity() != null) kit.setCity(updateData.getCity());
         if (updateData.getStartDate() != null) kit.setStartDate(updateData.getStartDate());
         if (updateData.getEndDate() != null) kit.setEndDate(updateData.getEndDate());
+        if (updateData.getArrivalDate() != null) {
+            kit.setArrivalDate(updateData.getArrivalDate());
+        } else if (updateData.getStartDate() != null || kit.getArrivalDate() == null) {
+            kit.setArrivalDate(resolveArrivalDate(null, kit.getOrderDate(), kit.getStartDate()));
+        }
         if (updateData.getStatus() != null) kit.setStatus(updateData.getStatus());
         if (updateData.getDeliveryMethod() != null) kit.setDeliveryMethod(updateData.getDeliveryMethod());
         if (updateData.getMeetingPoint() != null) kit.setMeetingPoint(updateData.getMeetingPoint());
@@ -139,6 +146,26 @@ public class KitService {
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
             throw new RuntimeException("End date cannot be before start date");
         }
+    }
+
+    private LocalDate resolveArrivalDate(LocalDate requestArrivalDate, LocalDate orderDate, LocalDate startDate) {
+        if (requestArrivalDate != null) {
+            return requestArrivalDate;
+        }
+        if (startDate == null) {
+            return null;
+        }
+        if (orderDate == null) {
+            return startDate.minusDays(1);
+        }
+
+        LocalDate preferredDeliveryDate = startDate.minusDays(1);
+        LocalDate minimumLeadDeliveryDate = orderDate.plusDays(DELIVERY_LEAD_DAYS - 1L);
+
+        if (minimumLeadDeliveryDate.isAfter(preferredDeliveryDate)) {
+            return minimumLeadDeliveryDate;
+        }
+        return preferredDeliveryDate;
     }
 
     public List<KitResponse> findByTenantId(Long tenantId) {

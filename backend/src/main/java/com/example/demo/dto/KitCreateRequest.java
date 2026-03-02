@@ -33,6 +33,7 @@ public class KitCreateRequest {
     private String city;
     private LocalDate startDate;
     private LocalDate endDate;
+    private LocalDate arrivalDate;
     private KitStatus status;
     private DeliveryMethod deliveryMethod;
     private String meetingPoint;
@@ -78,6 +79,14 @@ public class KitCreateRequest {
 
     public void setEndDate(LocalDate endDate) { 
         this.endDate = endDate; 
+    }
+
+    public LocalDate getArrivalDate() {
+        return arrivalDate;
+    }
+
+    public void setArrivalDate(LocalDate arrivalDate) {
+        this.arrivalDate = arrivalDate;
     }
 
     public KitStatus getStatus() {

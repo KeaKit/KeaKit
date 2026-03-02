@@ -16,6 +16,11 @@ import BASE_URL from "../../config/api";
 import { useAuth } from "../../context/AuthContext";
 import { KitResponse, RootStackParamList } from "../../types";
 import {
+  buildNotifications,
+  markNotificationsAsRead,
+  NotificationItem,
+} from "../../services/notificationService";
+import {
   BorderRadius,
   Colors,
   FontSizes,
@@ -29,67 +34,6 @@ type NotificationsNav = NativeStackNavigationProp<
   RootStackParamList,
   "Notifications"
 >;
-
-type NotificationItem = {
-  id: string;
-  title: string;
-  message: string;
-  dateLabel: string;
-};
-
-const formatDate = (dateString?: string): string => {
-  if (!dateString) return "";
-  const parts = dateString.split("-");
-  return parts.length === 3
-    ? `${parts[2]}/${parts[1]}/${parts[0]}`
-    : dateString;
-};
-
-const parseIsoDate = (dateString?: string): Date | null => {
-  if (!dateString) return null;
-  const parsed = new Date(`${dateString}T00:00:00.000Z`);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-
-const addDays = (date: Date, days: number): Date => {
-  const next = new Date(date);
-  next.setUTCDate(next.getUTCDate() + days);
-  return next;
-};
-
-const buildNotifications = (kits: KitResponse[]): NotificationItem[] => {
-  const now = new Date();
-  const today = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  );
-  const minDate = today;
-  const maxDate = addDays(today, 1);
-
-  return kits
-    .map((kit) => ({
-      kit,
-      estimatedDate: parseIsoDate(kit.estimatedDeliveryDate),
-    }))
-    .filter(({ estimatedDate }) => {
-      if (!estimatedDate) return false;
-      return estimatedDate >= minDate && estimatedDate <= maxDate;
-    })
-    .sort((a, b) => {
-      if (!a.estimatedDate || !b.estimatedDate) return 0;
-      return a.estimatedDate.getTime() - b.estimatedDate.getTime();
-    })
-    .slice(0, 5)
-    .map((kit) => ({
-      id: `kit-${kit.kit.id}`,
-      title: `Kit ${kit.kit.name}`,
-      message:
-        kit.kit.deliveryNotification ??
-        `Tu pedido llegará el ${formatDate(kit.kit.estimatedDeliveryDate)}`,
-      dateLabel: kit.kit.estimatedDeliveryDate
-        ? formatDate(kit.kit.estimatedDeliveryDate)
-        : "",
-    }));
-};
 
 const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NotificationsNav>();
@@ -122,7 +66,9 @@ const NotificationsScreen: React.FC = () => {
           }
 
           const kits: KitResponse[] = await response.json();
-          setNotifications(buildNotifications(kits));
+          const nextNotifications = buildNotifications(kits);
+          setNotifications(nextNotifications);
+          await markNotificationsAsRead(user.id, nextNotifications);
         } catch (err) {
           const message =
             err instanceof Error

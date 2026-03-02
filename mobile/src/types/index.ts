@@ -79,6 +79,7 @@ export interface KitCreateRequest {
   city: string;
   startDate: string;
   endDate: string;
+  arrivalDate?: string;
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
   courierAddress?: string;
@@ -163,6 +164,7 @@ export interface KitResponse {
   orderDate?: string;
   startDate: string;
   endDate: string;
+  arrivalDate?: string;
   estimatedDeliveryDate?: string;
   deliveryNotification?: string;
   status?: KitStatus;
@@ -265,5 +267,5 @@ export const EUROPEAN_COUNTRIES = [
   { value: "Turkey", label: "Turquía" },
   { value: "Ukraine", label: "Ucrania" },
   { value: "United Kingdom", label: "Reino Unido" },
-  { value: "Vatican City", label: "Ciudad del Vaticano" }
+  { value: "Vatican City", label: "Ciudad del Vaticano" },
 ];

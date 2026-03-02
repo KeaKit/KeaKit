@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class KitResponse {
-    private static final int DELIVERY_LEAD_DAYS = 7;
-
     public static class KitItemSelectionResponse {
         private Long itemId;
         private Integer quantity;
@@ -38,6 +36,7 @@ public class KitResponse {
     private LocalDate orderDate;
     private LocalDate startDate;
     private LocalDate endDate;
+    private LocalDate arrivalDate;
     private LocalDate estimatedDeliveryDate;
     private String deliveryNotification;
     private KitStatus status;
@@ -57,9 +56,10 @@ public class KitResponse {
         this.orderDate = kit.getOrderDate();
         this.startDate = kit.getStartDate();
         this.endDate = kit.getEndDate();
+        this.arrivalDate = kit.getArrivalDate();
         this.deliveryMethod = kit.getDeliveryMethod();
-        this.estimatedDeliveryDate = calculateEstimatedDeliveryDate(this.orderDate, this.startDate);
-        this.deliveryNotification = buildDeliveryNotification(this.estimatedDeliveryDate, this.deliveryMethod);
+        this.estimatedDeliveryDate = this.arrivalDate;
+        this.deliveryNotification = buildDeliveryNotification(this.arrivalDate, this.deliveryMethod);
         this.status = kit.getStatus();
         this.meetingPoint = kit.getMeetingPoint();
         this.courierPrice = kit.getCourierPrice();
@@ -108,6 +108,10 @@ public class KitResponse {
         return endDate; 
     }
 
+    public LocalDate getArrivalDate() {
+        return arrivalDate;
+    }
+
     public LocalDate getEstimatedDeliveryDate() {
         return estimatedDeliveryDate;
     }
@@ -148,25 +152,8 @@ public class KitResponse {
         return tenantId; 
     }
 
-    private LocalDate calculateEstimatedDeliveryDate(LocalDate orderDate, LocalDate startDate) {
-        if (startDate == null) {
-            return null;
-        }
-        if (orderDate == null) {
-            return startDate.minusDays(1);
-        }
-
-        LocalDate preferredDeliveryDate = startDate.minusDays(1);
-        LocalDate minimumLeadDeliveryDate = orderDate.plusDays(DELIVERY_LEAD_DAYS - 1L);
-
-        if (minimumLeadDeliveryDate.isAfter(preferredDeliveryDate)) {
-            return minimumLeadDeliveryDate;
-        }
-        return preferredDeliveryDate;
-    }
-
-    private String buildDeliveryNotification(LocalDate estimatedDeliveryDate, DeliveryMethod deliveryMethod) {
-        if (estimatedDeliveryDate == null) {
+    private String buildDeliveryNotification(LocalDate arrivalDate, DeliveryMethod deliveryMethod) {
+        if (arrivalDate == null) {
             return null;
         }
 
@@ -175,16 +162,10 @@ public class KitResponse {
             ? "Tu pedido"
             : "Tu kit";
 
-        if (today.isEqual(estimatedDeliveryDate.minusDays(1))) {
+        if (today.isEqual(arrivalDate.minusDays(1))) {
             return prefix + " llegará mañana";
         }
-        if (today.isEqual(estimatedDeliveryDate)) {
-            return prefix + " llega hoy";
-        }
-        if (today.isAfter(estimatedDeliveryDate)) {
-            return prefix + " tenía entrega prevista para el " + estimatedDeliveryDate;
-        }
-        return prefix + " llegará el " + estimatedDeliveryDate;
+        return null;
     }
 
 }

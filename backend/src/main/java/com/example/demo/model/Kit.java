@@ -24,6 +24,7 @@ public class Kit {
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDate orderDate;
+    private LocalDate arrivalDate;
 
     @Enumerated(EnumType.STRING)
     private KitStatus status;
@@ -108,6 +109,14 @@ public class Kit {
 
     public void setOrderDate(LocalDate orderDate) {
         this.orderDate = orderDate;
+    }
+
+    public LocalDate getArrivalDate() {
+        return arrivalDate;
+    }
+
+    public void setArrivalDate(LocalDate arrivalDate) {
+        this.arrivalDate = arrivalDate;
     }
 
     public KitStatus getStatus() {
