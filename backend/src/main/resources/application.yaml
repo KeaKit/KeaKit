@@ -3,26 +3,30 @@ spring:
     name: demo
   
   datasource:
-    url: ${DB_URL:jdbc:postgresql://postgres:5432/appdb}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:${DB_URL:jdbc:postgresql://postgres:5432/appdb}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD}}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     defer-datasource-initialization: true 
     hibernate:
-      # 'create' borra todo al iniciar. Úsalo solo en desarrollo.
-      ddl-auto: create
-    show-sql: true
+      ddl-auto: ${HIBERNATE_DDL_AUTO:update}
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 jwt:
-  secret: ${JWT_SECRET:KeaKitSecureSecretKey12345678901234567890ABCDEFGHIJKLMNOP}
+  secret: ${JWT_SECRET}
   expiration: 86400000 
 
-# --- NUEVA SECCIÓN PARA EL ADMIN SEEDER ---
 app:
   setup:
     admin:
@@ -30,6 +34,20 @@ app:
       password: ${ADMIN_PASSWORD:admin123}
       name: ${ADMIN_NAME:Admin Initial}
 
+stripe:
+  api:
+    key: ${STRIPE_SECRET_KEY}
+
+cloudinary:
+  cloud_name: ${CLOUDINARY_CLOUD_NAME}
+  api_key: ${CLOUDINARY_API_KEY}
+  api_secret: ${CLOUDINARY_API_SECRET}
+
 sendgrid:
-  api-key: ${SENDGRID_API_KEY:}
+  api-key: ${SENDGRID_API_KEY}
   from-email: ${SENDGRID_FROM_EMAIL:no-reply@keakit.app}
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: always
