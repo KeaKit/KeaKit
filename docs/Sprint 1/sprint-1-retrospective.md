@@ -52,6 +52,10 @@ En este documento se describirá con más detalle lo mencionado anteriormente.
 |  Reacción del equipo ante errores inesperados  | Bueno   |
 |  Gestión de dependencias entre tareas  | Mejorable   |
 |  Documentación final bien coordinada  | Bueno  |
+|  Reparto de documentación de la primera semana no equitativo | Mal |
+|  Reparto de casos de uso core bien dividido y repartido en subtareas| Bien |
+|  No comprobación completa de la tarea antes de hacer merge a develop, provocando errores | Mal |
+|  Versión de la aplicación desplegada con ligeras diferencias a la local | Mejorable |
 
 
 
