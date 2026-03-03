@@ -1,8 +1,10 @@
 package com.example.demo.article;
 
 import com.example.demo.controller.ArticleController;
+import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleStatus;
+import com.example.demo.model.Category;
 import com.example.demo.model.User;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.service.ArticleService;
@@ -49,6 +51,9 @@ class ArticleControllerTest {
     private com.example.demo.security.TokenBlacklistService tokenBlacklistService;
 
     @MockitoBean
+    private com.example.demo.repository.CategoryRepository categoryRepository;
+
+    @MockitoBean
     private JwtUtil jwtUtil;
 
     private Article sample;
@@ -59,7 +64,7 @@ class ArticleControllerTest {
         owner = new User();
         owner.setId(1L);
         owner.setName("Test Owner");
-
+        when(categoryRepository.findById(any())).thenReturn(Optional.of(new Category()));
         sample = new Article();
         sample.setId(1L);
         sample.setTitle("t");
@@ -80,6 +85,7 @@ class ArticleControllerTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", "1")
+                .param("categoryId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"t\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
             .andExpect(status().isCreated())
@@ -92,6 +98,7 @@ class ArticleControllerTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", "99")
+                .param("categoryId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"t\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
             .andExpect(status().isBadRequest())
@@ -105,6 +112,7 @@ class ArticleControllerTest {
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", "1")
+                .param("categoryId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
             .andExpect(status().isBadRequest())
@@ -221,5 +229,84 @@ class ArticleControllerTest {
                 .param("ownerId", "600"))
             .andExpect(status().isBadRequest())
             .andExpect(content().string("nope"));
+    }
+
+    // ------------ GET /api/article/my-articles/{userId} ------------
+
+    @Test
+    void getMyArticles_success() throws Exception {
+        UserArticle dto1 = new UserArticle(
+                10L, "Taladro", "url1", 15.0, "AVAILABLE", null
+        );
+        UserArticle dto2 = new UserArticle(
+                11L, "Bicicleta", "url2", 30.0, "RENTED", LocalDate.of(2026, 12, 31)
+        );
+
+        when(articleService.findArticlesByUserId(1L)).thenReturn(List.of(dto1, dto2));
+
+        mockMvc.perform(get("/api/article/my-articles/1"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].title").value("Taladro"))
+            .andExpect(jsonPath("$[0].status").value("AVAILABLE"))
+            .andExpect(jsonPath("$[0].rentedUntil").doesNotExist())
+            .andExpect(jsonPath("$[1].title").value("Bicicleta"))
+            .andExpect(jsonPath("$[1].status").value("RENTED"))
+            .andExpect(jsonPath("$[1].rentedUntil").value("2026-12-31"));
+    }
+
+    @Test
+    void getMyArticles_emptyList_returnsOk() throws Exception {
+        when(articleService.findArticlesByUserId(2L)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/article/my-articles/2"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
+    
+    @Test
+    void getMyArticles_serviceThrows_returnsBadRequest() throws Exception {
+        when(articleService.findArticlesByUserId(3L)).thenThrow(new RuntimeException("Error fetching articles"));
+
+        mockMvc.perform(get("/api/article/my-articles/3"))
+            .andExpect(status().isInternalServerError())
+            .andExpect(jsonPath("$.message").value("Error fetching articles"))
+            .andExpect(jsonPath("$.status").value(500));
+    }
+    
+    // ------------ GET /api/article/category/{categoryId}/count ------------
+
+    @Test
+    void getArticleCountByCategory_success() throws Exception {
+        when(articleService.countArticlesByCategory(1L)).thenReturn(5L);
+
+        mockMvc.perform(get("/api/article/category/1/count"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("5"));
+    }
+
+    @Test
+    void getArticleCountByCategory_serviceThrows_returnsZero() throws Exception {
+        when(articleService.countArticlesByCategory(2L)).thenThrow(new RuntimeException("DB Error"));
+
+        mockMvc.perform(get("/api/article/category/2/count"))
+            .andExpect(status().isInternalServerError())
+            .andExpect(content().string("0"));
+    }
+
+    // ------------ GET /api/article/category/{categoryId}/latest ------------
+
+    @Test
+    void getLatestArticlesByCategory_success() throws Exception {
+        UserArticle dto = new UserArticle(10L, "Taladro de prueba", "url_img", 15.0, "AVAILABLE", null);
+
+        when(articleService.findLatestArticlesByCategory(1L)).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/article/category/1/latest"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Taladro de prueba"))
+            .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
     }
 }

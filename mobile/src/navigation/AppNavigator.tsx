@@ -2,14 +2,33 @@ import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
 import { useAuth } from '../context/AuthContext';
+import CheckoutScreen from '../screens/kit/CheckoutScreen';
 import LoginScreen       from '../screens/auth/LoginScreen';
 import RegisterScreen    from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/home/HomeScreen';
 import CreateRatingScreen from '../screens/ratings/CreateRatingScreen';
 import UserRatingsScreen from '../screens/ratings/UserRatingsScreen';
+import MyIncidentsScreen from '../screens/incidents/MyIncidentsScreen';
+import CreateIncidentScreen from '../screens/incidents/CreateIncidentScreen';
+import IncidentDetailScreen from '../screens/incidents/IncidentDetailScreen';
+import MyArticlesScreen from '../screens/profile/MyArticlesScreen';
+import MyKitsScreen from '../screens/profile/MyKitsScreen';
+import UploadArticleScreen  from '../screens/profile/UploadArticleScreen';
+import CreateKitScreen from '../screens/kit/CreateKitScreen';
+import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
+import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import { RootStackParamList } from '../types';
+import EditArticleScreen from '../screens/profile/EditArticleScreen';
+
+import KitDetailScreen from '../screens/kit/KitDetailScreen';
+
+import CategoriesScreen from '../screens/category/CategoriesScreen';
+import CategoryFormScreen from '../screens/category/CategoryFormScreen';
+
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -26,15 +45,35 @@ const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{ headerShown: false }}
-        initialRouteName="Home"
-      >
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
-        <Stack.Screen name="UserRatings" component={UserRatingsScreen} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? (
+          <>
+            <Stack.Screen name="Home"          component={HomeScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
+            <Stack.Screen name="MyKits"    component={MyKitsScreen} />
+            <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
+            <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
+            <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
+            <Stack.Screen name="AdminUsers"    component={AdminUsersScreen} />
+            <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
+            <Stack.Screen name="EditArticle" component={EditArticleScreen} />
+            <Stack.Screen name="KitDetail" component={KitDetailScreen} />
+            <Stack.Screen name="Categories" component={CategoriesScreen} />
+            <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
+            <Stack.Screen name="MyIncidents" component={MyIncidentsScreen} />
+            <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
+            <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Login"    component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,5 +1,6 @@
 package com.example.demo.article;
 
+import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.User;
@@ -280,7 +281,7 @@ class ArticleServiceTest {
         update.setPricePerMonth(200.0);
         update.setAvailableFrom(LocalDate.now());
         update.setAvailableUntil(LocalDate.now().plusDays(10));
-        update.setCategory("tools");
+   //     update.setCategory("tools");
         update.setImageUrl("http://img.com");
         update.setPurchaseDate(LocalDate.of(2023, 1, 1));
 
@@ -423,5 +424,71 @@ class ArticleServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> articleService.toggleRent(99L, owner.getId()));
         assertThat(ex.getMessage()).contains("Article not found");
+    }
+
+    @Test
+    void getMyArticles_returnsMappedDTOs() {
+        Article articleAvailable = makeArticle(10L, ArticleStatus.AVAILABLE);
+        articleAvailable.setTitle("Taladro");
+        articleAvailable.setAvailableUntil(LocalDate.now().plusDays(5)); 
+
+        Article articleRented = makeArticle(11L, ArticleStatus.RENTED);
+        articleRented.setTitle("Bicicleta");
+        LocalDate rentalEndDate = LocalDate.now().plusDays(10);
+        articleRented.setAvailableUntil(rentalEndDate);
+
+        when(articleRepository.findByOwnerId(owner.getId()))
+            .thenReturn(List.of(articleAvailable, articleRented));
+
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+
+        assertThat(result).hasSize(2);
+
+        UserArticle dtoAvailable = result.get(0);
+        assertThat(dtoAvailable.title()).isEqualTo("Taladro");
+        assertThat(dtoAvailable.status()).isEqualTo("AVAILABLE");
+        assertThat(dtoAvailable.rentedUntil()).isNull();
+
+        UserArticle dtoRented = result.get(1);
+        assertThat(dtoRented.title()).isEqualTo("Bicicleta");
+        assertThat(dtoRented.status()).isEqualTo("RENTED");
+        assertThat(dtoRented.rentedUntil()).isEqualTo(rentalEndDate);
+    }
+
+    @Test
+    void getMyArticles_whenUserHasNoArticles_returnsEmptyList() {
+        when(articleRepository.findByOwnerId(owner.getId())).thenReturn(List.of());
+
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+
+        assertThat(result).isEmpty();
+        assertThat(result).isNotNull();
+    }
+
+    // ------------ CATEGORY METHODS ------------
+
+    @Test
+    void countArticlesByCategory_returnsCount() {
+        when(articleRepository.countByCategoryId(1L)).thenReturn(12L);
+
+        long count = articleService.countArticlesByCategory(1L);
+
+        assertThat(count).isEqualTo(12L);
+        verify(articleRepository).countByCategoryId(1L);
+    }
+
+    @Test
+    void findLatestArticlesByCategory_returnsMappedDTOs() {
+        Article a1 = makeArticle(100L, ArticleStatus.AVAILABLE);
+        a1.setTitle("Artículo Reciente");
+
+        when(articleRepository.findTop10ByCategoryIdOrderByIdDesc(1L)).thenReturn(List.of(a1));
+
+        List<UserArticle> result = articleService.findLatestArticlesByCategory(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).title()).isEqualTo("Artículo Reciente");
+        assertThat(result.get(0).status()).isEqualTo("AVAILABLE");
+        verify(articleRepository).findTop10ByCategoryIdOrderByIdDesc(1L);
     }
 }

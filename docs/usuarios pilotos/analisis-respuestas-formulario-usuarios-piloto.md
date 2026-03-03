@@ -14,7 +14,7 @@ La validación del problema se intensifica con la incorporación de perfiles de 
 
 | Metrica | Resultado | Observaciones |
 | :--- | :---: | :--- |
-| **Tasa de Conversion (Pilotos)** | **43%** | 13 de 30 usuarios mostraron interes en probar la App. |
+| **Tasa de Conversion (Pilotos)** | **43%** | 15 de 30 usuarios mostraron interes en probar la App. |
 | **Satisfaccion UX (UI)** | **4.5 / 5** | La interfaz se percibe intuitiva. |
 | **Confianza Visual** | **4 / 5** | Nivel de confianza para introducir datos bancarios. |
 | **Claridad de Precios** | **4.1 / 5** | Ligera bajada. El perfil nomada indico menor claridad (3/5). |
@@ -88,6 +88,8 @@ A continuacion, los usuarios segmentados para la fase de captacion.
 | `**ndela.rivera.per*****` | Nomada | Alto | Dispuesto a pagar mas. |
 | `**orai*****` | Erasmus | Alto | Busca precio. |
 | `**oralarcon*****` | Erasmus | Alto | Valora el ahorro y la sostenibilidad de la idea. |
+| `**inzeats*****` | Erasmus | Alto | Valora el ahorro y la sostenibilidad de la idea. |
+| `**co_3012*****` | Erasmus | Alto | Busca terminar de equipar su hogar temporal. |
 
 ### Arrend0adores (Oferta)
 *Usuarios con objetos disponibles.*

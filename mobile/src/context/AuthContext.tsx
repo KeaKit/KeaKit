@@ -15,6 +15,7 @@ interface AuthContextData {
   signIn(data: LoginRequest): Promise<void>;
   signUp(data: RegisterRequest): Promise<void>;
   signOut(): Promise<void>;
+  setUser(user: AuthUser): void; 
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -45,7 +46,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       id:    response.id,
       name:  response.name,
       email: response.email,
+      role: response.role,
       token: response.token,
+      phone: response.phone,
+      address: response.address,
+      city: response.city,
+      country: response.country,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
     setUser(authUser);
@@ -58,7 +64,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       id:    response.id,
       name:  response.name,
       email: response.email,
+      role: response.role,
       token: response.token,
+      phone: response.phone,
+      address: response.address,
+      city: response.city,
+      country: response.country,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
     setUser(authUser);
@@ -70,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, setUser }}>
       {children}
     </AuthContext.Provider>
   );

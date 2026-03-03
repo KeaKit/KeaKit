@@ -23,17 +23,29 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    @Column(nullable = false)
     private String phone;
+
+    @Column(nullable = false)
     private String address;
+
+    @Column(nullable = false)
     private String city;
+
+    @Column(nullable = false)
+    private String country;
 
     public User() {}
 
-    public User(String email, String password, String name, UserRole role) {
+    public User(String email, String password, String name, UserRole role, String phone, String address, String city, String country) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.role = role;
+        this.phone = phone;
+        this.address = address;
+        this.city = city;
+        this.country = country;
     }
 
     public Long getId() {
@@ -98,5 +110,13 @@ public class User {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 }

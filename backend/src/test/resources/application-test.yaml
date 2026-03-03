@@ -12,3 +12,12 @@ spring:
   h2:
     console:
       enabled: true
+
+jwt:
+  secret: TestSecretKeyForJWTTesting123456789012345678901234567890
+  expiration: 86400000
+
+STRIPE_SECRET_KEY: sk_test_mock_key_for_testing_only
+CLOUDINARY_CLOUD_NAME: dummy
+CLOUDINARY_API_KEY: dummy
+CLOUDINARY_API_SECRET: dummy
