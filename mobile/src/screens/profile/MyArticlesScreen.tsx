@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   Pressable,
   Image,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -20,7 +19,7 @@ import { RootStackParamList, UserArticle } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
-type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
+type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED' | 'PENDING_REVIEW';
 
 const MyArticlesScreen: React.FC = () => {
   const { user } = useAuth();
@@ -60,6 +59,7 @@ const MyArticlesScreen: React.FC = () => {
   const applyFilter = (f: FilterType, data: UserArticle[]) => {
     if (f === 'AVAILABLE') return data.filter(a => a.status === 'AVAILABLE');
     if (f === 'RENTED')    return data.filter(a => a.status === 'RENTED');
+    if (f === 'PENDING_REVIEW') return data.filter(a => a.status === 'PENDING_REVIEW');
     return data;
   };
 
@@ -75,7 +75,7 @@ const MyArticlesScreen: React.FC = () => {
       navigation.navigate('EditArticle', { article: full });
     } catch (err: any) {
       console.log('Error en handleEdit:', err);
-      Alert.alert('Error', err.message || 'No se pudo cargar el artículo');
+      window.alert(err.message || 'No se pudo cargar el artículo');
     }
   };
 
@@ -115,19 +115,21 @@ const MyArticlesScreen: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'AVAILABLE': return '#28a745';
-      case 'RENTED':    return '#ffc107';
-      case 'INACTIVE':  return '#6c757d';
-      default:          return '#999';
+      case 'AVAILABLE':      return '#28a745';
+      case 'RENTED':         return '#ffc107';
+      case 'PENDING_REVIEW': return '#FF9800';
+      case 'INACTIVE':       return '#6c757d';
+      default:               return '#999';
     }
   };
 
   const translateStatus = (status: string) => {
     switch (status) {
-      case 'AVAILABLE': return 'Disponible';
-      case 'RENTED':    return 'Alquilado';
-      case 'INACTIVE':  return 'Inactivo';
-      default:          return status;
+      case 'AVAILABLE':      return 'Disponible';
+      case 'RENTED':         return 'Alquilado';
+      case 'PENDING_REVIEW': return 'Pendiente de revisión';
+      case 'INACTIVE':       return 'Inactivo';
+      default:               return status;
     }
   };
 
@@ -170,27 +172,39 @@ const MyArticlesScreen: React.FC = () => {
           </View>
         </TouchableOpacity>
 
-        <View style={styles.actionsContainer}>
-          <Pressable
-            style={styles.editButton}
-            onPress={() => handleEdit(item)}
-            disabled={isDeleting}
-          >
-            <Ionicons name="pencil-outline" size={20} color={Colors.primary} />
-          </Pressable>
+        {item.status === 'PENDING_REVIEW' ? (
+          <View style={styles.actionsContainer}>
+            <Pressable
+              style={styles.reviewButton}
+              onPress={() => navigation.navigate('EndRental', { articleId: item.id })}
+            >
+              <Ionicons name="eye-outline" size={20} color="#fff" />
+              <Text style={styles.reviewButtonText}>Revisar</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.actionsContainer}>
+            <Pressable
+              style={styles.editButton}
+              onPress={() => handleEdit(item)}
+              disabled={isDeleting}
+            >
+              <Ionicons name="pencil-outline" size={20} color={Colors.primary} />
+            </Pressable>
 
-          <Pressable
-            style={styles.deleteButton}
-            onPress={() => handleDelete(item)}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <ActivityIndicator size="small" color="#d9534f" />
-            ) : (
-              <Ionicons name="trash-outline" size={20} color="#d9534f" />
-            )}
-          </Pressable>
-        </View>
+            <Pressable
+              style={styles.deleteButton}
+              onPress={() => handleDelete(item)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <ActivityIndicator size="small" color="#d9534f" />
+              ) : (
+                <Ionicons name="trash-outline" size={20} color="#d9534f" />
+              )}
+            </Pressable>
+          </View>
+        )}
       </View>
     );
   };
@@ -231,19 +245,25 @@ const MyArticlesScreen: React.FC = () => {
       </View>
 
       <View style={styles.filterContainer}>
-        {(['ALL', 'AVAILABLE', 'RENTED'] as FilterType[]).map((f) => (
-          <TouchableOpacity
-            key={f}
-            style={[styles.filterButton, filter === f && styles.filterButtonActive]}
-            onPress={() => handleFilter(f)}
-          >
-            <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'ALL'       ? `Todos (${articles.length})` : ''}
-              {f === 'AVAILABLE' ? `Disponibles (${articles.filter(a => a.status === 'AVAILABLE').length})` : ''}
-              {f === 'RENTED'    ? `Alquilados (${articles.filter(a => a.status === 'RENTED').length})` : ''}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {(['ALL', 'AVAILABLE', 'RENTED', 'PENDING_REVIEW'] as FilterType[]).map((f) => {
+          const labelMap: Record<FilterType, string> = {
+            ALL: `Todos (${articles.length})`,
+            AVAILABLE: `Disponibles (${articles.filter(a => a.status === 'AVAILABLE').length})`,
+            RENTED: `Alquilados (${articles.filter(a => a.status === 'RENTED').length})`,
+            PENDING_REVIEW: `Pendientes (${articles.filter(a => a.status === 'PENDING_REVIEW').length})`,
+          };
+          return (
+            <TouchableOpacity
+              key={f}
+              style={[styles.filterButton, filter === f && styles.filterButtonActive]}
+              onPress={() => handleFilter(f)}
+            >
+              <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
+                {labelMap[f]}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {filteredArticles.length === 0 ? (
@@ -252,7 +272,11 @@ const MyArticlesScreen: React.FC = () => {
           <Text style={styles.emptyText}>
             {filter === 'ALL'
               ? 'No tienes artículos subidos'
-              : `No tienes artículos ${filter === 'AVAILABLE' ? 'disponibles' : 'alquilados'}`}
+              : filter === 'AVAILABLE'
+                ? 'No tienes artículos disponibles'
+                : filter === 'RENTED'
+                  ? 'No tienes artículos alquilados'
+                  : 'No tienes artículos pendientes de revisión'}
           </Text>
           <Text style={styles.emptySubtext}>Pulsa el botón + para subir tu primer artículo</Text>
         </View>
@@ -440,6 +464,21 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: 8,
     backgroundColor: '#fdecea',
+  },
+  reviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 8,
+    backgroundColor: '#FF9800',
+  },
+  reviewButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
   },
   emptyContainer: {
     flex: 1,

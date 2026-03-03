@@ -18,12 +18,14 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, KitResponse, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { useAuth } from '../../context/AuthContext';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
+type KitDetailNavProp = NativeStackNavigationProp<RootStackParamList, 'KitDetail'>;
 
 const KitDetailScreen: React.FC = () => {
   const route = useRoute<KitDetailRouteProp>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<KitDetailNavProp>();
   const { user } = useAuth();
   const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
   const BASE = `http://${host}:8080`;
@@ -346,6 +348,8 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: 32, fontWeight: 'bold', color: Colors.primary, marginTop: 5 },
   confirmButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 30, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#04ac20', backgroundColor: '#FFF' },
   confirmButtonText: { color: '#04ac20', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
+  endRentalButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 15, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.primary, backgroundColor: '#F0F4FF' },
+  endRentalButtonText: { color: Colors.primary, fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
   deleteButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 15, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#FF3B30', backgroundColor: '#FFF' },
   deleteButtonText: { color: '#FF3B30', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
   reportButton: { padding: 10 },

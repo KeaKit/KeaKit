@@ -63,9 +63,20 @@ export interface UserArticle {
   title: string;
   imageUrl: string | null;
   pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE";
+  status: "AVAILABLE" | "RENTED" | "PENDING_REVIEW" | "INACTIVE";
   rentedUntil: string | null;
   totalUnits?: number;
+}
+
+export interface ArticleReviewDetail {
+  id: number;
+  title: string;
+  imageUrl: string | null;
+  pricePerMonth: number;
+  status: string;
+  rentedUntil: string | null;
+  tenantName: string | null;
+  tenantEmail: string | null;
 }
 
 export interface KitItemSelection {
@@ -119,7 +130,7 @@ export interface Article {
   category: Category;
   imageUrl: string | null;
   purchaseDate: string | null;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE";
+  status: "AVAILABLE" | "RENTED" | "PENDING_REVIEW" | "INACTIVE";
   rentedUntil: string | null;
   totalUnits?: number;
 }
@@ -132,7 +143,7 @@ export interface ArticlePayload {
   availableFrom: string;
   availableUntil: string;
   category: Category;
-  status?: "AVAILABLE" | "RENTED" | "INACTIVE";
+  status?: "AVAILABLE" | "RENTED" | "PENDING_REVIEW" | "INACTIVE";
   imageUrl?: string;
   purchaseDate?: string;
   totalUnits?: number;
@@ -144,6 +155,7 @@ export interface Item {
   description: string;
   pricePerMonth: number;
   category: string;
+  ownerId: number;
 }
 
 export enum KitStatus {
@@ -245,6 +257,23 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
+// === Rental Return (End of Rental) ===
+
+export type ReturnCondition = 'GOOD' | 'DAMAGED';
+
+export interface ReturnRequest {
+  condition: ReturnCondition;
+  comments?: string;
+}
+
+export interface ReturnResponse {
+  articleId: number;
+  tenantEmail: string;
+  resolution: 'DEPOSIT_RETURNED' | 'DEPOSIT_RETAINED';
+  amountProcessed: number;
+  message: string;
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -279,6 +308,7 @@ export type RootStackParamList = {
   MyArticles: undefined;
   MyKits: undefined;
   KitDetail: { kitId: number };
+  EndRental: { articleId: number };
   UploadArticle: undefined;
   AdminUsers: undefined;
   AdminUserForm: { userId?: number };

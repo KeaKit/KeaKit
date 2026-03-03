@@ -1,5 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ArticleReviewDetail;
+import com.example.demo.dto.ReturnRequest;
+import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
@@ -116,10 +119,35 @@ public class ArticleController {
         }
     }
 
+    @PostMapping("/{id}/return")
+    public ResponseEntity<?> processReturn(@PathVariable Long id, @RequestParam Long ownerId, @RequestBody ReturnRequest request) {
+        try {
+            ReturnResponse response = articleService.processReturn(id, ownerId, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/review-detail")
+    public ResponseEntity<?> getArticleReviewDetail(@PathVariable Long id) {
+        try {
+            ArticleReviewDetail detail = articleService.getArticleReviewDetail(id);
+            return ResponseEntity.ok(detail);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/my-articles/{userId}")
     public ResponseEntity<List<UserArticle>> getMyArticles(@PathVariable Long userId) {
         List<UserArticle> articles = articleService.findArticlesByUserId(userId);
-        
+        return ResponseEntity.ok(articles);
+    }
+
+    @GetMapping("/pending-review/{ownerId}")
+    public ResponseEntity<List<UserArticle>> getPendingReviewArticles(@PathVariable Long ownerId) {
+        List<UserArticle> articles = articleService.findPendingReviewByOwnerId(ownerId);
         return ResponseEntity.ok(articles);
     }
 

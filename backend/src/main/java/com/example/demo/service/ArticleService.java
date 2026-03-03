@@ -17,12 +17,15 @@ import com.example.demo.model.Article;
 import com.example.demo.model.User;
 import com.example.demo.model.Category;
 import com.example.demo.model.ArticleStatus;
-import com.example.demo.model.Kit;
-import com.example.demo.model.KitStatus;
+import com.example.demo.dto.ArticleReviewDetail;
 import com.example.demo.repository.ArticleRepository;
-import com.example.demo.repository.KitRepository;
+import com.example.demo.repository.KitItemRepository;
+import com.example.demo.repository.WalletRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.CategoryRepository;
+import com.example.demo.model.KitItem;
+import com.example.demo.model.Kit;
+import com.example.demo.model.Wallet;
 
 @Service
 public class ArticleService {
@@ -30,16 +33,18 @@ public class ArticleService {
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final KitItemRepository kitItemRepository;
+    private final WalletRepository walletRepository;
 
     @Autowired
     private CloudinaryService cloudinaryService;
-    private final KitRepository kitRepository;
 
-    public ArticleService(ArticleRepository articleRepository, UserRepository userRepository, KitRepository kitRepository, CategoryRepository categoryRepository) {
+    public ArticleService(ArticleRepository articleRepository, UserRepository userRepository, CategoryRepository categoryRepository, KitItemRepository kitItemRepository, WalletRepository walletRepository) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
-        this.kitRepository = kitRepository;
         this.categoryRepository = categoryRepository;
+        this.kitItemRepository = kitItemRepository;
+        this.walletRepository = walletRepository;
     }
 
 
@@ -209,6 +214,47 @@ public class ArticleService {
         }).collect(Collectors.toList());
     }
 
+    public ArticleReviewDetail getArticleReviewDetail(Long articleId) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        String tenantName = null;
+        String tenantEmail = null;
+
+        List<KitItem> kitItems = kitItemRepository.findByItemId(articleId);
+        for (KitItem ki : kitItems) {
+            Kit kit = ki.getKit();
+            if (kit.getTenant() != null) {
+                tenantName = kit.getTenant().getName();
+                tenantEmail = kit.getTenant().getEmail();
+                break;
+            }
+        }
+
+        return new ArticleReviewDetail(
+                article.getId(),
+                article.getTitle(),
+                article.getImageUrl(),
+                article.getPricePerMonth(),
+                article.getStatus() != null ? article.getStatus().name() : "UNKNOWN",
+                article.getAvailableUntil(),
+                tenantName,
+                tenantEmail
+        );
+    }
+
+    public List<UserArticle> findPendingReviewByOwnerId(Long ownerId) {
+        List<Article> articles = articleRepository.findByOwnerIdAndStatus(ownerId, ArticleStatus.PENDING_REVIEW);
+        return articles.stream().map(article -> new UserArticle(
+                article.getId(),
+                article.getTitle(),
+                article.getImageUrl(),
+                article.getPricePerMonth(),
+                article.getStatus().name(),
+                article.getAvailableUntil()
+        )).collect(Collectors.toList());
+    }
+
     @Transactional
     public ReturnResponse processReturn(Long articleId, Long ownerId, ReturnRequest request) {
 
@@ -219,12 +265,22 @@ public class ArticleService {
             throw new RuntimeException("Only the owner can confirm the return");
         }
         
-        if (article.getStatus() != ArticleStatus.RENTED) {
-            throw new RuntimeException("This article is not currently rented");
+        if (article.getStatus() != ArticleStatus.PENDING_REVIEW) {
+            throw new RuntimeException("This article is not pending review");
         }
 
-        Kit activeKit = kitRepository.findActiveKitByItemId(articleId, KitStatus.ACTIVE)
-                .orElseThrow(() -> new RuntimeException("No active Kit found for this article"));
+        // Resolve tenant from the kit that contained this article
+        String tenantEmail = null;
+        User tenant = null;
+        List<KitItem> kitItems = kitItemRepository.findByItemId(articleId);
+        for (KitItem ki : kitItems) {
+            Kit kit = ki.getKit();
+            if (kit.getTenant() != null) {
+                tenant = kit.getTenant();
+                tenantEmail = tenant.getEmail();
+                break;
+            }
+        }
 
         double depositAmount = article.getPricePerMonth() * 0.20;
         
@@ -236,12 +292,26 @@ public class ArticleService {
             resolution = "DEPOSIT_RETURNED";
             amountProcessed = depositAmount;
             message = "Artículo devuelto en buen estado. Se devuelve el 20% de garantía (" + depositAmount + "€) al arrendatario.";
-            // TODO: Llamar a Stripe para transferir el dinero de vuelta al arrendatario
+
+            // Devolver la garantía a la cartera del inquilino
+            if (tenant != null) {
+                Wallet tenantWallet = walletRepository.findByUserId(tenant.getId());
+                if (tenantWallet != null) {
+                    tenantWallet.setAvailableBalance(tenantWallet.getAvailableBalance() + depositAmount);
+                    walletRepository.save(tenantWallet);
+                }
+            }
         } else if ("DAMAGED".equalsIgnoreCase(request.condition())) {
             resolution = "DEPOSIT_RETAINED";
-            amountProcessed = depositAmount; // Cantidad retenida
+            amountProcessed = depositAmount;
             message = "Artículo con daños. Se retiene la garantía de " + depositAmount + "€ al arrendatario.";
-            // TODO: Transferir el dinero retenido a la cuenta del dueño
+
+            // Transferir la garantía retenida a la cartera del propietario
+            Wallet ownerWallet = walletRepository.findByUserId(ownerId);
+            if (ownerWallet != null) {
+                ownerWallet.setAvailableBalance(ownerWallet.getAvailableBalance() + depositAmount);
+                walletRepository.save(ownerWallet);
+            }
         } else {
             throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
         }
@@ -252,7 +322,7 @@ public class ArticleService {
 
         return new ReturnResponse(
                 articleId,
-                activeKit.getTenant().getEmail(),
+                tenantEmail,
                 resolution,
                 amountProcessed,
                 message

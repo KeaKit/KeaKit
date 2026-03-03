@@ -43,6 +43,12 @@ export const API_ROUTES = {
 
   // Kits / Rented items
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
+  GET_KIT:                    (kitId: number) => `${BASE_URL}/api/kits/${kitId}`,
+
+  // Rental return (End of Rental)
+  PROCESS_RETURN:             (articleId: number, ownerId: number) => `${BASE_URL}/api/article/${articleId}/return?ownerId=${ownerId}`,
+  ARTICLE_REVIEW_DETAIL:      (id: number) => `${BASE_URL}/api/article/${id}/review-detail`,
+  PENDING_REVIEW_ARTICLES:    (ownerId: number) => `${BASE_URL}/api/article/pending-review/${ownerId}`,
 } as const;
 
 export default BASE_URL;
