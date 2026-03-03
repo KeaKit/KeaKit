@@ -23,7 +23,7 @@
 | Adrián Miguel Chabrera Rubio  | Rafael Harana López  |
 | Luis Emmanuel Chávez Malavé   | José Luis Moraza Vergara  |
 | Guillermo Ciria González  | Germán Ojeda Garrido   |
-| Marta de la Calle González   | Lucía Ponce García de la Sola  |
+| Marta de la Calle González   | Lucía Ponce García de Sola  |
 | Salma El Hakimy Ettirabi  | Samuel Tamayo Balogh  |
 | Rosa María Espinosa Martínez |     | 
 
