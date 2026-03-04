@@ -4,15 +4,13 @@ import {
   TextInput, ScrollView, Alert, ActivityIndicator,
   FlatList, Image, Platform
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft, Image as ImageIcon, Pencil } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-// AÑADIDO: Importamos UserArticle
 import { Category, UserArticle, RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 
-// AÑADIDO: Importamos las nuevas funciones del servicio
 import { 
   createCategory, 
   updateCategory,
@@ -116,14 +114,13 @@ const CategoryFormScreen: React.FC = () => {
     setStatus(prev => prev === 'ACTIVE' ? 'DRAFT' : 'ACTIVE');
   };
 
-  // NUEVO: Renderizado adaptado a los datos reales de 'UserArticle'
   const renderArticle = ({ item }: { item: UserArticle }) => (
     <View style={styles.articleCard}>
       {item.imageUrl ? (
         <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
       ) : (
         <View style={[styles.articleImage, styles.imagePlaceholder]}>
-          <Ionicons name="image-outline" size={24} color={Colors.textLight} />
+          <ImageIcon size={24} color={Colors.textLight} />
         </View>
       )}
       <View style={styles.articleInfo}>
@@ -143,7 +140,7 @@ const CategoryFormScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.containerWhite}>
       <View style={commonStyles.header}>
         <TouchableOpacity style={{ padding: Spacing.sm }} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={28} color={Colors.primary} />
+          <ArrowLeft size={28} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>{getHeaderTitle()}</Text>
         <View style={{ width: 40 }} />
@@ -236,7 +233,7 @@ const CategoryFormScreen: React.FC = () => {
                 style={styles.editButton} 
                 onPress={() => setFormMode('edit')}
               >
-                <Ionicons name="pencil" size={18} color={Colors.textWhite} style={{ marginRight: 6 }} />
+                <Pencil size={18} color={Colors.textWhite} style={{ marginRight: 6 }} />
                 <Text style={styles.saveButtonText}>Editar</Text>
               </TouchableOpacity>
             ) : (

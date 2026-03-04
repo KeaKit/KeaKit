@@ -8,7 +8,11 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  Star, 
+  AlertCircle 
+} from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, RatingResponse } from '../../types';
@@ -55,11 +59,11 @@ const UserRatingsScreen: React.FC = () => {
   const renderStars = (score: number) => (
     <View style={styles.starsRow}>
       {[1, 2, 3, 4, 5].map((star) => (
-        <Ionicons
+        <Star
           key={star}
-          name={star <= score ? 'star' : 'star-outline'}
           size={16}
           color={Colors.warning}
+          fill={star <= score ? Colors.warning : 'transparent'}
         />
       ))}
     </View>
@@ -96,7 +100,7 @@ const UserRatingsScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.container}>
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <ArrowLeft size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Valoraciones</Text>
         <View style={{ width: 24 }} />
@@ -109,7 +113,7 @@ const UserRatingsScreen: React.FC = () => {
       ) : error ? (
         <View style={commonStyles.centerContent}>
           <View style={commonStyles.errorContainer}>
-            <Ionicons name="alert-circle" size={16} color={Colors.error} />
+            <AlertCircle size={16} color={Colors.error} />
             <Text style={commonStyles.errorText}>{error}</Text>
           </View>
         </View>
@@ -118,7 +122,7 @@ const UserRatingsScreen: React.FC = () => {
           <View style={[commonStyles.screenPadding, styles.summarySection]}>
             <Text style={styles.userName}>{userName}</Text>
             <View style={styles.averageRow}>
-              <Ionicons name="star" size={24} color={Colors.warning} />
+              <Star size={24} color={Colors.warning} fill={Colors.warning} />
               <Text style={styles.averageScore}>
                 {averageScore > 0 ? averageScore.toFixed(1) : '—'}
               </Text>

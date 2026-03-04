@@ -10,7 +10,15 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  AlertCircle, 
+  TriangleAlert 
+} from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import Divider from '../../components/Divider';
@@ -70,7 +78,7 @@ const LoginScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#103a57" />
+        <ArrowLeft size={24} color="#103a57" />
       </TouchableOpacity>
 
       <Image
@@ -79,7 +87,7 @@ const LoginScreen: React.FC = () => {
       />
 
       <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-        <Ionicons name="mail-outline" size={20} color="#999" style={styles.fieldIcon} />
+        <Mail size={20} color="#999" style={styles.fieldIcon} />
         <TextInput
           style={styles.input}
           placeholder="Correo electrónico"
@@ -92,13 +100,13 @@ const LoginScreen: React.FC = () => {
       </View>
       {errors.email && (
         <View style={styles.errorRow}>
-          <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+          <AlertCircle size={14} color="#d9534f" />
           <Text style={styles.errorText}>{errors.email}</Text>
         </View>
       )}
 
       <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-        <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.fieldIcon} />
+        <Lock size={20} color="#999" style={styles.fieldIcon} />
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
@@ -108,19 +116,19 @@ const LoginScreen: React.FC = () => {
           onChangeText={(v) => { setPassword(v); clearErrors(); }}
         />
         <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)} activeOpacity={0.7}>
-          <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
+          {showPassword ? <EyeOff size={20} color="#999" /> : <Eye size={20} color="#999" />}
         </TouchableOpacity>
       </View>
       {errors.password && (
         <View style={styles.errorRow}>
-          <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+          <AlertCircle size={14} color="#d9534f" />
           <Text style={styles.errorText}>{errors.password}</Text>
         </View>
       )}
 
       {errors.general && (
         <View style={styles.generalError}>
-          <Ionicons name="warning-outline" size={16} color="#d9534f" />
+          <TriangleAlert size={16} color="#d9534f" />
           <Text style={styles.generalErrorText}>{errors.general}</Text>
         </View>
       )}

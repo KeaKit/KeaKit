@@ -3,7 +3,18 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, TextInput, Alert, ActivityIndicator, Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  AlertCircle, 
+  ArrowLeft, 
+  ChevronUp, 
+  ChevronDown, 
+  Check, 
+  Image as ImageIcon, 
+  Images, 
+  Camera, 
+  XCircle, 
+  CloudUpload 
+} from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -52,7 +63,7 @@ const Field: React.FC<FieldProps> = ({
     />
     {!!error && (
       <View style={commonStyles.errorContainer}>
-        <Ionicons name="alert-circle" size={14} color={Colors.error} />
+        <AlertCircle size={14} color={Colors.error} />
         <Text style={commonStyles.errorText}>{error}</Text>
       </View>
     )}
@@ -224,7 +235,7 @@ const UploadArticleScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.container}>
       <View style={commonStyles.header}>
         <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={28} color={Colors.primary} />
+          <ArrowLeft size={28} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nuevo artículo</Text>
         <View style={{ width: 36 }} />
@@ -256,11 +267,11 @@ const UploadArticleScreen: React.FC = () => {
                 {selectedCategory ? selectedCategory.name : 'Selecciona una categoría'}
               </Text>
             )}
-            <Ionicons name={categoryOpen ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textSecondary} />
+            {categoryOpen ? <ChevronUp size={20} color={Colors.textSecondary} /> : <ChevronDown size={20} color={Colors.textSecondary} />}
           </TouchableOpacity>
           {!!errors.category && (
             <View style={commonStyles.errorContainer}>
-              <Ionicons name="alert-circle" size={14} color={Colors.error} />
+              <AlertCircle size={14} color={Colors.error} />
               <Text style={commonStyles.errorText}>{errors.category}</Text>
             </View>
           )}
@@ -285,7 +296,7 @@ const UploadArticleScreen: React.FC = () => {
                     {cat.name}
                   </Text>
                   {selectedCategory?.id === cat.id && (
-                    <Ionicons name="checkmark" size={18} color={Colors.primary} />
+                    <Check size={18} color={Colors.primary} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -322,30 +333,30 @@ const UploadArticleScreen: React.FC = () => {
                   style={styles.changeImageButton}
                   onPress={() => setSelectedImage(null)}
                 >
-                  <Ionicons name="close-circle" size={24} color={Colors.error} />
+                  <XCircle size={24} color={Colors.error} />
                 </TouchableOpacity>
               </View>
             ) : (
               <View style={[styles.imagePlaceholder, errors.image ? { borderColor: Colors.error } : null]}>
-                <Ionicons name="image-outline" size={40} color={Colors.textSecondary} />
+                <ImageIcon size={40} color={Colors.textSecondary} />
                 <Text style={styles.placeholderText}>Sube una foto de tu artículo</Text>
               </View>
             )}
 
             <View style={styles.buttonRow}>
               <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
-                <Ionicons name="images" size={20} color={Colors.primary} />
+                <Images size={20} color={Colors.primary} />
                 <Text style={styles.imageButtonText}>Galería</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.imageButton} onPress={takePicture}>
-                <Ionicons name="camera" size={20} color={Colors.primary} />
+                <Camera size={20} color={Colors.primary} />
                 <Text style={styles.imageButtonText}>Cámara</Text>
               </TouchableOpacity>
             </View>
             {!!errors.image && (
               <View style={[commonStyles.errorContainer, { marginTop: Spacing.xs }]}>
-                <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                <AlertCircle size={14} color={Colors.error} />
                 <Text style={commonStyles.errorText}>{errors.image}</Text>
               </View>
             )}
@@ -359,7 +370,7 @@ const UploadArticleScreen: React.FC = () => {
             <ActivityIndicator color={Colors.textWhite} />
           ) : (
             <View style={styles.submitContent}>
-              <Ionicons name="cloud-upload-outline" size={20} color={Colors.textWhite} />
+              <CloudUpload size={20} color={Colors.textWhite} />
               <Text style={[commonStyles.primaryButtonText, { marginLeft: Spacing.sm }]}>Publicar artículo</Text>
             </View>
           )}

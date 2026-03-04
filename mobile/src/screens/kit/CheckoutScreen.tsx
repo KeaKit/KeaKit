@@ -1,13 +1,18 @@
 import React, { useMemo, useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View, TouchableOpacity } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { RootStackParamList } from "../../types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { 
+  ChevronLeft, 
+  CreditCard, 
+  Lock, 
+  Calendar 
+} from "lucide-react-native";
 import { createKit } from "../../services/kitService";
 import { useAuth } from "../../context/AuthContext";
 import { Colors, commonStyles } from "../../styles";
-import { Ionicons } from "@expo/vector-icons";
 
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 
@@ -62,13 +67,7 @@ const CheckoutScreen: React.FC = () => {
   };
 
   const handlePay = async () => {
-      console.log("🟡 CLICK en Pagar");
-
-    console.log("👤 Usuario:", user);
-   console.log("🔐 Token:", user?.token);
-
     if (!user?.token) {
-      console.log("❌ No hay token");
       Alert.alert("Error", "Necesitas iniciar sesión.");
       return;
     }
@@ -124,12 +123,9 @@ const CheckoutScreen: React.FC = () => {
     <ScrollView contentContainerStyle={{ padding: 16 }}>
       {/* HEADER CON FLECHA */}
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-        <Ionicons
-          name="arrow-back"
-          size={24}
-          onPress={() => navigation.goBack()}
-          style={{ marginRight: 8 }}
-        />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
+          <ChevronLeft size={24} color={Colors.textPrimary} />
+        </TouchableOpacity>
         <Text style={{ fontSize: 18, fontWeight: "bold" }}>Pago</Text>
       </View>
 
@@ -166,7 +162,7 @@ const CheckoutScreen: React.FC = () => {
       </View>
 
       {/* TARJETA */}
-      <Text style={{ marginTop: 24, marginBottom: 8 }}>
+      <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 16, color: Colors.textPrimary }}>
         Datos de la tarjeta
       </Text>
 
@@ -176,7 +172,7 @@ const CheckoutScreen: React.FC = () => {
         value={cardNumber}
         onChangeText={handleCardChange}
         keyboardType="numeric"
-        left={<TextInput.Icon icon={() => <Ionicons name="card-outline" size={20} />} />}
+        left={<TextInput.Icon icon={() => <CreditCard size={20} color={Colors.textSecondary} />} />}
         style={{ marginBottom: 12 }}
         placeholder="1234 5678 9012 3456"
       />
@@ -188,7 +184,7 @@ const CheckoutScreen: React.FC = () => {
           value={cvv}
           onChangeText={handleCvvChange}
           keyboardType="numeric"
-          left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} />} />}
+          left={<TextInput.Icon icon={() => <Lock size={20} color={Colors.textSecondary} />} />}
           style={{ flex: 1 }}
           placeholder="123"
         />
@@ -198,7 +194,7 @@ const CheckoutScreen: React.FC = () => {
           label="Expiración"
           value={expiry}
           onChangeText={handleExpiryChange}
-          left={<TextInput.Icon icon={() => <Ionicons name="calendar-outline" size={20} />} />}
+          left={<TextInput.Icon icon={() => <Calendar size={20} color={Colors.textSecondary} />} />}
           style={{ flex: 1 }}
           placeholder="MM/YY"
         />

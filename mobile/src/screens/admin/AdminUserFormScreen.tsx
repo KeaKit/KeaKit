@@ -1,7 +1,7 @@
 // src/screens/admin/AdminUserFormScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
@@ -91,7 +91,11 @@ const AdminUserFormScreen: React.FC = () => {
           onChangeText={(v) => { setPassword(v); clearErrors(); }}
         />
         <TouchableOpacity onPress={() => setShowPassword(p => !p)} style={styles.eyeIcon}>
-          <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
+          {showPassword ? (
+            <EyeOff size={24} color="#999" />
+          ) : (
+            <Eye size={24} color="#999" />
+          )}
         </TouchableOpacity>
       </View>
 

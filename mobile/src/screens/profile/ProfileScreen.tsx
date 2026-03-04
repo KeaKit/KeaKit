@@ -9,7 +9,16 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  User, 
+  Mail, 
+  Phone, 
+  Home, 
+  Building2, 
+  Globe, 
+  Pencil 
+} from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 
@@ -18,7 +27,7 @@ type ProfileNav = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 interface ProfileField {
   label: string;
   value: string | undefined;
-  icon: string;
+  icon: React.ElementType;
 }
 
 const ProfileScreen: React.FC = () => {
@@ -34,18 +43,18 @@ const ProfileScreen: React.FC = () => {
   }
 
   const profileFields: ProfileField[] = [
-    { label: 'Nombre', value: user.name, icon: 'person-outline' },
-    { label: 'Email', value: user.email, icon: 'mail-outline' },
-    { label: 'Teléfono', value: user.phone, icon: 'call-outline' },
-    { label: 'Dirección', value: user.address, icon: 'home-outline' },
-    { label: 'Ciudad', value: user.city, icon: 'business-outline' },
-    { label: 'País', value: user.country, icon: 'earth-outline' },
+    { label: 'Nombre', value: user.name, icon: User },
+    { label: 'Email', value: user.email, icon: Mail },
+    { label: 'Teléfono', value: user.phone, icon: Phone },
+    { label: 'Dirección', value: user.address, icon: Home },
+    { label: 'Ciudad', value: user.city, icon: Building2 },
+    { label: 'País', value: user.country, icon: Globe },
   ];
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#103a57" />
+        <ArrowLeft size={24} color="#103a57" />
       </TouchableOpacity>
 
       <Image source={require('../../../assets/logo.png')} style={styles.logo} />
@@ -53,10 +62,10 @@ const ProfileScreen: React.FC = () => {
       <Text style={styles.title}>Perfil</Text>
       <Text style={styles.subtitle}>{user.email}</Text>
 
-      {profileFields.map(({ label, value, icon }) => (
+      {profileFields.map(({ label, value, icon: Icon }) => (
         <View key={label} style={styles.fieldWrapper}>
           <View style={styles.fieldContainer}>
-            <Ionicons name={icon as any} size={20} color="#103a57" style={styles.fieldIcon} />
+            <Icon size={20} color="#103a57" style={styles.fieldIcon} />
             <View style={styles.fieldContent}>
               <Text style={styles.fieldLabel}>{label}</Text>
               <Text style={styles.fieldValue}>{value || 'No especificado'}</Text>
@@ -69,7 +78,7 @@ const ProfileScreen: React.FC = () => {
         style={styles.editButton}
         onPress={() => navigation.navigate('EditProfile', { user })}
       >
-        <Ionicons name="pencil" size={18} color="#fff" style={{ marginRight: 8 }} />
+        <Pencil size={18} color="#fff" style={{ marginRight: 8 }} />
         <Text style={styles.editButtonText}>Editar perfil</Text>
       </TouchableOpacity>
     </ScrollView>
