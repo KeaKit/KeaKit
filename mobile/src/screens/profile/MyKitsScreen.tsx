@@ -34,11 +34,14 @@ const MyKitsScreen: React.FC = () => {
       setLoading(true);
       setError(null);
       const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
-      const url = `http://${host}:8080/api/kits/my-kits/${user.id}`;
+      const url = `https://backend-service-907955565973.europe-southwest1.run.app/api/kits/my-kits/${user.id}`;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+      });
+    clearTimeout(timeout);
       const data = await response.json();
       setKits(data);
     } catch (err) {
