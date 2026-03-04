@@ -8,52 +8,6 @@ El objetivo de este documento consiste en detallar el uso de herramientas de Int
 
 ### Interacción 1
 
-**Usuario:** Rosa María Espinosa Martínez.
-
-**Herramienta y versión de Inteligencia Artificial utilizada:** Copilot en Visual Studio Code, modelo GPT-4.1 en modo Agente.
-
-**Fecha de uso:** 17/02/2026
-
-**Objetivo del uso:** Pulir la redacción del documento que estaba redactando antes de subirlo al repositorio.
-
-**Enlace a la conversación:** Copilot no permite compartir enlaces de la conversación. Adjunto captura de pantalla.
-
-<div style="text-align: center;">
-  <img src="img/ai-report/rmem-copilot-politica-commits.png" width="500" height="auto" style="object-fit: cover;" alt="Captura Conversación Copilot">
-</div>
-
----
-
-### Interacción 2
-
-**Usuario:** Alejandro González Macías.
-
-**Herramienta y versión de Inteligencia Artificial utilizada:** ChatGPT, modelo GPT-5.2.
-
-**Fecha de uso:** 18/2/2026
-
-**Objetivo del uso:** Asegurar que la versión final del documento sobre el análisis de competidores no contenga ningún error ortográfico grave.
-
-**Enlace a la conversación:** [Ver conversación](https://chatgpt.com/share/6995a278-ceac-8005-9a86-4da19e4b53e6)
-
----
-
-### Interacción 3
-
-**Usuario:** Lucía Ponce García de Sola  
-
-**Herramienta y versión de Inteligencia Artificial utilizada:** ChatGPT, modelo GPT-5.2.
-
-**Fecha de uso:** 08/02/2026
-
-**Objetivo del uso:** Investigar y comparar diferentes frameworks y tecnologías para el desarrollo del backend y frontend del proyecto KeaKit, analizando ventajas, desventajas, documentación disponible y compatibilidad entre herramientas para realizar el análisis del stack tecnológico.
-
-**Enlace a la conversación:** [Enlace](https://chatgpt.com/share/6996048a-7eec-8005-bbc0-9f322538c4c2)
-
----
-
-### Interacción 4
-
 **Usuario:** Lucía Ponce García de Sola  
 **Herramienta y versión de Inteligencia Artificial utilizada:** Gemini 3 Flash
 
@@ -65,7 +19,7 @@ El objetivo de este documento consiste en detallar el uso de herramientas de Int
 
 ---
 
-### Interacción 5
+### Interacción 2
 
 **Usuario:** Luis Emmanuel Chávez Malavé 
 

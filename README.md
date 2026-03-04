@@ -60,7 +60,7 @@ Documentación del primer sprint de desarrollo.
 Plantillas reutilizables para documentos del proyecto.
 
 #### 📂 `docs/uso de ia/`
-Informes individuales del uso de herramientas de Inteligencia Artificial.
+Informes individuales y uno global del uso de herramientas de Inteligencia Artificial.
 
 #### 📂 `docs/usuarios pilotos/`
 Información y gestión de usuarios piloto del proyecto.
