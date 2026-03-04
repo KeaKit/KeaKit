@@ -26,6 +26,14 @@ Para garantizar un buen nivel de feedback, antes del inicio de las pruebas se el
 - **Neutros (7-8):** Usuarios que perciben la funcionalidad como correcta, pero con margen de mejora.
 - **Detractores (1-6):** Usuarios insatisfechos, que han encontrado dificultades, falta de claridad o han detectado problemas relevantes como bugs.
 
+Además de las preguntas de valoración, cada encuesta incluirá:
+
+- **Preguntas de selección de situaciones**, que permitirán identificar qué experiencia concreta ha tenido el usuario (por ejemplo: “Funcionó correctamente”, “Tuve que repetir el proceso”, “No encontré la opción”, “Encontré errores”, etc.).
+- **Preguntas abiertas**, que ofrecerán espacio para detallar problemas, sugerencias o mejoras no contempladas inicialmente.
+
+Para facilitar el análisis de los datos, las preguntas de la encuesta se organizan según el rol del usuario piloto, diferenciando entre quienes participan como arrendadores y quienes lo hacen como arrendatarios. Esta separación permite evitar una sobrecarga de pruebas para cada persona y, al mismo tiempo, nos ayuda a identificar con mayor precisión los intereses, necesidades y patrones de uso propios de cada perfil.
+
+
 ## Análisis de feedback
 
 El análisis del feedback obtenido a través de las encuestas permitirá evaluar la evolución de la percepción de los usuarios piloto a lo largo de los distintos sprints. Para ello, cada participante deberá indicar con qué usuario ha realizado la valoración, lo que facilitará identificar tendencias individuales y globales, así como detectar mejoras o retrocesos en la experiencia de uso.
@@ -36,32 +44,33 @@ Asimismo, se considera fundamental que los usuarios piloto perciban que su opini
 
 ## Portal de incidencias
 
-Si durante la fase de pruebas los usuarios piloto detectan algún bug o comportamiento inesperado, podrán reportarlo a través del portal de incidencias integrado en la aplicación. Este portal es accesible directamente desde la pantalla de soporte. Además, en los correos de aviso y recordatorio enviados a los usuarios piloto se incluirá un enlace directo al portal de incidencias.
+Si durante la fase de pruebas los usuarios piloto detectan algún bug o comportamiento inesperado, podrán reportarlo a través del portal de incidencias integrado en la aplicación. Este portal es accesible directamente desde la pantalla de soporte. 
+
 
 ## Beneficios
 
-Con el objetivo de incentivar la participación activa en el programa de usuarios piloto y reducir las posibles barreras de entrada, se han definido una serie de beneficios orientados a mejorar la experiencia durante la fase de pruebas.
+Con el objetivo de incentivar la participación activa en el programa de usuarios piloto y reducir las barreras de entrada, se han definido una serie de beneficios orientados a recompensar la confianza temprana y facilitar la experiencia durante la fase de pruebas.
 
 ### Beneficio transversal
 
-Todos los usuarios piloto que completen el ciclo de pruebas recibirán una **insignia de “Usuario Fundador”**, un distintivo permanente en su perfil dentro de la aplicación. Este reconocimiento otorgará visibilidad adicional y acceso prioritario a futuras ventajas cuando la plataforma se lance oficialmente.
+Todos los usuarios piloto que completen el ciclo de pruebas recibirán una **insignia de “Usuario Fundador”**, un distintivo permanente en su perfil dentro de KeaKit. Este reconocimiento mejora la visibilidad del usuario en la plataforma y actúa como sello de confianza para futuros arrendadores y arrendatarios, además de otorgar prioridad en futuras ventajas cuando la plataforma se lance oficialmente.
 
 ### Beneficios para arrendatarios
 
-Los usuarios piloto que prueben el rol de arrendatario dispondrán de incentivos diseñados para reducir la fricción económica y el riesgo percibido al alquilar:
+Los incentivos para quienes prueben el rol de arrendatario están diseñados para reducir la fricción económica y el riesgo percibido al alquilar:
 
-- **Descuentos iniciales en el primer alquiler**, orientados a facilitar la adopción del modelo de alquiler frente a la compra.
-- **Garantías de conformidad**, que permiten solicitar cambios o devoluciones sin penalización si el estado del kit no cumple las expectativas.
-- **Eliminación del depósito de seguridad** durante la fase piloto, sustituyéndolo por una verificación del perfil.
+- **Descuento en el primer kit**, que hace que alquilar resulte más económico que comprar desde el primer uso.
+- **Mayor confianza gracias a la insignia de “Usuario Fundador”**, que valida su participación temprana y refuerza la seguridad en las transacciones.
+
+Estos beneficios facilitan la adopción del modelo de alquiler y evidencian el ahorro que ofrece KeaKit.
 
 ### Beneficios para arrendadores
 
-Los usuarios piloto que participen como arrendadores contarán con ventajas destinadas a reforzar la confianza y la seguridad en el proceso:
+Los usuarios piloto que participen como arrendadores contarán con ventajas orientadas a maximizar su rentabilidad inicial y reforzar su confianza en el sistema:
 
-- **Comisión del 0% en el primer alquiler**, permitiendo que el usuario reciba íntegramente el importe de la transacción.
-- **Cobertura de garantía total durante el piloto**, que protege frente a daños, pérdidas o robos de los artículos alquilados.
-- **Reconocimiento adicional en la plataforma**, mejorando la visibilidad de sus artículos en futuras versiones de la aplicación.
+- **Comisión del 0% en el primer alquiler**, permitiendo recibir íntegramente el importe de la transacción.
+- **Mayor visibilidad gracias a la insignia de “Usuario Fundador”**, que posiciona sus artículos por delante de los de usuarios que se unan más tarde.
 
-Estos beneficios buscan recompensar la implicación de los participantes, reducir las barreras de entrada y fomentar la aportación de feedback valioso para la mejora continua del proyecto.
+Estos incentivos reducen el riesgo económico, facilitan la captación de los primeros alquileres y ayudan a consolidar la reputación del arrendador dentro de la plataforma.
 
-Para más información, consulte los documentos [incentivos para arrendatarios](../usuarios%20pilotos/estrategia-incentivos-arrendatarios.md) y [incentivos para arrendadores](../usuarios%20pilotos/estrategia-incentivos-arrendadores.md).
+Para más información, consulte el documento [incentivos](../usuarios%20pilotos/estrategia-incentivos.md).
