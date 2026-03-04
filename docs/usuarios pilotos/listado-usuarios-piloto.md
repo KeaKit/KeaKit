@@ -1,10 +1,12 @@
 # Listado de Usuarios Piloto
-**Fecha del informe:** 18/02/2026
-**Fuente de datos:** Formulario de Captación Usuarios Piloto
-**Muestra total analizada:** 30 usuarios
+**Fecha del informe:** 04/03/2026
+**Fuente de datos:** Formulario de Captación Usuarios Piloto, Feedback Sprint 1
+**Muestra total analizada:** 17 usuarios
 
 ### Arrendatarios (Demanda)
 *Usuarios que buscan equipamiento.*
+
+#### Primera captación
 
 | Email | Perfil | Nivel Interes | Notas |
 | :--- | :--- | :--- | :--- |
@@ -15,8 +17,15 @@
 | `**inzeats*****` | Erasmus | Alto | Valora el ahorro y la sostenibilidad de la idea. |
 | `**co_3012*****` | Erasmus | Alto | Busca terminar de equipar su hogar temporal. |
 
-### Arrend0adores (Oferta)
+#### Segunda captación (Feedback sprint 1)
+| Email | Perfil |
+| :--- | :--- |
+| `**llendel*****` | Erasmus |
+
+### Arrendadores (Oferta)
 *Usuarios con objetos disponibles.*
+
+#### Primera captación
 
 | Email | Perfil | Objetos Clave | Estrategia |
 | :--- | :--- | :--- | :--- |
@@ -30,3 +39,7 @@
 | `**urtado*****` | Practico | Electrodomesticos | Motivado por dinero. |
 | `**yerdl0*****` | Practico | Muebles | Miedo al robo. |
 | `**elbenit*****` | Rentabilizador | Muebles | Fomentar la reutilización |
+
+#### Segunda captación (Feedback sprint 1)
+
+
