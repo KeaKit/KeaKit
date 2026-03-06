@@ -1,100 +1,53 @@
-name: Fechas transicion tareas en GitHub Projects
-
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
-  repository-projects: write
+name: Actualizar Fechas en Proyecto
 
 on:
-  workflow_dispatch:
   issues:
-    types: [edited, labeled, unlabeled]
+    types: [edited]
+  pull_request:
+    types: [edited]
 
 jobs:
-  update-dates:
+  actualizar-fecha-segun-estado:
     runs-on: ubuntu-latest
-
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
+    # if: github.event.changes && github.event.issue
+    
     steps:
-      - name: Obtener item del ProjectV2 asociado a la issue
-        id: item
-        run: |
-          gh api graphql -f query='
-            query($owner:String!, $repo:String!, $issue:Int!) {
-              repository(owner:$owner, name:$repo) {
-                issue(number:$issue) {
-                  projectItems(first:20) {
-                    nodes {
-                      id
-                      project { id }
-                      fieldValues(first:20) {
-                        nodes {
-                          ... on ProjectV2ItemFieldSingleSelectValue {
-                            field { name }
-                            name
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }' \
-            -f owner="${{ github.repository_owner }}" \
-            -f repo="${{ github.event.repository.name }}" \
-            -f issue="${{ github.event.issue.number }}" > item.json
+      - name: Obtener fecha actual
+        id: current-date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
-          ITEM_ID=$(jq -r '.data.repository.issue.projectItems.nodes[0].id' item.json)
-          PROJECT_ID=$(jq -r '.data.repository.issue.projectItems.nodes[0].project.id' item.json)
-          STATUS=$(jq -r '.data.repository.issue.projectItems.nodes[0].fieldValues.nodes[]? | select(.field.name=="Status") | .name' item.json)
+      - name: Establecer fecha en TODO At
+        uses: nipe0324/update-project-v2-item-field@v1.0
+        if: github.event.changes.issue.field_value.to.name == 'TODO'
+        with:
+          project-url: 'https://github.com/orgs/KeaKit/projects/2'
+          github-token: ${{ secrets.GH_TOKEN }}
+          field-name: 'TODO At'
+          field-value: ${{ steps.current-date.outputs.date }}
 
-          echo "ITEM_ID=$ITEM_ID" >> $GITHUB_ENV
-          echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
-          echo "STATUS=$STATUS" >> $GITHUB_ENV
+      - name: Establecer fecha en In Progress At
+        uses: nipe0324/update-project-v2-item-field@v1.0
+        if: github.event.changes.issue.field_value.to.name == 'In Progress'
+        with:
+          project-url: 'https://github.com/orgs/KeaKit/projects/2'
+          github-token: ${{ secrets.GH_TOKEN }}
+          field-name: 'In Progress At'
+          field-value: ${{ steps.current-date.outputs.date }}
 
-      - name: Registrar fecha
-        if: env.STATUS != ''
-        run: |
-          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+      - name: Establecer fecha en In Review At
+        uses: nipe0324/update-project-v2-item-field@v1.0
+        if: github.event.changes.issue.field_value.to.name == 'In Review'
+        with:
+          project-url: 'https://github.com/orgs/KeaKit/projects/2'
+          github-token: ${{ secrets.GH_TOKEN }}
+          field-name: 'In Review At'
+          field-value: ${{ steps.current-date.outputs.date }}
 
-          if [ "$STATUS" = "Todo" ]; then FIELD_NAME="TODO At"; fi
-          if [ "$STATUS" = "In Progress" ]; then FIELD_NAME="In Progress At"; fi
-          if [ "$STATUS" = "In Review" ]; then FIELD_NAME="In Review At"; fi
-          if [ "$STATUS" = "Done" ]; then FIELD_NAME="Done At"; fi
-
-          echo "Campo detectado: $FIELD_NAME"
-
-          gh api graphql -f query='
-            query($project:ID!) {
-              node(id:$project) {
-                ... on ProjectV2 {
-                  fields(first:50) {
-                    nodes { id name }
-                  }
-                }
-              }
-            }' \
-            -f project="$PROJECT_ID" > fields.json
-
-          FIELD_ID=$(jq -r --arg NAME "$FIELD_NAME" '.data.node.fields.nodes[] | select(.name==$NAME) | .id' fields.json)
-
-          echo "FIELD_ID=$FIELD_ID"
-
-          gh api graphql -f query='
-            mutation($item:ID!, $field:ID!, $value:String!) {
-              updateProjectV2ItemFieldValue(
-                input: {
-                  itemId: $item,
-                  fieldId: $field,
-                  value: { date: $value }
-                }
-              ) {
-                projectV2Item { id }
-              }
-            }' \
-            -f item="$ITEM_ID" \
-            -f field="$FIELD_ID" \
-            -f value="$DATE"
+      - name: Establecer fecha en Done At
+        uses: nipe0324/update-project-v2-item-field@v1.0
+        if: github.event.changes.issue.field_value.to.name == 'Done'
+        with:
+          project-url: 'https://github.com/orgs/KeaKit/projects/2'
+          github-token: ${{ secrets.GH_TOKEN }}
+          field-name: 'Done At'
+          field-value: ${{ steps.current-date.outputs.date }}
