@@ -1,4 +1,4 @@
-name: Registrar fechas de transición en ProjectV2
+name: Fechas transicion tareas en GitHub Projects
 
 permissions:
   contents: read
