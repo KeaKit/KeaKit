@@ -3,7 +3,8 @@ name: Registrar fechas de transición en ProjectV2
 permissions:
   contents: read
   issues: write
-  projects: write
+  pull-requests: write
+  repository-projects: write
 
 on:
   workflow_dispatch:
@@ -28,9 +29,7 @@ jobs:
                   projectItems(first:20) {
                     nodes {
                       id
-                      project {
-                        id
-                      }
+                      project { id }
                       fieldValues(first:20) {
                         nodes {
                           ... on ProjectV2ItemFieldSingleSelectValue {
@@ -73,10 +72,7 @@ jobs:
               node(id:$project) {
                 ... on ProjectV2 {
                   fields(first:50) {
-                    nodes {
-                      id
-                      name
-                    }
+                    nodes { id name }
                   }
                 }
               }
