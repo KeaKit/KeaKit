@@ -1,0 +1,77 @@
+name: Registrar fechas de transición en ProjectV2
+
+permissions:
+  contents: read
+  issues: write
+  projects: write
+
+on:
+  workflow_dispatch:
+  projects_v2_item:
+    types: [created, edited, moved]
+
+jobs:
+  update-dates:
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    steps:
+      - name: Extraer datos del evento
+        id: extract
+        run: |
+          echo "ITEM_ID=${{ github.event.projects_v2_item.item_node_id }}" >> $GITHUB_ENV
+          echo "PROJECT_ID=${{ github.event.projects_v2_item.project_node_id }}" >> $GITHUB_ENV
+          echo "STATUS=$(jq -r '.projects_v2_item.field_values[]? | select(.field.name=="Status") | .name' <<< '${{ toJson(github.event) }}')" >> $GITHUB_ENV
+
+      - name: Registrar fecha según estado
+        if: env.STATUS != ''
+        run: |
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          if [ "$STATUS" = "Todo" ]; then
+            FIELD_NAME="TODO At"
+          elif [ "$STATUS" = "In Progress" ]; then
+            FIELD_NAME="In Progress At"
+          elif [ "$STATUS" = "In Review" ]; then
+            FIELD_NAME="In Review At"
+          elif [ "$STATUS" = "Done" ]; then
+            FIELD_NAME="Done At"
+          else
+            exit 0
+          fi
+
+          # Obtener ID del campo
+          gh api graphql -f query='
+            query($project:ID!) {
+              node(id:$project) {
+                ... on ProjectV2 {
+                  fields(first:50) {
+                    nodes {
+                      id
+                      name
+                    }
+                  }
+                }
+              }
+            }' -f project=$PROJECT_ID > fields.json
+
+          FIELD_ID=$(jq -r --arg NAME "$FIELD_NAME" '.data.node.fields.nodes[] | select(.name==$NAME) | .id' fields.json)
+
+          # Actualizar el campo con la fecha
+          gh api graphql -f query='
+            mutation($item:ID!, $field:ID!, $value:String!) {
+              updateProjectV2ItemFieldValue(
+                input: {
+                  itemId: $item,
+                  fieldId: $field,
+                  value: { date: $value }
+                }
+              ) {
+                projectV2Item { id }
+              }
+            }' \
+            -f item=$ITEM_ID \
+            -f field=$FIELD_ID \
+            -f value="$DATE"
