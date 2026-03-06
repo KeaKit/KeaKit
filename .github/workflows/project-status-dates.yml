@@ -3,12 +3,12 @@ name: Registrar fechas de transición en ProjectV2
 permissions:
   contents: read
   issues: write
-  projects: write
+  pull-requests: write
 
 on:
   workflow_dispatch:
-  projects_v2_item:
-    types: [created, edited, moved]
+  issues:
+    types: [edited, labeled, unlabeled]
 
 jobs:
   update-dates:
@@ -18,31 +18,51 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
-      - name: Extraer datos del evento
-        id: extract
+      - name: Obtener ID del item en el ProjectV2
+        id: item
         run: |
-          echo "ITEM_ID=${{ github.event.projects_v2_item.item_node_id }}" >> $GITHUB_ENV
-          echo "PROJECT_ID=${{ github.event.projects_v2_item.project_node_id }}" >> $GITHUB_ENV
-          echo "STATUS=$(jq -r '.projects_v2_item.field_values[]? | select(.field.name=="Status") | .name' <<< '${{ toJson(github.event) }}')" >> $GITHUB_ENV
+          gh api graphql -f query='
+            query($owner:String!, $repo:String!, $issue:Int!) {
+              repository(owner:$owner, name:$repo) {
+                issue(number:$issue) {
+                  projectItems(first:10) {
+                    nodes {
+                      id
+                      fieldValues(first:20) {
+                        nodes {
+                          ... on ProjectV2ItemFieldSingleSelectValue {
+                            field { name }
+                            name
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }' \
+            -f owner="${{ github.repository_owner }}" \
+            -f repo="${{ github.event.repository.name }}" \
+            -f issue="${{ github.event.issue.number }}" > item.json
 
-      - name: Registrar fecha según estado
+          ITEM_ID=$(jq -r '.data.repository.issue.projectItems.nodes[0].id' item.json)
+          STATUS=$(jq -r '.data.repository.issue.projectItems.nodes[0].fieldValues.nodes[]? | select(.field.name=="Status") | .name' item.json)
+
+          echo "ITEM_ID=$ITEM_ID" >> $GITHUB_ENV
+          echo "STATUS=$STATUS" >> $GITHUB_ENV
+
+      - name: Registrar fecha
         if: env.STATUS != ''
         run: |
           DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          if [ "$STATUS" = "Todo" ]; then
-            FIELD_NAME="TODO At"
-          elif [ "$STATUS" = "In Progress" ]; then
-            FIELD_NAME="In Progress At"
-          elif [ "$STATUS" = "In Review" ]; then
-            FIELD_NAME="In Review At"
-          elif [ "$STATUS" = "Done" ]; then
-            FIELD_NAME="Done At"
-          else
-            exit 0
-          fi
+          if [ "$STATUS" = "Todo" ]; then FIELD_NAME="TODO At"; fi
+          if [ "$STATUS" = "In Progress" ]; then FIELD_NAME="In Progress At"; fi
+          if [ "$STATUS" = "In Review" ]; then FIELD_NAME="In Review At"; fi
+          if [ "$STATUS" = "Done" ]; then FIELD_NAME="Done At"; fi
 
-          # Obtener ID del campo
+          echo "Campo detectado: $FIELD_NAME"
+
           gh api graphql -f query='
             query($project:ID!) {
               node(id:$project) {
@@ -55,11 +75,13 @@ jobs:
                   }
                 }
               }
-            }' -f project=$PROJECT_ID > fields.json
+            }' \
+            -f project="PVT_kwDOD3Si084BPCwq" > fields.json
 
           FIELD_ID=$(jq -r --arg NAME "$FIELD_NAME" '.data.node.fields.nodes[] | select(.name==$NAME) | .id' fields.json)
 
-          # Actualizar el campo con la fecha
+          echo "FIELD_ID=$FIELD_ID"
+
           gh api graphql -f query='
             mutation($item:ID!, $field:ID!, $value:String!) {
               updateProjectV2ItemFieldValue(
@@ -72,6 +94,6 @@ jobs:
                 projectV2Item { id }
               }
             }' \
-            -f item=$ITEM_ID \
-            -f field=$FIELD_ID \
+            -f item="$ITEM_ID" \
+            -f field="$FIELD_ID" \
             -f value="$DATE"
