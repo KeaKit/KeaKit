@@ -1,53 +1,53 @@
-name: Actualizar Fechas en Proyecto
+name: Actualizar fechas del GitHub Project
 
 on:
-  issues:
-    types: [edited]
-  pull_request:
-    types: [edited]
+  schedule:
+    - cron: "0 0,2,10,12,14,17,19,22 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  repository-projects: write
 
 jobs:
-  actualizar-fecha-segun-estado:
+  update-dates:
     runs-on: ubuntu-latest
-    # if: github.event.changes && github.event.issue
     
     steps:
-      - name: Obtener fecha actual
-        id: current-date
-        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      - name: Establecer fecha en TODO At
-        uses: nipe0324/update-project-v2-item-field@v1.0
-        if: github.event.changes.issue.field_value.to.name == 'TODO'
-        with:
-          project-url: 'https://github.com/orgs/KeaKit/projects/2'
-          github-token: ${{ secrets.GH_TOKEN }}
-          field-name: 'TODO At'
-          field-value: ${{ steps.current-date.outputs.date }}
-
-      - name: Establecer fecha en In Progress At
-        uses: nipe0324/update-project-v2-item-field@v1.0
-        if: github.event.changes.issue.field_value.to.name == 'In Progress'
-        with:
-          project-url: 'https://github.com/orgs/KeaKit/projects/2'
-          github-token: ${{ secrets.GH_TOKEN }}
-          field-name: 'In Progress At'
-          field-value: ${{ steps.current-date.outputs.date }}
-
-      - name: Establecer fecha en In Review At
-        uses: nipe0324/update-project-v2-item-field@v1.0
-        if: github.event.changes.issue.field_value.to.name == 'In Review'
-        with:
-          project-url: 'https://github.com/orgs/KeaKit/projects/2'
-          github-token: ${{ secrets.GH_TOKEN }}
-          field-name: 'In Review At'
-          field-value: ${{ steps.current-date.outputs.date }}
-
-      - name: Establecer fecha en Done At
-        uses: nipe0324/update-project-v2-item-field@v1.0
-        if: github.event.changes.issue.field_value.to.name == 'Done'
-        with:
-          project-url: 'https://github.com/orgs/KeaKit/projects/2'
-          github-token: ${{ secrets.GH_TOKEN }}
-          field-name: 'Done At'
-          field-value: ${{ steps.current-date.outputs.date }}
+      - name: Checkout repositorio
+        uses: actions/checkout@v3
+      
+      - name: Instalar dependencias de Python
+        run: |
+          pip install requests  # Solo esto es necesario
+      
+      - name: Verificar que el script existe
+        run: |
+          if [ ! -f "scripts/update-github-project-dates.sh" ]; then
+            echo "Script no encontrado en scripts/update-github-project-dates.sh"
+            exit 1
+          fi
+          chmod +x scripts/update-github-project-dates.sh
+      
+      - name: Ejecutar script de actualización de fechas
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          PROJECT_ID: "PVT_kwDOD3Si084BPCwq"
+          REPO_OWNER: "KeaKit"
+          REPO_NAME: "KeaKit"
+          MILESTONE_NUMBER: "3"  # Milestone que va a recorrer (S2)
+        run: |
+          echo "Ejecutando script para milestone 3..."
+          ./scripts/update-github-project-dates.sh
+      
+      - name: Notificar resultado
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "Script ejecutado correctamente"
+          else
+            echo "Error al ejecutar el script"
+            exit 1
+          fi
