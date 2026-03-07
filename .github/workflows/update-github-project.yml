@@ -21,7 +21,7 @@ jobs:
       
       - name: Instalar dependencias de Python
         run: |
-          pip install requests  # Solo esto es necesario
+          pip install requests
       
       - name: Verificar que el script existe
         run: |
