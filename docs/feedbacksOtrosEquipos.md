@@ -334,6 +334,157 @@ Esto puede resultar incoherente si los eventos están pensados únicamente para 
 
 ---------------------------------------------------------------------------------------------
 
+#### Onboarding
+
+Casos de uso probados:
+
+* Dar de alta a nuevos residentes a través de un formulario.
+* Preinscripción a través de formulario.
+
+---
+
+###### **Dar de alta a nuevos residentes a través de un formulario**
+
+**Credenciales utilizadas para la prueba**
+
+Correo: `residentetest@test.com`  
+Contraseña: `test123456789`
+
+**Acción legal**
+
+El formulario permite crear residentes correctamente cuando los datos son válidos.
+
+**Acción ilegal / Funcionamiento mejorable**
+
+Se detectaron múltiples problemas de validación del formulario:
+
+* El sistema permite introducir **solo un nombre sin apellido** en el campo de nombre completo sin mostrar ningún error.
+* Permite registrar nombres inválidos como:
+  * `22`
+  * `.`
+  * `@`
+  * `??¿`
+  * `a`
+* Permite registrar correos inválidos como `.@gmail.com`, lo cual **no cumple los estándares RFC de correo electrónico**.
+* No existe **límite máximo de caracteres** en los campos:
+  * nombre
+  * contraseña
+  * correo
+  * habitación
+  * edificio
+* Se pudieron introducir **aproximadamente 1000 caracteres** sin que el sistema lo impidiera.
+* Los campos **habitación y edificio permiten símbolos**, sin ninguna validación.
+* Se puede introducir una **fecha de check-in en el pasado** (ej: `12-06-1981`).
+  * El sistema indica que el residente se ha creado correctamente, pero **luego no aparece en el listado**.
+* El sistema permite introducir **nombres de habitación y edificio que no existen**, cuando idealmente deberían seleccionarse de una lista de habitaciones existentes y disponibles.
+* Se puede intentar crear **dos residentes con exactamente los mismos datos**.
+  * El sistema muestra el mensaje **“creado correctamente”**, pero el residente realmente **no se crea**.
+
+**Failure condition detectada**
+
+* **T-12:** El sistema muestra mensajes de éxito aunque la acción no se complete realmente (por ejemplo, al crear un residente duplicado o con fecha inválida).
+* **T-13:** El formulario no valida correctamente datos obligatorios o incorrectos (nombres inválidos, correos inválidos, campos con símbolos o longitud excesiva).
+
+---
+
+###### **Preinscripción a través de formulario**
+Se trata del formulario que aparece la primera vez que se inicia sesión con una cuenta de residente.
+**Funcionamiento detectado**
+
+* El formulario **no permite enviarse vacío**, lo cual es correcto.
+* La funcionalidad de preinscripción **funciona correctamente**.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---------------------------------------------------------------------------------------------
+
+#### Objetos
+
+Casos de uso probados:
+
+* Gestión de reservas de objetos (CRUD).
+* Visualización de disponibilidad de los objetos.
+
+---
+
+###### **Gestión de reservas de objetos (CRUD)**
+
+**Funcionamiento mejorable**
+
+Se detectaron varios problemas en operaciones de gestión de objetos:
+
+* Al **eliminar un objeto** aparece el error: `Unexpected token '<', "<!DOCTYPE "... is not valid JSON`
+
+
+* Aunque aparece el error, **al recargar la página el objeto sí se elimina**.
+* El mismo error aparece al intentar **ver el préstamo de un objeto** inmediatamente después de intentar eliminarlo sin recargar la página.
+* El sistema permite **crear objetos con nombres inválidos**, por ejemplo `@`.
+* Cuando se elimina un objeto, **no desaparece de la lista inmediatamente**, solo desaparece tras **recargar manualmente la página**.
+
+**Failure condition detectada**
+
+* **T-10:** Se muestra un error HTTP al usuario durante acciones legales como eliminar un objeto.
+* **T-12:** La interfaz no se actualiza correctamente después de eliminar un objeto, generando un comportamiento inesperado.
+
+---
+
+###### **Visualización de disponibilidad de los objetos**
+
+**Funcionamiento detectado**
+
+* El sistema muestra si el objeto está **disponible o no**.
+* También muestra **cuántas reservas tiene**, además del resto de detalles del objeto.
+
+**Funcionamiento mejorable**
+
+Se detectó una **inconsistencia entre vistas**:
+
+* En la **vista de residente**, un objeto (por ejemplo un *patinete*) aparece como **no disponible**.
+* En la **vista de administrador**, el mismo objeto aparece como **disponible**, incluso teniendo **dos reservas activas**.
+
+**Failure condition detectada**
+
+* **T-12:** El sistema muestra información inconsistente dependiendo del rol del usuario.
+
+---------------------------------------------------------------------------------------------
+
+#### Matching
+
+Casos de uso probados:
+
+* Configuración del perfil biográfico y preferencias.
+* Gestión de etiquetas personales para el algoritmo.
+
+---
+
+###### **Configuración del perfil biográfico y preferencias**
+
+**Funcionamiento mejorable**
+
+Se detectaron problemas de validación en campos obligatorios:
+
+* El campo **“Nombre completo”** aparece marcado como obligatorio (con asterisco), pero el sistema permite **guardar los cambios sin introducir ningún nombre**.
+* Incluso eliminando el **apodo**, el sistema permite guardar el perfil **completamente vacío**.
+* El campo **“Lugar de origen”** también aparece marcado como obligatorio, pero el sistema permite guardar el perfil **sin rellenarlo**.
+
+**Failure condition detectada**
+
+* **T-13:** El sistema no detecta formularios enviados con **campos obligatorios vacíos**.
+
+---
+
+###### **Gestión de etiquetas personales para el algoritmo**
+
+**Funcionamiento detectado**
+
+* La gestión de etiquetas personales funciona correctamente.
+
+**Failure condition detectada**
+
+* Ninguna.
+
 ## Meerkatters
 
 ### Casos de usos probados
