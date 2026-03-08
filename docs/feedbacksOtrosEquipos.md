@@ -22,8 +22,8 @@
 * **Failure condition detectada:** Ninguna.
 
 ###### **Recuperación de contraseñas**
-* **Funcionamiento mejorable:** No se pudo probar este caso de uso debido a la imposibilidad de registrar una cuenta propia y a que los correos de prueba proporcionados no son reales.
-* **Failure condition:** Pendiente de validación.
+* **Funcionamiento mejorable:** Puse un correo personal que no esta registrado y me salio un mensaje de "si tu correo existe te llegaron las instrucciones", nunca me llegaron ningunas instrucciones, ademas recomendaría primero realizar un filtro para ver si dicho correo esta registrado en el sistema y enviar un mensaje en consecuencia sea "correo no registrado" o en caso de que lo este, el mensaje anterior
+* **Failure condition:** T12, puse un correo real, el sistema dijo que me enviaria instrucciones y no fueron enviadass
 
 ---------------------------------------------------------------------------------------------
 
