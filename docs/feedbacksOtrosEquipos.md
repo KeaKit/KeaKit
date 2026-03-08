@@ -809,6 +809,111 @@ Cuando un evento se cancela:
 Este apartado no está todavía implementado. Hemos contactado con los miembros de MeerKatters y nos han informado que dicha funcionalidad la implementarán en futuros sprints, puesto que no es core.
 
 
+---------------------------------------------------------------------------------------------
+
+#### Suscripciones y Pagos
+
+Casos de uso probados:
+
+* UC29 – Ver Planes
+* UC30 – Suscribirse a Plan Premium
+* UC31 – Procesar Pago
+* UC32 – Cancelar Suscripción
+
+---
+
+###### **UC29 – Ver Planes**
+
+Permite consultar los planes de suscripción disponibles y sus beneficios.
+
+**Funcionamiento detectado**
+
+* Los planes de suscripción se visualizan correctamente.
+* La información de los beneficios asociados a cada plan se muestra sin problemas.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+###### **UC30 – Suscribirse a Plan Premium**
+
+Permite contratar un plan premium con ventajas adicionales.
+
+**Funcionamiento detectado**
+
+* El sistema no permite enviar el formulario vacío, lo cual es correcto.
+* El sistema valida correctamente algunos datos inválidos:
+  * No permite introducir **fechas de tarjeta expiradas**.
+  * No permite introducir **CVV con menos de 3 dígitos**.
+
+**Funcionamiento mejorable**
+
+Se detectaron algunos problemas de validación en el formulario de pago:
+
+* El campo **nombre del titular** permite introducir símbolos, por ejemplo `@`.
+* El campo **número de tarjeta** acepta cualquier secuencia de números.
+  * Se entiende que esto puede estar configurado así para pruebas, pero en un entorno real solo deberían aceptarse **tarjetas válidas**.
+
+**Failure condition detectada**
+
+* **T-13:** El formulario permite introducir datos incorrectos o no válidos (por ejemplo símbolos en el nombre del titular), lo que indica ausencia de validación adecuada.
+
+---
+
+###### **UC31 – Procesar Pago**
+
+Gestiona la transacción económica mediante la pasarela de pago integrada.
+
+**Funcionamiento detectado**
+
+* El proceso de pago se ejecuta correctamente una vez introducidos los datos.
+* El sistema completa la suscripción sin errores visibles para el usuario.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+###### **UC32 – Cancelar Suscripción**
+
+Permite finalizar una suscripción activa.
+
+**Funcionamiento detectado**
+
+* La cancelación de la suscripción se realiza correctamente.
+* El cambio se refleja inmediatamente en el estado de la cuenta.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---------------------------------------------------------------------------------------------
+
+#### Publicidad y Ajustes
+
+Casos de uso probados:
+
+* UC33 – Panel de Ajustes
+
+---
+
+###### **UC33 – Panel de Ajustes**
+
+Permite modificar preferencias generales de la cuenta.
+
+**Funcionamiento mejorable**
+
+* El panel muestra correctamente los controles de configuración.
+* Sin embargo, los cambios realizados **solo se modifican visualmente en la interfaz**, pero **no se guardan realmente en el sistema**.
+
+**Failure condition detectada**
+
+* **T-12:** El sistema no presenta el comportamiento esperado, ya que los cambios realizados en los ajustes no se persisten tras modificarlos.
+
+
 ## 9. Historial de versiones
 
 | Versión | Fecha       | Descripción | Autor(es) |
@@ -817,6 +922,7 @@ Este apartado no está todavía implementado. Hemos contactado con los miembros 
 | 1.0.1   | 08/03/2026 | Se corrigieron signos de puntuación | Luis Emmanuel Chavez Malave |
 | 1.1.0 | 08/03/2026 | Integración de pruebas adicionales de NexUS y Meerkatters | Marta Aguilar Morcillo |
 | 1.2.0 | 08/03/2026 | Integración de pruebas de casos de uso de NexUS  | Salma El Hakimy Ettorabi |
+| 1.2.1 | 08/03/2026 | Integración de pruebas de casos de uso de Meerkatters  | Salma El Hakimy Ettorabi |
 
 
 ---
