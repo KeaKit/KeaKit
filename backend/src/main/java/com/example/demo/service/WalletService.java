@@ -1,10 +1,14 @@
 package com.example.demo.service;
 
+import com.example.demo.exception.NotEnoughBalanceException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Transaction;
+import com.example.demo.model.TransactionType;
 import com.example.demo.model.Wallet;
 import com.example.demo.repository.TransactionRepository;
 import com.example.demo.repository.WalletRepository;
+
+import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +20,7 @@ public class WalletService {
 
     @Autowired
     private WalletRepository walletRepository;
+
 
     @Autowired
     private TransactionRepository transactionRepository;
@@ -29,4 +34,21 @@ public class WalletService {
         Wallet wallet = getWalletByUserId(userId);
         return transactionRepository.findByDestinationWalletIdOrderByTimestampDesc(wallet.getId());
     }
+
+    @Transactional
+    public void updateWalletBalance(Long userId, Double amount) throws ResourceNotFoundException {
+        Wallet wallet = getWalletByUserId(userId);
+        if (wallet.getBalance() < amount){
+            throw new NotEnoughBalanceException("Insufficient balance in wallet");
+        }
+        if(amount <= 0.0){
+            throw new NotEnoughBalanceException("the amount need to be positive");
+        }
+        Transaction transaction = new Transaction();
+        transaction.setAmount(- amount);
+        transaction.setDestinationWallet(wallet);
+        transaction.setType(TransactionType.PAYOUT);
+        transactionRepository.save(transaction);
+    }
+
 }
