@@ -820,6 +820,8 @@ Este apartado no está todavía implementado. Hemos contactado con los miembros 
 | 1.0.0   | 07/03/2026 | Se creó a modo de borrador el documento y se probaron varios casos de uso, tanto de Meerkatters como de NexUS. | Luis Emmanuel Chavez Malave |
 | 1.0.1   | 08/03/2026 | Se corrigieron signos de puntuación | Luis Emmanuel Chavez Malave |
 | 1.1.0 | 08/03/2026 | Integración de pruebas adicionales de NexUS y Meerkatters | Marta Aguilar Morcillo |
+| 1.2.0 | 08/03/2026 | Integración de pruebas de casos de uso de NexUS  | Salma El Hakimy Ettorabi |
+
 
 ---
 
