@@ -16,6 +16,8 @@ public class DatabaseSeeder {
     @Bean
     CommandLineRunner initDatabase(
             UserRepository userRepo,
+            WalletRepository walletRepo,
+            TransactionRepository transactionRepo,
             CategoryRepository catRepo,
             ItemRepository itemRepo,
             ArticleRepository articleRepo,
@@ -49,7 +51,20 @@ public class DatabaseSeeder {
             tenant.setPhone("223456789");
             userRepo.save(tenant);
 
-            // 2. Categorías
+            // 2. Wallets
+            Wallet ownerWallet = new Wallet(owner);
+            walletRepo.save(ownerWallet);
+            Wallet tenantWallet = new Wallet(tenant);
+            walletRepo.save(tenantWallet);
+
+            // 3. Transacciones
+            Transaction initialDeposit = new Transaction();
+            initialDeposit.setAmount(500.0);
+            initialDeposit.setType(TransactionType.PAYOUT);
+            initialDeposit.setDestinationWallet(ownerWallet);
+            transactionRepo.save(initialDeposit);
+
+            // 4. Categorías
             Category catTech = new Category();
             catTech.setName("Tecnología");
             catTech.setDescription("Dispositivos y servicios técnicos");
@@ -58,7 +73,7 @@ public class DatabaseSeeder {
             catTech.setStatus(CategoryStatus.ACTIVE);
             catRepo.save(catTech);
 
-            // 3. Artículo (Herencia de Item)
+            // 5. Artículo (Herencia de Item)
             // Según tus logs: id de article referencia a id de item
             Article laptop = new Article();
             laptop.setTitle("MacBook Pro");
@@ -72,7 +87,7 @@ public class DatabaseSeeder {
             // Al guardar el ArticleRepository, JPA gestiona la tabla 'items' y 'articles'
             articleRepo.save(laptop);
 
-            // 4. Servicio (Herencia de Item)
+            // 6. Servicio (Herencia de Item)
             Service setupService = new Service();
             setupService.setTitle("Instalación Software");
             setupService.setDescription("Configuración inicial a domicilio");
@@ -82,7 +97,7 @@ public class DatabaseSeeder {
             setupService.setTotalUnits(10);
             serviceRepo.save(setupService);
 
-            // 5. Kit (El Alquiler)
+            // 7. Kit (El Alquiler)
             Kit myKit = new Kit();
             myKit.setName("Pack Trabajo Remoto");
             myKit.setTenant(tenant);
@@ -92,7 +107,7 @@ public class DatabaseSeeder {
             myKit.setEndDate(LocalDate.now().plusMonths(1));
             kitRepo.save(myKit);
 
-            // 5.1 KitItems (relación intermedia)
+            // 7.1 KitItems (relación intermedia)
             KitItem kitItem1 = new KitItem();
             kitItem1.setKit(myKit);
             kitItem1.setItem(laptop);
@@ -105,7 +120,7 @@ public class DatabaseSeeder {
             kitItem2.setQuantity(1);
             kitItemRepo.save(kitItem2);
 
-            // 6. Rating
+            // 8. Rating
             Rating feedback = new Rating();
             feedback.setKit(myKit);
             feedback.setReviewer(tenant);
