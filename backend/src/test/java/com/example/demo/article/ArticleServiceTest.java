@@ -44,7 +44,7 @@ class ArticleServiceTest {
         owner.setId(1L);
         owner.setName("owner");
         owner.setEmail("owner@example.com");
-        owner.setPassword("pwd");
+        owner.setPassword("pwdpwd");
         owner.setRole(UserRole.USER);
     }
 
