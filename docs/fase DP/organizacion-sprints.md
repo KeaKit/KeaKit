@@ -9,7 +9,7 @@ Este documento detalla la hoja de ruta para el desarrollo del sistema, dividida 
 1. [Sprint 1: MVP](#sprint-1-mvp)
 2. [Sprint 2: MVP v1](#sprint-2-mvp-v1)
 3. [Sprint 3: MVP v2](#sprint-3-mvp-v2)
-4. [Historial de versiones]()
+4. [Historial de versiones](#historial-de-versiones)
 
 
 ## Sprint 1: MVP
@@ -22,9 +22,9 @@ Este documento detalla la hoja de ruta para el desarrollo del sistema, dividida 
 
 | Casos de Uso (CU) | Equipo Responsable |
 | :--- | :--- |
-| CU-ARRENDATARIO-01 <br> CU-ARRENDATARIO-02 <br> CU-ARRENDATARIO-03 <br> CU-ARRENDATARIO-04 | Squad 1:<br> - Lucía Ponce García de Sola <br> - Miguel Álvarez Raya <br> - Enrique Nicolae Barac Ploae <br> - Salma El Hakimy <br> - Luis Emmanuel Chavez Malave |
+| CU-ARRENDATARIO-01 <br> CU-ARRENDATARIO-02 <br> CU-ARRENDATARIO-03 <br> CU-ARRENDATARIO-04 (Primera versión) | Squad 1:<br> - Lucía Ponce García de Sola <br> - Miguel Álvarez Raya <br> - Enrique Nicolae Barac Ploae <br> - Salma El Hakimy <br> - Luis Emmanuel Chavez Malave |
 | CU-ADMIN-01 <br> CU-ARRENDADOR-02 <br> CU-ARRENDADOR-04 <br> CU-GENERAL-04 | Squad 2: <br> - Rosa María Espinosa Martínez <br> - Samuel Tamayo Balogh <br> - Guillermo García León <br> - Ismael Carrasco Mkhazni <br> - Germán Ojeda Garrido|
-| CU-GENERAL-01 <br> CU-GENERAL-02 <br> CU-GENERAL-03 <br> CU-ARRENDATARIO-06 | Squad 3: <br> - Guillermo Ciria González <br> - Rafael Harana Mancilla <br> - Alejandro González Macías <br> - Adrián Miguel Chabera Rubio <br> - Marta de la Calle González |
+| CU-GENERAL-01 <br> CU-GENERAL-02 <br> CU-GENERAL-03  | Squad 3: <br> - Guillermo Ciria González <br> - Rafael Harana Mancilla <br> - Alejandro González Macías <br> - Adrián Miguel Chabera Rubio <br> - Marta de la Calle González |
 |CU-ARRENDADOR-01 <br> CU-ARRENDADOR-03 <br> CU-ARRENDATARIO-05 <br> CU-ADMIN-02 | Squad 4: <br> - Paula Rosa González Páez <br> - Marta Aguilar Morcillo <br> - Ángel Amo Sánchez <br> - Jose Luis Moraza Vergara <br> - Cristina Fernández Chica <br> - Candela Jazmín Gutierrez González |
 
 * **Despliegue y Preparación de entorno:** Guillermo Ciria González.
@@ -42,7 +42,7 @@ Este documento detalla la hoja de ruta para el desarrollo del sistema, dividida 
 | Casos de Uso (CU) | Equipo Responsable |
 | :--- | :--- |
 |CU-GENERAL-05 <br> CU-ARRENDADOR-10 <br> CU-ARRENDATARIO-11 |Squad 1:<br> - Lucía Ponce García de Sola <br> - Miguel Álvarez Raya <br> - Enrique Nicolae Barac Ploae <br> - Salma El Hakimy <br> - Luis Emmanuel Chavez Malave |
-| CU-ARRENDATARIO-10 <br> CU-ADMIN-04 | Squad 2: <br> - Rosa María Espinosa Martínez <br> - Samuel Tamayo Balogh <br> - Guillermo García León <br> - Ismael Carrasco Mkhazni <br> - Germán Ojeda Garrido|
+| CU-ARRENDATARIO-10 <br> CU-ADMIN-04 <br> CU-ARRENDATARIO-06| Squad 2: <br> - Rosa María Espinosa Martínez <br> - Samuel Tamayo Balogh <br> - Guillermo García León <br> - Ismael Carrasco Mkhazni <br> - Germán Ojeda Garrido|
 |  CU-ARRENDADOR-08 <br> CU-ADMIN-06 | Squad 3: <br> - Guillermo Ciria González <br> - Rafael Harana Mancilla <br> - Alejandro González Macías <br> - Adrián Miguel Chabera Rubio <br> - Marta de la Calle González |
 | CU-ARRENDADOR-05 <br>   CU-ADMIN-05  | Squad 4: <br> - Paula Rosa González Páez <br> - Marta Aguilar Morcillo <br> - Ángel Amo Sánchez <br> - Jose Luis Moraza Vergara <br> - Cristina Fernández Chica <br> - Candela Jazmín Gutierrez González |
 

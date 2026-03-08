@@ -13,15 +13,13 @@
       - [CU-ARRENDADOR-01 – Subida de artículos](#cu-arrendador-01---subida-de-artículos)  
       - [CU-ARRENDADOR-02 – Listado de artículos subidos](#cu-arrendador-02---listado-de-artículos-subidos)  
       - [CU-ARRENDADOR-03 – Gestión de artículos subidos](#cu-arrendador-03---gestión-de-artículos-subidos)  
-      - [CU-ARRENDADOR-04 – Gestión de fin de alquiler](#cu-arrendador-04---gestión-de-fin-de-alquiler)  
 
    - [Arrendatario](#arrendatario)  
       - [CU-ARRENDATARIO-01 – Creación de kits](#cu-arrendatario--01---creación-de-kits)  
       - [CU-ARRENDATARIO-02 – Visualización dinámica de precios](#cu-arrendatario--02---visualización-dinámiaca-de-precios)  
       - [CU-ARRENDATARIO-03 – Gestión logística del alquiler](#cu-arrendatario--03---gestión-logística-del-alquiler)  
-      - [CU-ARRENDATARIO-04 – Pago del kit](#cu-arrendatario--04---pago-del-kit)  
+      - [CU-ARRENDATARIO-04 – Pago del kit](#cu-arrendatario-04---pago-del-kit)  
       - [CU-ARRENDATARIO-05 – Seguimiento de alquileres activos](#cu-arrendatario--05---seguimiento-de-alquileres-activos)  
-      - [CU-ARRENDATARIO-06 – Validación de recepción y liberación del pago restante](#cu-arrendatario--06---validación-de-recepción-y-liberación-del-pago-restante)  
 
    - [Administrador](#administrador)  
       - [CU-ADMIN-01 – Gestión de categorías](#cu-admin-01---gestión-de-categorías)  
@@ -34,6 +32,7 @@
       - [CU-GENERAL-05 – Home](#cu-general-05---home)  
 
    - [Arrendador](#arrendador-1)  
+      - [CU-ARRENDADOR-04 – Gestión de fin de alquiler](#cu-arrendador-04---gestión-de-fin-de-alquiler)  
       - [CU-ARRENDADOR-05 – Retirada de ingresos](#cu-arrendador-05---retirada-de-ingresos)  
       - [CU-ARRENDADOR-06 – Alertas de demanda](#cu-arrendador-06---alertas-de-demanda)  
       - [CU-ARRENDADOR-07 – Filtros en “Mis artículos”](#cu-arrendador-07---filtros-en-mis-artículos)  
@@ -42,6 +41,7 @@
       - [CU-ARRENDADOR-10 – Historial de alquileres de un objeto](#cu-arrendador-10---historial-de-alquileres-de-un-objeto)  
 
    - [Arrendatario](#arrendatario-1)  
+      - [CU-ARRENDATARIO-06 – Validación de recepción y liberación del pago restante](#cu-arrendatario-06---validación-de-recepción-y-liberación-del-pago-restante)  
       - [CU-ARRENDATARIO-07 – Modificar kits predeterminados](#cu-arrendatario--07---modificar-kits-predeterminados)  
       - [CU-ARRENDATARIO-08 – Filtrado de artículos disponibles](#cu-arrendatario--08---filtrado-de-artículos-disponibles)  
       - [CU-ARRENDATARIO-09 – Avisos de disponibilidad](#cu-arrendatario--09---avisos-de-disponibilidad)  
@@ -167,26 +167,12 @@
 | **ID**             | CU-ARRENDADOR-03|
 | **Nombre**         | Gestión de artículos subidos |
 | **Actores**        | Arrendador |
-| **Objetivo**       | os usuarios deben poder modificar o eliminar los artículos subidos |
+| **Objetivo**       | Los usuarios deben poder modificar o eliminar los artículos subidos |
 | **Precondiciones** | - |
 | **Flujo principal**| 1. Entrar en algún artículo <br> 2. Eliminar o editar el artículo <br> 3. En caso de editar el artículo, cambiar los datos y confirmar los cambios |
 | **Excepciones**    | Si el artículo está alquilado en ese momento, no podrá eliminarlo ni editarlo |
 | **Resultado**      | - |
 | **Historias de usuario**      | HU-ARRENDADOR-07 <br> HU-ARRENDADOR-08 <br> HU-ARRENDADOR-18 |
-
-### CU-ARRENDADOR-04 - Gestión de fin de alquiler
-
-| **Elemento**       | **Descripción**|
-|---------------------|-----------------|
-| **ID**             | CU-ARRENDADOR-04|
-| **Nombre**         | Gestión de fin de alquiler |
-| **Actores**        | Arrendador |
-| **Objetivo**       | El arrendador debe poder confirmar (o no) la devolución del objeto|
-| **Precondiciones** | - |
-| **Flujo principal**| 1. Entrar al artículo correspondiente <br> 2. Pulsar sobre una de las opciones posibles sobre la devolución del objeto|
-| **Excepciones**    | - |
-| **Resultado**      | **Si está en buen estado**: Se devuleve el 20% de depósito de garantía al arrendatario <br> **Si hay daños**: Se retiene total o parcialmente la garantía |
-| **Historias de usuario**      | HU-ARRENDADOR-33 <br> HU-ARRENDADOR-34 <br> HU-ARRENDADOR-40 |
 
 ## ARRENDATARIO
 
@@ -246,7 +232,7 @@
 | **Flujo principal**| 1. Pantalla de creación de kits <br> 2. Pulsar sobre el botón "Pagar kit" <br> 3. Rellenar los datos de pago <br> 4. Confirmar el pago|
 | **Excepciones**    | - |
 | **Resultado**      | El kit quedará pagado y aparecerá en "Mis alquileres" |
-| **Historias de usuario**      | HU-ARRENDATARIO-17 <br> HU-ARRENDATARIO-18 |
+| **Historias de usuario**      | HU-ARRENDATARIO-17  |
 
 ### CU-ARRENDATARIO-05 - Seguimiento de alquileres activos
 
@@ -262,19 +248,6 @@
 | **Resultado**      | Visualización de datos de seguimiento |
 | **Historias de usuario**      | HU-ARRENDATARIO-21 <br> HU-ARRENDATARIO-22 <br> HU-ARRENDATARIO-23 <br> HU-ARRENDATARIO-25 |
 
-### CU-ARRENDATARIO-06 - Validación de recepción y liberación del pago restante
-
-| **Elemento**       | **Descripción**|
-|---------------------|-----------------|
-| **ID**             | CU-ARRENDATARIO-06|
-| **Nombre**         | Validación de recepción y liberación del pago restante |
-| **Actores**        | Arrendatario |
-| **Objetivo**       | El arrendatario debe poder validar la recepción del kit |
-| **Precondiciones** | - |
-| **Flujo principal**| 1. Acceder a la sección "Mis kits" del perfil <br> 2. Entrar en el kit correspondiente <br> 3. Pulsar en recibido (o no recibido)|
-| **Excepciones**    | - |
-| **Resultado**      | Validación de recepción realizada |
-| **Historias de usuario**      | HU-ARRENDATARIO-38 <br> HU-ARRENDATARIO-39 <br> HU-ARRENDATARIO-32 <br> HU-ARRENDATARIO-41 |
 
 ## ADMINISTRADOR
 
@@ -329,6 +302,20 @@
 | **Historias de usuario**      | HU-ARRENDADOR-23 <br> HU-ARRENDATARIO-21 |
 
 ## ARRENDADOR
+
+### CU-ARRENDADOR-04 - Gestión de fin de alquiler
+
+| **Elemento**       | **Descripción**|
+|---------------------|-----------------|
+| **ID**             | CU-ARRENDADOR-04|
+| **Nombre**         | Gestión de fin de alquiler |
+| **Actores**        | Arrendador |
+| **Objetivo**       | El arrendador debe poder confirmar (o no) la devolución del objeto|
+| **Precondiciones** | - |
+| **Flujo principal**| 1. Entrar al artículo correspondiente <br> 2. Pulsar sobre una de las opciones posibles sobre la devolución del objeto|
+| **Excepciones**    | - |
+| **Resultado**      | **Si está en buen estado**: Se devuleve el 20% de depósito de garantía al arrendatario <br> **Si hay daños**: Se retiene total o parcialmente la garantía |
+| **Historias de usuario**      | HU-ARRENDADOR-33 <br> HU-ARRENDADOR-34 <br> HU-ARRENDADOR-40 |
 
 ### CU-ARRENDADOR-05 - Retirada de ingresos
 
@@ -423,6 +410,20 @@
 
 
 ## ARRENDATARIO
+
+### CU-ARRENDATARIO-06 - Validación de recepción y liberación del pago restante
+
+| **Elemento**       | **Descripción**|
+|---------------------|-----------------|
+| **ID**             | CU-ARRENDATARIO-06|
+| **Nombre**         | Validación de recepción y liberación del pago restante |
+| **Actores**        | Arrendatario |
+| **Objetivo**       | El arrendatario debe poder validar la recepción del kit |
+| **Precondiciones** | - |
+| **Flujo principal**| 1. Acceder a la sección "Mis kits" del perfil <br> 2. Entrar en el kit correspondiente <br> 3. Pulsar en recibido (o no recibido)|
+| **Excepciones**    | - |
+| **Resultado**      | Validación de recepción realizada |
+| **Historias de usuario**      | HU-ARRENDATARIO-38 <br> HU-ARRENDATARIO-39 <br> HU-ARRENDATARIO-32 <br> HU-ARRENDATARIO-41 |
 
 ### CU-ARRENDATARIO-07 - Modificar kits predeterminados
 
