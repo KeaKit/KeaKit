@@ -929,4 +929,4 @@ Permite modificar preferencias generales de la cuenta.
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
 **Fecha de redacción:** 08/03/2026  
-**Versión:** 1.2.0
+**Versión:** 1.2.1
