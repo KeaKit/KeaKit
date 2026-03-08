@@ -825,6 +825,6 @@ Este apartado no está todavía implementado. Hemos contactado con los miembros 
 
 ---
 
-**Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma 
-**Fecha de redacción:** 07/03/2026  
-**Versión:** 1.1.0
+**Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
+**Fecha de redacción:** 08/03/2026  
+**Versión:** 1.2.0
