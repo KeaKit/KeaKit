@@ -345,10 +345,6 @@ Casos de uso probados:
 
 ###### **Dar de alta a nuevos residentes a través de un formulario**
 
-**Credenciales utilizadas para la prueba**
-
-Correo: `residentetest@test.com`  
-Contraseña: `test123456789`
 
 **Acción legal**
 
