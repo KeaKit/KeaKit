@@ -58,12 +58,12 @@ public class UserController {
     public ResponseEntity<Map<String, String>> logout(@RequestHeader("Authorization") String authorizationHeader) {
         Map<String, String> response = new HashMap<>();
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        String token = jwtUtil.extractTokenFromAuthHeader(authorizationHeader);
+
+        if (token == null) {
             response.put("message", "Invalid token format");
             return ResponseEntity.badRequest().body(response);
         }
-
-        String token = authorizationHeader.substring(7);
 
         try {
             // Verificar que el token sea válido antes de invalidarlo
