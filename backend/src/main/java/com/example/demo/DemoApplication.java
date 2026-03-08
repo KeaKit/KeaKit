@@ -3,13 +3,11 @@ package com.example.demo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
 @SpringBootApplication
 @EnableCaching
-@EnableJpaAuditing // Para poder usar @CreatedDate y @LastModifiedDate en las entidades
 public class DemoApplication {
 
 	public static void main(String[] args) {
