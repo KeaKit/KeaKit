@@ -1,105 +1,91 @@
-# Feedback 
+# Informe de Feedback: NexUS & Meerkatters
 
-## NexUS
+## 1. NexUS
 
-### Casos de usos probados
+### Casos de uso probados
 
 #### Autenticación
-o Registro de usuarios mediante email.
-o Inicio y cierre de sesión
-o Recuperación de contraseña.
-o Gestión de roles.
-o Edición de perfil.
+* Registro de usuarios mediante email.
+* Inicio y cierre de sesión.
+* Recuperación de contraseña.
+* Gestión de roles.
+* Edición de perfil.
 
+---
 
 ###### **Registro mediante email**
+* **Funcionamiento inadecuado:** Aunque se indica que el registro está desarrollado, no se visualiza ningún botón ni opción en la interfaz para realizarlo.
+* **Failure condition detectada:** Ninguna técnica de backend; sin embargo, existe un bloqueo funcional por falta de elementos de UI.
 
-**Funcionamiento inadecuado:** 
-- Se dice desarrollado el registro de usuarios mediante email pero no se percibe ningun boton ni opcion para hacerlo.
+###### **Inicio y cierre de sesión**
+* **Funcionamiento mejorable:** El botón de **"Mantener sesión"** no es funcional; la sesión permanece abierta independientemente de si se marca o no.
+* **Failure condition detectada:** Ninguna.
 
-**Failure condition detectada:** ninguna para el registro
-
-------------------------------------------------------------------------------------------
-###### **inicio y cierre de sesion:** 
-
-**Funcionamiento mejorable:** 
-- el boton de mantener sesion no hace nada, pues la sesion se mantiene abierta aunque no lo marques.
-
-**Failure condition detectada:** ninguna 
-
------------------------------------------------------------------------------------------
-
-###### **Recuperacion de contraseñas**
-
-**Funcionamiento mejorable:** 
-- Al no poder registrar una cuenta con mi correo y como los correos proporcionados no existen realmente, no se pudo probar dicho caso de uso
-
-**Failure condition:** ninguno de momento
+###### **Recuperación de contraseñas**
+* **Funcionamiento mejorable:** No se pudo probar este caso de uso debido a la imposibilidad de registrar una cuenta propia y a que los correos de prueba proporcionados no son reales.
+* **Failure condition:** Pendiente de validación.
 
 ---------------------------------------------------------------------------------------------
 
-###### **Gestion de roles**
-
-**Funcionamiento mejorable:** 
-funciona correctamente: casos probados
-- Con una cuenta de residente no puedes entrar como administrador
-- Con una cuenta de administrador no puedes entrar como residente
-
-**Failure condition detectada:** Ninguna
+###### **Gestión de roles**
+* **Estado:** Funciona correctamente.
+* **Casos probados:**
+  * Un usuario con rol **Residente** no puede acceder como administrador.
+  * Un usuario con rol **Administrador** no puede acceder como residente.
+* **Failure condition detectada:** Ninguna.
 
 ---------------------------------------------------------------------------------------------
 
 ###### **Edición de perfil**
 
-**Funcionamiento mejorable:** 
-- Como administrador intente modificar mi perfil, como funcionamiento que percibo extraño es que puedes poner letras en la parte de telefono de contacto, deberia o eliminarse la seccion o arreglarse.
-- Como estudiante funciona perfectamente, pero como cosa a mejorar sería en intereses personalizados agregar un lenght maximo, escribi uno de como mil caracteres y se lo comio, ademas la interfaz queda un poco extraña. 
+###### **Edición de perfil**
+* **Funcionamiento mejorable:**
+  * **Administrador:** El campo de "Teléfono de contacto" permite la entrada de letras. Se recomienda restringir el campo a valores numéricos o eliminar la sección.
+  * **Estudiante:** El campo de "Intereses personalizados" no tiene un límite de caracteres (*max-length*). Al introducir un texto de gran longitud (aprox. 1.000 caracteres), la interfaz se desmaqueta.
+* **Failure condition detectada:**
+  * Estas dos failure conditions se consideraron suponiendo que se puede editar el perfil del administrador
+  * **T-12:** El botón de "Modificar perfil" no persiste los cambios. Al salir y volver a entrar, los datos regresan a su estado original.
+  * **T-13:** Ausencia de validación para campos vacíos o inválidos. Es posible guardar el perfil en blanco sin recibir ningún aviso del sistema.
 
-**Failure condition detectada:** 
-- Estas 2 failure condition se consideraron debido a que como administrador no funciona correctamente
-- T-12: al modificar el perfil, una vez sales y vuelves a entrar pues no ocurre ninguna modificación, todo sigue igual que antes, por tanto el boton de modificar perfil no modifica el perfil
--T-13: No existe validacion para campos vacios o invalidos, puedes dejar en blanco todos los campos modificables y el sistema no realiza ningun aviso 
+---
 
 
-#### Panel residencias:
-o Acceso e interacción con el panel administrativo.
-o Gestión de personal (CRUD).
-o Gestión de residentes (CRUD).
-
----------------------------------------------------------------------------------------------
+#### Panel de Residencias
+* Acceso e interacción con el panel administrativo.
+* Gestión de personal (CRUD).
+* Gestión de residentes (CRUD).
 
 ###### **Acceso e interacción con el panel administrativo**
 
-**Funcionamiento mejorable:**
-- Ninguno apreciable, en efecto se ve y se puede interactuar
+**Funcionamiento mejorable:** Ninguno apreciable, en efecto se ve y se puede interactuar
 
-**Failure condition detectada:**
-- Ninguna
+**Failure condition detectada:** Ninguna
 
 ---------------------------------------------------------------------------------------------
 
-###### **Gestión de personal (CRUD):**
+###### **Gestión de personal (CRUD)**
+* **Funcionamiento mejorable:** Se detectó un error crítico de lógica. Un administrador puede crear un nuevo usuario de personal, iniciar sesión con él y **borrarse a sí mismo**, lo que provoca el colapso de la aplicación.
 
-**Funcionamiento mejorable:**
-- Puedes crear un personal, entrar como administrador con ese personal creado, borrarte a ti mismo, y al intentar seguir navegando se bugea todo, el area de personal no se puede ver, al entrar en habitaciones la pantalla se queda en blanco, etc.
+* **Pasos para replicar el error:**
+  1. Entrar como administrador y crear un usuario (ej. `pepito5@nexus.es`).
+  2. Cerrar sesión e iniciar sesión como `pepito5@nexus.es`.
+  3. Ir al apartado de personal y eliminar la cuenta propia de `pepito5`.
+  4. Intentar navegar por el sistema.
 
-**Pasos para replicar el error:**
-- Entrar como administrador, ir a personal y crear un personal ej pepito5@nexus.es, luego salir de la sesion, iniciar sesion como administrador con pepito5@nexus.es, volver al apartado de personal, borrar a pepito5@nexus.es, finalmente al intentar interactuar con el sistema ocurren los fallos anteriormente comentados
+* **Failure condition detectada (T-12):** Tras el borrado del usuario activo, el sistema presenta fallos graves: la pantalla de habitaciones se queda en blanco y el área de personal desaparece. Además, al intentar reingresar con cualquier credencial, aparece el error: *"El usuario del token no existe"*.
 
-**Failure condition detectada:**
-- T-12: hice un crud "normal" y al borrarme a mi mismo la aplicacion empezo a presentar fallos, ademas una vez hecho eso, al salir e intentar entrar con otras credenciales si existentes sale "el usuario del token no existe", el problema persiste al intentar entrar como estudiante
+---
 
----------------------------------------------------------------------------------------------
 
 ###### **Gestión de residentes (CRUD):**
 
 **Funcionamiento mejorable:**
 
-- Debido al fallo anterior no pude probarla
+- Debido al fallo anterior no se pudo probar
 
 **Failure condition detectada:**
 
-- Debido al falloa anterio no pude probarla
+- Debido al falloa anterio no se pudo probar
 
 ##### Incidencias
 
@@ -111,36 +97,24 @@ o Adición de notas y comentarios rápidos a las incidencias.
 
 ---------------------------------------------------------------------------------------------
 
-###### **Creacion de incidencias**
-
-**Funcionamiento mejorable:**
-
-// Nota, falta seguir viendo casos de uso y ver el de gestion de residentes porque despues de encontrar el fallo en gestion de personal no pude seguir probando la aplicacion, como ultima cosa a mencionar, Muchas de las cosas que puse en funcionamiento mejorable pueden tomarse como un feilure condition T-12, si al leerlo consideran que es asi, pasenlo de funcionamiento mejorable a failure condition T-12
-
----------------------------------------------------------------------------------------------
-
 ## Meerkatters
 
 ### Casos de usos probados
 ---------------------------------------------------------------------------------------------
 #### UC01 – Registrarse
-Permite a un usuario no autenticado crear una cuenta en la plataforma
-proporcionando sus datos básicos. Durante el registro se valida si el dominio
-del correo pertenece a una institución reconocida para aplicar posibles
-beneficios o restricciones.
+Permite a un usuario no autenticado crear una cuenta en la plataforma, proporcionando sus datos básicos. Durante el registro se valida si el dominio del correo pertenece a una institución reconocida, para aplicar posibles beneficios o restricciones.
 
 **Funcionamiento mejorable:**
 
-- Los botones de google y linkedin no hacen nada, seria recomendable como dijo el profe o eliminarlos hasta que la funcionalidad este implementada o indicarlo en la seccion de indicaciones varias
+- Los botones de Google y LinkedIn no hacen nada. Sería recomendable, como dijo el profe, eliminarlos hasta que la funcionalidad esté implementada o indicarlo en la sección de indicaciones varias.
 
-- No me deja poner caracteres en chino para el email 汉字/漢字@alum.es
+- No me deja poner caracteres en chino para el email: 汉字/漢字@alum.es.
 
-- No tiene limite de caracteres en contraseña, por eso creo que ocurrio el siguiente error
-
+- No tiene límite de caracteres en contraseña, por eso creo que ocurrió el siguiente error.
 
 **Pasos para replicar el error:**
 
-- Al intentar crear una cuenta rellene los campos con el siguiente contenido:
+- Al intentar crear una cuenta, rellené los campos con el siguiente contenido:
 
 Nombre completo
 
@@ -152,80 +126,77 @@ chinhuan@alum.es
 
 Password
 
-汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字
+汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字汉字/漢字
 
 **Failure condition detectada:**
 
-- T-12: Al rellenar los campos de la forma anteriormente mencionada, al darle registrar cuenta me salta el siguiente error "Error interno del servidor"
-- T-13: no se hasta que punto esto cuente como un T-13
+- T-12: Al rellenar los campos de la forma anteriormente mencionada, al darle a registrar cuenta me salta el siguiente error: "Error interno del servidor".
+- T-13: No sé hasta qué punto esto cuente como un T-13.
+
 ---------------------------------------------------------------------------------------------
 #### UC02 – Iniciar Sesión
-Permite a un usuario autenticarse en la plataforma mediante sus credenciales
-registradas para acceder a funcionalidades personalizadas.
+Permite a un usuario autenticarse en la plataforma mediante sus credenciales registradas, para acceder a funcionalidades personalizadas.
 
 **Funcionamiento mejorable:**
 
-- Funciona como es de esperar, tanto con las credenciales que nos dieron como con usuarios creados por mi persona
+- Funciona como es de esperar, tanto con las credenciales que nos dieron como con usuarios creados por mi persona.
 
 **Failure condition detectada:**
 
-- Ninguna
+- Ninguna.
+
 ---------------------------------------------------------------------------------------------
 #### UC03 – Cerrar Sesión
-Permite al usuario autenticado finalizar su sesión activa, garantizando la
-seguridad y evitando accesos no autorizados desde el mismo dispositivo.
+Permite al usuario autenticado finalizar su sesión activa, garantizando la seguridad y evitando accesos no autorizados desde el mismo dispositivo.
 
 **Funcionamiento mejorable:**
 
-- Super escondida, ponganla en la navbar pls o en algun lugar facil de ver, me costo encontrarla
+- Súper escondida. Pónganla en la navbar, pls, o en algún lugar fácil de ver; me costó encontrarla.
 
 **Failure condition detectada:**
 
-- Ninguna
+- Ninguna.
+
 ---------------------------------------------------------------------------------------------
 #### UC04 – Personalizar Perfil
-Permite al usuario editar su información personal como nombre, foto,
-descripción o preferencias visibles dentro de la plataforma.
-
+Permite al usuario editar su información personal, como nombre, foto, descripción o preferencias visibles dentro de la plataforma.
 
 **Funcionamiento mejorable:**
 
-- Revisen el tamaño maximo de caracteres de varios campos, nuevamente puse un monton de caracteres en descripcion personal y nuevamente me salio el error de "Error interno del servidor"
+- Revisen el tamaño máximo de caracteres de varios campos. Nuevamente puse un montón de caracteres en descripción personal y me salió el error de "Error interno del servidor".
 
 **Failure condition detectada:**
 
-- T-12: Al editar mi perfil y escribir mas de 500 caracteres en la seccion de descripcion personal me salto el error "Error interno del servidor"
-- T-11: no se hasta que punto cuente como un T11
+- T-12: Al editar mi perfil y escribir más de 500 caracteres en la sección de descripción personal, me saltó el error "Error interno del servidor".
+- T-11: No sé hasta qué punto cuente como un T11.
 
 ---------------------------------------------------------------------------------------------
 #### UC05 – Ver Perfil
-Permite visualizar el perfil propio o el de otros usuarios, mostrando información
-pública relevante.
-
+Permite visualizar el perfil propio o el de otros usuarios, mostrando información pública relevante.
 
 **Funcionamiento mejorable:**
 
-- Al entrar como mi usuario creado chinhuan, accedo a la parte de profesores y sale no se pudieron cargar profesores y el boton de reintentar, cuando se supone que existe al menos un profesor (el de los dato de acceso)
+- Al entrar como mi usuario creado, chinhuan, accedo a la parte de profesores y sale "No se pudieron cargar profesores" y el botón de reintentar, cuando se supone que existe al menos un profesor (el de los datos de acceso).
 
 **Failure condition detectada:**
 
-- T-12: Intente listar a los profesores para ver su perfil, pero me sale "No se pudieron cargar los profesores" y un boton de reintentar que al presionarlo sigue sin cargar a ninguno
+- T-12: Intenté listar a los profesores para ver su perfil, pero me sale "No se pudieron cargar los profesores" y un botón de reintentar que, al presionarlo, sigue sin cargar a ninguno.
+
 ---------------------------------------------------------------------------------------------
 #### UC06 – Cambiar Contraseña
-Permite al usuario modificar su contraseña actual para reforzar la seguridad de
-su cuenta
+Permite al usuario modificar su contraseña actual para reforzar la seguridad de su cuenta.
 
 **Funcionamiento mejorable:**
 
-- Nuevamente problema de length de campos, puse una contraseña de muchos caracteres y me sale el error de servidor
+- Nuevamente, problema de length de campos. Puse una contraseña de muchos caracteres y me sale el error de servidor.
 
-- Error al cambiar contraseña 
+- Error al cambiar contraseña.
 
-- Si te ayuda creo que ocurre porque al crear usuario pide contraseña de tamaño minimo de 8, pero al cambiarla pide tamaño minimo de 6, por tanto si pones una de tamaño 6 ocurre el problema mencionado, como nota adicional, si cambias la contraseña por una de tamaño 8 no hay ningun fallo
+- Si te ayuda, creo que ocurre porque al crear usuario pide contraseña de tamaño mínimo de 8, pero al cambiarla pide tamaño mínimo de 6. Por tanto, si pones una de tamaño 6 ocurre el problema mencionado. Como nota adicional, si cambias la contraseña por una de tamaño 8 no hay ningún fallo.
 
 **Pasos para replicar el error:**
 
-rellena los campos de la siguiente manera
+Rellena los campos de la siguiente manera:
 
 Contraseña actual
 
@@ -239,53 +210,49 @@ Confirmar nueva contraseña
 
 123456
 
-error obtenido: "Error interno del servidor"
+Error obtenido: "Error interno del servidor".
 
 **Failure condition detectada:**
 
-- T-12: Intente cambiar la contraseña por otra y no me dejo, saltando el error "Error interno del servidor"
+- T-12: Intenté cambiar la contraseña por otra y no me dejó, saltando el error "Error interno del servidor".
 
 ---------------------------------------------------------------------------------------------
 ### UC07 – Eliminar Cuenta
-Permite al usuario eliminar permanentemente su cuenta y todos los datos
-asociados según la política de privacidad.
+Permite al usuario eliminar permanentemente su cuenta y todos los datos asociados, según la política de privacidad.
 
 **Funcionamiento mejorable:**
 
-- Se borra correctamente un usuario
+- Se borra correctamente un usuario.
 
 **Failure condition detectada:**
 
-- Ninguna
+- Ninguna.
 
 ---------------------------------------------------------------------------------------------
 
 #### UC8 – Crear Comunidad
-Permite a un usuario crear una nueva comunidad con un nombre, descripción y
-configuración inicial.
+Permite a un usuario crear una nueva comunidad con un nombre, descripción y configuración inicial.
 
 **Funcionamiento mejorable:**
 
-- Ninguna detectada, teniendo en cuenta las indicaciones dadas en el documento
+- Ninguna detectada, teniendo en cuenta las indicaciones dadas en el documento.
 
 **Failure condition detectada:**
 
-- Ninguna 
+- Ninguna.
 
 ---------------------------------------------------------------------------------------------
 
 #### UC9 – Configurar Privacidad Comunidad
-Permite al administrador definir si la comunidad es pública o privada y
-establecer reglas de acceso.
-
+Permite al administrador definir si la comunidad es pública o privada y establecer reglas de acceso.
 
 **Funcionamiento mejorable:**
 
-- No entendi muy bien eso de reglas de acceso pero efectivamente cree una comunidad en privado y nadie mas la ve
+- No entendí muy bien eso de reglas de acceso, pero efectivamente creé una comunidad en privado y nadie más la ve.
 
 **Failure condition detectada:**
 
-- Ninguna 
+- Ninguna.
 
 ---------------------------------------------------------------------------------------------
 
@@ -294,39 +261,39 @@ Permite a los usuarios buscar comunidades mediante filtros o palabras clave.
 
 **Funcionamiento mejorable:**
 
-- Al buscarse de forma automatica mientras escribes, la lupita que esta al lado del input literal no hace nada, yo la quitaria la verdad, por otro lado nuevamente si introduces muchisimos caracteres en la barra de busqueda dice que hubo un error al buscar comunidades, pero no lo considero failure condition porque sale un intentelo mas tarde, igual ya que el tamaño maximo de nombre de comunidad es 100 pondria un length maximo en esta barra de busqueda de 100 para evitar problemas
+- Al buscarse de forma automática mientras escribes, la lupita que está al lado del input literalmente no hace nada. Yo la quitaría, la verdad.  
+  Por otro lado, nuevamente si introduces muchísimos caracteres en la barra de búsqueda dice que hubo un error al buscar comunidades, pero no lo considero failure condition porque sale un "inténtelo más tarde".  
+  Igual, ya que el tamaño máximo de nombre de comunidad es 100, pondría un length máximo en esta barra de búsqueda de 100 para evitar problemas.
 
 **Failure condition detectada:**
 
-- Ninguna 
+- Ninguna.
 
 ---------------------------------------------------------------------------------------------
 
 #### UC11 – Explorar Comunidades
-Permite navegar por comunidades
+Permite navegar por comunidades.
 
 **Funcionamiento mejorable:**
 
-- Funciona correctamente, puedes ver las comunidades y clickear para ver sus eventos y el boton de  unirse a la comunidad
+- Funciona correctamente. Puedes ver las comunidades y clickear para ver sus eventos y el botón de unirse a la comunidad.
 
 **Failure condition detectada:**
 
-- Ninguna 
-
+- Ninguna.
 
 ---------------------------------------------------------------------------------------------
 
 #### UC12 – Unirse a Comunidad Pública
-Permite al usuario acceder directamente a una comunidad pública sin
-necesidad de aprobación
+Permite al usuario acceder directamente a una comunidad pública sin necesidad de aprobación.
 
 **Funcionamiento mejorable:**
 
-- Funciona correctamente, puedes unirte
+- Funciona correctamente, puedes unirte.
 
 **Failure condition detectada:**
 
-- Ninguna 
+- Ninguna.
 
 ---------------------------------------------------------------------------------------------
 
@@ -335,34 +302,34 @@ Permite al usuario dejar voluntariamente una comunidad a la que pertenece.
 
 **Funcionamiento mejorable:**
 
-- Funciona correctamente, puedes salirte de la comunidad, solo que si tu la creaste no puedes, dice algo de que tienes que pasarle el admin a otra persona, yo lo que haria es que te deje salirte y si una comunidad tiene 0 personas que se borre automaticamente 
+- Funciona correctamente, puedes salirte de la comunidad. Solo que si tú la creaste no puedes; dice algo de que tienes que pasarle el admin a otra persona. Yo lo que haría es que te deje salirte y, si una comunidad tiene 0 personas, que se borre automáticamente.
 
 **Failure condition detectada:**
 
-- Ninguna 
+- Ninguna.
 
 ---------------------------------------------------------------------------------------------
 
 #### UC14 – Chat de Comunidad
-Permite a los miembros comunicarse en tiempo real dentro de la comunidad
-mediante mensajes y archivos.
+Permite a los miembros comunicarse en tiempo real dentro de la comunidad, mediante mensajes y archivos.
 
 **Funcionamiento mejorable:**
 
-- No se puede navegar entre chat de comunidades y personales, si clickas en el nombre de alguien que escribio en un chat de comunidad puedes escribirle de forma personal, pero una vez ya le escribiste, si le das en vovler no vuelves a los chats de comunidades, te toca volver a entrar en la pantalla de chats
+- No se puede navegar entre chat de comunidades y personales. Si clickeas en el nombre de alguien que escribió en un chat de comunidad puedes escribirle de forma personal, pero una vez ya le escribiste, si le das en volver no vuelves a los chats de comunidades; te toca volver a entrar en la pantalla de chats.
 
 **Failure condition detectada:**
 
-- Ninguna 
-
-
+- Ninguna.
 
 ## 9. Historial de versiones
 
-| Versión | Fecha       | Descripción                   | Autor(es)       |
-|---------|------------|--------------------------------|------------|
-| 1.0.0   | 07/03/2026 | Se creo a modo de borrador el documento y se probaron varios casos de uso, tanto de meetkaters como de nexUS | Luis Emmanuel Chavez Malave |
+| Versión | Fecha       | Descripción | Autor(es) |
+|---------|------------|-------------|-----------|
+| 1.0.0   | 07/03/2026 | Se creó a modo de borrador el documento y se probaron varios casos de uso, tanto de Meerkatters como de NexUS. | Luis Emmanuel Chavez Malave |
+| 1.0.1   | 08/03/2026 | Se corrigieron signos de puntuación | Luis Emmanuel Chavez Malave |
+
 ---
-**Redactado por:** Luis Emmanuel Chavez Malave
-**Fecha de redacción:** 7/03/2026  
-**Versión:** 1.0.0
+
+**Redactado por:** Luis Emmanuel Chavez Malave  
+**Fecha de redacción:** 78/03/2026  
+**Versión:** 1.0.1
