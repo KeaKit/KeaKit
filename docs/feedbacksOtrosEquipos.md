@@ -21,9 +21,13 @@
 * **Funcionamiento mejorable:** El botón de **"Mantener sesión"** no es funcional; la sesión permanece abierta independientemente de si se marca o no.
 * **Failure condition detectada:** Ninguna.
 
-###### **Recuperación de contraseñas**
-* **Funcionamiento mejorable:** Puse un correo personal que no esta registrado y me salio un mensaje de "si tu correo existe te llegaron las instrucciones", nunca me llegaron ningunas instrucciones, ademas recomendaría primero realizar un filtro para ver si dicho correo esta registrado en el sistema y enviar un mensaje en consecuencia sea "correo no registrado" o en caso de que lo este, el mensaje anterior
-* **Failure condition:** T12, puse un correo real, el sistema dijo que me enviaria instrucciones y no fueron enviadass
+### Recuperación de contraseñas
+
+**Funcionamiento mejorable:**  
+Puse un correo personal que no está registrado y me salió un mensaje de “si tu correo existe, te llegaron las instrucciones”. Sin embargo, nunca me llegaron dichas instrucciones. Además, recomendaría primero realizar un filtro para comprobar si dicho correo está registrado en el sistema y enviar un mensaje en consecuencia: **“correo no registrado”**, o, en caso de que lo esté, mostrar el mensaje anterior.
+
+**Failure condition:**  
+T12: puse un correo real; el sistema indicó que me enviaría instrucciones, pero no fueron enviadas.
 
 ---------------------------------------------------------------------------------------------
 
