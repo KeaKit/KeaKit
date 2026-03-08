@@ -95,6 +95,243 @@ o Consultada de listado global de incidencias con filtros.
 o Cambio de estados de incidencias.
 o Adición de notas y comentarios rápidos a las incidencias.
 
+#### Incidencias
+
+Casos de uso probados:
+
+* Creación de incidencias.
+* Consulta del historial de incidencias propias.
+* Consulta del listado global con filtros.
+* Cambio de estados de incidencias.
+* Adición de notas y comentarios.
+
+---
+
+###### **Creación de incidencias**
+
+**Vista de residente**
+
+* **Estado:** Funciona correctamente. Permite crear incidencias y valida que los campos obligatorios estén completos.
+* Una vez creada la incidencia, se puede visualizar su descripción correctamente.
+
+**Vista de administrador**
+
+La incidencia creada por un residente aparece correctamente en el panel de administración.  
+El administrador puede:
+
+* Cambiar el estado de la incidencia.
+* Añadir una nota.
+* Asignar un técnico.
+
+**Funcionamiento mejorable:**
+
+* El campo para asignar técnico es un **campo de texto libre** y no valida que el técnico sea un usuario registrado en el sistema.
+* Durante las pruebas se asignó un técnico inexistente y el sistema lo permitió.
+
+---
+
+###### **Consulta del historial de incidencias propias**
+
+**Funcionamiento mejorable:**
+
+* No queda claro si la lista mostrada corresponde a:
+  * incidencias propias del usuario
+  * incidencias globales de la residencia.
+* No existe un filtro que permita visualizar únicamente las incidencias creadas por el usuario actual.
+
+---
+
+###### **Consulta del listado global de incidencias con filtros**
+
+* **Estado:** Todos los filtros funcionan correctamente, incluso con incidencias recién creadas.
+
+**Mejora sugerida:**
+
+* El filtro de prioridad utiliza los valores **BAJA** y **ALTA**, mientras que en otras partes de la aplicación se utiliza **URGENTE**, lo que puede generar confusión para los usuarios.
+* En la cabecera aparece un **icono de notificaciones (campana)** que no realiza ninguna acción al pulsarlo.
+
+---
+
+###### **Cambio de estado de incidencias**
+
+**Vista de residentes**
+
+* Cuando el administrador cambia el estado de una incidencia, el nuevo estado aparece correctamente reflejado en la vista del residente.
+
+**Vista de administradores**
+
+* Permite cambiar el estado de cualquier incidencia sin problemas.
+
+---
+
+###### **Adición de notas y comentarios a incidencias**
+
+**Vista de administradores**
+
+* Permite añadir notas sin problemas.
+
+**Vista de residentes**
+
+* Las notas añadidas por el administrador aparecen correctamente reflejadas.
+
+---
+
+#### Avisos
+
+###### **Gestión de avisos (CRUD)**
+
+**Vista de administrador**
+
+* Permite crear avisos correctamente.
+* Los campos incluyen validaciones, como impedir seleccionar fechas pasadas.
+
+---
+
+###### **Recepción de avisos**
+
+**Vista de residentes**
+
+Los residentes pueden:
+
+* visualizar avisos
+* filtrarlos por categoría.
+
+Los avisos cuya fecha ha pasado aparecen **oscurecidos**, lo cual ayuda a distinguirlos.
+
+**Sugerencia de mejora:**
+
+* Sería recomendable que los avisos desaparecieran del tablón una vez pasada su fecha para evitar saturar la interfaz.
+
+---
+
+#### Reservas
+
+Casos de uso probados:
+
+* Configuración de espacios, horas y aforos.
+* Panel de gestión y visualización de reservas.
+* Consulta de disponibilidad y reserva de espacios.
+* Creación de reservas.
+* Cancelación de reservas propias.
+
+---
+
+###### **Panel de gestión y visualización de reservas**
+
+**Vista de residente**
+
+* Permite visualizar reservas realizadas con sus fechas y estados correctamente.
+
+**Vista de administrador**
+
+* Las reservas realizadas por residentes se reflejan correctamente en el panel de administración.
+
+---
+
+###### **Consulta de disponibilidad y reserva de espacios**
+
+**Vista de residentes**
+
+* Los residentes solo pueden reservar objetos o salas que no estén **en curso**, lo cual funciona correctamente.
+
+---
+
+###### **Creación de reservas**
+
+Permite crear reservas indicando fecha y hora de uso.
+
+El sistema valida correctamente:
+
+* fechas pasadas
+* campos obligatorios.
+
+**Funcionamiento mejorable:**
+
+Se detectaron dos problemas:
+
+* Las reservas finalizadas **no se liberan automáticamente**.
+* Es posible crear **varias reservas del mismo objeto en el mismo intervalo de tiempo**.
+
+---
+
+###### **Cancelación de reservas propias**
+
+**Vista de residentes**
+
+* Los residentes pueden cancelar sus reservas correctamente.
+* El cambio se refleja inmediatamente en el panel de administración.
+
+---
+
+**Observación**
+
+* El cambio del **estado de la reserva** no está implementado actualmente.
+* Dado que esta funcionalidad no aparece como obligatoria en las guidelines del sprint, se asume que se implementará en futuros sprints.
+
+---
+
+#### Eventos
+
+Casos de uso probados:
+
+* Gestión de eventos (CRUD).
+* Inscripción a eventos.
+* Gestión de asistencia.
+
+---
+
+###### **Gestión de eventos (CRUD)**
+
+**Vista de administrador**
+
+Permite crear eventos correctamente y valida:
+
+* fechas pasadas
+* coherencia entre hora de inicio y hora de fin.
+
+**Mejora sugerida:**
+
+* El lugar del evento es un **campo libre**. Sería recomendable restringirlo a ubicaciones de la residencia.
+
+---
+
+###### **Problema principal detectado**
+
+Los eventos creados por administradores **no aparecen en la vista de residentes**, por lo que los residentes:
+
+* no pueden visualizarlos
+* no pueden inscribirse.
+
+Esto limita la funcionalidad principal del sistema de eventos.
+
+---
+
+###### **Inscripción a eventos**
+
+**Vista de administrador**
+
+* Un administrador puede inscribirse en eventos.  
+Esto puede resultar incoherente si los eventos están pensados únicamente para residentes.
+
+---
+
+###### **Gestión de asistencia**
+
+**Vista de administrador**
+
+* Se puede visualizar correctamente el número de asistentes registrados respecto al máximo permitido.
+
+**Vista de residentes**
+
+* No se pudo probar debido a que los eventos no aparecen en su interfaz.
+
+---
+
+###### **Seguridad**
+
+* Las vistas de administrador están correctamente protegidas por rol.
+* Se intentó acceder a URLs de administración desde una cuenta residente y el sistema denegó el acceso correctamente.
+
 ---------------------------------------------------------------------------------------------
 
 ## Meerkatters
@@ -321,6 +558,109 @@ Permite a los miembros comunicarse en tiempo real dentro de la comunidad, median
 
 * Ninguna.
 
+-------
+
+#### Eventos
+
+---
+
+###### **UC15 – Crear evento**
+
+Permite crear un evento que aparece posteriormente en el mapa.
+
+**Funcionamiento detectado:**
+
+* El evento se crea correctamente.
+* Los detalles se muestran correctamente al acceder a su vista.
+
+**Problemas detectados:**
+
+* Es posible crear eventos con fecha pasada.
+* Al introducir valores inválidos en algunos campos se produce un **error 500 del servidor**.
+
+---
+
+###### **UC16 – Configurar privacidad evento**
+
+Permite indicar si un evento es **público o privado**.
+
+* La etiqueta correspondiente aparece correctamente tras la creación del evento.
+
+---
+
+###### **UC17 – Información evento**
+
+Permite visualizar la descripción completa del evento desde el mapa.
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC18 – Ubicación mediante Google Maps**
+
+* Todos los eventos aparecen correctamente en el mapa.
+* Cuando se crea un evento en una ubicación concreta, este se refleja inmediatamente en el mapa.
+
+---
+
+###### **UC19 – Ubicaciones recomendadas**
+
+* No se encontró ninguna funcionalidad visible que permita consultar o seleccionar ubicaciones recomendadas.
+
+---
+
+###### **UC20 – Unirse a evento**
+
+Permite confirmar asistencia a eventos futuros.
+
+**Problemas detectados:**
+
+* Intentar unirse a un evento concreto del pasado ya disponible en el sistema denominado Clases de ecuaciones diferenciales provoca un **error 500**.
+* En otros eventos pasados el sistema permite confirmar asistencia, lo cual no debería ser posible.
+
+---
+
+###### **UC21 – Cancelar asistencia**
+
+Permite cancelar la asistencia correctamente.
+
+**Problema detectado:**
+
+* El sistema permite cancelar asistencia a eventos ya finalizados.
+* Una vez pasado el evento debería bloquearse cualquier modificación.
+
+---
+
+###### **UC22 – Ver asistentes**
+
+Permite visualizar correctamente la lista de asistentes a un evento.
+
+---
+
+###### **UC23 – Editar evento**
+
+Permite modificar eventos existentes.
+
+* Los cambios se reflejan correctamente tras guardar.
+
+---
+
+###### **UC24 – Cancelar evento**
+
+Cuando un evento se cancela:
+
+* desaparece de la lista de eventos
+* desaparece del mapa
+
+* **Estado:** El funcionamiento es correcto.
+
+-----
+#### Gestión de contenido (Archivos)
+
+---
+
+Este apartado no está todavía implementado. Hemos contactado con los miembros de MeerKatters y nos han informado que dicha funcionalidad la implementarán en futuros sprints, puesto que no es core.
+
 
 ## 9. Historial de versiones
 
@@ -328,9 +668,10 @@ Permite a los miembros comunicarse en tiempo real dentro de la comunidad, median
 |---------|------------|-------------|-----------|
 | 1.0.0   | 07/03/2026 | Se creó a modo de borrador el documento y se probaron varios casos de uso, tanto de Meerkatters como de NexUS. | Luis Emmanuel Chavez Malave |
 | 1.0.1   | 08/03/2026 | Se corrigieron signos de puntuación | Luis Emmanuel Chavez Malave |
+| 1.1.0 | 08/03/2026 | Integración de pruebas adicionales de NexUS y Meerkatters | Marta Aguilar Morcillo |
 
 ---
 
-**Redactado por:** Luis Emmanuel Chavez Malave  
-**Fecha de redacción:** 78/03/2026  
-**Versión:** 1.0.1
+**Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma 
+**Fecha de redacción:** 07/03/2026  
+**Versión:** 1.1.0
