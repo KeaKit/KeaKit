@@ -4,9 +4,11 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,39 +20,38 @@ import com.example.demo.model.Item;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitItem;
 import com.example.demo.model.KitStatus;
+import com.example.demo.model.Transaction;
+import com.example.demo.model.TransactionType;
 import com.example.demo.model.User;
 import com.example.demo.model.Wallet;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
+import com.example.demo.repository.TransactionRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.WalletRepository;
 import java.util.ArrayList;
 
 @Service
 public class KitService {
+    @Autowired
+    private KitRepository kitRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
+
+    @Autowired
+    private WalletRepository walletRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
+    private OrderConfirmationEmailService orderConfirmationEmailService;
 
     private static final double PLATFORM_COURIER_PRICE = 9.99;
-
-    private final KitRepository kitRepository;
-    private final UserRepository userRepository;
-    private final ItemRepository itemRepository;
-    private final OrderConfirmationEmailService orderConfirmationEmailService;
-
-    private final WalletRepository walletRepository;
-
-    public KitService(
-        KitRepository kitRepository,
-        UserRepository userRepository,
-        ItemRepository itemRepository,
-        OrderConfirmationEmailService orderConfirmationEmailService,
-        WalletRepository walletRepository
-    ) {
-        this.kitRepository = kitRepository;
-        this.userRepository = userRepository;
-        this.itemRepository = itemRepository;
-        this.orderConfirmationEmailService = orderConfirmationEmailService;
-        this.walletRepository = walletRepository;
-    }
 
     public List<Kit> findAll() {
         return kitRepository.findAll();
@@ -58,7 +59,7 @@ public class KitService {
 
     public KitResponse findById(Long id) {
         Kit kit = kitRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
         return new KitResponse(kit);
     }
 
@@ -70,11 +71,11 @@ public class KitService {
         kit.setCity(request.getCity());
         kit.setStartDate(request.getStartDate());
         kit.setEndDate(request.getEndDate());
-        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PAID); //se crea cuando se paga
+        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PAID); // se crea cuando se paga
 
         DeliveryMethod deliveryMethod = request.getDeliveryMethod() != null
-            ? request.getDeliveryMethod()
-            : DeliveryMethod.COURIER;
+                ? request.getDeliveryMethod()
+                : DeliveryMethod.COURIER;
         kit.setDeliveryMethod(deliveryMethod);
 
         String meetingPoint = request.getMeetingPoint() != null ? request.getMeetingPoint().trim() : null;
@@ -91,7 +92,7 @@ public class KitService {
 
         if (request.getTenantId() != null) {
             User tenant = userRepository.findById(request.getTenantId())
-                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+                    .orElseThrow(() -> new RuntimeException("Tenant not found"));
             kit.setTenant(tenant);
         }
 
@@ -104,36 +105,53 @@ public class KitService {
 
         Kit savedKit = kitRepository.save(kit);
         for (KitItem kitItem : savedKit.getKitItems()) {
-    Item item = kitItem.getItem();
-    User owner = item.getOwner(); // asumiendo que Item tiene referencia a su dueño
-    if (owner != null) {
-        Wallet ownerWallet = walletRepository.findByUserId(owner.getId());
+            Item item = kitItem.getItem();
+            User owner = item.getOwner(); // asumiendo que Item tiene referencia a su dueño
+            if (owner != null) {
 
-        // Precio total del item: precio por unidad * cantidad
-        double totalAmount = item.getPricePerMonth() * kitItem.getQuantity();
+                Optional<Wallet> ownerWallet = walletRepository.findByUserId(owner.getId());
+                if (ownerWallet.isEmpty()) {
+                    throw new RuntimeException("Owner wallet not found for user: " + owner.getId());
+                }
 
-        // Sumar a la wallet disponible
-        ownerWallet.setAvailableBalance(ownerWallet.getAvailableBalance() + totalAmount);
+                Wallet targetWallet = ownerWallet.get();
 
-        walletRepository.save(ownerWallet);
-    }
-}
+                // Precio total del item: precio por unidad * cantidad
+                double totalAmount = item.getPricePerMonth() * kitItem.getQuantity();
+
+                Transaction transaction = new Transaction();
+                transaction.setAmount(totalAmount);
+                transaction.setType(TransactionType.PAYOUT);
+                transaction.setDestinationWallet(targetWallet);
+
+                transactionRepository.save(transaction);
+            }
+        }
         return new KitResponse(savedKit);
     }
 
     public KitResponse update(Long id, Kit updateData) {
         Kit kit = kitRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
 
-        if (updateData.getName() != null) kit.setName(updateData.getName());
-        if (updateData.getCountry() != null) kit.setCountry(updateData.getCountry());
-        if (updateData.getCity() != null) kit.setCity(updateData.getCity());
-        if (updateData.getStartDate() != null) kit.setStartDate(updateData.getStartDate());
-        if (updateData.getEndDate() != null) kit.setEndDate(updateData.getEndDate());
-        if (updateData.getStatus() != null) kit.setStatus(updateData.getStatus());
-        if (updateData.getDeliveryMethod() != null) kit.setDeliveryMethod(updateData.getDeliveryMethod());
-        if (updateData.getMeetingPoint() != null) kit.setMeetingPoint(updateData.getMeetingPoint());
-        if (updateData.getTenant() != null) kit.setTenant(updateData.getTenant());
+        if (updateData.getName() != null)
+            kit.setName(updateData.getName());
+        if (updateData.getCountry() != null)
+            kit.setCountry(updateData.getCountry());
+        if (updateData.getCity() != null)
+            kit.setCity(updateData.getCity());
+        if (updateData.getStartDate() != null)
+            kit.setStartDate(updateData.getStartDate());
+        if (updateData.getEndDate() != null)
+            kit.setEndDate(updateData.getEndDate());
+        if (updateData.getStatus() != null)
+            kit.setStatus(updateData.getStatus());
+        if (updateData.getDeliveryMethod() != null)
+            kit.setDeliveryMethod(updateData.getDeliveryMethod());
+        if (updateData.getMeetingPoint() != null)
+            kit.setMeetingPoint(updateData.getMeetingPoint());
+        if (updateData.getTenant() != null)
+            kit.setTenant(updateData.getTenant());
         if (updateData.getKitItems() != null && !updateData.getKitItems().isEmpty()) {
             kit.setKitItems(updateData.getKitItems());
         } else if (updateData.getItems() != null) {
@@ -183,13 +201,13 @@ public class KitService {
     public List<KitResponse> findByTenantId(Long tenantId) {
         List<Kit> kits = kitRepository.findByTenantId(tenantId);
         return kits.stream()
-            .map(KitResponse::new)
-            .collect(java.util.stream.Collectors.toList());
+                .map(KitResponse::new)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public KitResponse findTrackingKitById(Long kitId, Long tenantId) {
         Kit kit = kitRepository.findById(kitId)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
         if (kit.getTenant() == null || !kit.getTenant().getId().equals(tenantId)) {
             throw new RuntimeException("Kit does not belong to the specified tenant");
         }
@@ -198,12 +216,11 @@ public class KitService {
 
     public void confirmKitStatus(Long id) {
         Kit kit = kitRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
 
         if (kit.getStatus() != KitStatus.PENDING_VALIDATION) {
             throw new RuntimeException(
-                "The kit can only be confirmed if its status is PENDING_VALIDATION"
-            );
+                    "The kit can only be confirmed if its status is PENDING_VALIDATION");
         }
 
         kit.setStatus(KitStatus.ACTIVE);
@@ -240,8 +257,8 @@ public class KitService {
 
         List<Item> foundItems = itemRepository.findAllById(quantitiesByItemId.keySet());
         Set<Long> foundItemIds = foundItems.stream()
-            .map(Item::getId)
-            .collect(Collectors.toSet());
+                .map(Item::getId)
+                .collect(Collectors.toSet());
 
         for (Long itemId : quantitiesByItemId.keySet()) {
             if (!foundItemIds.contains(itemId)) {
@@ -250,27 +267,26 @@ public class KitService {
         }
 
         Map<Long, Item> itemById = foundItems.stream()
-            .collect(Collectors.toMap(Item::getId, item -> item));
+                .collect(Collectors.toMap(Item::getId, item -> item));
 
         return quantitiesByItemId.entrySet().stream()
-            .map(entry -> {
-                Item item = itemById.get(entry.getKey());
-                int requestedQuantity = entry.getValue();
-                int totalUnits = item.getTotalUnits() != null ? item.getTotalUnits() : 1;
+                .map(entry -> {
+                    Item item = itemById.get(entry.getKey());
+                    int requestedQuantity = entry.getValue();
+                    int totalUnits = item.getTotalUnits() != null ? item.getTotalUnits() : 1;
 
-                if (requestedQuantity > totalUnits) {
-                    throw new RuntimeException(
-                        "Requested quantity for item " + item.getId() + " exceeds available units (" + totalUnits + ")"
-                    );
-                }
+                    if (requestedQuantity > totalUnits) {
+                        throw new RuntimeException(
+                                "Requested quantity for item " + item.getId() + " exceeds available units ("
+                                        + totalUnits + ")");
+                    }
 
-                KitItem kitItem = new KitItem();
-                kitItem.setItem(item);
-                kitItem.setQuantity(requestedQuantity);
-                return kitItem;
-            })
-            .collect(Collectors.toList());
+                    KitItem kitItem = new KitItem();
+                    kitItem.setItem(item);
+                    kitItem.setQuantity(requestedQuantity);
+                    return kitItem;
+                })
+                .collect(Collectors.toList());
     }
 
 }
-
