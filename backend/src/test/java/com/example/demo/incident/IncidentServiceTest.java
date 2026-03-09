@@ -5,9 +5,12 @@ import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentStatus;
 import com.example.demo.model.IncidentType;
 import com.example.demo.model.User;
+import com.example.demo.model.UserRole;
+import com.example.demo.model.Kit;
 import com.example.demo.repository.IncidentCommentRepository;
 import com.example.demo.repository.IncidentRepository;
 import com.example.demo.repository.ItemRepository;
+import com.example.demo.repository.KitRepository; 
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.IncidentService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +19,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +38,6 @@ class IncidentServiceTest {
     @Mock
     private IncidentRepository incidentRepository;
 
-    // --- NUEVOS MOCKS AÑADIDOS ---
     @Mock
     private IncidentCommentRepository incidentCommentRepository;
 
@@ -41,22 +47,43 @@ class IncidentServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private KitRepository kitRepository;
+
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
+    private Authentication authentication;
+
     @InjectMocks
     private IncidentService incidentService;
 
     private User testUser;
     private Article testItem;
+    private Kit testKit;
 
     @BeforeEach
     void setUp() {
         testUser = new User();
         testUser.setId(1L);
         testUser.setName("Test User");
+        testUser.setEmail("test@example.com");
+        testUser.setRole(UserRole.USER);
 
-        // Usamos Article porque Item es abstracta
         testItem = new Article(); 
         testItem.setId(1L);
         testItem.setTitle("Test Item");
+        testItem.setOwner(testUser);
+
+        testKit = new Kit();
+        testKit.setId(1L);
+
+        lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        lenient().when(authentication.getPrincipal()).thenReturn("test@example.com");
+
+        lenient().when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
     }
 
     private Incident makeIncident(Long id, IncidentType type, IncidentStatus status) {
@@ -69,6 +96,7 @@ class IncidentServiceTest {
         i.setUser(testUser);
         if (type == IncidentType.DAMAGED_ITEM) {
             i.setRelatedItem(testItem);
+            i.setRelatedKit(testKit);
         }
         return i;
     }
@@ -107,10 +135,11 @@ class IncidentServiceTest {
 
     @Test
     void createIncident_successful() {
-        Incident incident = makeIncident(null, IncidentType.GENERAL, IncidentStatus.OPEN);
+        Incident incident = makeIncident(null, IncidentType.DAMAGED_ITEM, IncidentStatus.OPEN);
         
-        // AVISAMOS A MOCKITO DE QUE EL NUEVO CÓDIGO BUSCARÁ AL USUARIO
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(itemRepository.findById(1L)).thenReturn(Optional.of(testItem));
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(testKit)); // NUEVO
 
         when(incidentRepository.save(any(Incident.class))).thenAnswer(i -> {
             Incident saved = i.getArgument(0);
@@ -133,6 +162,7 @@ class IncidentServiceTest {
 
         Incident updateData = new Incident();
         updateData.setTitle("Updated Title");
+        updateData.setDescription("Updated Description");
         updateData.setStatus(IncidentStatus.RESOLVED);
 
         Incident result = incidentService.updateIncident(2L, updateData);
@@ -147,7 +177,6 @@ class IncidentServiceTest {
         Incident incident = makeIncident(3L, IncidentType.GENERAL, IncidentStatus.OPEN);
         when(incidentRepository.findById(3L)).thenReturn(Optional.of(incident));
         
-        // AVISAMOS A MOCKITO DE QUE EL NUEVO CÓDIGO BORRARÁ COMENTARIOS
         doNothing().when(incidentCommentRepository).deleteByIncidentId(3L);
         doNothing().when(incidentRepository).delete(incident);
 
