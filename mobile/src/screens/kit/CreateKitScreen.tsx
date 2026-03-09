@@ -16,7 +16,13 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
 import { es, registerTranslation } from "react-native-paper-dates";
-import { Provider as PaperProvider, MD3LightTheme, TextInput as PaperTextInput, Button, SegmentedButtons } from "react-native-paper";
+import {
+  Provider as PaperProvider,
+  MD3LightTheme,
+  TextInput as PaperTextInput,
+  Button,
+  SegmentedButtons,
+} from "react-native-paper";
 
 registerTranslation("es", es);
 
@@ -69,8 +75,6 @@ type CatalogProduct = {
   isAvailable?: boolean;
   availabilityMessage?: string;
 };
-
-
 
 const toIsoDate = (raw: string): string | null => {
   const value = raw.trim();
@@ -206,7 +210,10 @@ const CreateKitScreen: React.FC = () => {
         title: p.title ?? "Sin título",
         pricePerMonth: Number(p.pricePerMonth ?? 0),
         status: String(p.status ?? "AVAILABLE"), // para SERVICE llega null, lo normalizamos
-        category: typeof p.category === "string" ? p.category : (p.category?.name ?? ""),
+        category:
+          typeof p.category === "string"
+            ? p.category
+            : (p.category?.name ?? ""),
         city: p.city ?? "",
         ownerName: p.ownerName ?? "",
         imageUrl: p.imageUrl ?? null,
@@ -279,8 +286,12 @@ const CreateKitScreen: React.FC = () => {
 
     return availableProducts.filter((p) => {
       const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
-      const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
-      const byCity = !showOnlyMyCity || !city.trim() || (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
+      const byCategory =
+        categoryFilter === "ALL" || p.category === categoryFilter;
+      const byCity =
+        !showOnlyMyCity ||
+        !city.trim() ||
+        (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
       const bySearch =
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
@@ -395,10 +406,7 @@ const CreateKitScreen: React.FC = () => {
     return { valid: true, payloadDates: { startIso, endIso } };
   };
 
-
-
-
-    const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!user?.id || !user.token) {
       setErrors({ general: "Necesitas iniciar sesión para crear un kit." });
       return;
@@ -407,27 +415,64 @@ const CreateKitScreen: React.FC = () => {
     const validation = validate();
     if (!validation.valid || !validation.payloadDates) return;
 
-    // Prepara los items con precio y ownerId
-    const itemsPayload = selectedProducts.map((p) => ({
-      id: p.id,
-      quantity: selectedQuantities[p.id] ?? 1,
-      pricePerMonth: p.pricePerMonth,
-      ownerId: p.ownerName ? p.id : 0, // aquí deberías mapear al ID real del dueño
-    }));
+    const handleCreateKit = async () => {
+      if (!user?.id || !user.token) {
+        console.error("🔥 ERROR al crear kit: Usuario no autenticado");
+        return;
+      }
 
-    navigation.navigate("Checkout", {
-      kitData: {
-        name: name.trim(),
-        country: country.trim(),
-        city: city.trim(),
-        startDate: validation.payloadDates.startIso,
-        endDate: validation.payloadDates.endIso,
-        deliveryMethod,
-        meetingPoint: deliveryMethod === "MEETING_POINT" ? meetingPoint.trim() : undefined,
-        courierAddress: deliveryMethod === "COURIER" ? courierAddress.trim() : undefined,
-        items: itemsPayload,
-      },
-    });
+      const validation = validate();
+      if (!validation.valid || !validation.payloadDates) {
+        console.error("🔥 ERROR al crear kit: Campos requeridos incompletos");
+        return;
+      }
+
+      try {
+        setSubmitting(true);
+
+        const payload = {
+          name: name.trim(),
+          country: country.trim(),
+          city: city.trim(),
+          startDate: validation.payloadDates.startIso,
+          endDate: validation.payloadDates.endIso,
+          deliveryMethod,
+          // En el record de Java solo tenemos 'meetingPoint'
+          // Si es COURIER, mandamos la dirección en ese mismo campo o lo dejamos undefined
+          meetingPoint:
+            deliveryMethod === "MEETING_POINT"
+              ? meetingPoint.trim()
+              : deliveryMethod === "COURIER"
+                ? courierAddress.trim()
+                : undefined,
+
+          tenantId: user.id,
+          itemSelections: selectedProducts.map((p) => ({
+            itemId: p.id,
+            quantity: selectedQuantities[p.id] ?? 1,
+            pricePerMonth: p.pricePerMonth,
+          })),
+        };
+
+        console.log("📦 Creando kit con payload:", payload);
+
+        const response = await createKit(payload, user.token);
+
+        console.log("✅ Kit creado exitosamente:", response);
+        return response;
+      } catch (error) {
+        console.error("🔥 ERROR al crear kit:", error);
+      } finally {
+        setSubmitting(false);
+      }
+    };
+    const createdKit = await handleCreateKit();
+    if (!createdKit) {
+      console.error("🔥 ERROR: No se pudo crear el kit.");
+      return;
+    }
+
+    navigation.navigate("Checkout", createdKit);
   };
 
   const customTheme = {
@@ -435,14 +480,14 @@ const CreateKitScreen: React.FC = () => {
     colors: {
       ...MD3LightTheme.colors,
       primary: Colors.primary,
-      onPrimary: '#FFFFFF',
-      primaryContainer: '#E3F2FD',
+      onPrimary: "#FFFFFF",
+      primaryContainer: "#E3F2FD",
       onPrimaryContainer: Colors.primary,
-      surface: '#FFFFFF',
-      onSurface: '#1C1B1F',
-      surfaceVariant: '#E7E0EC',
-      onSurfaceVariant: '#49454F',
-      secondaryContainer: '#E3F2FD',
+      surface: "#FFFFFF",
+      onSurface: "#1C1B1F",
+      surfaceVariant: "#E7E0EC",
+      onSurfaceVariant: "#49454F",
+      secondaryContainer: "#E3F2FD",
       onSecondaryContainer: Colors.primary,
     },
   };
@@ -450,466 +495,491 @@ const CreateKitScreen: React.FC = () => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
-      <ScrollView
-        contentContainerStyle={createKitStyles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-      <View style={createKitStyles.headerRow}>
-        {/* Botón de volver */}
-        <TouchableOpacity
-          style={componentStyles.iconButton}
-          onPress={() => navigation.goBack()}
+        <ScrollView
+          contentContainerStyle={createKitStyles.content}
+          keyboardShouldPersistTaps="handled"
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-        </TouchableOpacity>
+          <View style={createKitStyles.headerRow}>
+            {/* Botón de volver */}
+            <TouchableOpacity
+              style={componentStyles.iconButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+            </TouchableOpacity>
 
-        <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
-          Crea un Kit
-        </Text>
-
-        {/* Mantener espacio a la derecha para centrar el título */}
-        <View style={componentStyles.iconButton} />
-      </View>
-
-        <PaperTextInput
-          mode="outlined"
-          label="Nombre del Kit"
-          value={name}
-          onChangeText={(value) => {
-            setName(value);
-            clearFieldError("name");
-          }}
-          error={!!errors.name}
-          style={{ backgroundColor: Colors.backgroundWhite }}
-          outlineColor={Colors.border}
-          activeOutlineColor={Colors.primary}
-        />
-        {errors.name ? (
-          <Text style={commonStyles.errorText}>{errors.name}</Text>
-        ) : null}
-
-        <View style={createKitStyles.row}>
-          <View style={createKitStyles.rowItem}>
-            <PaperTextInput
-              mode="outlined"
-              label="País"
-              value={country}
-              onChangeText={(value) => {
-                setCountry(value);
-                clearFieldError("country");
-              }}
-              error={!!errors.country}
-              style={{ backgroundColor: Colors.backgroundWhite }}
-              outlineColor={Colors.border}
-              activeOutlineColor={Colors.primary}
-            />
-            {errors.country ? (
-              <Text style={commonStyles.errorText}>{errors.country}</Text>
-            ) : null}
-          </View>
-         
-          <View style={createKitStyles.rowItem}>
-            <PaperTextInput
-              mode="outlined"
-              label="Ciudad"
-              value={city}
-              onChangeText={(value) => {
-                setCity(value);
-                clearFieldError("city");
-              }}
-              error={!!errors.city}
-              style={{ backgroundColor: Colors.backgroundWhite }}
-              outlineColor={Colors.border}
-              activeOutlineColor={Colors.primary}
-            />
-            {errors.city ? (
-              <Text style={commonStyles.errorText}>{errors.city}</Text>
-            ) : null}
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[
-            commonStyles.input,
-            createKitStyles.dateInput,
-            (errors.startDate || errors.endDate) && commonStyles.inputError,
-            { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-          ]}
-          onPress={() => setShowDateRangePicker(true)}
-        >
-          <Text
-            style={[
-              { color: startDate && endDate ? Colors.textPrimary : Colors.textSecondary },
-            ]}
-          >
-            {startDate && endDate
-              ? `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${startDate.getFullYear()} - ${String(endDate.getDate()).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${endDate.getFullYear()}`
-              : "Selecciona rango de fechas del alquiler"}
-          </Text>
-          <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
-        </TouchableOpacity>
-        <DatePickerModal
-          locale="es"
-          mode="range"
-          visible={showDateRangePicker}
-          onDismiss={() => setShowDateRangePicker(false)}
-          startDate={startDate || undefined}
-          endDate={endDate || undefined}
-          onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
-            setShowDateRangePicker(false);
-            if (params.startDate && params.endDate) {
-              setStartDate(params.startDate);
-              setEndDate(params.endDate);
-              clearFieldError("startDate");
-              clearFieldError("endDate");
-            }
-          }}
-          validRange={{ startDate: new Date() }}
-        />
-        {errors.startDate ? (
-          <Text style={commonStyles.errorText}>{errors.startDate}</Text>
-        ) : null}
-        {errors.endDate ? (
-          <Text style={commonStyles.errorText}>{errors.endDate}</Text>
-        ) : null}
-
-        {/* Duración del alquiler */}
-        {monthsBetween !== null && monthsBetween > 0 && (
-          <View style={{ marginTop: 8, marginBottom: 16 }}>
-            <Text style={commonStyles.bodySecondary}>
-              Duración: {monthsBetween.toFixed(2)} meses
+            <Text
+              style={[commonStyles.headerTitle, createKitStyles.headerTitle]}
+            >
+              Crea un Kit
             </Text>
+
+            {/* Mantener espacio a la derecha para centrar el título */}
+            <View style={componentStyles.iconButton} />
           </View>
-        )}
 
-        <View style={createKitStyles.deliverySection}>
-          <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
-            Método de entrega
-          </Text>
-
-          <SegmentedButtons
-            value={deliveryMethod}
-            onValueChange={(value) => {
-              setDeliveryMethod(value as DeliveryMethod);
-              clearFieldError("meetingPoint");
-              clearFieldError("courierAddress");
+          <PaperTextInput
+            mode="outlined"
+            label="Nombre del Kit"
+            value={name}
+            onChangeText={(value) => {
+              setName(value);
+              clearFieldError("name");
             }}
-            buttons={[
-              {
-                value: 'COURIER',
-                label: 'Mensajería',
-                icon: 'truck-delivery',
-              },
-              {
-                value: 'MEETING_POINT',
-                label: 'Punto de encuentro',
-                icon: 'map-marker',
-              },
-            ]}
-            style={{ marginVertical: 12 }}
+            error={!!errors.name}
+            style={{ backgroundColor: Colors.backgroundWhite }}
+            outlineColor={Colors.border}
+            activeOutlineColor={Colors.primary}
           />
+          {errors.name ? (
+            <Text style={commonStyles.errorText}>{errors.name}</Text>
+          ) : null}
 
-          {deliveryMethod === "MEETING_POINT" ? (
-            <>
+          <View style={createKitStyles.row}>
+            <View style={createKitStyles.rowItem}>
               <PaperTextInput
                 mode="outlined"
-                label="Punto de encuentro"
-                placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
-                value={meetingPoint}
+                label="País"
+                value={country}
                 onChangeText={(value) => {
-                  setMeetingPoint(value);
-                  clearFieldError("meetingPoint");
+                  setCountry(value);
+                  clearFieldError("country");
                 }}
-                error={!!errors.meetingPoint}
-                style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
+                error={!!errors.country}
+                style={{ backgroundColor: Colors.backgroundWhite }}
                 outlineColor={Colors.border}
                 activeOutlineColor={Colors.primary}
-                multiline
               />
-              {errors.meetingPoint ? (
-                <Text style={commonStyles.errorText}>
-                  {errors.meetingPoint}
-                </Text>
+              {errors.country ? (
+                <Text style={commonStyles.errorText}>{errors.country}</Text>
               ) : null}
-            </>
-          ) : null}
+            </View>
 
-          {deliveryMethod === "COURIER" ? (
-            <>
+            <View style={createKitStyles.rowItem}>
               <PaperTextInput
                 mode="outlined"
-                label="Dirección de entrega"
-                value={courierAddress}
+                label="Ciudad"
+                value={city}
                 onChangeText={(value) => {
-                  setCourierAddress(value);
-                  clearFieldError("courierAddress");
+                  setCity(value);
+                  clearFieldError("city");
                 }}
-                error={!!errors.courierAddress}
-                style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
+                error={!!errors.city}
+                style={{ backgroundColor: Colors.backgroundWhite }}
                 outlineColor={Colors.border}
                 activeOutlineColor={Colors.primary}
-                multiline
               />
-              {errors.courierAddress ? (
-                <Text style={commonStyles.errorText}>
-                  {errors.courierAddress}
-                </Text>
+              {errors.city ? (
+                <Text style={commonStyles.errorText}>{errors.city}</Text>
               ) : null}
-            </>
-          ) : null}
-
-          {deliveryMethod === "COURIER" ? (
-            <Text style={commonStyles.bodySecondary}>
-              Se aplicará una tarifa fija de mensajería de {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
-            </Text>
-          ) : null}
-        </View>
-
-        
-
-        <View style={createKitStyles.productsHeader}>
-          <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
-            Tus Productos
-          </Text>
-          <Button
-            mode="contained"
-            onPress={openAddProductModal}
-            icon="plus"
-            compact
-            style={{ borderRadius: 8 }}
-          >
-            Añadir Producto
-          </Button>
-        </View>
-
-        <View style={createKitStyles.counterBadge}>
-          <Text style={createKitStyles.counterBadgeText}>
-            Seleccionados: {selectedItemsCount}
-          </Text>
-        </View>
-
-        {/* Lista de items añadidos al kit */}
-        {loadingCatalog ? (
-          <View style={createKitStyles.loaderArea}>
-            <ActivityIndicator color={Colors.primary} />
+            </View>
           </View>
-        ) : selectedProducts.length === 0 ? (
-          <Text style={commonStyles.bodySecondary}>
-            Aún no has añadido productos al kit. Pulsa "Añadir Producto +".
-          </Text>
-        ) : (
-          selectedProducts.map((item) => (
-            <KitItemComponent
-              key={item.id}
-              item={item}
-              quantity={selectedQuantities[item.id] ?? 1}
-              maxQuantity={item.totalUnits}
-              duration={monthsBetween ?? 0}
-              onIncrease={incrementSelectedQuantity}
-              onDecrease={decrementSelectedQuantity}
-              onRemove={removeSelectedItem}
+
+          <TouchableOpacity
+            style={[
+              commonStyles.input,
+              createKitStyles.dateInput,
+              (errors.startDate || errors.endDate) && commonStyles.inputError,
+              {
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              },
+            ]}
+            onPress={() => setShowDateRangePicker(true)}
+          >
+            <Text
+              style={[
+                {
+                  color:
+                    startDate && endDate
+                      ? Colors.textPrimary
+                      : Colors.textSecondary,
+                },
+              ]}
+            >
+              {startDate && endDate
+                ? `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${startDate.getFullYear()} - ${String(endDate.getDate()).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${endDate.getFullYear()}`
+                : "Selecciona rango de fechas del alquiler"}
+            </Text>
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color={Colors.primary}
             />
-          ))
-        )}
-
-        {errors.items ? (
-          <Text style={commonStyles.errorText}>{errors.items}</Text>
-        ) : null}
-        {errors.general ? (
-          <Text style={commonStyles.errorText}>{errors.general}</Text>
-        ) : null}
-      </ScrollView>
-
-      <View style={createKitStyles.footerRow}>
-        {/* Resumen de precios */}
-        <View style={{ flex: 1 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 8,
+          </TouchableOpacity>
+          <DatePickerModal
+            locale="es"
+            mode="range"
+            visible={showDateRangePicker}
+            onDismiss={() => setShowDateRangePicker(false)}
+            startDate={startDate || undefined}
+            endDate={endDate || undefined}
+            onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
+              setShowDateRangePicker(false);
+              if (params.startDate && params.endDate) {
+                setStartDate(params.startDate);
+                setEndDate(params.endDate);
+                clearFieldError("startDate");
+                clearFieldError("endDate");
+              }
             }}
-          >
-            <Text style={commonStyles.caption}>Subtotal productos</Text>
-            <Text style={commonStyles.caption}>{totalPrice.toFixed(2)}€</Text>
-          </View>
+            validRange={{ startDate: new Date() }}
+          />
+          {errors.startDate ? (
+            <Text style={commonStyles.errorText}>{errors.startDate}</Text>
+          ) : null}
+          {errors.endDate ? (
+            <Text style={commonStyles.errorText}>{errors.endDate}</Text>
+          ) : null}
 
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 12,
-            }}
-          >
-            <Text style={commonStyles.caption}>Garantía (20%)</Text>
-            <Text style={commonStyles.caption}>
-              {(totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
-            </Text>
-          </View>
-          
-                    <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 12,
-            }}
-          >
-            <Text style={commonStyles.caption}>Comisión (20%)</Text>
-            <Text style={commonStyles.caption}>
-              {(totalPrice * COMISION).toFixed(2)}€
-            </Text>
-          </View>
+          {/* Duración del alquiler */}
+          {monthsBetween !== null && monthsBetween > 0 && (
+            <View style={{ marginTop: 8, marginBottom: 16 }}>
+              <Text style={commonStyles.bodySecondary}>
+                Duración: {monthsBetween.toFixed(2)} meses
+              </Text>
+            </View>
+          )}
 
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 12,
-            }}
-          >
-            <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
-            <Text style={commonStyles.caption}>{courierPrice.toFixed(2)}€</Text>
-          </View>
-
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderTopWidth: 1,
-              borderTopColor: Colors.border,
-              paddingTop: 12,
-              marginBottom: 16,
-            }}
-          >
+          <View style={createKitStyles.deliverySection}>
             <Text
-              style={[
-                commonStyles.caption,
-                { color: Colors.primary, fontWeight: "600", fontSize: 16 },
-              ]}
+              style={[commonStyles.subtitle, createKitStyles.productsTitle]}
             >
-              Total a pagar
+              Método de entrega
             </Text>
-            <Text
-              style={[
-                createKitStyles.productTitle,
-                { fontSize: 20, color: Colors.primary },
+
+            <SegmentedButtons
+              value={deliveryMethod}
+              onValueChange={(value) => {
+                setDeliveryMethod(value as DeliveryMethod);
+                clearFieldError("meetingPoint");
+                clearFieldError("courierAddress");
+              }}
+              buttons={[
+                {
+                  value: "COURIER",
+                  label: "Mensajería",
+                  icon: "truck-delivery",
+                },
+                {
+                  value: "MEETING_POINT",
+                  label: "Punto de encuentro",
+                  icon: "map-marker",
+                },
               ]}
-            >
-              {(
-                totalPrice +
-                totalPrice * GUARANTEE_PERCENTAGE +
-                + totalPrice*COMISION +
-                courierPrice
-              ).toFixed(2)}
-              €
-            </Text>
+              style={{ marginVertical: 12 }}
+            />
+
+            {deliveryMethod === "MEETING_POINT" ? (
+              <>
+                <PaperTextInput
+                  mode="outlined"
+                  label="Punto de encuentro"
+                  placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
+                  value={meetingPoint}
+                  onChangeText={(value) => {
+                    setMeetingPoint(value);
+                    clearFieldError("meetingPoint");
+                  }}
+                  error={!!errors.meetingPoint}
+                  style={{
+                    backgroundColor: Colors.backgroundWhite,
+                    marginTop: 12,
+                  }}
+                  outlineColor={Colors.border}
+                  activeOutlineColor={Colors.primary}
+                  multiline
+                />
+                {errors.meetingPoint ? (
+                  <Text style={commonStyles.errorText}>
+                    {errors.meetingPoint}
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
+
+            {deliveryMethod === "COURIER" ? (
+              <>
+                <PaperTextInput
+                  mode="outlined"
+                  label="Dirección de entrega"
+                  value={courierAddress}
+                  onChangeText={(value) => {
+                    setCourierAddress(value);
+                    clearFieldError("courierAddress");
+                  }}
+                  error={!!errors.courierAddress}
+                  style={{
+                    backgroundColor: Colors.backgroundWhite,
+                    marginTop: 12,
+                  }}
+                  outlineColor={Colors.border}
+                  activeOutlineColor={Colors.primary}
+                  multiline
+                />
+                {errors.courierAddress ? (
+                  <Text style={commonStyles.errorText}>
+                    {errors.courierAddress}
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
+
+            {deliveryMethod === "COURIER" ? (
+              <Text style={commonStyles.bodySecondary}>
+                Se aplicará una tarifa fija de mensajería de{" "}
+                {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
+              </Text>
+            ) : null}
           </View>
 
-          <Button
-            mode="contained"
-            onPress={() => setConfirmVisible(true)}
-            disabled={submitting}
-            loading={submitting}
-            icon="cart-outline"
-            style={{ borderRadius: 8 }}
-            contentStyle={{ paddingVertical: 8 }}
-          >
-            Realizar Pedido
-          </Button>
-        </View>
-      </View>
-
-      <ProductSelectionModal
-        visible={catalogModalVisible}
-        onDismiss={() => setCatalogModalVisible(false)}
-        searchText={searchText}
-        onSearchChange={setSearchText}
-        categoryFilter={categoryFilter}
-        onCategoryFilterChange={setCategoryFilter}
-        categories={categories}
-        filteredProducts={filteredProducts}
-        tempSelectedQuantities={tempSelectedQuantities}
-        onToggleSelection={toggleTempSelection}
-        onChangeQuantity={changeTempQuantity}
-        onConfirm={confirmSelection}
-        userCity={city.trim()}
-        showOnlyMyCity={showOnlyMyCity}
-        onToggleMyCity={setShowOnlyMyCity}
-        showOnlyAvailable={showOnlyAvailable}
-        onToggleAvailable={setShowOnlyAvailable}
-        startDate={startDate}
-        endDate={endDate}
-      />
-
-      <Modal
-      visible={confirmVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setConfirmVisible(false)}
-    >
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.4)",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 20,
-        }}
-      >
-        <View
-          style={{
-            width: "100%",
-            backgroundColor: "white",
-            borderRadius: 16,
-            padding: 20,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "bold",
-              marginBottom: 10,
-              color: "#111",
-            }}
-          >
-            Depósito de garantía
-          </Text>
-
-          <Text style={{ fontSize: 15, color: "#444", marginBottom: 20 }}>
-            Recuerda que el 20%  se retendrá como garantía y se te devolverá
-            cuando el kit sea devuelto en buen estado.
-          </Text>
-
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "flex-end",
-              gap: 10,
-            }}
-          >
+          <View style={createKitStyles.productsHeader}>
+            <Text
+              style={[commonStyles.subtitle, createKitStyles.productsTitle]}
+            >
+              Tus Productos
+            </Text>
             <Button
-              mode="outlined"
-              onPress={() => setConfirmVisible(false)}
+              mode="contained"
+              onPress={openAddProductModal}
+              icon="plus"
+              compact
+              style={{ borderRadius: 8 }}
             >
-              Cancelar
+              Añadir Producto
             </Button>
+          </View>
+
+          <View style={createKitStyles.counterBadge}>
+            <Text style={createKitStyles.counterBadgeText}>
+              Seleccionados: {selectedItemsCount}
+            </Text>
+          </View>
+
+          {/* Lista de items añadidos al kit */}
+          {loadingCatalog ? (
+            <View style={createKitStyles.loaderArea}>
+              <ActivityIndicator color={Colors.primary} />
+            </View>
+          ) : selectedProducts.length === 0 ? (
+            <Text style={commonStyles.bodySecondary}>
+              Aún no has añadido productos al kit. Pulsa "Añadir Producto +".
+            </Text>
+          ) : (
+            selectedProducts.map((item) => (
+              <KitItemComponent
+                key={item.id}
+                item={item}
+                quantity={selectedQuantities[item.id] ?? 1}
+                maxQuantity={item.totalUnits}
+                duration={monthsBetween ?? 0}
+                onIncrease={incrementSelectedQuantity}
+                onDecrease={decrementSelectedQuantity}
+                onRemove={removeSelectedItem}
+              />
+            ))
+          )}
+
+          {errors.items ? (
+            <Text style={commonStyles.errorText}>{errors.items}</Text>
+          ) : null}
+          {errors.general ? (
+            <Text style={commonStyles.errorText}>{errors.general}</Text>
+          ) : null}
+        </ScrollView>
+
+        <View style={createKitStyles.footerRow}>
+          {/* Resumen de precios */}
+          <View style={{ flex: 1 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <Text style={commonStyles.caption}>Subtotal productos</Text>
+              <Text style={commonStyles.caption}>{totalPrice.toFixed(2)}€</Text>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: 12,
+              }}
+            >
+              <Text style={commonStyles.caption}>Garantía (20%)</Text>
+              <Text style={commonStyles.caption}>
+                {(totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: 12,
+              }}
+            >
+              <Text style={commonStyles.caption}>Comisión (20%)</Text>
+              <Text style={commonStyles.caption}>
+                {(totalPrice * COMISION).toFixed(2)}€
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: 12,
+              }}
+            >
+              <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
+              <Text style={commonStyles.caption}>
+                {courierPrice.toFixed(2)}€
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderTopWidth: 1,
+                borderTopColor: Colors.border,
+                paddingTop: 12,
+                marginBottom: 16,
+              }}
+            >
+              <Text
+                style={[
+                  commonStyles.caption,
+                  { color: Colors.primary, fontWeight: "600", fontSize: 16 },
+                ]}
+              >
+                Total a pagar
+              </Text>
+              <Text
+                style={[
+                  createKitStyles.productTitle,
+                  { fontSize: 20, color: Colors.primary },
+                ]}
+              >
+                {(
+                  totalPrice +
+                  totalPrice * GUARANTEE_PERCENTAGE +
+                  +totalPrice * COMISION +
+                  courierPrice
+                ).toFixed(2)}
+                €
+              </Text>
+            </View>
 
             <Button
               mode="contained"
-              onPress={() => {
-                setConfirmVisible(false);
-                handleSubmit();
-              }}
+              onPress={() => setConfirmVisible(true)}
+              disabled={submitting}
+              loading={submitting}
+              icon="cart-outline"
+              style={{ borderRadius: 8 }}
+              contentStyle={{ paddingVertical: 8 }}
             >
-              Aceptar
+              Realizar Pedido
             </Button>
           </View>
         </View>
-      </View>
-    </Modal>
 
-    </SafeAreaView>
+        <ProductSelectionModal
+          visible={catalogModalVisible}
+          onDismiss={() => setCatalogModalVisible(false)}
+          searchText={searchText}
+          onSearchChange={setSearchText}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          categories={categories}
+          filteredProducts={filteredProducts}
+          tempSelectedQuantities={tempSelectedQuantities}
+          onToggleSelection={toggleTempSelection}
+          onChangeQuantity={changeTempQuantity}
+          onConfirm={confirmSelection}
+          userCity={city.trim()}
+          showOnlyMyCity={showOnlyMyCity}
+          onToggleMyCity={setShowOnlyMyCity}
+          showOnlyAvailable={showOnlyAvailable}
+          onToggleAvailable={setShowOnlyAvailable}
+          startDate={startDate}
+          endDate={endDate}
+        />
+
+        <Modal
+          visible={confirmVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setConfirmVisible(false)}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 20,
+            }}
+          >
+            <View
+              style={{
+                width: "100%",
+                backgroundColor: "white",
+                borderRadius: 16,
+                padding: 20,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  marginBottom: 10,
+                  color: "#111",
+                }}
+              >
+                Depósito de garantía
+              </Text>
+
+              <Text style={{ fontSize: 15, color: "#444", marginBottom: 20 }}>
+                Recuerda que el 20% se retendrá como garantía y se te devolverá
+                cuando el kit sea devuelto en buen estado.
+              </Text>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-end",
+                  gap: 10,
+                }}
+              >
+                <Button
+                  mode="outlined"
+                  onPress={() => setConfirmVisible(false)}
+                >
+                  Cancelar
+                </Button>
+
+                <Button
+                  mode="contained"
+                  onPress={() => {
+                    setConfirmVisible(false);
+                    handleSubmit();
+                  }}
+                >
+                  Aceptar
+                </Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
     </PaperProvider>
   );
 };

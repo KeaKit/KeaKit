@@ -23,7 +23,7 @@ const HomeScreen: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation<HomeNav>();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [availableBalance, setAvailableBalance] = useState<number | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
 
   useEffect(() => {
@@ -32,10 +32,10 @@ const HomeScreen: React.FC = () => {
         setLoadingBalance(true);
         try {
           const wallet = await getWalletByUserId(user.id, user.token);
-          setAvailableBalance(wallet.availableBalance);
+          setBalance(wallet.balance);
         } catch (error) {
           console.error('Error al cargar el saldo:', error);
-          setAvailableBalance(null);
+          setBalance(null);
         } finally {
           setLoadingBalance(false);
         }
@@ -111,7 +111,7 @@ const HomeScreen: React.FC = () => {
                 <ActivityIndicator size="small" color={Colors.primary} />
               ) : (
                 <Text style={styles.balanceAmount}>
-                  {availableBalance !== null ? `${availableBalance.toFixed(2)}€` : 'No disponible'}
+                  {balance !== null ? `${balance.toFixed(2)}€` : 'No disponible'}
                 </Text>
               )}
             </View>
