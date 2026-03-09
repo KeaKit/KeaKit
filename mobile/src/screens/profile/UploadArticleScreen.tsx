@@ -12,6 +12,11 @@ import { uploadArticle, uploadArticleWithImage } from '../../services/articleSer
 import { fetchAllCategories } from '../../services/categoryService';
 import { ArticlePayload, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
+import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { DatePickerModal } from 'react-native-paper-dates';
+import { es, registerTranslation } from 'react-native-paper-dates';
+
+registerTranslation('es', es);
 
 type UploadNav = NativeStackNavigationProp<RootStackParamList, 'UploadArticle'>;
 
@@ -59,6 +64,21 @@ const Field: React.FC<FieldProps> = ({
   </View>
 );
 
+// ── Helper: Date → "YYYY-MM-DD" ─────────────────────────────────────────────
+const toIso = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+};
+
+// ── Helper: "YYYY-MM-DD" → "DD/MM/YYYY" para mostrar ────────────────────────
+const toDisplay = (iso: string): string => {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+};
+
 const UploadArticleScreen: React.FC = () => {
   const navigation = useNavigation<UploadNav>();
   const { user } = useAuth();
@@ -72,6 +92,15 @@ const UploadArticleScreen: React.FC = () => {
   const [availableUntil, setAvailableUntil] = useState('');
   const [selectedImage, setSelectedImage] = useState<{ uri: string; name: string } | null>(null);
   const [purchaseDate, setPurchaseDate] = useState('');
+
+  // Calendario disponibilidad
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+
+  // Calendario fecha de compra
+  const [showPurchaseDatePicker, setShowPurchaseDatePicker] = useState(false);
+  const [purchaseDateObj, setPurchaseDateObj] = useState<Date | undefined>(undefined);
 
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -105,41 +134,35 @@ const UploadArticleScreen: React.FC = () => {
         aspect: [4, 3],
         quality: 0.8,
       });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (!result.canceled && result.assets?.length > 0) {
         const asset = result.assets[0];
         const fileName = asset.uri.split('/').pop() || 'image.jpg';
         setSelectedImage({ uri: asset.uri, name: fileName });
         clearError('image');
       }
-    } catch (error) {
-      console.error('Error picking image:', error);
+    } catch {
       Alert.alert('Error', 'No se pudo seleccionar la imagen');
     }
   };
 
   const takePicture = async () => {
     try {
-      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-      if (!permissionResult.granted) {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
         Alert.alert('Permiso requerido', 'Se requiere acceso a la cámara para tomar fotos');
         return;
       }
-
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
       });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (!result.canceled && result.assets?.length > 0) {
         const asset = result.assets[0];
-        const fileName = `photo_${Date.now()}.jpg`;
-        setSelectedImage({ uri: asset.uri, name: fileName });
+        setSelectedImage({ uri: asset.uri, name: `photo_${Date.now()}.jpg` });
         clearError('image');
       }
-    } catch (error) {
-      console.error('Error taking picture:', error);
+    } catch {
       Alert.alert('Error', 'No se pudo tomar la foto');
     }
   };
@@ -149,7 +172,6 @@ const UploadArticleScreen: React.FC = () => {
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
     if (!title.trim())       newErrors.title       = 'El título es obligatorio';
     if (!description.trim()) newErrors.description = 'La descripción es obligatoria';
@@ -161,23 +183,17 @@ const UploadArticleScreen: React.FC = () => {
     } else if (selectedCategory) {
       const price = Number(pricePerMonth);
       if (price < selectedCategory.minPrice || price > selectedCategory.maxPrice) {
-         newErrors.pricePerMonth = `El precio debe estar entre ${selectedCategory.minPrice}€ y ${selectedCategory.maxPrice}€ para esta categoría`;
+        newErrors.pricePerMonth = `El precio debe estar entre ${selectedCategory.minPrice}€ y ${selectedCategory.maxPrice}€`;
       }
     }
 
-    if (!availableFrom || !dateRegex.test(availableFrom))
-      newErrors.availableFrom = 'Formato: AAAA-MM-DD';
-
-    if (!availableUntil || !dateRegex.test(availableUntil))
-      newErrors.availableUntil = 'Formato: AAAA-MM-DD';
-
-    if(availableFrom < Date.now().toString().slice(0,10)) {
-      newErrors.availableFrom = 'La fecha de inicio no puede ser anterior a hoy';
-    }
+    if (!availableFrom)  newErrors.availableFrom  = 'Selecciona la fecha de inicio';
+    if (!availableUntil) newErrors.availableUntil = 'Selecciona la fecha de fin';
 
     if (availableFrom && availableUntil && availableFrom >= availableUntil)
       newErrors.availableUntil = 'Debe ser posterior a la fecha de inicio';
 
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (purchaseDate && !dateRegex.test(purchaseDate))
       newErrors.purchaseDate = 'Formato: AAAA-MM-DD';
 
@@ -191,7 +207,6 @@ const UploadArticleScreen: React.FC = () => {
       Alert.alert('Error', 'Debes estar autenticado para subir un artículo.');
       return;
     }
-
     setLoading(true);
     try {
       const payload: ArticlePayload = {
@@ -201,7 +216,7 @@ const UploadArticleScreen: React.FC = () => {
         pricePerMonth: Number(pricePerMonth),
         availableFrom,
         availableUntil,
-        category:      { id: selectedCategory!.id } as any, 
+        category:      { id: selectedCategory!.id } as any,
         status:        'AVAILABLE',
         ...(purchaseDate.trim() && { purchaseDate: purchaseDate.trim() }),
       };
@@ -209,7 +224,6 @@ const UploadArticleScreen: React.FC = () => {
       if (selectedImage) {
         await uploadArticleWithImage(user.id, selectedCategory!.id, user.token, payload, selectedImage.uri, selectedImage.name);
       } else {
-        // En teoría validation previene caer aquí, pero como fallback
         await uploadArticle(user.id, selectedCategory!.id, user.token, payload);
       }
       navigation.goBack();
@@ -220,188 +234,447 @@ const UploadArticleScreen: React.FC = () => {
     }
   };
 
+  const customTheme = {
+    ...MD3LightTheme,
+    colors: {
+      ...MD3LightTheme.colors,
+      primary: Colors.primary,
+      onPrimary: '#FFFFFF',
+      primaryContainer: '#E3F2FD',
+      onPrimaryContainer: Colors.primary,
+      surface: '#FFFFFF',
+      onSurface: '#1C1B1F',
+    },
+  };
+
   return (
-    <SafeAreaView style={commonStyles.container}>
-      <View style={commonStyles.header}>
-        <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={28} color={Colors.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nuevo artículo</Text>
-        <View style={{ width: 36 }} />
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Información básica</Text>
-          <Field label="Título" value={title} onChange={(t) => { setTitle(t); clearError('title'); }} placeholder="Ej: Taladro percutor Bosch" error={errors.title} />
-          <Field label="Descripción" value={description} onChange={(t) => { setDescription(t); clearError('description'); }} placeholder="Describe el estado, accesorios incluidos..." multiline error={errors.description} />
-          <Field label="Ciudad" value={city} onChange={(t) => { setCity(t); clearError('city'); }} placeholder="Ej: Madrid" error={errors.city} />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Categoría</Text>
-          <TouchableOpacity
-            style={[
-              commonStyles.input,
-              styles.categorySelector,
-              errors.category ? commonStyles.inputError : null,
-            ]}
-            onPress={() => !loadingCategories && setCategoryOpen((o) => !o)}
-            activeOpacity={0.8}
-          >
-            {loadingCategories ? (
-              <ActivityIndicator size="small" color={Colors.primary} />
-            ) : (
-              <Text style={[styles.categorySelectorText, !selectedCategory && { color: Colors.textSecondary }]}>
-                {selectedCategory ? selectedCategory.name : 'Selecciona una categoría'}
-              </Text>
-            )}
-            <Ionicons name={categoryOpen ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textSecondary} />
+    <PaperProvider theme={customTheme}>
+      <SafeAreaView style={commonStyles.container}>
+        <View style={commonStyles.header}>
+          <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={28} color={Colors.primary} />
           </TouchableOpacity>
-          {!!errors.category && (
-            <View style={commonStyles.errorContainer}>
-              <Ionicons name="alert-circle" size={14} color={Colors.error} />
-              <Text style={commonStyles.errorText}>{errors.category}</Text>
-            </View>
-          )}
-          {categoryOpen && dbCategories.length > 0 && (
-            <View style={styles.categoryDropdown}>
-              {dbCategories.map((cat, index) => (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={[
-                    styles.categoryOption,
-                    index === dbCategories.length - 1 && { borderBottomWidth: 0 },
-                    selectedCategory?.id === cat.id && styles.categoryOptionSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedCategory(cat);
-                    setCategoryOpen(false);
-                    clearError('category');
-                    clearError('pricePerMonth'); 
-                  }}
-                >
-                  <Text style={[styles.categoryOptionText, selectedCategory?.id === cat.id && styles.categoryOptionTextSelected]}>
-                    {cat.name}
-                  </Text>
-                  {selectedCategory?.id === cat.id && (
-                    <Ionicons name="checkmark" size={18} color={Colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-          {categoryOpen && dbCategories.length === 0 && !loadingCategories && (
-            <View style={[styles.categoryDropdown, { padding: Spacing.md }]}>
-               <Text style={commonStyles.bodySecondary}>No hay categorías disponibles.</Text>
-            </View>
-          )}
+          <Text style={styles.headerTitle}>Nuevo artículo</Text>
+          <View style={{ width: 36 }} />
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Precio y disponibilidad</Text>
-          <Field label="Precio por mes (€)" value={pricePerMonth} onChange={(t) => { setPricePerMonth(t); clearError('pricePerMonth'); }} placeholder="Ej: 25.00" keyboardType="numeric" error={errors.pricePerMonth} />
-          {selectedCategory && (
-            <Text style={styles.helperText}>
-              El precio debe estar entre {selectedCategory.minPrice}€ y {selectedCategory.maxPrice}€.
-            </Text>
-          )}
-          <Field label="Disponible desde" value={availableFrom} onChange={(t) => { setAvailableFrom(t); clearError('availableFrom'); }} placeholder="AAAA-MM-DD" error={errors.availableFrom} />
-          <Field label="Disponible hasta" value={availableUntil} onChange={(t) => { setAvailableUntil(t); clearError('availableUntil'); }} placeholder="AAAA-MM-DD" error={errors.availableUntil} />
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Información adicional</Text>
-          
-          <Text style={styles.label}>Foto del artículo (opcional)</Text>
-          <View style={styles.imageSelectorContainer}>
-            {selectedImage ? (
-              <View style={styles.selectedImageContainer}>
-                <Image source={{ uri: selectedImage.uri }} style={styles.imagePreview} />
-                <TouchableOpacity
-                  style={styles.changeImageButton}
-                  onPress={() => setSelectedImage(null)}
-                >
-                  <Ionicons name="close-circle" size={24} color={Colors.error} />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={[styles.imagePlaceholder, errors.image ? { borderColor: Colors.error } : null]}>
-                <Ionicons name="image-outline" size={40} color={Colors.textSecondary} />
-                <Text style={styles.placeholderText}>Sube una foto de tu artículo</Text>
+          {/* Información básica */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Información básica</Text>
+            <Field label="Título" value={title} onChange={(t) => { setTitle(t); clearError('title'); }} placeholder="Ej: Taladro percutor Bosch" error={errors.title} />
+            <Field label="Descripción" value={description} onChange={(t) => { setDescription(t); clearError('description'); }} placeholder="Describe el estado, accesorios incluidos..." multiline error={errors.description} />
+            <Field label="Ciudad" value={city} onChange={(t) => { setCity(t); clearError('city'); }} placeholder="Ej: Madrid" error={errors.city} />
+          </View>
+
+          {/* Categoría */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Categoría</Text>
+            <TouchableOpacity
+              style={[commonStyles.input, styles.categorySelector, errors.category ? commonStyles.inputError : null]}
+              onPress={() => !loadingCategories && setCategoryOpen((o) => !o)}
+              activeOpacity={0.8}
+            >
+              {loadingCategories ? (
+                <ActivityIndicator size="small" color={Colors.primary} />
+              ) : (
+                <Text style={[styles.categorySelectorText, !selectedCategory && { color: Colors.textSecondary }]}>
+                  {selectedCategory ? selectedCategory.name : 'Selecciona una categoría'}
+                </Text>
+              )}
+              <Ionicons name={categoryOpen ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+            {!!errors.category && (
+              <View style={commonStyles.errorContainer}>
+                <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                <Text style={commonStyles.errorText}>{errors.category}</Text>
               </View>
             )}
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
-                <Ionicons name="images" size={20} color={Colors.primary} />
-                <Text style={styles.imageButtonText}>Galería</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.imageButton} onPress={takePicture}>
-                <Ionicons name="camera" size={20} color={Colors.primary} />
-                <Text style={styles.imageButtonText}>Cámara</Text>
-              </TouchableOpacity>
-            </View>
-            {!!errors.image && (
-              <View style={[commonStyles.errorContainer, { marginTop: Spacing.xs }]}>
-                <Ionicons name="alert-circle" size={14} color={Colors.error} />
-                <Text style={commonStyles.errorText}>{errors.image}</Text>
+            {categoryOpen && dbCategories.length > 0 && (
+              <View style={styles.categoryDropdown}>
+                {dbCategories.map((cat, index) => (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.categoryOption,
+                      index === dbCategories.length - 1 && { borderBottomWidth: 0 },
+                      selectedCategory?.id === cat.id && styles.categoryOptionSelected,
+                    ]}
+                    onPress={() => {
+                      setSelectedCategory(cat);
+                      setCategoryOpen(false);
+                      clearError('category');
+                      clearError('pricePerMonth');
+                    }}
+                  >
+                    <Text style={[styles.categoryOptionText, selectedCategory?.id === cat.id && styles.categoryOptionTextSelected]}>
+                      {cat.name}
+                    </Text>
+                    {selectedCategory?.id === cat.id && <Ionicons name="checkmark" size={18} color={Colors.primary} />}
+                  </TouchableOpacity>
+                ))}
               </View>
             )}
           </View>
 
-          <Field label="Fecha de compra" value={purchaseDate} onChange={(t) => { setPurchaseDate(t); clearError('purchaseDate'); }} placeholder="AAAA-MM-DD" optional error={errors.purchaseDate} />
-        </View>
+          {/* Precio y disponibilidad */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Precio y disponibilidad</Text>
+            <Field
+              label="Precio por mes (€)"
+              value={pricePerMonth}
+              onChange={(t) => { setPricePerMonth(t); clearError('pricePerMonth'); }}
+              placeholder="Ej: 25.00"
+              keyboardType="numeric"
+              error={errors.pricePerMonth}
+            />
+            {selectedCategory && (
+              <Text style={styles.helperText}>
+                Precio entre {selectedCategory.minPrice}€ y {selectedCategory.maxPrice}€
+              </Text>
+            )}
 
-        <TouchableOpacity style={[commonStyles.primaryButton, loading && styles.buttonDisabled]} onPress={handleSubmit} disabled={loading} activeOpacity={0.8}>
-          {loading ? (
-            <ActivityIndicator color={Colors.textWhite} />
-          ) : (
-            <View style={styles.submitContent}>
-              <Ionicons name="cloud-upload-outline" size={20} color={Colors.textWhite} />
-              <Text style={[commonStyles.primaryButtonText, { marginLeft: Spacing.sm }]}>Publicar artículo</Text>
+            {/* Selector de rango de fechas */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Periodo de disponibilidad</Text>
+              <TouchableOpacity
+                style={[
+                  commonStyles.input,
+                  styles.dateSelector,
+                  (errors.availableFrom || errors.availableUntil) ? commonStyles.inputError : null,
+                ]}
+                onPress={() => setShowDateRangePicker(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.dateSelectorText,
+                  !(availableFrom && availableUntil) && { color: Colors.textSecondary },
+                ]}>
+                  {availableFrom && availableUntil
+                    ? `${toDisplay(availableFrom)}  →  ${toDisplay(availableUntil)}`
+                    : 'Selecciona el rango de disponibilidad'}
+                </Text>
+                <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
+              </TouchableOpacity>
+              {!!errors.availableFrom && (
+                <View style={commonStyles.errorContainer}>
+                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                  <Text style={commonStyles.errorText}>{errors.availableFrom}</Text>
+                </View>
+              )}
+              {!!errors.availableUntil && (
+                <View style={commonStyles.errorContainer}>
+                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                  <Text style={commonStyles.errorText}>{errors.availableUntil}</Text>
+                </View>
+              )}
             </View>
-          )}
-        </TouchableOpacity>
 
-        <View style={{ height: Spacing.xxl }} />
-      </ScrollView>
-    </SafeAreaView>
+            <DatePickerModal
+              locale="es"
+              mode="range"
+              visible={showDateRangePicker}
+              onDismiss={() => setShowDateRangePicker(false)}
+              startDate={startDate}
+              endDate={endDate}
+              onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
+                setShowDateRangePicker(false);
+                if (params.startDate && params.endDate) {
+                  setStartDate(params.startDate);
+                  setEndDate(params.endDate);
+                  setAvailableFrom(toIso(params.startDate));
+                  setAvailableUntil(toIso(params.endDate));
+                  clearError('availableFrom');
+                  clearError('availableUntil');
+                }
+              }}
+              validRange={{ startDate: new Date() }}
+            />
+          </View>
+
+          {/* Información adicional */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Información adicional</Text>
+
+            <Text style={styles.label}>Foto del artículo <Text style={styles.optional}>(opcional)</Text></Text>
+            <View style={styles.imageSelectorContainer}>
+              {selectedImage ? (
+                <View style={styles.selectedImageContainer}>
+                  <Image source={{ uri: selectedImage.uri }} style={styles.imagePreview} />
+                  <TouchableOpacity style={styles.changeImageButton} onPress={() => setSelectedImage(null)}>
+                    <Ionicons name="close-circle" size={24} color={Colors.error} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={[styles.imagePlaceholder, errors.image ? { borderColor: Colors.error } : null]}>
+                  <Ionicons name="image-outline" size={40} color={Colors.textSecondary} />
+                  <Text style={styles.placeholderText}>Sube una foto de tu artículo</Text>
+                </View>
+              )}
+              <View style={styles.buttonRow}>
+                <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
+                  <Ionicons name="images" size={20} color={Colors.primary} />
+                  <Text style={styles.imageButtonText}>Galería</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.imageButton} onPress={takePicture}>
+                  <Ionicons name="camera" size={20} color={Colors.primary} />
+                  <Text style={styles.imageButtonText}>Cámara</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.fieldContainer}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Fecha de compra</Text>
+                <Text style={styles.optional}> (opcional)</Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  commonStyles.input,
+                  styles.dateSelector,
+                  errors.purchaseDate ? commonStyles.inputError : null,
+                ]}
+                onPress={() => setShowPurchaseDatePicker(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.dateSelectorText,
+                  !purchaseDate && { color: Colors.textSecondary },
+                ]}>
+                  {purchaseDate ? toDisplay(purchaseDate) : 'Selecciona la fecha de compra'}
+                </Text>
+                <View style={styles.dateRightIcons}>
+                  {purchaseDate && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setPurchaseDate('');
+                        setPurchaseDateObj(undefined);
+                      }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Ionicons name="close-circle" size={18} color={Colors.textSecondary} />
+                    </TouchableOpacity>
+                  )}
+                  <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
+                </View>
+              </TouchableOpacity>
+              {!!errors.purchaseDate && (
+                <View style={commonStyles.errorContainer}>
+                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                  <Text style={commonStyles.errorText}>{errors.purchaseDate}</Text>
+                </View>
+              )}
+              <DatePickerModal
+                locale="es"
+                mode="single"
+                visible={showPurchaseDatePicker}
+                onDismiss={() => setShowPurchaseDatePicker(false)}
+                date={purchaseDateObj}
+                onConfirm={(params: { date?: Date }) => {
+                  setShowPurchaseDatePicker(false);
+                  if (params.date) {
+                    setPurchaseDateObj(params.date);
+                    setPurchaseDate(toIso(params.date));
+                    clearError('purchaseDate');
+                  }
+                }}
+                validRange={{ endDate: new Date() }}
+              />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[commonStyles.primaryButton, loading && styles.buttonDisabled]}
+            onPress={handleSubmit}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color={Colors.textWhite} />
+            ) : (
+              <View style={styles.submitContent}>
+                <Ionicons name="cloud-upload-outline" size={20} color={Colors.textWhite} />
+                <Text style={[commonStyles.primaryButtonText, { marginLeft: Spacing.sm }]}>Publicar artículo</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <View style={{ height: Spacing.xxl }} />
+        </ScrollView>
+      </SafeAreaView>
+    </PaperProvider>
   );
 };
 
 const styles = StyleSheet.create({
-  headerTitle: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary },
-  scrollContent: { padding: Spacing.lg, gap: Spacing.xl },
-  section: { gap: Spacing.md },
-  sectionTitle: { fontSize: 12, fontWeight: '700', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1 },
-  fieldContainer: { gap: Spacing.xs },
-  labelRow: { flexDirection: 'row', alignItems: 'center' },
-  label: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
-  optional: { fontSize: 13, color: Colors.textSecondary },
-  textarea: { height: 100, paddingTop: Spacing.md },
-  categorySelector: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  categorySelectorText: { fontSize: 15, color: Colors.textPrimary },
-  categoryDropdown: { backgroundColor: Colors.backgroundWhite, borderRadius: 10, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden' },
-  categoryOption: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.base, paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  categoryOptionSelected: { backgroundColor: Colors.primary + '12' },
-  categoryOptionText: { fontSize: 15, color: Colors.textPrimary },
-  categoryOptionTextSelected: { fontWeight: '700', color: Colors.primary },
-  submitContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  buttonDisabled: { opacity: 0.6 },
-  
-  helperText: { fontSize: 12, color: Colors.textSecondary, fontStyle: 'italic', marginTop: -4 },
-
-  imageSelectorContainer: { gap: Spacing.sm },
-  selectedImageContainer: { position: 'relative', height: 250, width: '100%', borderRadius: 12, overflow: 'hidden', marginBottom: Spacing.sm, backgroundColor: Colors.border },
-  imagePreview: { width: '100%', height: '100%', resizeMode: 'contain' },
-  changeImageButton: { position: 'absolute', top: Spacing.sm, right: Spacing.sm, backgroundColor: Colors.backgroundWhite, borderRadius: 12 },
-  imagePlaceholder: { height: 180, width: '100%', backgroundColor: Colors.background, borderRadius: 12, borderWidth: 2, borderColor: Colors.border, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.sm },
-  placeholderText: { color: Colors.textSecondary, fontSize: 14, marginTop: Spacing.sm },
-  buttonRow: { flexDirection: 'row', gap: Spacing.md },
-  imageButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: Spacing.md, paddingHorizontal: Spacing.base, borderRadius: 8, backgroundColor: Colors.border, borderWidth: 1, borderColor: Colors.primary },
-  imageButtonText: { color: Colors.primary, fontSize: 14, fontWeight: '600' },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  scrollContent: {
+    padding: Spacing.lg,
+    gap: Spacing.xl,
+  },
+  section: {
+    gap: Spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  fieldContainer: {
+    gap: Spacing.xs,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  optional: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  textarea: {
+    height: 100,
+    paddingTop: Spacing.md,
+  },
+  categorySelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  categorySelectorText: {
+    fontSize: 15,
+    color: Colors.textPrimary,
+  },
+  categoryDropdown: {
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+  },
+  categoryOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  categoryOptionSelected: {
+    backgroundColor: Colors.primary + '12',
+  },
+  categoryOptionText: {
+    fontSize: 15,
+    color: Colors.textPrimary,
+  },
+  categoryOptionTextSelected: {
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  helperText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+    marginTop: -4,
+  },
+  dateSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateSelectorText: {
+    fontSize: 15,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  dateRightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  imageSelectorContainer: {
+    gap: Spacing.sm,
+  },
+  selectedImageContainer: {
+    position: 'relative',
+    height: 250,
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: Spacing.sm,
+    backgroundColor: Colors.border,
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  changeImageButton: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 12,
+  },
+  imagePlaceholder: {
+    height: 180,
+    width: '100%',
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  placeholderText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    marginTop: Spacing.sm,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  imageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.base,
+    borderRadius: 8,
+    backgroundColor: Colors.border,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  imageButtonText: {
+    color: Colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  submitContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
 });
 
 export default UploadArticleScreen;
