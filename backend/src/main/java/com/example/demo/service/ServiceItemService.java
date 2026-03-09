@@ -196,4 +196,8 @@ public class ServiceItemService {
     public List<ServiceItem> findAllActive() {
         return serviceRepository.findByStatus(ServiceStatus.ACTIVE);
     }
+
+    public List<ServiceItem> findByOwner(Long ownerId) {
+        return serviceRepository.findByOwnerId(ownerId);
+    }
 }

@@ -4,6 +4,7 @@ import com.example.demo.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -41,8 +42,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/cities/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 //Para asegurar que las url que comiencen por api/admin/ solo serán accesibles por usuarios con rol ADMIN
+                .requestMatchers(HttpMethod.GET, "/api/services/active", "/api/services/{id}").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
