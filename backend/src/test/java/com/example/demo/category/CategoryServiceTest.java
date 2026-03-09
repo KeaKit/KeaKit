@@ -3,6 +3,7 @@ package com.example.demo.category;
 import com.example.demo.model.Category;
 import com.example.demo.model.CategoryStatus;
 import com.example.demo.repository.CategoryRepository;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.service.CategoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ class CategoryServiceTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+
+    @Mock
+    private ItemRepository itemRepository;
 
     @InjectMocks
     private CategoryService categoryService;
@@ -94,10 +98,28 @@ class CategoryServiceTest {
     void deleteCategory_success() {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(sampleCategory));
         
+        when(itemRepository.existsByCategoryId(1L)).thenReturn(false);
+
         doNothing().when(categoryRepository).delete(sampleCategory);
 
         categoryService.deleteCategory(1L);
 
         verify(categoryRepository).delete(sampleCategory);
     }
+
+    @Test
+    void deleteCategory_throwsException_whenItemsExist() {
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(sampleCategory));
+        
+        when(itemRepository.existsByCategoryId(1L)).thenReturn(true);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            categoryService.deleteCategory(1L);
+        });
+
+        assertThat(ex.getMessage()).isEqualTo("No se puede eliminar la categoría porque tiene artículos asociados.");
+
+        verify(categoryRepository, never()).delete(any());
+    }
+
 }
