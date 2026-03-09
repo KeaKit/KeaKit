@@ -29,7 +29,7 @@ public class ServiceItemService {
 
     public ServiceItem findById(Long id) {
         return serviceRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
+            .orElseThrow(() -> new RuntimeException("Service not found"));
     }
 
     /**
@@ -38,10 +38,10 @@ public class ServiceItemService {
     @Transactional
     public ServiceItem createAndPromote(ServiceItem service, Long ownerId, Long categoryId) {
         User owner = userRepository.findById(ownerId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new RuntimeException("User not found"));
         
         Category category = categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+            .orElseThrow(() -> new RuntimeException("Category not found"));
 
         validateServiceData(service, true);
 
@@ -58,14 +58,14 @@ public class ServiceItemService {
     @Transactional
     public ServiceItem update(Long id, Long ownerId, ServiceItem updateData) {
         ServiceItem service = serviceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Service not found"));
 
         if (!service.getOwner().getId().equals(ownerId)) {
-            throw new RuntimeException("Solo el dueño puede modificar este servicio");
+            throw new RuntimeException("Only the owner can modify this service");
         }
 
         if (service.getStatus() == ServiceStatus.UNAVAILABLE) {
-            throw new RuntimeException("El servicio está actualmente alquilado y no puede modificarse.");
+            throw new RuntimeException("The service is currently rented and cannot be modified.");
         }
 
         if (updateData.getTitle() != null) service.setTitle(updateData.getTitle());
@@ -87,7 +87,7 @@ public class ServiceItemService {
             if (updateData.getStatus() == ServiceStatus.ACTIVE || updateData.getStatus() == ServiceStatus.DRAFT) {
                 service.setStatus(updateData.getStatus());
             } else {
-                throw new RuntimeException("El estado manual solo puede ser ACTIVE o DRAFT");
+                throw new RuntimeException("Service status can only be ACTIVE or DRAFT");
             }
         }
         validateServiceData(service, startMonthChanged);
@@ -101,10 +101,10 @@ public class ServiceItemService {
     @Transactional
     public ServiceItem requestService(Long serviceId) {
         ServiceItem service = serviceRepository.findById(serviceId)
-            .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
+            .orElseThrow(() -> new RuntimeException("Service not found"));
 
         if (service.getStatus() != ServiceStatus.ACTIVE) {
-            throw new RuntimeException("El servicio no está activo para ser solicitado");
+            throw new RuntimeException("The service is not active and cannot be requested");
         }
         service.setStatus(ServiceStatus.UNAVAILABLE); 
         return serviceRepository.save(service);
@@ -116,7 +116,7 @@ public class ServiceItemService {
     @Transactional
     public ServiceItem releaseService(Long serviceId) {
         ServiceItem service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Service not found"));
 
         service.setAvailableFrom(LocalDate.now());
         
@@ -134,14 +134,14 @@ public class ServiceItemService {
      */
     public void delete(Long serviceId, Long ownerId) {
        ServiceItem service = serviceRepository.findById(serviceId)
-        .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
+        .orElseThrow(() -> new RuntimeException("Service not found"));
 
         if (!service.getOwner().getId().equals(ownerId)) {
-            throw new RuntimeException("No tienes permiso para eliminar este servicio");
+            throw new RuntimeException("You do not have permission to delete this service");
         }
 
         if (service.getStatus() == ServiceStatus.UNAVAILABLE) {
-            throw new RuntimeException("El servicio está alquilado y no puede eliminarse.");
+            throw new RuntimeException("The service is currently rented and cannot be deleted");
         }
         serviceRepository.delete(service);
     }
@@ -169,24 +169,24 @@ public class ServiceItemService {
      */
     private void validateServiceData(ServiceItem service, boolean checkFromFuture) {
         if (service.getTitle() == null || service.getTitle().isEmpty()) 
-            throw new RuntimeException("El título es obligatorio");
+            throw new RuntimeException("Title is required");
         if (service.getCity() == null || service.getCity().isEmpty()) 
-            throw new RuntimeException("La ciudad es obligatoria");
+            throw new RuntimeException("City is required");
         
         if (service.getPricePerMonth() == null || service.getPricePerMonth() <= 0) 
-            throw new RuntimeException("El precio mensual debe ser positivo");
+            throw new RuntimeException("Monthly price must be positive");
 
         LocalDate from = service.getAvailableFrom();
         LocalDate until = service.getAvailableUntil();
 
         if (from == null || until == null) 
-            throw new RuntimeException("Debes indicar el rango de fechas (Desde/Hasta)");
+            throw new RuntimeException("You must specify the date range (From/Until)");
 
         if (checkFromFuture && from.isBefore(LocalDate.now())) {
-            throw new RuntimeException("La fecha de inicio no puede ser anterior a hoy");
+            throw new RuntimeException("Start date cannot be in the past");
         }
         if (until.isBefore(from)) 
-            throw new RuntimeException("La fecha de fin debe ser posterior a la de inicio");
+            throw new RuntimeException("End date must be after the start date");
         
         if (until.isBefore(LocalDate.now())) {
              service.setStatus(ServiceStatus.DRAFT);
