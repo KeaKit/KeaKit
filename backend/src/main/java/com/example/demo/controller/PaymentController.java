@@ -42,9 +42,9 @@ public class PaymentController {
 
     @PostMapping("/process")
     public ResponseEntity<String> processPayment(
-            @RequestBody String payload, 
+            @RequestBody String payload,
             @RequestHeader(value = "Stripe-Signature", required = false) String sigHeader) {
-        
+
         Event event;
 
         try {
@@ -67,14 +67,14 @@ public class PaymentController {
                     PaymentIntent paymentIntent = (PaymentIntent) stripeObject;
                     System.out.println("¡Pago exitoso! ID: " + paymentIntent.getId());
                     System.out.println("Monto: " + paymentIntent.getAmount());
-                    
+
                     // Recuperar metadata del kit
                     Map<String, String> metadata = paymentIntent.getMetadata();
                     System.out.println("Kit: " + metadata.get("kit_name"));
                     System.out.println("Usuario: " + metadata.get("user_id"));
                     System.out.println("Fechas: " + metadata.get("start_date") + " - " + metadata.get("end_date"));
                     System.out.println("Items: " + metadata.get("items"));
-                    
+
                     // Aquí creas el kit en la base de datos usando los metadata
                 }
             });
@@ -86,13 +86,13 @@ public class PaymentController {
     @PostMapping("/pay-kit")
     public ResponseEntity<Map<String, Object>> simulateCapturedPayment(
             @RequestBody Map<String, Object> paymentRequest) throws StripeException, RuntimeException {
-        
+
         Long amount = ((Number) paymentRequest.get("amount")).longValue();
-        
+
         // Reutilizar el servicio existente para crear el PaymentIntent
         PaymentIntent intent = paymentService.createPaymentIntent(amount);
         Long kitId = null;
-        
+
         // Agregar metadata del kit
         Map<String, String> metadata = new HashMap<>();
         System.out.println("Recibiendo solicitud de pago para kit. Datos: " + paymentRequest);
@@ -100,16 +100,15 @@ public class PaymentController {
             metadata.put("kit_id", paymentRequest.get("kitId").toString());
             kitId = Long.valueOf(paymentRequest.get("kitId").toString());
             Optional<Kit> kit = kitRepository.findById(kitId);
-            
+
             if (kit.isPresent()) {
                 System.out.println("Kit encontrado: " + kit.get().getName());
                 kit.get().setStatus(KitStatus.PAID);
                 kitRepository.save(kit.get());
-                System.out.println("Actualizado kit status"+kit.get().getStatus());
-            }else{
+                System.out.println("Actualizado kit status" + kit.get().getStatus());
+            } else {
                 System.out.println("Kit no encontrado :(");
             }
-            
 
         }
         if (paymentRequest.containsKey("userId")) {
@@ -124,20 +123,20 @@ public class PaymentController {
         if (paymentRequest.containsKey("items")) {
             metadata.put("items", paymentRequest.get("items").toString());
         }
-        
+
         // Actualizar el PaymentIntent con metadata
         Map<String, Object> updateParams = new HashMap<>();
         updateParams.put("metadata", metadata);
         intent = intent.update(updateParams);
-        
+
         // Confirmar el pago con tarjeta de prueba
         Map<String, Object> confirmParams = new HashMap<>();
         confirmParams.put("payment_method", "pm_card_visa");
         intent = intent.confirm(confirmParams);
-        
+
         // Obtener el balance actual de prueba
         Balance balance = Balance.retrieve();
-        
+
         // Preparar respuesta
         Map<String, Object> response = new HashMap<>();
         response.put("paymentIntentId", intent.getId());
@@ -153,14 +152,10 @@ public class PaymentController {
         if (!intent.getStatus().equals("succeeded")) {
             throw new RuntimeException("Error al capturar el pago de prueba. Status: " + intent.getStatus());
         } else {
-
             System.out.println("Pago de prueba capturado exitosamente. ID: " + intent.getId());
             System.out.println("Creando transacciones...");
-
         }
 
-
-        
         return ResponseEntity.ok(response);
     }
 
