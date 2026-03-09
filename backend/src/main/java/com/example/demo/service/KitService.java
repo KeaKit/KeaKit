@@ -1,11 +1,8 @@
 package com.example.demo.service;
 
 import java.time.LocalDate;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,21 +61,21 @@ public class KitService {
     }
 
     @Transactional
-    public KitResponse create(KitCreateRequest request) {
+    public Kit create(KitCreateRequest request) {
         Kit kit = new Kit();
-        kit.setName(request.getName());
-        kit.setCountry(request.getCountry());
-        kit.setCity(request.getCity());
-        kit.setStartDate(request.getStartDate());
-        kit.setEndDate(request.getEndDate());
-        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PAID); // se crea cuando se paga
+        kit.setName(request.name());
+        kit.setCountry(request.country());
+        kit.setCity(request.city());
+        kit.setStartDate(request.startDate());
+        kit.setEndDate(request.endDate());
+        kit.setStatus(request.status() != null ? request.status() : KitStatus.PENDING);
 
-        DeliveryMethod deliveryMethod = request.getDeliveryMethod() != null
-                ? request.getDeliveryMethod()
+        DeliveryMethod deliveryMethod = request.deliveryMethod() != null
+                ? request.deliveryMethod()
                 : DeliveryMethod.COURIER;
         kit.setDeliveryMethod(deliveryMethod);
 
-        String meetingPoint = request.getMeetingPoint() != null ? request.getMeetingPoint().trim() : null;
+        String meetingPoint = request.meetingPoint() != null ? request.meetingPoint().trim() : null;
         if (deliveryMethod == DeliveryMethod.MEETING_POINT && (meetingPoint == null || meetingPoint.isEmpty())) {
             throw new RuntimeException("Meeting point is required when delivery method is MEETING_POINT");
         }
@@ -90,13 +87,13 @@ public class KitService {
             kit.setCourierPrice(null);
         }
 
-        if (request.getTenantId() != null) {
-            User tenant = userRepository.findById(request.getTenantId())
+        if (request.tenantId() != null) {
+            User tenant = userRepository.findById(request.tenantId())
                     .orElseThrow(() -> new RuntimeException("Tenant not found"));
             kit.setTenant(tenant);
         }
 
-        List<KitItem> kitItems = buildKitItemsFromRequest(request);
+        List<KitItem> kitItems = itemSelectionToKitItems(request.itemSelections());
         if (!kitItems.isEmpty()) {
             kit.setKitItems(kitItems);
         }
@@ -104,9 +101,11 @@ public class KitService {
         validateDates(kit.getStartDate(), kit.getEndDate());
 
         Kit savedKit = kitRepository.save(kit);
-        for (KitItem kitItem : savedKit.getKitItems()) {
-            Item item = kitItem.getItem();
-            User owner = item.getOwner(); // asumiendo que Item tiene referencia a su dueño
+        
+        for (KitItem item : kitItems) {
+            // TODO: Revisar si estamos pagando al dueño dos veces
+            Item itemEntity = item.getItem();
+            User owner = itemEntity.getOwner(); // asumiendo que Item tiene referencia a su dueño
             if (owner != null) {
 
                 Optional<Wallet> ownerWallet = walletRepository.findByUserId(owner.getId());
@@ -117,7 +116,7 @@ public class KitService {
                 Wallet targetWallet = ownerWallet.get();
 
                 // Precio total del item: precio por unidad * cantidad
-                double totalAmount = item.getPricePerMonth() * kitItem.getQuantity();
+                double totalAmount = item.getPricePerMonth() * item.getQuantity();
 
                 Transaction transaction = new Transaction();
                 transaction.setAmount(totalAmount);
@@ -127,7 +126,7 @@ public class KitService {
                 transactionRepository.save(transaction);
             }
         }
-        return new KitResponse(savedKit);
+        return savedKit;
     }
 
     public KitResponse update(Long id, Kit updateData) {
@@ -228,62 +227,15 @@ public class KitService {
         orderConfirmationEmailService.sendOrderConfirmation(savedKit);
     }
 
-    private List<KitItem> buildKitItemsFromRequest(KitCreateRequest request) {
-        Map<Long, Integer> quantitiesByItemId = new LinkedHashMap<>();
-
-        if (request.getItemSelections() != null && !request.getItemSelections().isEmpty()) {
-            for (KitCreateRequest.KitItemSelectionRequest selection : request.getItemSelections()) {
-                if (selection == null || selection.getItemId() == null) {
-                    throw new RuntimeException("Each selected item must include itemId");
-                }
-                int quantity = selection.getQuantity() != null ? selection.getQuantity() : 1;
-                if (quantity < 1) {
-                    throw new RuntimeException("Quantity must be at least 1");
-                }
-                quantitiesByItemId.merge(selection.getItemId(), quantity, Integer::sum);
-            }
-        } else if (request.getItemIds() != null && !request.getItemIds().isEmpty()) {
-            for (Long itemId : request.getItemIds()) {
-                if (itemId == null) {
-                    throw new RuntimeException("Item id cannot be null");
-                }
-                quantitiesByItemId.merge(itemId, 1, Integer::sum);
-            }
-        }
-
-        if (quantitiesByItemId.isEmpty()) {
-            return List.of();
-        }
-
-        List<Item> foundItems = itemRepository.findAllById(quantitiesByItemId.keySet());
-        Set<Long> foundItemIds = foundItems.stream()
-                .map(Item::getId)
-                .collect(Collectors.toSet());
-
-        for (Long itemId : quantitiesByItemId.keySet()) {
-            if (!foundItemIds.contains(itemId)) {
-                throw new RuntimeException("Item not found: " + itemId);
-            }
-        }
-
-        Map<Long, Item> itemById = foundItems.stream()
-                .collect(Collectors.toMap(Item::getId, item -> item));
-
-        return quantitiesByItemId.entrySet().stream()
-                .map(entry -> {
-                    Item item = itemById.get(entry.getKey());
-                    int requestedQuantity = entry.getValue();
-                    int totalUnits = item.getTotalUnits() != null ? item.getTotalUnits() : 1;
-
-                    if (requestedQuantity > totalUnits) {
-                        throw new RuntimeException(
-                                "Requested quantity for item " + item.getId() + " exceeds available units ("
-                                        + totalUnits + ")");
-                    }
-
+    private List<KitItem> itemSelectionToKitItems(List<KitCreateRequest.ItemSelectionRequest> itemSelections) {
+        return itemSelections.stream()
+                .map(sel -> {
+                    Item item = itemRepository.findById(sel.itemId())
+                            .orElseThrow(() -> new RuntimeException("Item not found: " + sel.itemId()));
                     KitItem kitItem = new KitItem();
                     kitItem.setItem(item);
-                    kitItem.setQuantity(requestedQuantity);
+                    kitItem.setQuantity(sel.quantity());
+                    kitItem.setPricePerMonth(sel.pricePerMonth());
                     return kitItem;
                 })
                 .collect(Collectors.toList());

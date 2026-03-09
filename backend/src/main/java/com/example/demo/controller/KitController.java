@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-
 import java.util.stream.Collectors;
 import java.util.List;
 
@@ -34,8 +33,9 @@ public class KitController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createKit(@RequestBody KitCreateRequest request) {
-        try {
-            KitResponse response = kitService.create(request);
+        // TODO: Devolver un DTO en vez de Kit. Ahora mismo devuelve contenido sensible (contraseña de tenant y owners)
+        try{
+            Kit response = kitService.create(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -46,9 +46,9 @@ public class KitController {
     public ResponseEntity<?> getAllKits() {
         try {
             List<KitResponse> response = kitService.findAll()
-                .stream()
-                .map(KitResponse::new)
-                .collect(Collectors.toList());
+                    .stream()
+                    .map(KitResponse::new)
+                    .collect(Collectors.toList());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -72,7 +72,7 @@ public class KitController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(e.getMessage());
+                    .body(e.getMessage());
         }
     }
 
@@ -123,7 +123,7 @@ public class KitController {
             return ResponseEntity.ok("Kit status confirmed succesfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(e.getMessage());
+                    .body(e.getMessage());
         }
     }
 
