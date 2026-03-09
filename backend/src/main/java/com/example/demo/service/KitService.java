@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.dto.KitCreateRequest;
+import com.example.demo.dto.KitPaymentDTO;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.model.DeliveryMethod;
 import com.example.demo.dto.RentedItemResponse;
@@ -49,6 +50,8 @@ public class KitService {
     private OrderConfirmationEmailService orderConfirmationEmailService;
 
     private static final double PLATFORM_COURIER_PRICE = 9.99;
+    private static final double PLATFORM_FEE_PERCENTAGE = 0.2; // TODO: Obtener la comisión de la configuración hecha por el admin
+    private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2; // TODO: Obtener la garantía de la configuración hecha por el admin
 
     public List<Kit> findAll() {
         return kitRepository.findAll();
@@ -127,6 +130,21 @@ public class KitService {
             }
         }
         return savedKit;
+    }
+
+    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+        double subtotalPrice = request.itemSelections().stream()
+                .mapToDouble(item -> item.pricePerMonth() * item.quantity())
+                .sum();
+        double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
+        double fee = subtotalPrice * PLATFORM_FEE_PERCENTAGE;
+        double courierPrice = 0.0;
+        if (request.deliveryMethod() == DeliveryMethod.COURIER) {
+            courierPrice = PLATFORM_COURIER_PRICE;
+        }
+        double totalPrice = subtotalPrice + guarantee + fee + courierPrice;
+
+        return new KitPaymentDTO(totalPrice, subtotalPrice, guarantee, fee, courierPrice);
     }
 
     public KitResponse update(Long id, Kit updateData) {

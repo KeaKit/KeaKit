@@ -93,6 +93,14 @@ export interface KitCreateRequest {
   itemSelections: ItemSelectionRequest[]; 
 }
 
+export interface KitPaymentDTO {
+  totalPrice: number;
+  subtotalPrice: number;
+  guarantee: number;
+  fee: number;
+  courierPrice: number;
+}
+
 export interface RatingCreateRequest {
   revieweeId: number;
   kitId: number;
