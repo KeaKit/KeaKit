@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                 //Para asegurar que las url que comiencen por api/admin/ solo serán accesibles por usuarios con rol ADMIN
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/article/**").authenticated()
                 .anyRequest().permitAll()
             )
             .sessionManagement(session -> session
