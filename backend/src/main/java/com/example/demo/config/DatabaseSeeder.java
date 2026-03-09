@@ -84,6 +84,9 @@ public class DatabaseSeeder {
             laptop.setTotalUnits(1);
             laptop.setStatus(ArticleStatus.AVAILABLE);
             laptop.setPurchaseDate(LocalDate.now().minusMonths(6));
+            laptop.setAvailableFrom(LocalDate.now());
+            laptop.setAvailableUntil(LocalDate.now().plusMonths(36));
+
             // Al guardar el ArticleRepository, JPA gestiona la tabla 'items' y 'articles'
             articleRepo.save(laptop);
 
@@ -95,6 +98,8 @@ public class DatabaseSeeder {
             setupService.setOwner(owner);
             setupService.setPricePerMonth(50.0);
             setupService.setTotalUnits(10);
+            setupService.setAvailableFrom(LocalDate.now());
+            setupService.setAvailableUntil(LocalDate.now().plusMonths(36));
             serviceRepo.save(setupService);
 
             // 7. Kit (El Alquiler)
