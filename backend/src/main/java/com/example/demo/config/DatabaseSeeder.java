@@ -73,7 +73,7 @@ public class DatabaseSeeder {
             articleRepo.save(laptop);
 
             // 4. Servicio (Herencia de Item)
-            Service setupService = new Service();
+            ServiceItem setupService = new ServiceItem();
             setupService.setTitle("Instalación Software");
             setupService.setDescription("Configuración inicial a domicilio");
             setupService.setCategory(catTech);

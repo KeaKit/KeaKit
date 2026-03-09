@@ -6,15 +6,15 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "services")
-public class Service extends Item {
+public class ServiceItem extends Item {
 
     @Enumerated(EnumType.STRING)
     private ServiceStatus status;
 
 
-    public Service() {}
+    public ServiceItem() {}
 
-    public Service(String title, String description, String city, String country, Double pricePerMonth, LocalDate availableFrom, LocalDate availableUntil, Category category, User owner, ServiceStatus serviceStatus) {
+    public ServiceItem(String title, String description, String city, String country, Double pricePerMonth, LocalDate availableFrom, LocalDate availableUntil, Category category, User owner, ServiceStatus serviceStatus) {
         super(title, description, city, pricePerMonth, availableFrom, availableUntil, category, owner);
         this.status = serviceStatus;
     }
