@@ -10,7 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { uploadArticle, uploadArticleWithImage } from '../../services/articleService';
 import { fetchAllCategories } from '../../services/categoryService';
-import { ArticlePayload, RootStackParamList, Category } from '../../types';
+import { ArticlePayload, ArticleCondition, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
@@ -92,6 +92,14 @@ const UploadArticleScreen: React.FC = () => {
   const [availableUntil, setAvailableUntil] = useState('');
   const [selectedImage, setSelectedImage] = useState<{ uri: string; name: string } | null>(null);
   const [purchaseDate, setPurchaseDate] = useState('');
+  const [condition, setCondition] = useState<'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN' | ''>('');
+
+  const conditionOptions: { value: 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN'; label: string }[] = [
+    { value: 'NEW',          label: 'Nuevo' },
+    { value: 'LIGHTLY_USED', label: 'Poco usado' },
+    { value: 'USED',         label: 'Usado' },
+    { value: 'WORN',         label: 'Desgastado' },
+  ];
 
   // Calendario disponibilidad
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
@@ -175,6 +183,7 @@ const UploadArticleScreen: React.FC = () => {
 
     if (!title.trim())       newErrors.title       = 'El título es obligatorio';
     if (!description.trim()) newErrors.description = 'La descripción es obligatoria';
+    if (description.length > 1000) newErrors.description = 'La descripción no puede superar los 1000 caracteres';
     if (!city.trim())        newErrors.city        = 'La ciudad es obligatoria';
     if (!selectedCategory)   newErrors.category    = 'Selecciona una categoría';
 
@@ -218,6 +227,7 @@ const UploadArticleScreen: React.FC = () => {
         availableUntil,
         category:      { id: selectedCategory!.id } as any,
         status:        'AVAILABLE',
+        ...(condition           && { condition:    condition as ArticleCondition }),
         ...(purchaseDate.trim() && { purchaseDate: purchaseDate.trim() }),
       };
 
@@ -396,6 +406,24 @@ const UploadArticleScreen: React.FC = () => {
           {/* Información adicional */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Información adicional</Text>
+
+            {/* RN-ART-23: estado de conservación */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Estado de conservación <Text style={styles.optional}>(opcional)</Text></Text>
+              <View style={styles.conditionRow}>
+                {conditionOptions.map((opt) => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.conditionChip, condition === opt.value && styles.conditionChipActive]}
+                    onPress={() => setCondition(condition === opt.value ? '' : opt.value)}
+                  >
+                    <Text style={[styles.conditionChipText, condition === opt.value && styles.conditionChipTextActive]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
 
             <Text style={styles.label}>Foto del artículo <Text style={styles.optional}>(opcional)</Text></Text>
             <View style={styles.imageSelectorContainer}>
@@ -674,6 +702,32 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  conditionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  conditionChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
+  },
+  conditionChipActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + '18',
+  },
+  conditionChipText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  conditionChipTextActive: {
+    color: Colors.primary,
+    fontWeight: '700',
   },
 });
 
