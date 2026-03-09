@@ -2,7 +2,7 @@
 
 ## Información general
 
-**Fecha:** 077/03/2026  
+**Fecha:** 07/03/2026  
 **Hora:** 10:15 - 11:30  
 **Lugar:** Microsoft Teams  
 **Grupo convocado:** Grupo 4
