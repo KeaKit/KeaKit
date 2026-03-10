@@ -54,7 +54,7 @@ class ArticleServiceTest {
         owner.setId(1L);
         owner.setName("Owner");
         owner.setEmail("owner@example.com");
-        owner.setPassword("pwd");
+        owner.setPassword("pwdpwd");
         owner.setRole(UserRole.USER);
 
         category = new Category("Bricolaje", "Desc", 5.0, 500.0);

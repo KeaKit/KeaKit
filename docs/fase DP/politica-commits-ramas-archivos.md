@@ -88,7 +88,7 @@ fix: resolve null pointer and add email notification
 
 ## Ramas
 
-El repositorio de KeaKit cuenta con una rama principal, *main*, donde se aloja código definitivo, funcional y testeado. Paralelamente, existe una rama *develop*, sirviendo de área de trabajo y referencia común a todos los desarrolladores. Ambas ramas permanecerán durante todo el desarrollo.
+El repositorio de KeaKit cuenta con una rama principal, *main*, donde se aloja código definitivo, funcional y testeado. Paralelamente, existe una rama *develop*, sirviendo de área de trabajo y referencia común a todos los desarrolladores.
 
 Para el desarrollo de funcionalidades o arreglo de errores, será necesario crear ramas con esos fines y de corta duración a partir de develop. El nombre de las ramas debe estar en inglés, ser significativo y seguir el siguiente formato:
 ```
@@ -97,6 +97,8 @@ tipo-rama/nombre-rama
 Pueden haber dos tipos de ramas:
 - **feat/**: para nuevas funcionalidades.
 - **fix/**: para arreglar errores.
+
+Una vez se haya cumplido el propósito de la rama, se deberá comprobar que el conjunto global con los cambios funciona y pasa las pruebas. Posteriormente, se deberá abrir una Pull Request en Github desde la rama en cuestión hacia develop. Para la aprobación de las mismas, se asignarán internamente parejas de revisión cuya funcionalidad será comprobar que el código a mergear es de calidad y aprobar la PR si es apta. Las ramas específicas *no deberán ser borradas* después de su desarrollo, pues sirven como herramienta de trazabilidad para ver las contribuciones de cada miembro del equipo a lo largo del desarrollo del proyecto.
 
 No será necesario crear una rama nueva para añadir documentación al proyecto; podrá hacerse directamente sobre main.
 
@@ -112,8 +114,6 @@ feature/nueva-funcionalidad
 fix/ArregloPago
 ```
 *Motivo:* No siguen el formato, usan español o mayúsculas.
-
-Una vez se haya cumplido el propósito de la rama, se deberá comprobar que el conjunto global con los cambios funciona y pasa las pruebas. Posteriormente, la rama deberá ser mergeada a develop y borrada.
 
 ## Archivos
 El nombre de los archivos subidos al repositorio debe seguir el siguiente patrón:
@@ -176,6 +176,7 @@ Mockups.md
 |---------|-------------|-------------------------------|----------------|
 | 1.0.0   | 17/02/2026  | Creación inicial de la política de commits, ramas y archivos | Rosa María Espinosa Martínez |
 | 1.1.0   | 25/02/2026  | Añadida política obligatoria de historial de versiones para documentación | Rosa María Espinosa Martínez |
+| 2.0.0   | 25/02/2026  | Cambio en la política de ramas a seguir | Rosa María Espinosa Martínez |
 
 ---
 [1]: Conventional Commits, "Conventional Commits Specification v1.0.0", [Online]. Available: https://www.conventionalcommits.org/en/v1.0.0/. [Accessed: 17-Feb-2026].

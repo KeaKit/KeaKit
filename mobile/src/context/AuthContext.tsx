@@ -15,7 +15,7 @@ interface AuthContextData {
   signIn(data: LoginRequest): Promise<void>;
   signUp(data: RegisterRequest): Promise<void>;
   signOut(): Promise<void>;
-  setUser(user: AuthUser): void; 
+  setUser(user: AuthUser | null): void; 
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -25,7 +25,15 @@ const USER_STORAGE_KEY = '@AuthApp:user';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, _setUser] = useState<AuthUser | null>(null);
+
+  const setUser = useCallback(async (updatedUser: AuthUser | null) => {
+    if (updatedUser) {
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+    }
+    _setUser(updatedUser);
+  }, []);
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

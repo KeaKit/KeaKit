@@ -47,7 +47,7 @@ class KitIntegrationTest {
         tenant = new User();
         tenant.setName("Cristina");
         tenant.setEmail("cris@example.com");
-        tenant.setPassword("123");
+        tenant.setPassword("123456");
         tenant.setRole(UserRole.USER);
         tenant.setCountry("España");
         tenant.setCity("Sevilla");

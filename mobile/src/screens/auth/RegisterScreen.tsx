@@ -38,6 +38,8 @@ const parseBackendError = (err: unknown): FieldErrors => {
   const message = err.message.toLowerCase();
   if (message.includes('email already'))
     return { email: 'Este correo ya está registrado.' };
+  if (message.includes('phone number must be valid'))
+    return { phone: 'Número de teléfono no válido.' };
   return { general: err.message || 'Error al registrarse.' };
 };
 
@@ -113,7 +115,7 @@ const RegisterScreen: React.FC = () => {
         name:     form.name.trim(),
         email:    form.email.trim(),
         password: form.password.trim(),
-        phone:    form.phone.trim(),
+        phone:    form.phone.trim().replace(/\s+/g, ""),
         address:  form.address.trim(),
         city:     selectedCity,
         country:  selectedCountry,

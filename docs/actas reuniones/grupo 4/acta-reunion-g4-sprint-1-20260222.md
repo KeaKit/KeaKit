@@ -20,7 +20,7 @@
 | Marta Aguilar Morcillo | Participante |
 
 ### Ausentes
-- Paula Rosa González Paéz
+- Paula Rosa González Páez
 
 ## Orden del día
 
