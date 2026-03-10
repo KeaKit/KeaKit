@@ -3,12 +3,14 @@ package com.example.demo.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 
 import com.example.demo.model.Category;
+import com.example.demo.model.CategoryStatus;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.CategoryRepository;
@@ -28,11 +30,18 @@ public class CategoryService {
     private UserRepository userRepository;
 
     private void checkAdminRole() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() == null || auth.getPrincipal().equals("anonymousUser")) {
+            throw new AccessDeniedException("No hay usuario autenticado.");
+        }
+
+        Object principal = auth.getPrincipal();
         String email = (principal instanceof UserDetails) ?
                         ((UserDetails) principal).getUsername() : principal.toString();
+        
         User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                    
         if (user.getRole() != UserRole.ADMIN) {
             throw new AccessDeniedException("Solo los administradores pueden realizar esta operación.");
         }    
@@ -50,6 +59,9 @@ public class CategoryService {
     public Category createCategory(Category category) {
         checkAdminRole();
         validateCategoryRules(category);
+        if (category.getStatus() == null) {
+            category.setStatus(CategoryStatus.DRAFT);
+        }
         return categoryRepository.save(category);
     }
 
