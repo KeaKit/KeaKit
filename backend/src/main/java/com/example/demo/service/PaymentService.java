@@ -33,18 +33,21 @@ public class PaymentService {
     }
 
     public PaymentIntent createPaymentIntent(Long amount) throws StripeException {
-        PaymentIntent intent = PaymentIntent.create(
-                PaymentIntentCreateParams.builder()
-                        .setAmount(amount)
-                        .setCurrency("eur")
-                        .setAutomaticPaymentMethods(
-                                PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
-                                        .setEnabled(true)
-                                        .setAllowRedirects(PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
-                                        .build()
-                        )
-                        .build()
-        );
+        Stripe.apiKey = stripeApiKey;
+        PaymentIntentCreateParams params =
+        PaymentIntentCreateParams.builder()
+            .setAmount(amount)
+            .setCurrency("eur")
+            .setAutomaticPaymentMethods(
+                PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                    .setEnabled(true)
+                    .setAllowRedirects(PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
+                    .build()
+            )
+            .build();
+        PaymentIntent intent = PaymentIntent.create(params);
+        System.out.println(intent.getId());
+        System.out.println(intent.getClientSecret());
         return intent;
     }
 

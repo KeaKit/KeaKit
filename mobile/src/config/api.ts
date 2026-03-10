@@ -45,7 +45,7 @@ export const API_ROUTES = {
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
 
   // Payments
-  SIMULATE_PAYMENT:           `${BASE_URL}/api/payments/pay-kit`,
+  CREATE_PAYMENT_INTENT:     `${BASE_URL}/api/payments/create`,
 } as const;
 
 export default BASE_URL;

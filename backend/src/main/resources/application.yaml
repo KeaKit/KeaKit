@@ -36,4 +36,4 @@ sendgrid:
 
 stripe:
   api:
-    key: ${STRIPE_SECRET_KEY:}
+    key: ${STRIPE_SECRET_KEY:sk_test_default_key} # Reemplaza con clave real para que funcione
