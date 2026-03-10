@@ -57,8 +57,8 @@ public class KitControllerTest {
 
     @Test
     void createKit_withStatus_returnsCreated() throws Exception {
-        KitResponse response = new KitResponse(new Kit());
-        when(kitService.create(any())).thenReturn(response);
+        Kit kit = new Kit();
+        when(kitService.create(any())).thenReturn(kit);
 
         mockMvc.perform(post("/api/kits/create")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -71,6 +71,13 @@ export interface UserArticle {
 export interface KitItemSelection {
   itemId: number;
   quantity: number;
+  pricePerMonth: number;
+}
+
+export interface ItemSelectionRequest {
+  itemId: number;
+  quantity: number;
+  pricePerMonth: number;
 }
 
 export interface KitCreateRequest {
@@ -79,12 +86,19 @@ export interface KitCreateRequest {
   city: string;
   startDate: string;
   endDate: string;
+  status?: "PENDING" | "APPROVED" | "CANCELLED";
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
-  courierAddress?: string;
   tenantId: number;
-  itemIds?: number[];
-  itemSelections?: KitItemSelection[];
+  itemSelections: ItemSelectionRequest[]; 
+}
+
+export interface KitPaymentDTO {
+  totalPrice: number;
+  subtotalPrice: number;
+  guarantee: number;
+  fee: number;
+  courierPrice: number;
 }
 
 export interface RatingCreateRequest {
@@ -144,6 +158,7 @@ export interface Item {
   description: string;
   pricePerMonth: number;
   category: string;
+  quantity?: number;
 }
 
 export enum KitStatus {
@@ -154,6 +169,39 @@ export enum KitStatus {
   COMPLETED = "COMPLETED",
   CANCELLED = "CANCELLED",
 }
+export interface Kit {
+  id: number;
+  name: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  orderDate?: string;
+  status: KitStatus;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint?: string;
+  courierPrice?: number;
+  tenant: {
+    id: number;
+    email: string;
+    password: string;
+    name: string;
+    role: "ADMIN" | "USER";
+    phone: string;
+    address: string;
+    city: string;
+    country: string;
+  };
+  kitItems: {
+    id: number;
+    item: Item;
+    quantity: number;
+    pricePerMonth: number;
+  }[];
+  items?: Item[];
+  totalPrice?: number;
+}
+
 
 export interface KitResponse {
   id: number;
@@ -252,24 +300,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   CreateKit: undefined;
-  Checkout: {
-  kitData: {
-    name: string;
-    country: string;
-    city: string;
-    startDate: string;
-    endDate: string;
-    deliveryMethod: "COURIER" | "MEETING_POINT";
-    meetingPoint?: string;
-    courierAddress?: string;
-    items: {
-      id: number;
-      quantity: number;
-      pricePerMonth: number;
-      ownerId: number;
-    }[];
-  };
-};
+  Checkout: KitResponse;
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };

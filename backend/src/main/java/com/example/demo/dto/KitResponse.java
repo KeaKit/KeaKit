@@ -13,13 +13,15 @@ import java.util.stream.Collectors;
 public class KitResponse {
     private static final int DELIVERY_LEAD_DAYS = 7;
 
-    public static class KitItemSelectionResponse {
+    public static class KitItemResponse {
         private Long itemId;
         private Integer quantity;
+        private Double pricePerMonth;
 
-        public KitItemSelectionResponse(Long itemId, Integer quantity) {
+        public KitItemResponse(Long itemId, Integer quantity, Double pricePerMonth) {
             this.itemId = itemId;
             this.quantity = quantity;
+            this.pricePerMonth = pricePerMonth;
         }
 
         public Long getItemId() {
@@ -28,6 +30,9 @@ public class KitResponse {
 
         public Integer getQuantity() {
             return quantity;
+        }
+        public Double getPricePerMonth() {
+            return pricePerMonth;
         }
     }
 
@@ -46,7 +51,7 @@ public class KitResponse {
     private Double courierPrice;
     private Long tenantId;
     private List<Long> itemIds;
-    private List<KitItemSelectionResponse> itemSelections;
+    private List<KitItemResponse> items;
     private Integer totalSelectedItems;
 
     public KitResponse(Kit kit) {
@@ -66,17 +71,17 @@ public class KitResponse {
         this.tenantId = kit.getTenant() != null ? kit.getTenant().getId() : null;
         List<KitItem> kitItems = kit.getKitItems() != null ? kit.getKitItems() : List.of();
 
-        this.itemSelections = kitItems.stream()
+        this.items = kitItems.stream()
             .filter(kitItem -> kitItem.getItem() != null && kitItem.getItem().getId() != null)
-            .map(kitItem -> new KitItemSelectionResponse(kitItem.getItem().getId(), kitItem.getQuantity()))
+            .map(kitItem -> new KitItemResponse(kitItem.getItem().getId(), kitItem.getQuantity(), kitItem.getPricePerMonth()))
             .collect(Collectors.toList());
 
-        this.totalSelectedItems = this.itemSelections.stream()
+        this.totalSelectedItems = this.items.stream()
             .map(selection -> selection.getQuantity() != null ? selection.getQuantity() : 0)
             .reduce(0, Integer::sum);
 
-        this.itemIds = this.itemSelections.stream()
-            .map(KitItemSelectionResponse::getItemId)
+        this.itemIds = this.items.stream()
+            .map(KitItemResponse::getItemId)
             .distinct()
             .collect(Collectors.toCollection(ArrayList::new));
     }
@@ -136,8 +141,8 @@ public class KitResponse {
         return itemIds; 
     }
 
-    public List<KitItemSelectionResponse> getItemSelections() {
-        return itemSelections;
+    public List<KitItemResponse> getItems() {
+        return items;
     }
 
     public Integer getTotalSelectedItems() {

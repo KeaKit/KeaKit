@@ -26,7 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = CategoryController.class, excludeAutoConfiguration = {
         SecurityAutoConfiguration.class,
-        SecurityFilterAutoConfiguration.class
+        SecurityFilterAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration.class
 })
 class CategoryControllerTest {
 

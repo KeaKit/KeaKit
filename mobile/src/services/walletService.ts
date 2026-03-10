@@ -2,9 +2,15 @@ import BASE_URL from '../config/api';
 
 export interface Wallet {
   id: number;
-  availableBalance: number;
-  pendingBalance: number;
-  currency: string;
+  balance: number;
+  transactions: Transaction[];
+}
+
+export interface Transaction {
+  id: number;
+  amount: number;
+  type: 'PAYOUT' | 'FEE' | 'GUARANTEE_DEPOSIT' | 'GUARANTEE_REFUND' | 'REFUND';
+  timestamp: Date;
 }
 
 export const getWalletByUserId = async (userId: number, token: string): Promise<Wallet> => {

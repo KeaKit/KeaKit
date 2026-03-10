@@ -1,11 +1,11 @@
 package com.example.demo.security;
 
+import com.example.demo.model.UserRole;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -31,12 +31,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String authorizationHeader = request.getHeader("Authorization");
-
+        String jwt = jwtUtil.extractTokenFromAuthHeader(authorizationHeader);
         String email = null;
-        String jwt = null;
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
+        if (jwt != null) {
             try {
                 email = jwtUtil.extractEmail(jwt);
             } catch (Exception e) {
@@ -55,8 +53,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
             if (jwtUtil.validateToken(jwt)) {
-                UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                // Extraer información adicional del token
+                Long userId = jwtUtil.extractUserId(jwt);
+                UserRole role = jwtUtil.extractRole(jwt);
+
+                // Usar el token de autenticación personalizado con información adicional
+                JwtAuthenticationToken authenticationToken =
+                    new JwtAuthenticationToken(
+                        userDetails, 
+                        null, 
+                        userDetails.getAuthorities(),
+                        userId,
+                        role,
+                        email
+                    );
 
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
