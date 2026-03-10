@@ -67,7 +67,7 @@ public class KitController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-    @GetMapping("/payment")
+    @PostMapping("/payment")
     public ResponseEntity<?> getKitPayment(@RequestBody KitCreateRequest request) {
         // No es necesario que el kit esté en el repositorio para calcular su precio
         try {

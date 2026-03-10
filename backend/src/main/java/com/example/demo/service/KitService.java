@@ -137,14 +137,22 @@ public class KitService {
                 .mapToDouble(item -> item.pricePerMonth() * item.quantity())
                 .sum();
         double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
-        double fee = subtotalPrice * PLATFORM_FEE_PERCENTAGE;
         double courierPrice = 0.0;
         if (request.deliveryMethod() == DeliveryMethod.COURIER) {
             courierPrice = PLATFORM_COURIER_PRICE;
         }
-        double totalPrice = subtotalPrice + guarantee + fee + courierPrice;
+        double totalPrice = subtotalPrice + guarantee + courierPrice;
 
-        return new KitPaymentDTO(totalPrice, subtotalPrice, guarantee, fee, courierPrice);
+        return new KitPaymentDTO(
+                toCents(totalPrice),
+                toCents(subtotalPrice),
+                toCents(guarantee),
+                toCents(courierPrice)
+        );
+    }
+
+    private Integer toCents(Double amount) {
+        return (amount != null) ? (int) Math.round(amount * 100) : 0;
     }
 
     public KitResponse update(Long id, Kit updateData) {
