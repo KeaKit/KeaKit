@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  ScrollView,
-  TextInput,
-  Alert,
-  ActivityIndicator,
+  View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
+  ScrollView, TextInput, Alert, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -16,11 +9,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { updateArticle } from '../../services/articleService';
 import { fetchAllCategories } from '../../services/categoryService';
-import { ArticlePayload, ArticleCondition, RootStackParamList, Category } from '../../types';
+import { ArticlePayload, ArticleCondition, RootStackParamList, Category, EUROPEAN_COUNTRIES } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { es, registerTranslation } from 'react-native-paper-dates';
+import { useLocationPicker } from '../../hooks/useLocationPicker';
+import { SelectPicker } from '../../components/SelectPicker';
 
 registerTranslation('es', es);
 
@@ -48,11 +43,7 @@ const Field: React.FC<FieldProps> = ({
       {optional && <Text style={styles.optional}> (opcional)</Text>}
     </View>
     <TextInput
-      style={[
-        commonStyles.input,
-        multiline && styles.textarea,
-        error ? commonStyles.inputError : null,
-      ]}
+      style={[commonStyles.input, multiline && styles.textarea, error ? commonStyles.inputError : null]}
       value={value}
       onChangeText={onChange}
       placeholder={placeholder}
@@ -71,7 +62,6 @@ const Field: React.FC<FieldProps> = ({
   </View>
 );
 
-// ── Helper: Date → "YYYY-MM-DD" ─────────────────────────────────────────────
 const toIso = (d: Date): string => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -79,22 +69,18 @@ const toIso = (d: Date): string => {
   return `${y}-${m}-${dd}`;
 };
 
-// ── Helper: "YYYY-MM-DD" → "DD/MM/YYYY" para mostrar ────────────────────────
 const toDisplay = (iso: string): string => {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
 };
 
-// ── Helper: "YYYY-MM-DD" → Date ──────────────────────────────────────────────
 const isoToDate = (iso: string | null | undefined): Date | undefined => {
   if (!iso) return undefined;
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d);
 };
 
-
-// ── Helper: valida que una fecha ISO sea real (mes/día válidos) ──────────────
 const isValidIsoDate = (iso: string): boolean => {
   if (!iso) return true;
   const [y, m, d] = iso.split('-').map(Number);
@@ -104,7 +90,6 @@ const isValidIsoDate = (iso: string): boolean => {
   return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
 };
 
-// ── Helper: máximo 2 decimales ───────────────────────────────────────────────
 const hasAtMostTwoDecimals = (value: string): boolean =>
   /^\d+(\.\d{1,2})?$/.test(value.trim());
 
@@ -114,16 +99,17 @@ const EditArticleScreen: React.FC = () => {
   const { user }    = useAuth();
   const { article } = route.params;
 
+  const originalCity = article.city ?? '';
+
   const [title,          setTitle]          = useState(article.title ?? '');
   const [description,    setDescription]    = useState(article.description ?? '');
-  const [city,           setCity]           = useState(article.city ?? '');
   const [pricePerMonth,  setPricePerMonth]  = useState(String(article.pricePerMonth ?? ''));
   const [availableFrom,  setAvailableFrom]  = useState(article.availableFrom ?? '');
   const [availableUntil, setAvailableUntil] = useState(article.availableUntil ?? '');
   const [category,       setCategory]       = useState<Category | null>(article.category ?? null);
   const [imageUrl,       setImageUrl]       = useState(article.imageUrl ?? '');
   const [purchaseDate,   setPurchaseDate]   = useState(article.purchaseDate ?? '');
-  const [condition, setCondition] = useState<'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN' | ''>(article.condition ?? '');
+  const [condition,      setCondition]      = useState<'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN' | ''>(article.condition ?? '');
 
   const conditionOptions: { value: 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN'; label: string }[] = [
     { value: 'NEW',          label: 'Nuevo' },
@@ -132,14 +118,20 @@ const EditArticleScreen: React.FC = () => {
     { value: 'WORN',         label: 'Desgastado' },
   ];
 
-  // Calendario disponibilidad
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [startDate, setStartDate] = useState<Date | undefined>(isoToDate(article.availableFrom));
-  const [endDate,   setEndDate]   = useState<Date | undefined>(isoToDate(article.availableUntil));
+  const {
+    selectedCountry,
+    selectedCity,
+    setSelectedCity,
+    cities,
+    loadingCities,
+    onCountryChange,
+  } = useLocationPicker('', originalCity);
 
-  // Calendario fecha de compra
+  const [showDateRangePicker,    setShowDateRangePicker]    = useState(false);
+  const [startDate,              setStartDate]              = useState<Date | undefined>(isoToDate(article.availableFrom));
+  const [endDate,                setEndDate]                = useState<Date | undefined>(isoToDate(article.availableUntil));
   const [showPurchaseDatePicker, setShowPurchaseDatePicker] = useState(false);
-  const [purchaseDateObj, setPurchaseDateObj] = useState<Date | undefined>(isoToDate(article.purchaseDate));
+  const [purchaseDateObj,        setPurchaseDateObj]        = useState<Date | undefined>(isoToDate(article.purchaseDate));
 
   const [loading,           setLoading]           = useState(false);
   const [errors,            setErrors]            = useState<Record<string, string>>({});
@@ -152,9 +144,8 @@ const EditArticleScreen: React.FC = () => {
       if (!user?.token) return;
       try {
         const data = await fetchAllCategories(user.token);
-        const activeCategories = data.filter(c => c.status === 'ACTIVE');
-        setDbCategories(activeCategories);
-      } catch (err) {
+        setDbCategories(data.filter(c => c.status === 'ACTIVE'));
+      } catch {
         Alert.alert('Aviso', 'No se pudieron cargar las categorías del servidor.');
       } finally {
         setLoadingCategories(false);
@@ -163,15 +154,19 @@ const EditArticleScreen: React.FC = () => {
     loadCategories();
   }, [user?.token]);
 
-  const clearError = (key: string) =>
-    setErrors((prev) => ({ ...prev, [key]: '' }));
+  const clearError = (key: string) => setErrors((prev) => ({ ...prev, [key]: '' }));
+
+  const handleRestoreCity = () => {
+    onCountryChange('');
+    setSelectedCity(originalCity);
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!title.trim())       newErrors.title       = 'El título es obligatorio';
     if (!description.trim()) newErrors.description = 'La descripción es obligatoria';
     if (description.length > 1000) newErrors.description = 'La descripción no puede superar los 1000 caracteres';
-    if (!city.trim())        newErrors.city        = 'La ciudad es obligatoria';
+    if (!selectedCity)       newErrors.city        = 'La ciudad es obligatoria';
     if (!category)           newErrors.category    = 'Selecciona una categoría';
 
     if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0) {
@@ -180,17 +175,14 @@ const EditArticleScreen: React.FC = () => {
       newErrors.pricePerMonth = 'El precio no puede tener más de 2 decimales';
     } else if (category) {
       const price = Number(pricePerMonth);
-      if (price < category.minPrice || price > category.maxPrice) {
+      if (price < category.minPrice || price > category.maxPrice)
         newErrors.pricePerMonth = `El precio debe estar entre ${category.minPrice}€ y ${category.maxPrice}€ para esta categoría`;
-      }
     }
 
     if (!availableFrom)  newErrors.availableFrom  = 'Selecciona la fecha de inicio';
     if (!availableUntil) newErrors.availableUntil = 'Selecciona la fecha de fin';
-
     if (availableFrom && availableUntil && availableFrom >= availableUntil)
       newErrors.availableUntil = 'Debe ser posterior a la fecha de inicio';
-
     if (purchaseDate && !isValidIsoDate(purchaseDate))
       newErrors.purchaseDate = 'Fecha de compra no válida';
 
@@ -200,16 +192,13 @@ const EditArticleScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    if (!user) {
-      Alert.alert('Error', 'Debes estar autenticado para editar un artículo.');
-      return;
-    }
+    if (!user) { Alert.alert('Error', 'Debes estar autenticado para editar un artículo.'); return; }
     setLoading(true);
     try {
       const payload: ArticlePayload = {
         title:         title.trim(),
         description:   description.trim(),
-        city:          city.trim(),
+        city:          selectedCity,
         pricePerMonth: Number(pricePerMonth),
         availableFrom,
         availableUntil,
@@ -251,12 +240,9 @@ const EditArticleScreen: React.FC = () => {
           <View style={{ width: 36 }} />
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Información básica */}
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
+          {/* ── Información básica ───────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Información básica</Text>
             <Field
@@ -274,16 +260,75 @@ const EditArticleScreen: React.FC = () => {
               multiline
               error={errors.description}
             />
-            <Field
-              label="Ciudad"
-              value={city}
-              onChange={(t) => { setCity(t); clearError('city'); }}
-              placeholder="Ej: Madrid"
-              error={errors.city}
-            />
+
+            {/* País */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>País <Text style={styles.optional}>(opcional — para cambiar la ciudad)</Text></Text>
+              <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
+                <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+                <SelectPicker
+                  options={EUROPEAN_COUNTRIES}
+                  selectedValue={selectedCountry}
+                  placeholder="Selecciona un país"
+                  onValueChange={(value: string) => {
+                    onCountryChange(value);
+                    clearError('country');
+                    clearError('city');
+                  }}
+                />
+              </View>
+            </View>
+
+            {/* Ciudad */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Ciudad</Text>
+              <View style={[styles.pickerWrapper, errors.city ? styles.pickerWrapperError : null]}>
+                <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+                {loadingCities ? (
+                  <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
+                ) : !selectedCountry ? (
+                  /* Sin país: ciudad original en modo lectura */
+                  <>
+                    <Text style={styles.cityReadOnly}>
+                      {selectedCity || originalCity || 'Sin ciudad'}
+                    </Text>
+                  </>
+                ) : (
+                  /* Con país: selector normal */
+                  <>
+                    <SelectPicker
+                      options={cities.map(c => ({ label: c, value: c }))}
+                      selectedValue={selectedCity}
+                      placeholder="Selecciona una ciudad"
+                      disabled={cities.length === 0}
+                      onValueChange={(value: string) => {
+                        setSelectedCity(value);
+                        clearError('city');
+                      }}
+                    />
+                    {/* Flecha para restaurar la ciudad original */}
+                    {originalCity && selectedCity !== originalCity && (
+                      <TouchableOpacity
+                        onPress={handleRestoreCity}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        style={styles.restoreButton}
+                      >
+                        <Ionicons name="arrow-undo-outline" size={20} color={Colors.primary} />
+                      </TouchableOpacity>
+                    )}
+                  </>
+                )}
+              </View>
+              {!!errors.city && (
+                <View style={commonStyles.errorContainer}>
+                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                  <Text style={commonStyles.errorText}>{errors.city}</Text>
+                </View>
+              )}
+            </View>
           </View>
 
-          {/* Categoría */}
+          {/* ── Categoría ────────────────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Categoría</Text>
             <TouchableOpacity
@@ -316,12 +361,7 @@ const EditArticleScreen: React.FC = () => {
                       index === dbCategories.length - 1 && { borderBottomWidth: 0 },
                       category?.id === cat.id && styles.categoryOptionSelected,
                     ]}
-                    onPress={() => {
-                      setCategory(cat);
-                      setCategoryOpen(false);
-                      clearError('category');
-                      clearError('pricePerMonth');
-                    }}
+                    onPress={() => { setCategory(cat); setCategoryOpen(false); clearError('category'); clearError('pricePerMonth'); }}
                   >
                     <Text style={[styles.categoryOptionText, category?.id === cat.id && styles.categoryOptionTextSelected]}>
                       {cat.name}
@@ -338,7 +378,7 @@ const EditArticleScreen: React.FC = () => {
             )}
           </View>
 
-          {/* Precio y disponibilidad */}
+          {/* ── Precio y disponibilidad ───────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Precio y disponibilidad</Text>
             <Field
@@ -350,27 +390,17 @@ const EditArticleScreen: React.FC = () => {
               error={errors.pricePerMonth}
             />
             {category && (
-              <Text style={styles.helperText}>
-                Precio entre {category.minPrice}€ y {category.maxPrice}€
-              </Text>
+              <Text style={styles.helperText}>{`Precio entre ${category.minPrice}€ y ${category.maxPrice}€`}</Text>
             )}
 
-            {/* Selector de rango de fechas */}
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Periodo de disponibilidad</Text>
               <TouchableOpacity
-                style={[
-                  commonStyles.input,
-                  styles.dateSelector,
-                  (errors.availableFrom || errors.availableUntil) ? commonStyles.inputError : null,
-                ]}
+                style={[commonStyles.input, styles.dateSelector, (errors.availableFrom || errors.availableUntil) ? commonStyles.inputError : null]}
                 onPress={() => setShowDateRangePicker(true)}
                 activeOpacity={0.8}
               >
-                <Text style={[
-                  styles.dateSelectorText,
-                  !(availableFrom && availableUntil) && { color: Colors.textSecondary },
-                ]}>
+                <Text style={[styles.dateSelectorText, !(availableFrom && availableUntil) && { color: Colors.textSecondary }]}>
                   {availableFrom && availableUntil
                     ? `${toDisplay(availableFrom)}  →  ${toDisplay(availableUntil)}`
                     : 'Selecciona el rango de disponibilidad'}
@@ -413,7 +443,7 @@ const EditArticleScreen: React.FC = () => {
             />
           </View>
 
-          {/* Información adicional */}
+          {/* ── Información adicional ─────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Información adicional</Text>
             <Field
@@ -425,7 +455,6 @@ const EditArticleScreen: React.FC = () => {
               error={errors.imageUrl}
             />
 
-            {/* RN-ART-23: estado de conservación */}
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Estado de conservación <Text style={styles.optional}>(opcional)</Text></Text>
               <View style={styles.conditionRow}>
@@ -443,34 +472,23 @@ const EditArticleScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Fecha de compra con calendario */}
             <View style={styles.fieldContainer}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Fecha de compra</Text>
                 <Text style={styles.optional}> (opcional)</Text>
               </View>
               <TouchableOpacity
-                style={[
-                  commonStyles.input,
-                  styles.dateSelector,
-                  errors.purchaseDate ? commonStyles.inputError : null,
-                ]}
+                style={[commonStyles.input, styles.dateSelector, errors.purchaseDate ? commonStyles.inputError : null]}
                 onPress={() => setShowPurchaseDatePicker(true)}
                 activeOpacity={0.8}
               >
-                <Text style={[
-                  styles.dateSelectorText,
-                  !purchaseDate && { color: Colors.textSecondary },
-                ]}>
+                <Text style={[styles.dateSelectorText, !purchaseDate && { color: Colors.textSecondary }]}>
                   {purchaseDate ? toDisplay(purchaseDate) : 'Selecciona la fecha de compra'}
                 </Text>
                 <View style={styles.dateRightIcons}>
                   {purchaseDate && (
                     <TouchableOpacity
-                      onPress={() => {
-                        setPurchaseDate('');
-                        setPurchaseDateObj(undefined);
-                      }}
+                      onPress={() => { setPurchaseDate(''); setPurchaseDateObj(undefined); }}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <Ionicons name="close-circle" size={18} color={Colors.textSecondary} />
@@ -515,9 +533,7 @@ const EditArticleScreen: React.FC = () => {
             ) : (
               <View style={styles.submitContent}>
                 <Ionicons name="save-outline" size={20} color={Colors.textWhite} />
-                <Text style={[commonStyles.primaryButtonText, { marginLeft: Spacing.sm }]}>
-                  Guardar cambios
-                </Text>
+                <Text style={[commonStyles.primaryButtonText, { marginLeft: Spacing.sm }]}>Guardar cambios</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -530,6 +546,7 @@ const EditArticleScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  // ── Layout ────────────────────────────────────────────────────────────────
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -549,6 +566,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
+
+  // ── Fields ────────────────────────────────────────────────────────────────
   fieldContainer: {
     gap: Spacing.xs,
   },
@@ -569,6 +588,35 @@ const styles = StyleSheet.create({
     height: 100,
     paddingTop: Spacing.md,
   },
+
+  // ── Location pickers ──────────────────────────────────────────────────────
+  pickerWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  pickerWrapperError: {
+    borderColor: Colors.error,
+    backgroundColor: '#fff5f5',
+  },
+  pickerIcon: {
+    marginRight: Spacing.sm,
+  },
+  cityReadOnly: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.textPrimary,
+  },
+  restoreButton: {
+    marginLeft: Spacing.sm,
+  },
+
+  // ── Category dropdown ─────────────────────────────────────────────────────
   categorySelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -611,6 +659,8 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: -4,
   },
+
+  // ── Date selectors ────────────────────────────────────────────────────────
   dateSelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -626,6 +676,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
+
+  // ── Submit ────────────────────────────────────────────────────────────────
   submitContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -634,6 +686,8 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.6,
   },
+
+  // ── Condition chips ───────────────────────────────────────────────────────
   conditionRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
