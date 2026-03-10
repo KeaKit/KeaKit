@@ -23,6 +23,7 @@ public class DatabaseSeeder {
             KitRepository kitRepo,
             KitItemRepository kitItemRepo,
             RatingRepository ratingRepo,
+            WalletRepository walletRepo,
             PasswordEncoder passwordEncoder) {
         return args -> {
             
@@ -32,22 +33,30 @@ public class DatabaseSeeder {
             owner.setEmail("owner@example.com");
             owner.setPassword(passwordEncoder.encode("password123"));
             owner.setRole(UserRole.USER);
-            owner.setCountry("España");
+            owner.setCountry("Spain");
             owner.setCity("Sevilla");
             owner.setAddress("Calle 123 matame otra vez");
             owner.setPhone("123456789");
+            Wallet ownerWallet = new Wallet();
+            ownerWallet.setUser(owner);
+            ownerWallet.setAvailableBalance(500.0);
             userRepo.save(owner);
+            walletRepo.save(ownerWallet);
 
             User tenant = new User();
             tenant.setName("Lucía Renter");
             tenant.setEmail("tenant@example.com");
             tenant.setPassword(passwordEncoder.encode("password123"));
             tenant.setRole(UserRole.USER);
-            tenant.setCountry("España");
+            tenant.setCountry("Spain");
             tenant.setCity("Sevilla");
             tenant.setAddress("Calle 123 matame otra vez");
             tenant.setPhone("223456789");
+            Wallet tenantWallet = new Wallet();
+            tenantWallet.setUser(tenant);
+            tenantWallet.setAvailableBalance(500.0);
             userRepo.save(tenant);
+            walletRepo.save(tenantWallet);
 
             // 2. Categorías
             Category catTech = new Category();

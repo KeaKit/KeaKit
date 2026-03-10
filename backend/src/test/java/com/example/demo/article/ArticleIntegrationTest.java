@@ -53,7 +53,7 @@ class ArticleIntegrationTest {
         User owner = new User();
         owner.setName("Juan");
         owner.setEmail("juan@example.com");
-        owner.setPassword("123");
+        owner.setPassword("123456");
         owner.setRole(UserRole.USER);
         owner.setCountry("España");
         owner.setCity("Sevilla");
