@@ -79,6 +79,21 @@ const toDisplay = (iso: string): string => {
   return `${d}/${m}/${y}`;
 };
 
+
+// ── Helper: valida que una fecha ISO sea real (mes/día válidos) ──────────────
+const isValidIsoDate = (iso: string): boolean => {
+  if (!iso) return true;
+  const [y, m, d] = iso.split('-').map(Number);
+  if (m < 1 || m > 12) return false;
+  if (d < 1 || d > 31) return false;
+  const date = new Date(y, m - 1, d);
+  return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
+};
+
+// ── Helper: máximo 2 decimales ───────────────────────────────────────────────
+const hasAtMostTwoDecimals = (value: string): boolean =>
+  /^\d+(\.\d{1,2})?$/.test(value.trim());
+
 const UploadArticleScreen: React.FC = () => {
   const navigation = useNavigation<UploadNav>();
   const { user } = useAuth();
@@ -189,6 +204,8 @@ const UploadArticleScreen: React.FC = () => {
 
     if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0) {
       newErrors.pricePerMonth = 'Introduce un precio válido';
+    } else if (!hasAtMostTwoDecimals(pricePerMonth)) {
+      newErrors.pricePerMonth = 'El precio no puede tener más de 2 decimales';
     } else if (selectedCategory) {
       const price = Number(pricePerMonth);
       if (price < selectedCategory.minPrice || price > selectedCategory.maxPrice) {
@@ -202,9 +219,8 @@ const UploadArticleScreen: React.FC = () => {
     if (availableFrom && availableUntil && availableFrom >= availableUntil)
       newErrors.availableUntil = 'Debe ser posterior a la fecha de inicio';
 
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (purchaseDate && !dateRegex.test(purchaseDate))
-      newErrors.purchaseDate = 'Formato: AAAA-MM-DD';
+    if (purchaseDate && !isValidIsoDate(purchaseDate))
+      newErrors.purchaseDate = 'Fecha de compra no válida';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;

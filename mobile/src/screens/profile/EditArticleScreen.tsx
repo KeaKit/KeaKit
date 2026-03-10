@@ -93,6 +93,21 @@ const isoToDate = (iso: string | null | undefined): Date | undefined => {
   return new Date(y, m - 1, d);
 };
 
+
+// ── Helper: valida que una fecha ISO sea real (mes/día válidos) ──────────────
+const isValidIsoDate = (iso: string): boolean => {
+  if (!iso) return true;
+  const [y, m, d] = iso.split('-').map(Number);
+  if (m < 1 || m > 12) return false;
+  if (d < 1 || d > 31) return false;
+  const date = new Date(y, m - 1, d);
+  return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
+};
+
+// ── Helper: máximo 2 decimales ───────────────────────────────────────────────
+const hasAtMostTwoDecimals = (value: string): boolean =>
+  /^\d+(\.\d{1,2})?$/.test(value.trim());
+
 const EditArticleScreen: React.FC = () => {
   const navigation  = useNavigation<EditNav>();
   const route       = useRoute<EditRoute>();
@@ -153,8 +168,6 @@ const EditArticleScreen: React.FC = () => {
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
     if (!title.trim())       newErrors.title       = 'El título es obligatorio';
     if (!description.trim()) newErrors.description = 'La descripción es obligatoria';
     if (description.length > 1000) newErrors.description = 'La descripción no puede superar los 1000 caracteres';
@@ -163,6 +176,8 @@ const EditArticleScreen: React.FC = () => {
 
     if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0) {
       newErrors.pricePerMonth = 'Introduce un precio válido';
+    } else if (!hasAtMostTwoDecimals(pricePerMonth)) {
+      newErrors.pricePerMonth = 'El precio no puede tener más de 2 decimales';
     } else if (category) {
       const price = Number(pricePerMonth);
       if (price < category.minPrice || price > category.maxPrice) {
@@ -176,8 +191,8 @@ const EditArticleScreen: React.FC = () => {
     if (availableFrom && availableUntil && availableFrom >= availableUntil)
       newErrors.availableUntil = 'Debe ser posterior a la fecha de inicio';
 
-    if (purchaseDate && !dateRegex.test(purchaseDate))
-      newErrors.purchaseDate = 'Formato: AAAA-MM-DD';
+    if (purchaseDate && !isValidIsoDate(purchaseDate))
+      newErrors.purchaseDate = 'Fecha de compra no válida';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
