@@ -1,4 +1,4 @@
-package com.example.demo.service;
+package com.example.demo.user;
 
 import com.example.demo.dto.AdminUserRequest;
 import com.example.demo.exception.UserAlreadyExistsException;

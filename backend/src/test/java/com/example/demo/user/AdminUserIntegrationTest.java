@@ -1,4 +1,4 @@
-package com.example.demo.integration;
+package com.example.demo.user;
 
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
