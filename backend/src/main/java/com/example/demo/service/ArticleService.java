@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +16,6 @@ import com.example.demo.model.Article;
 import com.example.demo.model.User;
 import com.example.demo.model.Category;
 import com.example.demo.model.ArticleStatus;
-import com.example.demo.model.ArticleCondition;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 import com.example.demo.repository.ArticleRepository;
@@ -52,6 +50,7 @@ public class ArticleService {
         Category category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new RuntimeException("Category not found"));
 
+        // Upload image to Cloudinary
         String imageUrl = cloudinaryService.uploadImage(image);
 
         article.setOwner(owner);
@@ -289,10 +288,16 @@ public class ArticleService {
             resolution = "DEPOSIT_RETURNED";
             amountProcessed = depositAmount;
             message = "Artículo devuelto en buen estado. Se devuelve el 20% de garantía (" + depositAmount + "€) al arrendatario.";
+
+            // TODO: Llamar a Stripe para transferir el dinero de vuelta al arrendatario
+
         } else if ("DAMAGED".equalsIgnoreCase(request.condition())) {
             resolution = "DEPOSIT_RETAINED";
             amountProcessed = depositAmount;
             message = "Artículo con daños. Se retiene la garantía de " + depositAmount + "€ al arrendatario.";
+
+            // TODO: Transferir el dinero retenido a la cuenta del dueño
+
         } else {
             throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
         }
