@@ -1,3 +1,5 @@
+# Plan de Pruebas
+
 ## 1. Introducción y Alcance
 
 El propósito de este plan de pruebas es asegurar la calidad, funcionalidad, rendimiento y fiabilidad de la aplicación KeaKit. El alcance incluye la validación de la lógica de negocio, la integración de componentes, la validación de los flujos principales por parte del usuario y la respuesta del sistema bajo carga.
@@ -32,7 +34,7 @@ Las pruebas de integración verifican la correcta comunicación entre los difere
 
 ## 4. Pruebas de Aceptación
 
-Validan que el sistema cumple con los requerimientos desde el punto de vista del usuario final. Se redactan usando el formato Given-When-Then.
+Validan que el sistema cumple con los requerimientos desde el punto de vista del usuario final, actualmente cubren las funcionalidades pruncipales. Se redactan usando el formato Given-When-Then.
 Se implementarán mediante el testing de interfaz de usuario, replicando el procedimiento de cada caso de prueba y grabandolo en scripts para poder ejecutar los tests de manera automatizada. 
 
 ### 4.1 CU-ARRENDADOR-01 - Subida de artículos
@@ -163,7 +165,20 @@ El desarrollador asignado creará una nueva rama partiendo de la rama principal 
     
 2. **Integración Continua (CI):** La creación del PR lanzará automáticamente los workflows de GitHub Actions (tests de backend y frontend) para asegurar que la corrección no rompe otras partes del sistema.
     
-3. **Code Review:** Una persona asignada realizará una revisión del código actualizado.
+4. **Code Review:** Una persona asignada realizará una revisión del código actualizado.
     
-4. **Merge y Cierre:** Si los tests pasan en verde y el PR es aprobado, se integra el código (`merge`). La Issue asociada se moverá automáticamente a "Done" y el tiempo invertido deberá quedar registrado en Clockify.
+5. **Merge y Cierre:** Si los tests pasan en verde y el PR es aprobado, se integra el código (`merge`). La Issue asociada se moverá automáticamente a "Done" y el tiempo invertido deberá quedar registrado en Clockify.
 
+---
+
+## 7. Historial de versiones
+
+| Versión | Fecha       | Descripción                                   | Autor(es)               |
+|---------|-------------|-----------------------------------------------|-------------------------|
+| 1.0.0   | 10/03/2026  | Primera versión del documento de Plan de Pruebas | Guillermo García León |
+
+---
+
+**Redactado por:** Guillermo García León
+**Fecha de redacción:** 10/03/2026
+**Versión:** 1.0.0
