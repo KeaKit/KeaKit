@@ -29,7 +29,7 @@ registerTranslation("es", es);
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
 import { API_ROUTES } from "../../config/api";
-import { RootStackParamList } from "../../types";
+import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
@@ -150,6 +150,7 @@ const CreateKitScreen: React.FC = () => {
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [payment, setPayment] = useState<KitPaymentDTO | null>(null);
 
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
@@ -415,65 +416,73 @@ const CreateKitScreen: React.FC = () => {
     const validation = validate();
     if (!validation.valid || !validation.payloadDates) return;
 
+    const payload: KitCreateRequest = {
+      name: name.trim(),
+      country: country.trim(),
+      city: city.trim(),
+      startDate: validation.payloadDates.startIso,
+      endDate: validation.payloadDates.endIso,
+      deliveryMethod,
+      meetingPoint:
+        deliveryMethod === "MEETING_POINT"
+          ? meetingPoint.trim()
+          : deliveryMethod === "COURIER"
+            ? courierAddress.trim()
+            : undefined,
+      tenantId: user.id,
+      itemSelections: selectedProducts.map((p) => ({
+        itemId: p.id,
+        quantity: selectedQuantities[p.id] ?? 1,
+        pricePerMonth: p.pricePerMonth,
+      })),
+    };
+
     const handleCreateKit = async () => {
-      if (!user?.id || !user.token) {
-        console.error("🔥 ERROR al crear kit: Usuario no autenticado");
-        return;
-      }
-
-      const validation = validate();
-      if (!validation.valid || !validation.payloadDates) {
-        console.error("🔥 ERROR al crear kit: Campos requeridos incompletos");
-        return;
-      }
-
       try {
         setSubmitting(true);
-
-        const payload = {
-          name: name.trim(),
-          country: country.trim(),
-          city: city.trim(),
-          startDate: validation.payloadDates.startIso,
-          endDate: validation.payloadDates.endIso,
-          deliveryMethod,
-          // En el record de Java solo tenemos 'meetingPoint'
-          // Si es COURIER, mandamos la dirección en ese mismo campo o lo dejamos undefined
-          meetingPoint:
-            deliveryMethod === "MEETING_POINT"
-              ? meetingPoint.trim()
-              : deliveryMethod === "COURIER"
-                ? courierAddress.trim()
-                : undefined,
-
-          tenantId: user.id,
-          itemSelections: selectedProducts.map((p) => ({
-            itemId: p.id,
-            quantity: selectedQuantities[p.id] ?? 1,
-            pricePerMonth: p.pricePerMonth,
-          })),
-        };
-
-        console.log("📦 Creando kit con payload:", payload);
-
         const response = await createKit(payload, user.token);
-
-        console.log("✅ Kit creado exitosamente:", response);
         return response;
       } catch (error) {
         console.error("🔥 ERROR al crear kit:", error);
+        return null;
       } finally {
         setSubmitting(false);
       }
     };
-    const createdKit = await handleCreateKit();
-    if (!createdKit) {
-      console.error("🔥 ERROR: No se pudo crear el kit.");
-      return;
-    }
 
-    navigation.navigate("Checkout", createdKit);
+    try {
+      // 1) Calcular precios en backend
+      const paymentRes = await fetch(API_ROUTES.KIT_PAYMENT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!paymentRes.ok) {
+        const errorText = await paymentRes.text();
+        throw new Error(`Error en cálculo de pago: ${errorText}`);
+      }
+
+      const paymentData = await paymentRes.json();
+      setPayment(paymentData);
+
+      // 2) Crear el kit
+      const createdKit = await handleCreateKit();
+      console.log("tenantId:", user.id);
+      if (!createdKit) {
+        console.error("🔥 ERROR: No se pudo crear el kit.");
+        return;
+      }
+
+      navigation.navigate("Checkout", createdKit);
+    } catch (error) {
+      console.error("🔥 ERROR al crear kit:", error);
+    }
   };
+
 
   const customTheme = {
     ...MD3LightTheme,
@@ -876,6 +885,58 @@ const CreateKitScreen: React.FC = () => {
                 €
               </Text>
             </View>
+
+            <Button
+              mode="outlined"
+              onPress={async () => {
+                if (!user?.id || !user.token) {
+                  setErrors({ general: "Necesitas iniciar sesión." });
+                  return;
+                }
+
+                const validation = validate();
+                if (!validation.valid || !validation.payloadDates) return;
+
+                const payload: KitCreateRequest = {
+                  name: name.trim(),
+                  country: country.trim(),
+                  city: city.trim(),
+                  startDate: validation.payloadDates.startIso,
+                  endDate: validation.payloadDates.endIso,
+                  deliveryMethod,
+                  meetingPoint:
+                    deliveryMethod === "MEETING_POINT"
+                      ? meetingPoint.trim()
+                      : deliveryMethod === "COURIER"
+                        ? courierAddress.trim()
+                        : undefined,
+                  tenantId: user.id,
+                  itemSelections: selectedProducts.map((p) => ({
+                    itemId: p.id,
+                    quantity: selectedQuantities[p.id] ?? 1,
+                    pricePerMonth: p.pricePerMonth,
+                  })),
+                  status: KitStatus.DRAFT,
+                };
+
+                try {
+                  setSubmitting(true);
+                  const created = await createKit(payload, user.token);
+                  if (created) {
+                    Alert.alert("Guardado", "Kit guardado como borrador.");
+                    navigation.navigate("MyKits");
+                  }
+                } catch (e) {
+                  console.error("Error guardando borrador:", e);
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+              style={{ borderRadius: 8, marginBottom: 8 }}
+            >
+              Guardar para pagar más tarde
+            </Button>
+
 
             <Button
               mode="contained"

@@ -23,7 +23,8 @@ import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.RentedItemResponse;
 import com.example.demo.model.Kit;
 import com.example.demo.service.KitService;
-import org.springframework.web.bind.annotation.RequestParam;
+
+import jakarta.validation.Valid;
 
 
 @RestController
@@ -35,11 +36,10 @@ public class KitController {
     private KitService kitService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createKit(@RequestBody KitCreateRequest request) {
-        // TODO: Devolver un DTO en vez de Kit. Ahora mismo devuelve contenido sensible (contraseña de tenant y owners)
-        try{
-            Kit response = kitService.create(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<?> createKit(@Valid @RequestBody KitCreateRequest request) {
+        try {
+            Kit saved = kitService.create(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new KitResponse(saved));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
@@ -68,7 +68,7 @@ public class KitController {
         }
     }
     @PostMapping("/payment")
-    public ResponseEntity<?> getKitPayment(@RequestBody KitCreateRequest request) {
+    public ResponseEntity<?> getKitPayment(@Valid @RequestBody KitCreateRequest request) {
         // No es necesario que el kit esté en el repositorio para calcular su precio
         try {
             KitPaymentDTO response = kitService.getKitPayment(request);
@@ -139,5 +139,27 @@ public class KitController {
                     .body(e.getMessage());
         }
     }
+
+    @PatchMapping("/{id}/pay")
+    public ResponseEntity<?> markKitAsPaid(@PathVariable Long id) {
+        try {
+            KitResponse response = kitService.markAsPaid(id);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelKit(@PathVariable Long id) {
+        try {
+            KitResponse response = kitService.cancel(id);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+
 
 }

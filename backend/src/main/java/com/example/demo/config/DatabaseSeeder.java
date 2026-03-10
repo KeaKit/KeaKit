@@ -1,11 +1,13 @@
 package com.example.demo.config;
 
-import com.example.demo.model.*; // Ajusta a tus modelos
+import com.example.demo.model.*; 
 import com.example.demo.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.List;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,9 +25,7 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
-            KitItemRepository kitItemRepo,
             RatingRepository ratingRepo,
-            WalletRepository walletRepo,
             PasswordEncoder passwordEncoder) {
         return args -> {
             
@@ -35,30 +35,22 @@ public class DatabaseSeeder {
             owner.setEmail("owner@example.com");
             owner.setPassword(passwordEncoder.encode("password123"));
             owner.setRole(UserRole.USER);
-            owner.setCountry("Spain");
+            owner.setCountry("España");
             owner.setCity("Sevilla");
             owner.setAddress("Calle 123 matame otra vez");
             owner.setPhone("123456789");
-            Wallet ownerWallet = new Wallet();
-            ownerWallet.setUser(owner);
-            ownerWallet.setAvailableBalance(500.0);
             userRepo.save(owner);
-            walletRepo.save(ownerWallet);
 
             User tenant = new User();
             tenant.setName("Lucía Renter");
             tenant.setEmail("tenant@example.com");
             tenant.setPassword(passwordEncoder.encode("password123"));
             tenant.setRole(UserRole.USER);
-            tenant.setCountry("Spain");
+            tenant.setCountry("España");
             tenant.setCity("Sevilla");
             tenant.setAddress("Calle 123 matame otra vez");
             tenant.setPhone("223456789");
-            Wallet tenantWallet = new Wallet();
-            tenantWallet.setUser(tenant);
-            tenantWallet.setAvailableBalance(500.0);
             userRepo.save(tenant);
-            walletRepo.save(tenantWallet);
 
             // 2. Wallets
             Wallet ownerWallet = new Wallet(owner);
@@ -88,6 +80,7 @@ public class DatabaseSeeder {
             laptop.setTitle("MacBook Pro");
             laptop.setDescription("16 pulgadas, M2");
             laptop.setCategory(catTech);
+            laptop.setCity("Sevilla");
             laptop.setOwner(owner);
             laptop.setPricePerMonth(150.0);
             laptop.setTotalUnits(1);
@@ -104,6 +97,7 @@ public class DatabaseSeeder {
             setupService.setTitle("Instalación Software");
             setupService.setDescription("Configuración inicial a domicilio");
             setupService.setCategory(catTech);
+            setupService.setCity("Sevilla");
             setupService.setOwner(owner);
             setupService.setPricePerMonth(50.0);
             setupService.setTotalUnits(10);
@@ -121,18 +115,18 @@ public class DatabaseSeeder {
             myKit.setEndDate(LocalDate.now().plusMonths(1));
             kitRepo.save(myKit);
 
-            // 7.1 KitItems (relación intermedia)
-            KitItem kitItem1 = new KitItem();
-            kitItem1.setKit(myKit);
-            kitItem1.setItem(laptop);
-            kitItem1.setQuantity(1);
-            kitItemRepo.save(kitItem1);
+            // 7.1 ItemMemento
+            ItemMemento snap1 = laptop.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint(), null);
+            snap1.setKit(myKit);
+            snap1.setPriceAtRental(laptop.getPricePerMonth());
 
-            KitItem kitItem2 = new KitItem();
-            kitItem2.setKit(myKit);
-            kitItem2.setItem(setupService);
-            kitItem2.setQuantity(1);
-            kitItemRepo.save(kitItem2);
+            ItemMemento snap2 = setupService.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint(), null);
+            snap2.setKit(myKit);
+            snap2.setPriceAtRental(setupService.getPricePerMonth());
+
+            myKit.setSnapshots(List.of(snap1, snap2));
+            kitRepo.save(myKit);
+
 
             // 8. Rating
             Rating feedback = new Rating();

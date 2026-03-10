@@ -35,7 +35,7 @@ const MyKitsScreen: React.FC = () => {
       const response = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
       const data = await response.json();
-      setKits(data);
+      setKits(data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED));
     } catch (err) {
       console.log('[MyKits] error:', err);
       setError("Error al cargar alquileres");
@@ -68,6 +68,8 @@ const MyKitsScreen: React.FC = () => {
 
   const getStatusInfo = (status: KitStatus) => {
     switch (status) {
+      case KitStatus.DRAFT:
+        return { label: "Modo borrador", color: "#14fdfdff" };
       case KitStatus.PENDING:
         return { label: "Pendiente de pago", color: "#fd7e14" };
       case KitStatus.PAID:

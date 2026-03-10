@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { Button, TextInput, ActivityIndicator, Modal, Portal } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { Kit, RootStackParamList } from "../../types";
+import { Kit, RootStackParamList, KitResponse } from "../../types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../../context/AuthContext";
 import { Colors, commonStyles } from "../../styles";
@@ -15,8 +15,8 @@ const CheckoutScreen: React.FC = () => {
   const navigation = useNavigation<CheckoutNav>();
   const { user } = useAuth();
   const route = useRoute<any>();
-  const createdKit = route.params as Kit;
-  const items = createdKit.kitItems || [];
+  const createdKit = route.params as KitResponse;
+  const items = createdKit.items || [];
   const [isProcessing, setIsProcessing] = useState(false);
   console.log("🚀 CheckoutScreen - Kit recibido:", createdKit);
   console.log("🚀 CheckoutScreen - Items en el kit:", items);
@@ -38,17 +38,15 @@ const CheckoutScreen: React.FC = () => {
   // --------------------------------------------------------------
 
   const totalPrice = useMemo(() => {
-    if(items.length === 0) return 0;
+    if (createdKit.totalPrice != null) return createdKit.totalPrice;
+    if (items.length === 0) return 0;
+    return items.reduce((sum, item) => {
+      const price = Number(item.pricePerMonth) || 0;
+      const quantity = Number(item.quantity) || 1;
+      return sum + price * quantity;
+    }, 0);
+  }, [createdKit.totalPrice, items]);
 
-    return items.reduce(
-      (sum, item) => {
-        const price = Number(item.pricePerMonth) || 0;
-        const quantity = Number(item.quantity) || 1;
-        return sum + (price * quantity);
-      },
-      0,
-    );
-  }, [items]);
   // 🔒 handlers con límite de longitud
   const handleCardChange = (value: string) => {
     const cleaned = value.replace(/\D/g, "").slice(0, 16);
@@ -118,7 +116,7 @@ const CheckoutScreen: React.FC = () => {
           endDate: createdKit.endDate,
           items: JSON.stringify(
             items.map((item) => ({
-              id: item.id,
+              id: item.itemId,
               quantity: item.quantity,
               pricePerMonth: item.pricePerMonth,
             }))
@@ -172,14 +170,14 @@ const CheckoutScreen: React.FC = () => {
       ) : (
         items.map((item, index) => (
           <View
-            key={item.id || index}
+            key={item.itemId || index}
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
               marginBottom: 6,
             }}
           >
-            <Text>{`${item.item.title} x${item.quantity || 1}`}</Text>
+            <Text>{`${item.name ?? "Item"} x${item.quantity || 1}`}</Text>
             <Text>{(item.pricePerMonth * (item.quantity || 1)).toFixed(2)}€</Text>
           </View>
         ))

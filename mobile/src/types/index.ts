@@ -86,7 +86,7 @@ export interface KitCreateRequest {
   city: string;
   startDate: string;
   endDate: string;
-  status?: "PENDING" | "APPROVED" | "CANCELLED";
+  status?: KitStatus;
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
   tenantId: number;
@@ -97,7 +97,7 @@ export interface KitPaymentDTO {
   totalPrice: number;
   subtotalPrice: number;
   guarantee: number;
-  fee: number;
+  platformfee: number;
   courierPrice: number;
 }
 
@@ -162,13 +162,17 @@ export interface Item {
 }
 
 export enum KitStatus {
+  DRAFT = "DRAFT",
   PENDING = "PENDING",
   PAID = "PAID",
-  PENDING_VALIDATION = "PENDING VALIDATION",
+  PENDING_VALIDATION = "PENDING_VALIDATION",
   ACTIVE = "ACTIVE",
   COMPLETED = "COMPLETED",
   CANCELLED = "CANCELLED",
+  UPCOMING = "UPCOMING",
+  FINISHED = "FINISHED",
 }
+
 export interface Kit {
   id: number;
   name: string;
@@ -202,6 +206,14 @@ export interface Kit {
   totalPrice?: number;
 }
 
+export interface KitItemResponse {
+  itemId: number;
+  quantity: number;
+  pricePerMonth: number;
+  name?: string | null;
+  category?: string | null;
+  imageUrl?: string | null;
+}
 
 export interface KitResponse {
   id: number;
@@ -215,15 +227,18 @@ export interface KitResponse {
   deliveryNotification?: string;
   status?: KitStatus;
   tenantId: number;
-  items?: Item[];
+  items?: KitItemResponse[];
   itemIds?: number[];
+  subtotalPrice?: number;
+  guaranteePrice?: number;
+  platformFee?: number;
   totalPrice?: number;
   deliveryMethod?: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
   courierPrice?: number;
-  itemSelections?: KitItemSelection[];
   totalSelectedItems?: number;
 }
+
 export interface Category {
   id: number;
   name: string;

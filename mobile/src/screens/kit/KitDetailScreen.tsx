@@ -18,6 +18,7 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, KitResponse, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { useAuth } from '../../context/AuthContext';
+import { API_ROUTES } from "../../config/api";
 
 type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
 
@@ -218,9 +219,9 @@ const KitDetailScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Productos Incluidos</Text>
         <View style={styles.itemsContainer}>
           {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => (
-            <View key={item.id} style={styles.itemCard}>
+            <View key={item.itemId} style={styles.itemCard}>
               <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.title}</Text>
+                <Text style={styles.itemName}>{item.name}</Text>
                 <Text style={styles.itemMeta}>{item.category} • {item.pricePerMonth}€/mes</Text>
               </View>
               <Ionicons name="cube-outline" size={20} color="#DDD" />
@@ -245,6 +246,47 @@ const KitDetailScreen: React.FC = () => {
           <Text style={styles.totalValue}>{kit.totalPrice?.toLocaleString('es-ES')} €</Text>
         </View>
 
+        {kit.status === KitStatus.DRAFT && (
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={async () => {
+              try {
+                const res = await fetch(API_ROUTES.KIT_MARK_PAID(kit.id), {
+                  method: "PATCH",
+                });
+                if (!res.ok) throw new Error("No se pudo pagar el kit");
+                Alert.alert("Éxito", "Kit pagado correctamente.");
+                navigation.goBack();
+              } catch (e) {
+                Alert.alert("Error", "No se pudo pagar el kit.");
+              }
+            }}
+          >
+            <Text style={styles.confirmButtonText}>Pagar ahora</Text>
+          </TouchableOpacity>
+        )}
+
+        {kit.status === KitStatus.DRAFT && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={async () => {
+              try {
+                const res = await fetch(API_ROUTES.KIT_CANCEL(kit.id), {
+                  method: "PATCH",
+                });
+                if (!res.ok) throw new Error("No se pudo cancelar");
+                Alert.alert("Cancelado", "Kit cancelado.");
+                navigation.goBack();
+              } catch (e) {
+                Alert.alert("Error", "No se pudo cancelar.");
+              }
+            }}
+          >
+            <Text style={styles.deleteButtonText}>Cancelar borrador</Text>
+          </TouchableOpacity>
+        )}
+
+
         {kit.status === KitStatus.PENDING_VALIDATION && (
           <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmKit}>
             <Ionicons name="checkmark-done-outline" size={20} color="#04ac20" />
@@ -252,10 +294,12 @@ const KitDetailScreen: React.FC = () => {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.deleteButton} onPress={handleCancelKit}>
-          <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-          <Text style={styles.deleteButtonText}>Cancelar este alquiler</Text>
-        </TouchableOpacity>
+        {kit.status === KitStatus.DRAFT && (
+          <TouchableOpacity style={styles.deleteButton} onPress={handleCancelKit}>
+            <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+            <Text style={styles.deleteButtonText}>Cancelar borrador</Text>
+          </TouchableOpacity>
+        )}
 
       </ScrollView>
 
@@ -272,18 +316,18 @@ const KitDetailScreen: React.FC = () => {
 
             <ScrollView style={{ maxHeight: 300 }}>
               {kit.items?.map((item) => {
-                const isSelected = selectedItems.includes(item.id);
+                const isSelected = selectedItems.includes(item.itemId);
 
                 return (
                   <TouchableOpacity
-                    key={item.id}
+                    key={item.itemId}
                     style={[
                       styles.modalItem,
                       isSelected && styles.modalItemSelected
                     ]}
-                    onPress={() => toggleItemSelection(item.id)}
+                    onPress={() => toggleItemSelection(item.itemId)}
                   >
-                    <Text style={styles.modalItemText}>{item.title}</Text>
+                    <Text style={styles.modalItemText}>{item.name}</Text>
                     {isSelected && (
                       <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
                     )}

@@ -135,8 +135,8 @@ public class KitServiceTest {
 
         // Verificar
         assertNotNull(res);
-        assertEquals(1, res.getKitItems().size());
-        assertEquals(2, res.getKitItems().get(0).getQuantity());
+        assertEquals(1, res.getSnapshots().size());
+        assertEquals(2, res.getSnapshots().get(0).getSelectedUnits());
     }
 
     @Test
