@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
+import com.example.demo.dto.UserUpdateData;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.model.Wallet;
@@ -76,7 +77,7 @@ public class UserService {
         return new UserResponse(user, token);
     }
 
-    public UserResponse updateUser(Long id, User updateData) {
+    public UserResponse updateUser(Long id, UserUpdateData updateData) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new UserNotFoundException("User not found"));
 
