@@ -33,7 +33,7 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction(Double amount, String currency, Wallet destinationWallet, TransactionType type) {
+    public Transaction(Double amount, Wallet destinationWallet, TransactionType type) {
         this.amount = amount;
         this.destinationWallet = destinationWallet;
         this.type = type;
