@@ -1,4 +1,4 @@
-package com.example.demo.user;
+package com.example.demo.controller;
 
 import com.example.demo.dto.AdminUserRequest;
 import com.example.demo.dto.UserResponse;
