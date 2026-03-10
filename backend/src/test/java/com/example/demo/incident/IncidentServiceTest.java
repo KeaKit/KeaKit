@@ -10,7 +10,7 @@ import com.example.demo.model.Kit;
 import com.example.demo.repository.IncidentCommentRepository;
 import com.example.demo.repository.IncidentRepository;
 import com.example.demo.repository.ItemRepository;
-import com.example.demo.repository.KitRepository; 
+import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.IncidentService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -65,13 +64,14 @@ class IncidentServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Configuramos el usuario de prueba como ADMIN para que pase el checkUserAdmin()
         testUser = new User();
         testUser.setId(1L);
         testUser.setName("Test User");
         testUser.setEmail("test@example.com");
-        testUser.setRole(UserRole.USER);
+        testUser.setRole(UserRole.ADMIN);
 
-        testItem = new Article(); 
+        testItem = new Article();
         testItem.setId(1L);
         testItem.setTitle("Test Item");
         testItem.setOwner(testUser);
@@ -79,6 +79,7 @@ class IncidentServiceTest {
         testKit = new Kit();
         testKit.setId(1L);
 
+        // Simulamos el contexto de seguridad con el usuario de prueba
         lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
         lenient().when(authentication.getPrincipal()).thenReturn("test@example.com");
@@ -93,7 +94,7 @@ class IncidentServiceTest {
         i.setDescription("Incident Description");
         i.setType(type);
         i.setStatus(status);
-        i.setUser(testUser);
+        i.setUser(testUser); // El usuario de prueba es el autor
         if (type == IncidentType.DAMAGED_ITEM) {
             i.setRelatedItem(testItem);
             i.setRelatedKit(testKit);
@@ -136,10 +137,10 @@ class IncidentServiceTest {
     @Test
     void createIncident_successful() {
         Incident incident = makeIncident(null, IncidentType.DAMAGED_ITEM, IncidentStatus.OPEN);
-        
+
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(itemRepository.findById(1L)).thenReturn(Optional.of(testItem));
-        when(kitRepository.findById(1L)).thenReturn(Optional.of(testKit)); // NUEVO
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(testKit));
 
         when(incidentRepository.save(any(Incident.class))).thenAnswer(i -> {
             Incident saved = i.getArgument(0);
@@ -176,7 +177,7 @@ class IncidentServiceTest {
     void deleteIncident_successful() {
         Incident incident = makeIncident(3L, IncidentType.GENERAL, IncidentStatus.OPEN);
         when(incidentRepository.findById(3L)).thenReturn(Optional.of(incident));
-        
+
         doNothing().when(incidentCommentRepository).deleteByIncidentId(3L);
         doNothing().when(incidentRepository).delete(incident);
 

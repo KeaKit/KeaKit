@@ -49,10 +49,7 @@ public class IncidentService {
     
     private boolean checkUserAuthor(Incident incident) {
         String currentUserEmail = getCurrentUserEmail();
-
-        boolean isAuthor = incident.getUser().getEmail().equals(currentUserEmail);
-
-        return isAuthor;
+        return incident.getUser().getEmail().equals(currentUserEmail);
     } 
 
     private boolean checkUserAdmin() {
@@ -60,9 +57,7 @@ public class IncidentService {
         User currentUser = userRepository.findByEmail(currentUserEmail)
             .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
 
-        boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
-
-        return isAdmin;
+        return currentUser.getRole() == UserRole.ADMIN;
     }
 
     private boolean checkUserOwner(Incident incident) {
@@ -80,7 +75,7 @@ public class IncidentService {
         Incident incident = incidentRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Incident not found"));
 
-        if (!checkUserAdmin() || !checkUserAuthor(incident) || !checkUserOwner(incident)) {
+        if (!(checkUserAdmin() || checkUserAuthor(incident) || checkUserOwner(incident))) {
             throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para ver esta incidencia.");
         }
 
@@ -89,7 +84,9 @@ public class IncidentService {
 
     public List<Incident> getIncidentsByUserId(Long userId) {
         List<Incident> incidents = incidentRepository.findByUserId(userId);
-        if (!checkUserAdmin() || !checkUserAuthor(incidents.get(0))) {
+        if (incidents.isEmpty()) return incidents; // Protección anti-errores
+
+        if (!(checkUserAdmin() || checkUserAuthor(incidents.get(0)))) {
             throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para listar las incidencias");
         }
         return incidents;
@@ -97,7 +94,9 @@ public class IncidentService {
 
     public List<Incident> getReceivedIncidentsByOwnerId(Long ownerId) {
         List<Incident> incidents = incidentRepository.findReceivedByOwnerId(ownerId);
-        if (!checkUserAdmin() || !checkUserOwner(incidents.get(0))) {
+        if (incidents.isEmpty()) return incidents; // Protección anti-errores
+
+        if (!(checkUserAdmin() || checkUserOwner(incidents.get(0)))) {
             throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para listar las incidencias");
         }
         return incidents;
@@ -126,7 +125,7 @@ public class IncidentService {
     public Incident updateIncident(Long id, Incident updateData) {
         Incident incident = getIncidentById(id);
 
-        if (!checkUserAdmin() || !checkUserAuthor(incident)) {
+        if (!(checkUserAdmin() || checkUserAuthor(incident))) {
             throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para modificar esta incidencia.");
         }
 
@@ -147,9 +146,11 @@ public class IncidentService {
 
     public Incident resolveIncident(Long id) {
         Incident incident = getIncidentById(id);
-        if (!checkUserAdmin() || !checkUserAuthor(incident)) {
+        
+        if (!(checkUserAdmin() || checkUserAuthor(incident))) {
             throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para modificar esta incidencia.");
         }
+        
         incident.setStatus(IncidentStatus.RESOLVED);
         return incidentRepository.save(incident);
     }
@@ -157,9 +158,11 @@ public class IncidentService {
     @Transactional
     public void deleteIncident(Long id) {
         Incident incident = getIncidentById(id);
-        if (!checkUserAdmin() || !checkUserAuthor(incident)) {
+        
+        if (!(checkUserAdmin() || checkUserAuthor(incident))) {
             throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para modificar esta incidencia.");
         }
+        
         if (incident.getStatus() == IncidentStatus.RESOLVED) {
             throw new RuntimeException("No se puede eliminar una incidencia resuelta");
         }
@@ -169,7 +172,8 @@ public class IncidentService {
 
     public List<IncidentComment> getCommentsByIncidentId(Long incidentId) {
         Incident incident = getIncidentById(incidentId);
-        if (!checkUserAdmin() || !checkUserAuthor(incident)) {
+        
+        if (!(checkUserAdmin() || checkUserAuthor(incident) || checkUserOwner(incident))) {
             throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para ver esta incidencia.");
         }
         return incidentCommentRepository.findByIncidentIdOrderByCreatedAtAsc(incidentId);
@@ -177,7 +181,8 @@ public class IncidentService {
 
     public IncidentComment addComment(Long incidentId, IncidentComment comment) {
         Incident incident = getIncidentById(incidentId);
-        if (!checkUserAdmin() || !checkUserAuthor(incident)) {
+        
+        if (!(checkUserAdmin() || checkUserAuthor(incident) || checkUserOwner(incident))) {
             throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para modificar esta incidencia.");
         }
         if (incident.getStatus() == IncidentStatus.RESOLVED) {
@@ -223,5 +228,4 @@ public class IncidentService {
             return principal.toString();
         }
     }
-
 }
