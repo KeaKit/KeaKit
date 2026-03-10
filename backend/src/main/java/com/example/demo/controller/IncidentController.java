@@ -43,6 +43,8 @@ public class IncidentController {
     public ResponseEntity<?> getAllIncidents() {
         try {
             return ResponseEntity.ok(incidentService.getAllIncidents());
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
@@ -52,6 +54,8 @@ public class IncidentController {
     public ResponseEntity<?> getIncidentsByUser(@PathVariable Long userId) {
         try {
             return ResponseEntity.ok(incidentService.getIncidentsByUserId(userId));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
@@ -61,6 +65,8 @@ public class IncidentController {
     public ResponseEntity<?> getReceivedIncidents(@PathVariable Long ownerId) {
         try {
             return ResponseEntity.ok(incidentService.getReceivedIncidentsByOwnerId(ownerId));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
@@ -82,6 +88,8 @@ public class IncidentController {
         try {
             Incident updatedIncident = incidentService.updateIncident(id, incidentDetails);
             return ResponseEntity.ok(updatedIncident);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
@@ -94,6 +102,8 @@ public class IncidentController {
         try {
             incidentService.deleteIncident(id);
             return ResponseEntity.ok("Incident deleted successfully");
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
@@ -104,6 +114,8 @@ public class IncidentController {
         try {
             Incident resolved = incidentService.resolveIncident(id);
             return ResponseEntity.ok(resolved);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
@@ -115,6 +127,8 @@ public class IncidentController {
     public ResponseEntity<?> getComments(@PathVariable Long incidentId) {
         try {
             return ResponseEntity.ok(incidentService.getCommentsByIncidentId(incidentId));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
@@ -125,6 +139,8 @@ public class IncidentController {
         try {
             IncidentComment saved = incidentService.addComment(incidentId, comment);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
