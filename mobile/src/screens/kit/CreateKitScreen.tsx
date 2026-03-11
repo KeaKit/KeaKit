@@ -61,6 +61,7 @@ type CatalogProduct = {
   status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
   category?: string;
   city?: string;
+  ownerId: number;
   ownerName?: string;
   imageUrl?: string | null;
   totalUnits: number;
@@ -208,6 +209,7 @@ const CreateKitScreen: React.FC = () => {
         status: String(p.status ?? "AVAILABLE"), // para SERVICE llega null, lo normalizamos
         category: typeof p.category === "string" ? p.category : (p.category?.name ?? ""),
         city: p.city ?? "",
+        ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
         imageUrl: p.imageUrl ?? null,
         totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
