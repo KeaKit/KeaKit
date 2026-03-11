@@ -6,10 +6,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "kits")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Kit {
 
     @Id
@@ -39,6 +42,7 @@ public class Kit {
     @JoinColumn(name = "tenant_id")
     private User tenant;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "kit", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<KitItem> kitItems = new ArrayList<>();
 

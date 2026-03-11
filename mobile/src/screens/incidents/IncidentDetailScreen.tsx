@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Alert,
+  Modal,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -59,6 +59,8 @@ const IncidentDetailScreen: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [error, setError] = useState('');
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const commentInputRef = useRef<TextInput>(null);
 
@@ -98,7 +100,7 @@ const IncidentDetailScreen: React.FC = () => {
       setComments((prev) => [...prev, newComment]);
       setCommentText('');
     } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo añadir el comentario');
+      setError(err instanceof Error ? err.message : 'No se pudo añadir el comentario');
     } finally {
       setSubmitting(false);
     }
@@ -339,7 +341,7 @@ const IncidentDetailScreen: React.FC = () => {
           <View style={styles.actionButtonsRow}>
             <TouchableOpacity
               style={[styles.resolveButton, resolving && styles.buttonDisabled]}
-              onPress={handleResolve}
+              onPress={() => setShowResolveModal(true)}
               disabled={resolving}
               activeOpacity={0.7}
             >
@@ -354,7 +356,7 @@ const IncidentDetailScreen: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.deleteButton, deleting && styles.buttonDisabled, styles.deleteButtonHalf]}
-              onPress={handleDelete}
+              onPress={() => setShowDeleteModal(true)}
               disabled={deleting}
               activeOpacity={0.7}
             >
@@ -369,6 +371,72 @@ const IncidentDetailScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Modal confirmar resolver */}
+        <Modal
+          visible={showResolveModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowResolveModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Ionicons name="checkmark-circle" size={48} color={Colors.success} style={styles.modalIcon} />
+              <Text style={styles.modalTitle}>¿Marcar como resuelta?</Text>
+              <Text style={styles.modalMessage}>Esta acción cerrará la incidencia y no se podrán añadir más comentarios.</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setShowResolveModal(false)}
+                >
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalConfirmButton, { backgroundColor: Colors.success }]}
+                  onPress={() => {
+                    setShowResolveModal(false);
+                    handleResolve();
+                  }}
+                >
+                  <Text style={styles.modalConfirmText}>Confirmar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal confirmar eliminar */}
+        <Modal
+          visible={showDeleteModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowDeleteModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Ionicons name="trash" size={48} color={Colors.error} style={styles.modalIcon} />
+              <Text style={styles.modalTitle}>¿Eliminar incidencia?</Text>
+              <Text style={styles.modalMessage}>Esta acción es irreversible. Se eliminarán también todos los comentarios asociados.</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setShowDeleteModal(false)}
+                >
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalConfirmButton, { backgroundColor: Colors.error }]}
+                  onPress={() => {
+                    setShowDeleteModal(false);
+                    handleDelete();
+                  }}
+                >
+                  <Text style={styles.modalConfirmText}>Eliminar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -577,6 +645,67 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     opacity: 0.5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  modalCard: {
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+  },
+  modalIcon: {
+    marginBottom: Spacing.base,
+  },
+  modalTitle: {
+    fontSize: FontSizes.lg,
+    fontWeight: FontWeights.bold as '700',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: FontSizes.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: Spacing.lg,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: Spacing.base,
+    width: '100%',
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: Spacing.base,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.semibold as '600',
+    color: Colors.textSecondary,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: Spacing.base,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  modalConfirmText: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.semibold as '600',
+    color: Colors.textWhite,
   },
 });
 
