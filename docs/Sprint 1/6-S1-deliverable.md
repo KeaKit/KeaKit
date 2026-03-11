@@ -41,6 +41,8 @@ S1 - Sprint 1
 ## Repositorio
 
 Repositorio público: [https://github.com/KeaKit/KeaKit](https://github.com/KeaKit/KeaKit)
+<<<<<<< HEAD
+=======
 
 ## Contenidos de entrgable (situados en docs/)
 
@@ -90,3 +92,4 @@ Información y gestión de usuarios piloto del proyecto.
 - **[persona-con-hijos.md](docs/usuarios%20pilotos/persona-con-hijos.md)**: Perfil de usuario piloto: persona con hijos.
 - **[persona-en-practicas.md](docs/usuarios%20pilotos/persona-en-practicas.md)**: Perfil de usuario piloto: persona en prácticas.
 - **[plan-beneficiacion-usuarios-pilotos.md](docs/usuarios%20pilotos/plan-beneficiacion-usuarios-pilotos.md)**: Plan de beneficiación para usuarios piloto.
+>>>>>>> main

@@ -4,11 +4,14 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "items")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public abstract class Item {
 
     @Id
@@ -39,6 +42,7 @@ public abstract class Item {
     @JoinColumn(name = "owner_id")
     protected User owner;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<KitItem> kitItems = new ArrayList<>();
 

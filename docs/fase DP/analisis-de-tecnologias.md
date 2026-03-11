@@ -6,41 +6,52 @@
    1.1. [Spring Boot](#11-spring-boot)  
    1.2. [Django REST framework](#12-django-rest-framework)  
    1.3. [NestJS](#13-nestjs)  
+
 2. [Frontend](#2-frontend)  
    2.1. [Vue](#21-vue)  
    2.2. [React](#22-react)  
    2.3. [Angular](#23-angular)  
    2.4. [Flutter](#24-flutter)  
    2.5. [React Native](#25-react-native)  
+
 3. [Base de datos](#3-base-de-datos)  
    3.1. [MariaDB](#31-mariadb)  
    3.2. [PostgreSQL](#32-postgresql)  
+
 4. [Plataformas de despliegue](#4-plataformas-de-despliegue)  
    4.1. [Despliegue Backend](#41-despliegue-backend)  
        4.1.1. [Render](#411-render)  
        4.1.2. [Railway](#412-railway)  
+       4.1.3. [GCloud](#413-gcloud)  
    4.2. [Despliegue Frontend](#42-despliegue-frontend)  
        4.2.1. [Expo Application Services](#421-expo-application-services)  
+       4.2.2. [GCloud](#422-gcloud)  
    4.3. [Despliegue Base de Datos](#43-despliegue-base-de-datos)  
        4.3.1. [Neon.tech](#431-neontech)  
        4.3.2. [Supabase](#432-supabase)  
        4.3.3. [Render](#433-render)  
+       4.3.4. [GCloud](#434-gcloud)  
+
 5. [Pasarela de pago](#5-pasarela-de-pago)  
    5.1. [Stripe](#51-stripe)  
    5.2. [Braintree](#52-braintree)  
-6. [Tecnologías escogidas](#6-tecnologías-escogidas)  
+
+6. [Tecnologías escogidas](#6-tecnologias-escogidas)  
    6.1. [Desarrollo](#61-desarrollo)  
    6.2. [Despliegue](#62-despliegue)  
    6.3. [CI/CD](#63-cicd)  
-   6.4. [Gestión](#64-gestión)  
-   6.5. [Comunicación](#65-comunicación)  
+   6.4. [Gestión](#64-gestion)  
+   6.5. [Comunicación](#65-comunicacion)  
    6.6. [Inteligencia Artificial](#66-inteligencia-artificial)  
-7. [Análisis de viabilidad y cuota](#7-análisis-de-viabilidad-y-cuota)  
-   7.1. [Render](#71-render)  
-   7.2. [Neon](#72-neon)  
-   7.3. [Cloudinary](#73-cloudinary)  
-   7.4. [Conclusiones](#74-conclusiones)  
-8. [Análisis de riesgos y plan de contingencia](#8-análisis-de-riesgos-y-plan-de-contingencia)  
+   6.7. [Pasarela de pago](#67-pasarela-de-pago)  
+
+7. [Analisis de viabilidad y quota](#7-analisis-de-viabilidad-y-quota)  
+   7.1. [GCloud](#71-gcloud)  
+   7.2. [Cloudinary](#72-cloudinary)  
+   7.3. [Conclusiones](#73-conclusiones)  
+
+8. [Analisis de riesgos y plan de contingencia](#8-analisis-de-riesgos-y-plan-de-contingencia)  
+
 9. [Historial de versiones](#9-historial-de-versiones)
 
 
@@ -326,6 +337,28 @@ La elección de una plataforma de despliegue para el backend es fundamental para
 - Dependencia de proveedor externo.
 ---
 
+#### 4.1.3 GCloud 
+
+<div style="text-align: center;">
+  <img src="img/technologies/Google-Cloud-Logo.png" width="500" height="auto" style="object-fit: cover;" alt="Render logo">
+</div>
+
+**Documentación:**  
+🔗 https://docs.cloud.google.com/docs
+
+✅ **Ventajas:**
+- Todo el despliegue se hace en una sola plataforma
+- 300$ Gratuitos por parte de la universidad
+- Los miembros del equipo estan familiarizados con esta tecnología
+
+❌ **Desventajas:**
+- El despliegue de la base de datos no es gratuito
+- Se cobra por hora de uso
+- Los 300$ si no se gastan en 3 meses se pierden 
+---
+
+
+
 ### 4.2 Despliegue Frontend
 En cuanto al frontend, el despliegue en una arquitectura de React Native con TypeScript consiste en gestionar la compilación y distribución de los binarios para dispositivos móviles. Es imperativo elegir una plataforma de servicios de compilación porque centraliza la transformación del código TypeScript en una aplicación funcional para Android o iOS. Una infraestructura de despliegue adecuada permite que el equipo trabaje sobre una base de código tipada y coherente, facilitando que cualquier usuario o evaluador pueda instalar la aplicación en su terminal físico mediante un flujo de distribución controlado y profesional. Se proponen tres plataformas:
 
@@ -354,6 +387,26 @@ En cuanto al frontend, el despliegue en una arquitectura de React Native con Typ
 - Menor control sobre configuraciones nativas avanzadas.
 - Puede requerir configuración adicional para publicar en tiendas oficiales.
 ---
+
+#### 4.2.2 GCloud 
+
+<div style="text-align: center;">
+  <img src="img/technologies/Google-Cloud-Logo.png" width="500" height="auto" style="object-fit: cover;" alt="Render logo">
+</div>
+
+**Documentación:**  
+🔗 https://docs.cloud.google.com/docs
+
+✅ **Ventajas:**
+- Todo el despliegue se hace en una sola plataforma
+- 300$ Gratuitos por parte de la universidad
+- Los miembros del equipo estan familiarizados con esta tecnología
+
+❌ **Desventajas:**
+- La configuración de planes es complicada
+- Los 300$ si no se gastan en 3 meses se pierden 
+---
+
 
 ### 4.3 Despliegue Base de Datos
 Por último, desplegar la base de datos PostgreSQL de forma independiente es el pilar que garantiza la persistencia y la integridad de la información del proyecto. Se han analizado las siguientes opciones:
@@ -429,6 +482,27 @@ Por último, desplegar la base de datos PostgreSQL de forma independiente es el 
 - Dependencia de la infraestructura de Render.
 ---
 
+#### 4.3.4 GCloud 
+
+<div style="text-align: center;">
+  <img src="img/technologies/Google-Cloud-Logo.png" width="500" height="auto" style="object-fit: cover;" alt="Render logo">
+</div>
+
+**Documentación:**  
+🔗 https://docs.cloud.google.com/docs
+
+✅ **Ventajas:**
+- Todo el despliegue se hace en una sola plataforma
+- 300$ Gratuitos por parte de la universidad
+- Los miembros del equipo estan familiarizados con esta tecnología
+
+❌ **Desventajas:**
+- El despliegue de la base de datos no es gratuito
+- Se cobra por hora de uso
+- Los 300$ si no se gastan en 3 meses se pierden 
+---
+
+
 # 5. Pasarela de pago
 
 ### 5.1 Stripe
@@ -483,7 +557,7 @@ Tras realizar un análisis exhaustivo de ventajas y desventajas sobre todas las 
 - ☁️ **Cloudinary** para el almacenamiento de imagenes.
 
 ## 6.2 Despliegue
-- ☁️ **Render** para el despliegue del backend.
+- ☁️ **GCloud** para el despliegue del backend.
 - 📱 **Expo Application Services** para la compilación del apk e ipa, y despliegue de la página web.
 - 📲 **Uptodown, Aptoide, F-Droid** como tiendas para la descarga de la aplicación.
 - 🐳 **Docker** para los contenedores.
@@ -518,23 +592,28 @@ Tras realizar un análisis exhaustivo de ventajas y desventajas sobre todas las 
 
 # 7 Analisis de viabilidad y quota
 
-## 7.1 Render
+## 7.1 GCloud
 
-Para este analisis se tendran en cuenta 2 puntos de vista finalizacion de la quota por acciones de desarrollo y por uso de usuarios.
+GCloud ofrece a parte de un tier gratuito con ciertas limitaciones, tambien se pueden reclamar 300$ de forma gratuita para que si en cuyo caso nos pasamos del limite se cobren a los 300$, una vez finalizados si supondria un costo directo a nuestro equipo.  
 
-**desarrollo:** Build quota, el plan gratuito tiene una quota de 500 build/minutes, es decir que con cada despliegue se consume una cantidad de minutos para la construccion y compilacion de la aplicación, si tenemos en cuenta un despliegue aproximado entre 7 a 10 minutos para compilar el codigo significa que podemos hacer entre 50 a 70 despliegues.
+Por tanto haremos un estudio de las diferentes limitaciones que podemos llegar a tener tanto en el despliegue backend/frontend como en la base de datos
 
-Para el Sprint 1 se asignaron un total de 35 casos de uso, si desplegamos cada vez que se completa un caso de uso aun se esta muy lejos de alcanzar el minimo de 50, por lo tanto se puede concluir un bajo riesgo.
 
-**Por uso de usuario:** el plan gratuito ofrece una quota de 750 horas de uso. Teniendo en cuenta que tenemos una cantidad inicial de 22 usuarios piloto y suponiendo que cada uno use la aplicacion unas 5 horas por semana se contabilizan un total de 220 horas a lo largo de 2 semanas, incluso si duplicamos la cantidad de usuarios piloto llegamos a las 440 horas, bastante alejado de las 750 horas, por tanto tambien se puede concluir un bajo riesgo.
+**Backend/Frontend:** la aplicación será desplegada haciendo uso de la herramienta de cloud run, esta en el plan gratuito nos da las siguientes restricciones:
 
-## 7.2 Neon
+- 2 millones de solicitudes por mes: Actualmente contamos con un total de 22 usuarios piloto, si cada uno hiciera 50 peticiones todos los dias apenas llegariamos a unos 33000 peticiones al mes, incluso si duplicaramos o triplicaramos la cantidad de usuarios piloto estariamos muy lejos de llegar al limite.
 
-En este caso tenemos 2 peligros principales, por un lado la quota de horas de computo mensual y por otro de espacio
+- 360000 GB second de memoria: Esta es una quota calculada y se explica de la siguiente manera si el servicio usa 500 mb (0.5 GB) y se ejecuta durante 1 segundo consumimos 0.5GB second, con esto aclarado haremos algunas suposiciones, como por ejemplo que nuestro servicio usa 0.5 GB cada segundo, esto nos daria un total de 200 horas de ejecucion total, que aunque parezca poco debemos recordar que el servicio se apaga, e incluso aunque no lo hiciera, con solo usar 10$ de los 300$ que disponemos se suman un total de 4 millones de GB second que equivaldrian a unas 2.222 horas o 92 dias seguidos funcionando, por tanto aunque existe el riesgo de superar el limite gratuito, debido a que podemos hacer uso de creditos obtenidos gratuitamente tampoco se considera un riesgo real.
 
-**Espacio maximo:** en la version gratuita de neon nos permite una cantidad de 0.5GB de espacio, si utilizamos datos de chatgpt, un calculo de un objeto con 10 campos, puede pesar aproximadamente 0.71 KB por lo que podriamos tener un total de 720 mil filas de dicho objeto, teniendo en cuenta que los tipos de datos usados suelen tener menos de 10 campos, el tamaño de nuestra aplicacion y el numero de usuarios piloto el volumen de datos es mucho mayor del que podriamos utilizar
+- 180000 vCPU seconds: Esta es una quota similar a la anterior pero con CPU, debido a la dificultad de saber cuanto puede consumir en cpu nuestra aplicación por segundo se han utilizado datos horientativos obtenidos mediante inteligencia artificial para una aplicacion de nuestro tipo, para esto se hicieron calculos con 50-200 usuarios diarios y con 1000-5000 usuarios diarios, para el primer caso se estima un uso entre 20.000 a 80.000 vCPU second al mes y para el segundo caso se estima 200.000 - 800.000 al mes, quedando muy lejos de los 180.000 vCPU second que tenemos gratuitos al mes
 
-**Horas de procesamiento:** Neon permite un total de 100 CU-hrs o en otras palabras 100 horas de procesamiento, y segun datos extraidos de chatgpt, una consulta de 1000 filas tarda aproximadamente de 2-10 ms y una escritura de 1000 filas puede tardar de 20-50 ms para insertar datos o 1-2 s para update, incluso si cada uno de nuestros usuarios piloto realizara mas de mil updates y una gran cantidad de consultas tan grandes, aun estariamos lejos de gastar 100 horas en 2 semanas de sprint.
+**Base de datos:** en el caso de la base de datos utiliza otro tipo de servicio con otras quotas distintas, vabe recalcar que la base de datos no entra dentro del plan gratuito asi que se utilizaran parte de los 300$ para su uso.
+
+- CPU y memoria: Esta se cobra por la simple existencia de de la base de datos, siendo en la version db-1f-micro 0.0150$ la hora, este ofrece aproximadamente 0,6GB de RAM, esto significaria en un precio de 11.16$ al mes.
+
+- Almacenamiento: en el almacenamiento este cuesta  0.040$ por GB al mes, por lo que si alquilamos 25GB esto costaria es aproximadamente 1$ adicional al mes.
+
+Esto implica que en la base de datos no estaria costando aproximadamente 12.16$ al mes dejandonos lejos de los 300$ que disponemos, incluso si tenemos mas gastos por superacion de quotas un mes especifico aun asi seria muy complicado llegar a los 300$ en 3 meses.
 
 ## 7.3 Cloudinary
 
@@ -582,7 +661,8 @@ Como podemos observar es viable el uso de las herramientas seleccionadas en este
 | 2.1.0 | 18/02/2026 | Revision de Análisis de riesgos | Luis Emmanuel Chavez Malave |
 | 2.1.1 | 18/02/2026 | Corrección referencias obsoletas a imágenes | Rosa María Espinosa Martínez |
 | 3.0.0 | 25/02/2026 | se añadieron herramientas adicionales y el estudio de viabilidad de uso | Luis Emmanuel Chavez Malave |
+| 3.1.0 | 4/03/2026 | Se agrego Gcloud y se cambio la viabilidad de las herramientas escogidas | Luis Emmanuel Chavez Malave |
 ---
 **Redactado por:** Luis Emmanuel Chavez Malave
-**Fecha de redacción:** 25/02/2026  
-**Versión:** 3.0.0
+**Fecha de redacción:** 4/03/2026  
+**Versión:** 3.0.1

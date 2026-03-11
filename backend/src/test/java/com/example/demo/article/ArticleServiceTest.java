@@ -1,11 +1,17 @@
 package com.example.demo.article;
 
+import com.example.demo.dto.ReturnRequest;
+import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleStatus;
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.CategoryRepository;
+import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.ArticleService;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +38,12 @@ class ArticleServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private KitRepository kitRepository;
+
+    @Mock
+    private CategoryRepository categoryRepository;
 
     @InjectMocks
     private ArticleService articleService;
@@ -490,5 +502,162 @@ class ArticleServiceTest {
         assertThat(result.get(0).title()).isEqualTo("Artículo Reciente");
         assertThat(result.get(0).status()).isEqualTo("AVAILABLE");
         verify(articleRepository).findTop10ByCategoryIdOrderByIdDesc(1L);
+    }
+
+    //------------ Gestión de fin de alquiler ------------
+
+    private Kit makeActiveKit(User tenant) {
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setName("Kit Test");
+        kit.setStatus(KitStatus.ACTIVE);
+        kit.setTenant(tenant);
+        kit.setStartDate(LocalDate.now().minusDays(30));
+        kit.setEndDate(LocalDate.now());
+        return kit;
+    }
+
+    @Test
+    void processReturn_goodCondition_returnsDepositReturned() {
+        Article a = makeArticle(20L, ArticleStatus.RENTED);
+        a.setPricePerMonth(100.0);
+        User tenant = new User();
+        tenant.setId(2L);
+        tenant.setEmail("tenant@example.com");
+        Kit activeKit = makeActiveKit(tenant);
+
+        when(articleRepository.findById(20L)).thenReturn(Optional.of(a));
+        when(kitRepository.findActiveKitByItemId(20L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+
+        ReturnRequest request = new ReturnRequest("GOOD", "Todo perfecto");
+        ReturnResponse response = articleService.processReturn(20L, owner.getId(), request);
+
+        assertThat(response.resolution()).isEqualTo("DEPOSIT_RETURNED");
+        assertThat(response.amountProcessed()).isEqualTo(20.0); // 20% de 100
+        assertThat(response.articleId()).isEqualTo(20L);
+        assertThat(response.tenantEmail()).isEqualTo("tenant@example.com");
+        assertThat(response.message()).contains("buen estado");
+        verify(articleRepository).save(a);
+        assertThat(a.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
+    }
+
+    @Test
+    void processReturn_damagedCondition_retainsDeposit() {
+        Article a = makeArticle(21L, ArticleStatus.RENTED);
+        a.setPricePerMonth(200.0);
+        User tenant = new User();
+        tenant.setId(3L);
+        tenant.setEmail("damaged@example.com");
+        Kit activeKit = makeActiveKit(tenant);
+
+        when(articleRepository.findById(21L)).thenReturn(Optional.of(a));
+        when(kitRepository.findActiveKitByItemId(21L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+
+        ReturnRequest request = new ReturnRequest("DAMAGED", "Tiene arañazos");
+        ReturnResponse response = articleService.processReturn(21L, owner.getId(), request);
+
+        assertThat(response.resolution()).isEqualTo("DEPOSIT_RETAINED");
+        assertThat(response.amountProcessed()).isEqualTo(40.0); // 20% de 200
+        assertThat(response.articleId()).isEqualTo(21L);
+        assertThat(response.tenantEmail()).isEqualTo("damaged@example.com");
+        assertThat(response.message()).contains("daños");
+        verify(articleRepository).save(a);
+        assertThat(a.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
+    }
+
+    @Test
+    void processReturn_invalidCondition_throws() {
+        Article a = makeArticle(22L, ArticleStatus.RENTED);
+        User tenant = new User();
+        tenant.setId(4L);
+        tenant.setEmail("t@example.com");
+        Kit activeKit = makeActiveKit(tenant);
+
+        when(articleRepository.findById(22L)).thenReturn(Optional.of(a));
+        when(kitRepository.findActiveKitByItemId(22L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+
+        ReturnRequest request = new ReturnRequest("UNKNOWN", "");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> articleService.processReturn(22L, owner.getId(), request));
+        assertThat(ex.getMessage()).contains("Condición no válida");
+    }
+
+    @Test
+    void processReturn_articleNotFound_throws() {
+        when(articleRepository.findById(99L)).thenReturn(Optional.empty());
+
+        ReturnRequest request = new ReturnRequest("GOOD", "");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> articleService.processReturn(99L, owner.getId(), request));
+        assertThat(ex.getMessage()).contains("Article not found");
+    }
+
+    @Test
+    void processReturn_notOwner_throws() {
+        Article a = makeArticle(23L, ArticleStatus.RENTED);
+        User otherOwner = new User();
+        otherOwner.setId(999L);
+        a.setOwner(otherOwner);
+
+        when(articleRepository.findById(23L)).thenReturn(Optional.of(a));
+
+        ReturnRequest request = new ReturnRequest("GOOD", "");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> articleService.processReturn(23L, owner.getId(), request));
+        assertThat(ex.getMessage()).contains("Only the owner can confirm the return");
+    }
+
+    @Test
+    void processReturn_articleNotRented_throws() {
+        Article a = makeArticle(24L, ArticleStatus.AVAILABLE);
+
+        when(articleRepository.findById(24L)).thenReturn(Optional.of(a));
+
+        ReturnRequest request = new ReturnRequest("GOOD", "");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> articleService.processReturn(24L, owner.getId(), request));
+        assertThat(ex.getMessage()).contains("not currently rented");
+    }
+
+    @Test
+    void processReturn_noActiveKit_throws() {
+        Article a = makeArticle(25L, ArticleStatus.RENTED);
+
+        when(articleRepository.findById(25L)).thenReturn(Optional.of(a));
+        when(kitRepository.findActiveKitByItemId(25L, KitStatus.ACTIVE)).thenReturn(Optional.empty());
+
+        ReturnRequest request = new ReturnRequest("GOOD", "");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> articleService.processReturn(25L, owner.getId(), request));
+        assertThat(ex.getMessage()).contains("No active Kit found");
+    }
+
+    @Test
+    void processReturn_goodCondition_setsArticleAvailableAndClearsUntil() {
+        Article a = makeArticle(26L, ArticleStatus.RENTED);
+        a.setPricePerMonth(50.0);
+        a.setAvailableUntil(LocalDate.now().plusDays(10));
+        User tenant = new User();
+        tenant.setId(5L);
+        tenant.setEmail("clean@example.com");
+        Kit activeKit = makeActiveKit(tenant);
+
+        when(articleRepository.findById(26L)).thenReturn(Optional.of(a));
+        when(kitRepository.findActiveKitByItemId(26L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+
+        ReturnRequest request = new ReturnRequest("GOOD", "");
+        articleService.processReturn(26L, owner.getId(), request);
+
+        assertThat(a.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
+        assertThat(a.getAvailableUntil()).isNull();
+        verify(articleRepository).save(a);
     }
 }
