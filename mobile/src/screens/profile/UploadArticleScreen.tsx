@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   scrollContent: {
     padding: Spacing.lg,
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   optional: {
     fontSize: 13,
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
   },
   categorySelectorText: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   categoryDropdown: {
     backgroundColor: Colors.backgroundWhite,
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
   },
   categoryOptionText: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   categoryOptionTextSelected: {
     fontWeight: '700',
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
   },
   dateSelectorText: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
     flex: 1,
   },
   dateRightIcons: {
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     height: 180,
     width: '100%',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundWhite,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.border,
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.border,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundWhite,
   },
   conditionChipActive: {
     borderColor: Colors.primary,

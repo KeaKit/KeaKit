@@ -8,7 +8,6 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Pressable,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -17,6 +16,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getMyServices, deleteService, getServiceById } from '../../services/servicesService';
 import { RootStackParamList, Service, ServiceStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
+import { useNotification } from '../../components/NotificationContext';
+import { ConfirmModal } from '../../components/ConfirmModal'; // 👈 Importar el modal
 
 type MyServicesNav = NativeStackNavigationProp<RootStackParamList, 'MyServices'>;
 type FilterType = 'ALL' | 'ACTIVE' | 'UNAVAILABLE' | 'DRAFT';
@@ -24,6 +25,7 @@ type FilterType = 'ALL' | 'ACTIVE' | 'UNAVAILABLE' | 'DRAFT';
 const MyServicesScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<MyServicesNav>();
+  const { showNotification } = useNotification();
 
   const [services, setServices] = useState<Service[]>([]);
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
@@ -31,6 +33,10 @@ const MyServicesScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('ALL');
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  
+  // Estados para el modal de confirmación
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -48,6 +54,7 @@ const MyServicesScreen: React.FC = () => {
           setFilteredServices(applyFilter(filter, data));
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Error al cargar servicios');
+          showNotification('Error al cargar los servicios', 'error');
         } finally {
           setLoading(false);
         }
@@ -74,44 +81,50 @@ const MyServicesScreen: React.FC = () => {
       const full = await getServiceById(item.id, user.token);
       navigation.navigate('EditService', { service: full });
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'No se pudo cargar el servicio');
+      showNotification(err.message || 'No se pudo cargar el servicio', 'error');
     }
   };
 
-  const handleDelete = (item: Service) => {
+  const handleDeletePress = (item: Service) => {
     if (item.status === 'UNAVAILABLE') {
-      Alert.alert(
-        'No se puede eliminar',
-        'Este servicio está actualmente alquilado. Espera a que finalice el alquiler para eliminarlo.'
+      showNotification(
+        'Este servicio está actualmente alquilado. Espera a que finalice el alquiler para eliminarlo.',
+        'error'
       );
       return;
     }
+    
+    // Mostrar modal de confirmación
+    setServiceToDelete(item);
+    setConfirmModalVisible(true);
+  };
 
-    Alert.alert(
-      'Confirmar eliminación',
-      `¿Seguro que quieres eliminar "${item.title}"? Esta acción no se puede deshacer.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            if (!user) return;
-            try {
-              setDeletingId(item.id);
-              await deleteService(item.id, user.id, user.token);
-              const updated = services.filter(s => s.id !== item.id);
-              setServices(updated);
-              setFilteredServices(applyFilter(filter, updated));
-            } catch (err) {
-              Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo eliminar el servicio');
-            } finally {
-              setDeletingId(null);
-            }
-          },
-        },
-      ]
-    );
+  const handleConfirmDelete = async () => {
+    if (!user || !serviceToDelete) return;
+    
+    setConfirmModalVisible(false);
+    setDeletingId(serviceToDelete.id);
+    
+    try {
+      await deleteService(serviceToDelete.id, user.id, user.token);
+      const updated = services.filter(s => s.id !== serviceToDelete.id);
+      setServices(updated);
+      setFilteredServices(applyFilter(filter, updated));
+      showNotification('Servicio eliminado correctamente', 'success');
+    } catch (err) {
+      showNotification(
+        err instanceof Error ? err.message : 'No se pudo eliminar el servicio',
+        'error'
+      );
+    } finally {
+      setDeletingId(null);
+      setServiceToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmModalVisible(false);
+    setServiceToDelete(null);
   };
 
   const formatDate = (dateString: string | null): string => {
@@ -198,7 +211,7 @@ const MyServicesScreen: React.FC = () => {
 
           <Pressable
             style={styles.deleteButton}
-            onPress={() => handleDelete(item)}
+            onPress={() => handleDeletePress(item)}
             disabled={isDeleting}
           >
             {isDeleting
@@ -287,10 +300,23 @@ const MyServicesScreen: React.FC = () => {
       >
         <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
+
+      {/* Modal de confirmación */}
+      <ConfirmModal
+        visible={confirmModalVisible}
+        title="Confirmar eliminación"
+        message={`¿Seguro que quieres eliminar "${serviceToDelete?.title}"? Esta acción no se puede deshacer.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        confirmStyle="destructive"
+      />
     </SafeAreaView>
   );
 };
 
+// Los estilos se mantienen igual
 const styles = StyleSheet.create({
   centerContainer: {
     flex: 1,
@@ -327,7 +353,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   headerRight: {
     width: 40,
@@ -392,7 +418,7 @@ const styles = StyleSheet.create({
   serviceTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
     marginBottom: Spacing.xs,
   },
   detailRow: {

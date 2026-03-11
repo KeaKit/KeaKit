@@ -16,6 +16,7 @@ import { DatePickerModal } from 'react-native-paper-dates';
 import { es, registerTranslation } from 'react-native-paper-dates';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
+import { useNotification } from '../../components/NotificationContext'; // 👈 Importar
 
 registerTranslation('es', es);
 
@@ -49,6 +50,7 @@ const EditServiceScreen: React.FC = () => {
   const route = useRoute<EditServiceRoute>();
   const { user } = useAuth();
   const { service } = route.params;
+  const { showNotification } = useNotification(); // 👈 Hook de notificaciones
 
   const originalCity = service.city ?? '';
 
@@ -86,7 +88,7 @@ const EditServiceScreen: React.FC = () => {
         const data = await fetchAllCategories(user.token);
         setDbCategories(data.filter(c => c.status === 'ACTIVE'));
       } catch {
-        Alert.alert('Aviso', 'No se pudieron cargar las categorías del servidor.');
+        showNotification('No se pudieron cargar las categorías', 'error'); // 👈 Notificación
       } finally {
         setLoadingCategories(false);
       }
@@ -131,13 +133,19 @@ const EditServiceScreen: React.FC = () => {
     }
 
     setErrors(newErrors);
+    
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      showNotification(firstError, 'error');
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validate()) return;
     if (!user) {
-      Alert.alert('Error', 'Debes estar autenticado para editar un servicio.');
+      showNotification('Debes iniciar sesión para editar un servicio', 'error'); // 👈 Notificación
       return;
     }
 
@@ -155,9 +163,15 @@ const EditServiceScreen: React.FC = () => {
       };
 
       await updateService(service.id, user.id, user.token, payload);
+      
+      showNotification('Servicio actualizado correctamente', 'success'); // 👈 Notificación éxito
       navigation.goBack();
+      
     } catch (error: any) {
-      Alert.alert('Error', error.message ?? 'No se pudo actualizar el servicio');
+      showNotification(
+        error.message ?? 'Error al actualizar el servicio', 
+        'error'
+      );
     } finally {
       setLoading(false);
     }
@@ -416,12 +430,11 @@ const EditServiceScreen: React.FC = () => {
   );
 };
 
-// Reutilizamos los mismos estilos de PromoteServiceScreen
 const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   scrollContent: {
     padding: Spacing.lg,
@@ -447,7 +460,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   optional: {
     fontSize: 13,
@@ -477,7 +490,7 @@ const styles = StyleSheet.create({
   cityReadOnly: {
     flex: 1,
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   restoreButton: {
     marginLeft: Spacing.sm,
@@ -489,7 +502,7 @@ const styles = StyleSheet.create({
   },
   categorySelectorText: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   categoryDropdown: {
     backgroundColor: Colors.backgroundWhite,
@@ -512,7 +525,7 @@ const styles = StyleSheet.create({
   },
   categoryOptionText: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   categoryOptionTextSelected: {
     fontWeight: '700',
@@ -531,7 +544,7 @@ const styles = StyleSheet.create({
   },
   dateSelectorText: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
     flex: 1,
   },
   submitContent: {
@@ -544,7 +557,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Componente Field reutilizado
 const Field: React.FC<{
   label: string;
   value: string;
