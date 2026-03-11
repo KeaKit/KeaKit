@@ -4,40 +4,41 @@
  */
 
 export const Colors = {
-  // ─── Colores Primarios (Oficiales) ─────────────────────────────
-  primary: '#2d6e91',           // Azul oscuro (Títulos, botones, énfasis)
-  background: '#fcfff5',        // Crema / Blanco roto (Fondo general de la app)
-  textPrimary: '#595959',       // Gris oscuro (Textos principales para legibilidad)
+  primary: '#1A3A52', 
+  primaryLight: '#2C5F7C',     
+  primaryDark: '#0F2534',  
 
-  // ─── Colores Secundarios (Apoyo visual y acentos) ──────────────
-  secondaryLavender: '#d6d0f8', // Lila claro
-  secondaryBlue: '#8ec2db',     // Azul claro
-  secondaryMint: '#c3f1d1',     // Verde menta
+  primaryHome: '#2d6e91',           
+  backgroundHome: '#fcfff5',        
+  textPrimaryHome: '#595959', 
 
-  // ─── Colores de fondo derivados ────────────────────────────────
-  backgroundWhite: '#FFFFFF',   // Blanco puro (Para las tarjetas, contrasta genial con el crema)
-  backgroundCard: '#FFFFFF',    // Fondo de tarjetas
+  brandBeige: '#F5EFE7',        // Fondo logo
+  brandBorder: '#D4C5B9',       // Borde logo
+  brandIcon: '#8B7355',         // Color icono logo
 
-  // ─── Colores de texto de apoyo ─────────────────────────────────
-  textSecondary: '#7A7A7A',     // Gris un poco más claro para subtítulos
-  textLight: '#9CA3AF',         // Texto claro / Placeholders
-  textWhite: '#FFFFFF',         // Texto blanco (sobre fondos oscuros)
-  textMuted: '#D1D5DB',         // Texto muy apagado (disable)
+  secondaryLavender: '#d6d0f8',
+  secondaryBlue: '#8ec2db',
+  secondaryMint: '#c3f1d1',
 
-  // ─── Colores de borde ──────────────────────────────────────────
-  border: '#E8ECF1',            // Borde principal
-  borderLight: '#F3F4F6',       // Borde claro
-  borderPrimary: 'rgba(45, 110, 145, 0.15)', // Borde sutil basado en tu azul
+  backgroundWhite: '#FFFFFF',   
+  backgroundCard: '#FFFFFF',    
 
-  // ─── Colores de estado ─────────────────────────────────────────
-  success: '#10B981',           // Verde éxito
-  error: '#EF4444',             // Rojo error
-  warning: '#F59E0B',           // Amarillo advertencia
-  info: '#3B82F6',              // Azul información
+  textSecondary: '#7A7A7A',
+  textLight: '#9CA3AF', 
+  textWhite: '#FFFFFF', 
+  textMuted: '#D1D5DB', 
 
-  // ─── Colores de overlay/sombra ─────────────────────────────────
-  overlay: 'rgba(45, 110, 145, 0.4)', // Overlay tintado ligeramente con tu azul
-  shadowColor: '#2d6e91',       // Sombras basadas en tu azul oscuro (queda más premium que negro puro)
+  border: '#E8ECF1',            
+  borderLight: '#F3F4F6',
+  borderPrimary: 'rgba(45, 110, 145, 0.15)',
+
+  success: '#10B981',     
+  error: '#EF4444',           
+  warning: '#F59E0B',       
+  info: '#3B82F6',  
+
+  overlay: 'rgba(45, 110, 145, 0.4)',
+  shadowColor: '#2d6e91',  
 } as const;
 
 export const Spacing = {

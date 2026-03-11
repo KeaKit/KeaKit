@@ -16,15 +16,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, RentedItemResponse, Article } from '../../types';
-import { Colors } from '../../styles'; // Asumiendo que has corregido el archivo de colores
+import { Colors } from '../../styles';
 import { getWalletByUserId } from '../../services/walletService';
 import { getRentedItems } from '../../services/incidentService';
 import { getMyArticles } from '../../services/articleService';
 import ProfileMenuModal from './ProfileMenuModal';
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-
-const { width } = Dimensions.get('window');
 
 // ─── Animated list item wrapper ──────────────────────────────────────────────
 const FadeInItem: React.FC<{ delay?: number; children: React.ReactNode }> = ({
@@ -177,7 +175,7 @@ const HomeScreen: React.FC = () => {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryHome} />
         }
       >
         { /* Wallet */}
@@ -187,7 +185,7 @@ const HomeScreen: React.FC = () => {
             onPress={() => console.log('Navegar a futura pantalla de Wallet detalles')}
           >
             <LinearGradient
-              colors={[Colors.primary, '#1e526e']}
+              colors={[Colors.primaryHome, '#1e526e']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={[styles.card, styles.cardPrimary, styles.touchableCardLayout]}
@@ -222,7 +220,7 @@ const HomeScreen: React.FC = () => {
               onPress={() => navigation.navigate('MyKits')}
             >
               <View style={[styles.largeCircleGraphic, { backgroundColor: 'rgba(255,255,255,0.7)' }]}>
-                <Ionicons name="layers" size={32} color={Colors.primary} />
+                <Ionicons name="layers" size={32} color={Colors.primaryHome} />
               </View>
               <View style={styles.cardHorizontalText}>
                   {loadingRentals ? (
@@ -232,7 +230,7 @@ const HomeScreen: React.FC = () => {
                 )}
                 <Text style={styles.cardSubtitleDark}>artículos en uso</Text>
               </View>
-              <Ionicons name="chevron-forward" size={24} color={Colors.primary} />
+              <Ionicons name="chevron-forward" size={24} color={Colors.primaryHome} />
             </TouchableOpacity>
           </FadeInItem>
         )}
@@ -243,7 +241,7 @@ const HomeScreen: React.FC = () => {
             {/* Create kit card */}
             <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryBlue }]}>
               <View style={[styles.circleGraphic, { backgroundColor: 'rgba(255,255,255,0.7)' }]}>
-                <Ionicons name="cube" size={28} color={Colors.primary} />
+                <Ionicons name="cube" size={28} color={Colors.primaryHome} />
               </View>
               <View style={styles.gridCardContent}>
                 <Text style={styles.gridCardValueDark}>Kit</Text>
@@ -260,7 +258,7 @@ const HomeScreen: React.FC = () => {
             {/* Upload Article card */}
             <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryMint }]}>
               <View style={[styles.circleGraphic, { backgroundColor: 'rgba(255,255,255,0.7)' }]}>
-                <Ionicons name="bag" size={28} color={Colors.primary} />
+                <Ionicons name="bag" size={28} color={Colors.primaryHome} />
               </View>
               <View style={styles.gridCardContent}>
                 <Text style={styles.gridCardValueDark}>Artículo</Text>
@@ -389,7 +387,7 @@ const styles = StyleSheet.create({
   headerGreeting: {
     fontSize: 32,
     fontWeight: '800',
-    color: Colors.primary, // Texto azul oscuro
+    color: Colors.primaryHome, // Texto azul oscuro
     letterSpacing: -0.5,
   },
   avatarBtn: {
@@ -400,7 +398,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.primary, // Círculo azul oscuro
+    backgroundColor: Colors.primaryHome, // Círculo azul oscuro
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -480,19 +478,19 @@ const styles = StyleSheet.create({
   hugeValueDark: {
     fontSize: 36,
     fontWeight: '800',
-    color: Colors.primary, // Texto azul oscuro
+    color: Colors.primaryHome, // Texto azul oscuro
     letterSpacing: -1,
     marginBottom: 2,
   },
   cardTitleDark: {
     fontSize: 18,
     fontWeight: '800',
-    color: Colors.primary,
+    color: Colors.primaryHome,
     letterSpacing: -0.3,
   },
   cardSubtitleDark: {
     fontSize: 14,
-    color: Colors.textPrimary, // Texto gris oscuro
+    color: Colors.textPrimaryHome, // Texto gris oscuro
     fontWeight: '500',
   },
 
@@ -541,12 +539,12 @@ const styles = StyleSheet.create({
   gridCardValueDark: {
     fontSize: 22,
     fontWeight: '800',
-    color: Colors.primary,
+    color: Colors.primaryHome,
     marginBottom: 2,
   },
   gridCardLabelDark: {
     fontSize: 12,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
     textAlign: 'center',
     paddingHorizontal: 4,
   },
@@ -554,7 +552,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 10,
     borderRadius: 999, // Botón pastilla relleno
-    backgroundColor: Colors.primary, // Botón azul oscuro
+    backgroundColor: Colors.primaryHome, // Botón azul oscuro
     alignItems: 'center',
   },
   pillButtonTextLight: {
@@ -586,11 +584,11 @@ const styles = StyleSheet.create({
   compactRowTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.primary,
+    color: Colors.primaryHome,
   },
   compactRowSubtitle: {
     fontSize: 13,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   compactRowRight: {
     flexDirection: 'row',
@@ -600,7 +598,7 @@ const styles = StyleSheet.create({
   compactRowPrice: {
     fontSize: 15,
     fontWeight: '800',
-    color: Colors.primary,
+    color: Colors.primaryHome,
   },
   compactRowDot: {
     width: 8,
@@ -622,7 +620,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: Colors.primary, // Botón azul oscuro ancho
+    backgroundColor: Colors.primaryHome, // Botón azul oscuro ancho
     alignItems: 'center',
   },
   moreBtnTextLabelLight: {
