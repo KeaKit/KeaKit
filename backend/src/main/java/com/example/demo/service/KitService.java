@@ -120,27 +120,28 @@ public class KitService {
 
         Kit savedKit = kitRepository.save(kit);
 
-        for (ItemMemento snapshot : snapshots) {
-            User owner = snapshot.getOwnerAtRental();
-            if (owner != null) {
+        if (status == KitStatus.PAID || status == KitStatus.ACTIVE) {
+            for (ItemMemento snapshot : snapshots) {
+                User owner = snapshot.getOwnerAtRental();
+                if (owner != null) {
+                    Optional<Wallet> ownerWallet = walletRepository.findByUserId(owner.getId());
+                    if (ownerWallet.isEmpty()) {
+                        throw new RuntimeException("Owner wallet not found for user: " + owner.getId());
+                    }
 
-                Optional<Wallet> ownerWallet = walletRepository.findByUserId(owner.getId());
-                if (ownerWallet.isEmpty()) {
-                    throw new RuntimeException("Owner wallet not found for user: " + owner.getId());
+                    Wallet targetWallet = ownerWallet.get();
+
+                    double price = snapshot.getPriceAtRental() != null ? snapshot.getPriceAtRental() : 0.0;
+                    int qty = snapshot.getSelectedUnits() != null ? snapshot.getSelectedUnits() : 0;
+                    double totalAmount = price * qty;
+
+                    Transaction transaction = new Transaction();
+                    transaction.setAmount(totalAmount);
+                    transaction.setType(TransactionType.PAYOUT);
+                    transaction.setDestinationWallet(targetWallet);
+
+                    transactionRepository.save(transaction);
                 }
-
-                Wallet targetWallet = ownerWallet.get();
-
-                double price = snapshot.getPriceAtRental() != null ? snapshot.getPriceAtRental() : 0.0;
-                int qty = snapshot.getSelectedUnits() != null ? snapshot.getSelectedUnits() : 0;
-                double totalAmount = price * qty;
-
-                Transaction transaction = new Transaction();
-                transaction.setAmount(totalAmount);
-                transaction.setType(TransactionType.PAYOUT);
-                transaction.setDestinationWallet(targetWallet);
-
-                transactionRepository.save(transaction);
             }
         }
         return savedKit;

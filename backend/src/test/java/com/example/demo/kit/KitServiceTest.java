@@ -60,7 +60,7 @@ public class KitServiceTest {
     }
 
     @Test
-    void createKit_withoutStatus_defaultsToPending() {
+    void createKit_withoutStatus_defaultsToDraft() {
         User tenant = createTestUser(1L, "Juan");
         KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid", 
             LocalDate.now(), LocalDate.now().plusDays(7), null, null, null, tenant.getId(), List.of());
@@ -69,14 +69,14 @@ public class KitServiceTest {
 
         Kit res = kitService.create(req);
 
-        assertEquals(KitStatus.PENDING, res.getStatus());
+        assertEquals(KitStatus.DRAFT, res.getStatus());
     }
 
     @Test
     void updateKit_changeStatus_success() {
         Kit existing = new Kit();
         existing.setId(1L);
-        existing.setStatus(KitStatus.PENDING);
+        existing.setStatus(KitStatus.DRAFT);
 
         Kit update = new Kit();
         update.setStatus(KitStatus.ACTIVE);
@@ -140,10 +140,10 @@ public class KitServiceTest {
     }
 
     @Test
-    void confirmKitStatus_whenPendingValidation_changesToActive() {
+    void confirmKitStatus_when_paid_changesToActive() {
         Kit kit = new Kit();
         kit.setId(1L);
-        kit.setStatus(KitStatus.PENDING_VALIDATION);
+        kit.setStatus(KitStatus.PAID);
 
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
         when(kitRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));

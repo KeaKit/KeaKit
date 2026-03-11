@@ -70,18 +70,14 @@ const MyKitsScreen: React.FC = () => {
     switch (status) {
       case KitStatus.DRAFT:
         return { label: "Modo borrador", color: "#14fdfdff" };
-      case KitStatus.PENDING:
-        return { label: "Pendiente de pago", color: "#fd7e14" };
       case KitStatus.PAID:
         return { label: "Pagado", color: "#17a2b8" };
-      case KitStatus.PENDING_VALIDATION:
-        return { label: "Pendiente de validación", color: "#ffc107" };
       case KitStatus.ACTIVE:
         return { label: "Activo", color: "#28a745" };
-      case KitStatus.COMPLETED:
-        return { label: "Completado", color: "#6c757d" };
       case KitStatus.CANCELLED:
         return { label: "Cancelado", color: "#dc3545" };
+      case KitStatus.FINISHED:
+        return { label: "Finalizado", color: "#6c757d" };
 
       default:
         return { label: status, color: "#999" };

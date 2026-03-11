@@ -19,12 +19,13 @@ import { RootStackParamList, KitResponse, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { useAuth } from '../../context/AuthContext';
 import { API_ROUTES } from "../../config/api";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
 
 const KitDetailScreen: React.FC = () => {
   const route = useRoute<KitDetailRouteProp>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "KitDetail">>();
   const { user } = useAuth();
   const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
   const BASE = `http://${host}:8080`;
@@ -179,7 +180,7 @@ const KitDetailScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle del Kit</Text>
-        {kit.status === KitStatus.PENDING_VALIDATION && (
+        {kit.status === KitStatus.PAID && (
         <TouchableOpacity 
           onPress={handleReportProblem} 
           style={styles.reportButton}
@@ -187,7 +188,7 @@ const KitDetailScreen: React.FC = () => {
           <Ionicons name="flag-outline" size={22} color="#FF3B30" />
         </TouchableOpacity>
         )}
-        {kit.status !== KitStatus.PENDING_VALIDATION && (
+        {kit.status !== KitStatus.PAID && (
           <View style={{ width: 40 }} />
         )}
       </View>
@@ -249,23 +250,11 @@ const KitDetailScreen: React.FC = () => {
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
             style={styles.confirmButton}
-            onPress={async () => {
-              try {
-                const res = await fetch(API_ROUTES.KIT_MARK_PAID(kit.id), {
-                  method: "PATCH",
-                });
-                if (!res.ok) throw new Error("No se pudo pagar el kit");
-                Alert.alert("Éxito", "Kit pagado correctamente.");
-                navigation.goBack();
-              } catch (e) {
-                Alert.alert("Error", "No se pudo pagar el kit.");
-              }
-            }}
+            onPress={() => navigation.navigate("Checkout", kit)}
           >
-            <Text style={styles.confirmButtonText}>Pagar ahora</Text>
+            <Text style={styles.confirmButtonText}>Realizar pedido</Text>
           </TouchableOpacity>
         )}
-
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
             style={styles.deleteButton}
@@ -282,22 +271,15 @@ const KitDetailScreen: React.FC = () => {
               }
             }}
           >
-            <Text style={styles.deleteButtonText}>Cancelar borrador</Text>
+            <Text style={styles.deleteButtonText}>Eliminar kit</Text>
           </TouchableOpacity>
         )}
 
 
-        {kit.status === KitStatus.PENDING_VALIDATION && (
+        {kit.status === KitStatus.PAID && (
           <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmKit}>
             <Ionicons name="checkmark-done-outline" size={20} color="#04ac20" />
             <Text style={styles.confirmButtonText}>Confirmar recepción</Text>
-          </TouchableOpacity>
-        )}
-
-        {kit.status === KitStatus.DRAFT && (
-          <TouchableOpacity style={styles.deleteButton} onPress={handleCancelKit}>
-            <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-            <Text style={styles.deleteButtonText}>Cancelar borrador</Text>
           </TouchableOpacity>
         )}
 

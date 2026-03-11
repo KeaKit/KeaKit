@@ -79,13 +79,13 @@ public class KitControllerTest {
     @Test
     void getKit_success_returnsStatus() throws Exception {
         Kit kit = new Kit();
-        kit.setStatus(KitStatus.COMPLETED);
+        kit.setStatus(KitStatus.FINISHED);
 
         when(kitService.findById(1L)).thenReturn(new KitResponse(kit));
 
         mockMvc.perform(get("/api/kits/1"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("COMPLETED"));
+            .andExpect(jsonPath("$.status").value("FINISHED"));
     }
 
     @Test
