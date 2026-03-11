@@ -2,7 +2,11 @@ package com.example.demo.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 @Entity
 @Table(name = "ratings", uniqueConstraints = {
@@ -14,6 +18,22 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    @Min(1)
+    @Max(5)
+    private Integer score;
+
+    @Column(length = 1000)
+    private String comment;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RatingType type;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    
     @ManyToOne
     @JoinColumn(name = "reviewer_id", nullable = false)
     private User reviewer;
@@ -25,19 +45,6 @@ public class Rating {
     @ManyToOne
     @JoinColumn(name = "kit_id", nullable = false)
     private Kit kit;
-
-    @Column(nullable = false)
-    private Integer score;
-
-    @Column(length = 1000)
-    private String comment;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private RatingType type;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
 
     public Rating() {}
 
