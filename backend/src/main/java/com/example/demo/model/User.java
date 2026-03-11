@@ -2,6 +2,9 @@ package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "users")
@@ -13,9 +16,11 @@ public class User {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @Email
     private String email;
 
     @Column(nullable = false)
+    @Size(min = 6)
     private String password;
 
     @Column(nullable = false)
@@ -26,6 +31,7 @@ public class User {
     private UserRole role;
 
     @Column(nullable = false)
+    @Pattern(regexp = "^[0-9\\-\\+]{9,15}$", message = "Phone number must be valid")
     private String phone;
 
     @Column(nullable = false)
@@ -36,6 +42,10 @@ public class User {
 
     @Column(nullable = false)
     private String country;
+
+    @Column(nullable = false)
+    private boolean isPilotUser = false;
+
 
     public User() {}
 

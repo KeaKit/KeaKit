@@ -18,6 +18,7 @@
     "@stripe/stripe-react-native": "^0.59.1",
     "expo": "~54.0.33",
     "expo-image-picker": "^55.0.10",
+    "expo-linear-gradient": "^55.0.8",
     "expo-status-bar": "~3.0.9",
     "is-plain-obj": "^4.1.0",
     "lucide-react-native": "^0.577.0",

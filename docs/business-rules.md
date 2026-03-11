@@ -102,10 +102,13 @@
 
 | ID | Regla de Negocio |
 |----|------------------|
-| RN-SRV-01 | Un servicio es un subtipo de ítem (Item) que representa un servicio ofrecido por un propietario. |
-| RN-SRV-02 | Un servicio comparte las mismas reglas de validación base que un ítem: título obligatorio, descripción obligatoria, categoría obligatoria y propietario obligatorio. |
-| RN-SRV-03 | Un servicio no tiene estado de alquiler (`AVAILABLE`/`RENTED`/`INACTIVE`) como los artículos; el estado se trata como `null` y se normaliza a `"AVAILABLE"` en el catálogo. |
-| RN-SRV-04 | Los servicios no tienen imagen asociada. |
+| RN-SRV-01 | Un servicio (ServiceItem) es un subtipo de ítem (Item) que representa un servicio ofrecido por un propietario. |
+| RN-SRV-02 | Un servicio comparte las mismas reglas de validación base que un ítem: título obligatorio, descripción obligatoria, categoría obligatoria y propietario obligatorio. Además para crear o actualizar un servicio, son obligatorios: Título, Ciudad, Precio Mensual (debe ser positivo) y un rango de fechas (availableFrom / availableUntil).|
+| RN-SRV-03 | Los servicios utilizan el enumerado ServiceStatus con tres estados: `DRAFT (Borrador)`, `ACTIVE (Disponible)` y `UNAVAILABLE (Alquilado)`. |
+| RN-SRV-04 | Un servicio no puede ser modificado ni eliminado si su estado es UNAVAILABLE (está actualmente alquilado). |
+|RN-SRV-05|Si la fecha actual supera a availableUntil, el servicio cambia automáticamente a estado DRAFT (vía proceso programado).|
+|RN-SRV-06|Al solicitar un servicio, el estado cambia a UNAVAILABLE. Al liberarlo, vuelve a ACTIVE (o DRAFT si ya expiró por fecha).|
+|RN-SRV-07|Solo el propietario autenticado del servicio tiene permisos para realizar operaciones de creación, actualización y eliminación.|
 
 ### 1.5 Kits (Proceso de Alquiler)
 
@@ -994,10 +997,13 @@ La siguiente matriz relaciona cada Regla de Negocio con las Historias de Usuario
 | RN-ART-25 | HU-ARRENDADOR-04, HU-ARRENDADOR-19 |
 | RN-ART-26 | HU-ARRENDADOR-04, HU-ARRENDADOR-20 |
 | RN-ART-27 | HU-ARRENDADOR-04, HU-ARRENDADOR-21 |
-| RN-SRV-01 | HU-ARRENDADOR-01 |
-| RN-SRV-02 | HU-ARRENDADOR-01 |
-| RN-SRV-03 | HU-ARRENDADOR-01 |
-| RN-SRV-04 | HU-ARRENDADOR-01 |
+| RN-SRV-01 | HU-ARRENDADOR-01, HU-ARRENDADOR-11 |
+| RN-SRV-02 | HU-ARRENDADOR-11, HU-ARRENDADOR-17 |
+| RN-SRV-03 | HU-ARRENDADOR-20, HU-ARRENDATARIO-06, HU-ARRENDATARIO-26 |
+| RN-SRV-04 | HU-ARRENDADOR-07, HU-ARRENDADOR-08 |
+| RN-SRV-05 | HU-ARRENDADOR-18, HU-ARRENDADOR-19|
+| RN-SRV-06	| HU-ARRENDATARIO-07, HU-ARRENDATARIO-17, HU-ARRENDATARIO-31 |
+| RN-SRV-07	| HU-ARRENDADOR-07, HU-ARRENDADOR-08, HU-ARRENDADOR-11|
 | RN-KIT-01 | HU-ARRENDATARIO-04 |
 | RN-KIT-02 | HU-ARRENDATARIO-04 |
 | RN-KIT-03 | HU-ARRENDATARIO-04, HU-ARRENDATARIO-05 |
@@ -1140,9 +1146,9 @@ La siguiente matriz relaciona cada Regla de Negocio con las Historias de Usuario
 | Versión | Fecha       | Descripción                                   | Autor(es)               |
 |---------|-------------|-----------------------------------------------|-------------------------|
 | 1.0.0   | 06/03/2026  | Primera versión del documento de Reglas de Negocio | Samuel Tamayo Balogh |
-
+| 1.1.0   | 11/03/2026  | Actualización de reglas de Servicios (RN-SRV) y sincronización de la Matriz de Trazabilidad | Paula Rosa González Páez |
 ---
 
-**Redactado por:** Samuel Tamayo Balogh  
-**Fecha de redacción:** 06/03/2026  
+**Redactado por:** Samuel Tamayo Balogh, Paula Rosa González Páez  
+**Fecha de redacción:** 11/03/2026  
 **Versión:** 1.0.0

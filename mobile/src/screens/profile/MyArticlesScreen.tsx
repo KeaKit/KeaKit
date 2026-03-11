@@ -84,7 +84,6 @@ const MyArticlesScreen: React.FC = () => {
       const full = await getArticleById(item.id, user.token);
       navigation.navigate('EditArticle', { article: full });
     } catch (err: any) {
-      console.log('Error en handleEdit:', err);
       Alert.alert('Error', err.message || 'No se pudo cargar el artículo');
     }
   };
@@ -141,6 +140,14 @@ const MyArticlesScreen: React.FC = () => {
     }
   };
 
+  const getFilterLabel = (f: FilterType): string => {
+    switch (f) {
+      case 'ALL':       return `Todos (${articles.length})`;
+      case 'AVAILABLE': return `Disponibles (${articles.filter(a => a.status === 'AVAILABLE').length})`;
+      case 'RENTED':    return `Alquilados (${articles.filter(a => a.status === 'RENTED').length})`;
+    }
+  };
+
   const renderArticle = ({ item }: { item: UserArticle }) => {
     const isDeleting = deletingId === item.id;
     return (
@@ -163,8 +170,8 @@ const MyArticlesScreen: React.FC = () => {
           <View style={styles.articleInfo}>
             <Text style={styles.articleTitle} numberOfLines={2}>{item.title}</Text>
             <View style={styles.priceRow}>
-              <Banknote size={16} color={Colors.primary} />
-              <Text style={styles.articlePrice}>€{item.pricePerMonth.toFixed(2)}/mes</Text>
+              <Ionicons name="cash-outline" size={16} color={Colors.primary} />
+              <Text style={styles.articlePrice}>{`€${item.pricePerMonth.toFixed(2)}/mes`}</Text>
             </View>
             <View style={styles.statusRow}>
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
@@ -173,8 +180,8 @@ const MyArticlesScreen: React.FC = () => {
             </View>
             {item.status === 'RENTED' && item.rentedUntil && (
               <View style={styles.dateRow}>
-                <Calendar size={16} color="#666" />
-                <Text style={styles.dateText}>Hasta: {formatDate(item.rentedUntil)}</Text>
+                <Ionicons name="calendar-outline" size={16} color="#666" />
+                <Text style={styles.dateText}>{`Hasta: ${formatDate(item.rentedUntil)}`}</Text>
               </View>
             )}
           </View>
@@ -194,11 +201,10 @@ const MyArticlesScreen: React.FC = () => {
             onPress={() => handleDelete(item)}
             disabled={isDeleting}
           >
-            {isDeleting ? (
-              <ActivityIndicator size="small" color="#d9534f" />
-            ) : (
-              <Trash2 size={20} color="#d9534f" />
-            )}
+            {isDeleting
+              ? <ActivityIndicator size="small" color="#d9534f" />
+              : <Ionicons name="trash-outline" size={20} color="#d9534f" />
+            }
           </Pressable>
         </View>
       </View>
@@ -248,9 +254,7 @@ const MyArticlesScreen: React.FC = () => {
             onPress={() => handleFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'ALL'       ? `Todos (${articles.length})` : ''}
-              {f === 'AVAILABLE' ? `Disponibles (${articles.filter(a => a.status === 'AVAILABLE').length})` : ''}
-              {f === 'RENTED'    ? `Alquilados (${articles.filter(a => a.status === 'RENTED').length})` : ''}
+              {getFilterLabel(f)}
             </Text>
           </TouchableOpacity>
         ))}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -47,6 +47,9 @@ type ProfileData = {
 
 const parseBackendError = (err: unknown): FieldErrors => {
   if (!(err instanceof Error)) return { general: 'Error al actualizar el perfil.' };
+  const message = err.message.toLowerCase();
+  if (message.includes('phone number must be valid'))
+    return { phone: 'Número de teléfono no válido.' };
   return { general: err.message || 'Error al actualizar el perfil.' };
 };
 
@@ -114,11 +117,11 @@ const EditProfileScreen: React.FC = () => {
         city:    updatedUser.city,
         country: updatedUser.country,
       });
+      navigation.goBack();
     } catch (err: unknown) {
       setErrors(parseBackendError(err));
     } finally {
       setLoading(false);
-      navigation.goBack();
     }
   };
 

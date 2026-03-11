@@ -7,10 +7,8 @@ import {
 import { ArrowLeft, Image as ImageIcon, Pencil } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
 import { Category, UserArticle, RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
-
 import { 
   createCategory, 
   updateCategory,
@@ -19,6 +17,11 @@ import {
 } from '../../services/categoryService';
 
 import { Colors, Spacing, commonStyles, FontSizes, FontWeights, BorderRadius } from '../../styles';
+import { categoryFormScreenStyles } from '../../styles/categoryFormScreenStyles';
+
+const { scrollContent, formCard, inputRow, inputLabel,
+    inlineInput, statusValue ,priceInput, priceSeparator, divider, cardFooter, statsContainer, statPill, statCircle, statNumber, statLabel
+    ,saveButton, saveButtonText, editButton, articleCard, articleImage, imagePlaceholder, articleInfo, articleTitle, articleBadge, addIconSmall} = categoryFormScreenStyles;
 
 type CategoryFormNav = NativeStackNavigationProp<RootStackParamList, 'CategoryForm'>;
 type CategoryFormRoute = RouteProp<RootStackParamList, 'CategoryForm'>;
@@ -36,7 +39,7 @@ const CategoryFormScreen: React.FC = () => {
 
   const [name, setName] = useState(categoryToEdit?.name || '');
   const [description, setDescription] = useState(categoryToEdit?.description || '');
-  const [status, setStatus] = useState<'ACTIVE' | 'DRAFT'>(categoryToEdit?.status || 'ACTIVE');
+  const [status, setStatus] = useState<'ACTIVE' | 'DRAFT'>(categoryToEdit?.status || 'DRAFT');
   const [minPrice, setMinPrice] = useState(categoryToEdit?.minPrice?.toString() || '');
   const [maxPrice, setMaxPrice] = useState(categoryToEdit?.maxPrice?.toString() || '');
   const [isSaving, setIsSaving] = useState(false);
@@ -115,18 +118,18 @@ const CategoryFormScreen: React.FC = () => {
   };
 
   const renderArticle = ({ item }: { item: UserArticle }) => (
-    <View style={styles.articleCard}>
+    <View style={articleCard}>
       {item.imageUrl ? (
-        <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
+        <Image source={{ uri: item.imageUrl }} style={articleImage} resizeMode="cover" />
       ) : (
-        <View style={[styles.articleImage, styles.imagePlaceholder]}>
-          <ImageIcon size={24} color={Colors.textLight} />
+        <View style={[articleImage, imagePlaceholder]}>
+          <Ionicons name="image-outline" size={24} color={Colors.textLight} />
         </View>
       )}
-      <View style={styles.articleInfo}>
+      <View style={articleInfo}>
         <View style={{ flex: 1, paddingRight: Spacing.xs }}>
-          <Text style={styles.articleTitle} numberOfLines={1}>{item.title}</Text>
-          <Text style={styles.articleBadge}>
+          <Text style={articleTitle} numberOfLines={1}>{item.title}</Text>
+          <Text style={articleBadge}>
              {item.status === 'AVAILABLE' ? 'Disponible' : item.status === 'RENTED' ? 'Alquilado' : 'Inactivo'}
           </Text>
         </View>
@@ -146,13 +149,13 @@ const CategoryFormScreen: React.FC = () => {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={scrollContent}>
 
-        <View style={styles.formCard}>
-          <View style={styles.inputRow}>
-            <Text style={styles.inputLabel}>Nombre: </Text>
+        <View style={formCard}>
+          <View style={inputRow}>
+            <Text style={inputLabel}>Nombre: </Text>
             <TextInput
-              style={[styles.inlineInput, !isEditable && { color: Colors.textSecondary }]}
+              style={[inlineInput, !isEditable && { color: Colors.textSecondary }]}
               placeholder="Ej. Electrónica"
               value={name}
               onChangeText={setName}
@@ -160,12 +163,12 @@ const CategoryFormScreen: React.FC = () => {
               placeholderTextColor={Colors.textLight}
             />
           </View>
-          <View style={styles.divider} />
+          <View style={divider} />
 
-          <View style={styles.inputRow}>
-            <Text style={styles.inputLabel}>Descripción: </Text>
+          <View style={inputRow}>
+            <Text style={inputLabel}>Descripción: </Text>
             <TextInput
-              style={[styles.inlineInput, { flex: 1 }, !isEditable && { color: Colors.textSecondary }]}
+              style={[inlineInput, { flex: 1 }, !isEditable && { color: Colors.textSecondary }]}
               placeholder="Añade una descripción..."
               value={description}
               onChangeText={setDescription}
@@ -174,13 +177,13 @@ const CategoryFormScreen: React.FC = () => {
               placeholderTextColor={Colors.textLight}
             />
           </View>
-          <View style={styles.divider} />
+          <View style={divider} />
 
-          <View style={styles.inputRow}>
-            <Text style={styles.inputLabel}>Estado: </Text>
+          <View style={inputRow}>
+            <Text style={inputLabel}>Estado: </Text>
             <TouchableOpacity onPress={toggleStatus} disabled={!isEditable}>
               <Text style={[
-                styles.statusValue, 
+                statusValue, 
                 { color: status === 'ACTIVE' ? Colors.success : Colors.warning },
                 !isEditable && { opacity: 0.7 }
               ]}>
@@ -188,64 +191,64 @@ const CategoryFormScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.divider} />
+          <View style={divider} />
 
-          <View style={styles.inputRow}>
-            <Text style={styles.inputLabel}>Rango de precios: </Text>
+          <View style={inputRow}>
+            <Text style={inputLabel}>Rango de precios: </Text>
             <TextInput
-              style={[styles.priceInput, !isEditable && { color: Colors.textSecondary }]}
+              style={[priceInput, !isEditable && { color: Colors.textSecondary }]}
               keyboardType="numeric"
               placeholder="Mín"
               value={minPrice}
               onChangeText={setMinPrice}
               editable={isEditable}
             />
-            <Text style={styles.priceSeparator}>€  -  </Text>
+            <Text style={priceSeparator}>€  -  </Text>
             <TextInput
-              style={[styles.priceInput, !isEditable && { color: Colors.textSecondary }]}
+              style={[priceInput, !isEditable && { color: Colors.textSecondary }]}
               keyboardType="numeric"
               placeholder="Máx"
               value={maxPrice}
               onChangeText={setMaxPrice}
               editable={isEditable}
             />
-            <Text style={styles.priceSeparator}>€</Text>
+            <Text style={priceSeparator}>€</Text>
           </View>
           
-          <View style={styles.divider} />
+          <View style={divider} />
 
-          <View style={styles.cardFooter}>
-            <View style={styles.statsContainer}>
-              <View style={styles.statPill}>
-                <View style={styles.statCircle}>
+          <View style={cardFooter}>
+            <View style={statsContainer}>
+              <View style={statPill}>
+                <View style={statCircle}>
                   {isLoadingExtra ? (
                     <ActivityIndicator size="small" color={Colors.primary} />
                   ) : (
-                    <Text style={styles.statNumber}>{articleCount}</Text>
+                    <Text style={statNumber}>{articleCount}</Text>
                   )}
                 </View>
-                <Text style={styles.statLabel}>Artículos publicados</Text>
+                <Text style={statLabel}>Artículos publicados</Text>
               </View>
             </View>
 
             {formMode === 'view' ? (
               <TouchableOpacity 
-                style={styles.editButton} 
+                style={editButton} 
                 onPress={() => setFormMode('edit')}
               >
-                <Pencil size={18} color={Colors.textWhite} style={{ marginRight: 6 }} />
-                <Text style={styles.saveButtonText}>Editar</Text>
+                <Ionicons name="pencil" size={18} color={Colors.textWhite} style={{ marginRight: 6 }} />
+                <Text style={saveButtonText}>Editar</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity 
-                style={styles.saveButton} 
+                style={saveButton} 
                 onPress={handleSave} 
                 disabled={isSaving}
               >
                 {isSaving ? (
                   <ActivityIndicator color={Colors.textWhite} size="small" />
                 ) : (
-                  <Text style={styles.saveButtonText}>
+                  <Text style={saveButtonText}>
                     {formMode === 'edit' ? 'Confirmar cambios' : 'Crear categoría'}
                   </Text>
                 )}
@@ -279,35 +282,5 @@ const CategoryFormScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  scrollContent: { padding: Spacing.lg, paddingBottom: 100 },
-  formCard: { backgroundColor: Colors.backgroundWhite, borderRadius: BorderRadius.xl, padding: Spacing.lg, borderWidth: 1, borderColor: Colors.border, shadowColor: Colors.shadowColor || '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.xs },
-  inputLabel: { fontSize: FontSizes.base, color: Colors.textPrimary, fontWeight: FontWeights.bold },
-  inlineInput: { flex: 1, fontSize: FontSizes.base, color: Colors.textPrimary, paddingVertical: 0, marginLeft: 4 },
-  statusValue: { fontSize: FontSizes.base, fontWeight: FontWeights.bold, marginLeft: 4 },
-  priceInput: { fontSize: FontSizes.base, color: Colors.textPrimary, fontWeight: FontWeights.bold, paddingVertical: 0, minWidth: 30, textAlign: 'center' },
-  priceSeparator: { fontSize: FontSizes.base, color: Colors.textPrimary, fontWeight: FontWeights.bold },
-  divider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.sm },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: Spacing.sm },
-  statsContainer: { gap: Spacing.sm },
-  statPill: { flexDirection: 'row', alignItems: 'center' },
-  statCircle: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: Colors.border, justifyContent: 'center', alignItems: 'center', marginRight: Spacing.sm },
-  statNumber: { fontSize: FontSizes.sm, fontWeight: FontWeights.bold, color: Colors.textPrimary },
-  statLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary, fontWeight: FontWeights.medium },
-  saveButton: { backgroundColor: Colors.primaryDark || Colors.primary, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, justifyContent: 'center', alignItems: 'center' },
-  saveButtonText: { color: Colors.textWhite, fontSize: FontSizes.sm, fontWeight: FontWeights.bold },
-  editButton: { flexDirection: 'row', backgroundColor: Colors.primaryLight || Colors.primary, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, justifyContent: 'center', alignItems: 'center' },
-  articleCard: { width: 140, backgroundColor: Colors.backgroundWhite, borderRadius: BorderRadius.lg, padding: Spacing.sm, marginRight: Spacing.md, borderWidth: 1, borderColor: Colors.border },
-  articleImage: { width: '100%', height: 90, borderRadius: BorderRadius.md, backgroundColor: Colors.borderLight, marginBottom: Spacing.sm },
-  
-  imagePlaceholder: { justifyContent: 'center', alignItems: 'center' },
-  
-  articleInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  articleTitle: { fontSize: FontSizes.sm, fontWeight: FontWeights.bold, color: Colors.textPrimary },
-  articleBadge: { fontSize: 10, color: Colors.textSecondary, marginTop: 2 },
-  addIconSmall: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, justifyContent: 'center', alignItems: 'center' },
-});
 
 export default CategoryFormScreen;

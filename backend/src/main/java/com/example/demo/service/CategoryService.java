@@ -1,13 +1,21 @@
 package com.example.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 
 import com.example.demo.model.Category;
+import com.example.demo.model.CategoryStatus;
+import com.example.demo.model.User;
+import com.example.demo.model.UserRole;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ItemRepository;
+import com.example.demo.repository.UserRepository;
 
 @Service
 public class CategoryService {
@@ -17,6 +25,27 @@ public class CategoryService {
 
     @Autowired
     private ItemRepository itemRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private void checkAdminRole() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() == null || auth.getPrincipal().equals("anonymousUser")) {
+            throw new AccessDeniedException("No hay usuario autenticado.");
+        }
+
+        Object principal = auth.getPrincipal();
+        String email = (principal instanceof UserDetails) ?
+                        ((UserDetails) principal).getUsername() : principal.toString();
+        
+        User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                    
+        if (user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Solo los administradores pueden realizar esta operación.");
+        }    
+    }
 
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
@@ -28,11 +57,16 @@ public class CategoryService {
     }
 
     public Category createCategory(Category category) {
+        checkAdminRole();
         validateCategoryRules(category);
+        if (category.getStatus() == null) {
+            category.setStatus(CategoryStatus.DRAFT);
+        }
         return categoryRepository.save(category);
     }
 
     public Category updateCategory(Long id, Category updateData) {
+        checkAdminRole();
         Category category = getCategoryById(id);
 
         if (updateData.getName() != null) {
@@ -55,6 +89,7 @@ public class CategoryService {
     }
 
     public void deleteCategory(Long id) {
+        checkAdminRole();
         Category category = getCategoryById(id);
         if (itemRepository.existsByCategoryId(id)) {
             throw new IllegalStateException("No se puede eliminar la categoría porque tiene artículos asociados.");
