@@ -118,3 +118,29 @@ Para evaluar la efectividad de las acciones de marketing, se monitorizarán:
 * **Tasa de respuesta a encuestas:** Porcentaje de respuestas obtenidas en las encuestas difundidas por mensajería.
 * **Engagement en redes:** Interacciones (likes, comentarios, compartidos, guardados) en publicaciones de Instagram y LinkedIn.
 * **Conversión por incentivo:** Cuántos usuarios mencionan un incentivo concreto como motivo de inscripción.
+
+# 4. SISTEMA GAMIFICADO DE INCENTIVOS BASADO EN PRUEBAS DE FEEDBACK
+El objetivo de este sistema es aumentar la participación activa de los usuarios piloto, fomentar su constancia y obtener datos de calidad que permitan mejorar KeaKit antes del lanzamiento oficial. La idea central es sencilla: cuantas más pruebas de feedback complete un usuario, más beneficios desbloqueará, creando así un camino de progresión que incentiva su implicación continua en el proceso de cocreación de la plataforma.
+
+## Funcionamiento general
+* Cada prueba completada suma **1 punto de progreso**, es decir, desbloquea un incentivo.  
+
+### ⭐ 1 prueba completada → Insignia “Usuario Fundador”
+**Para todos los usuarios.**  
+* Distintivo permanente.  
+* Prioridad en búsquedas (arrendadores).  
+* Sello de confianza (arrendatarios).
+
+### ⭐⭐ 2 pruebas completadas → Incentivo económico inicial
+**Arrendatarios:**  
+* 10% de descuento en el primer kit.
+
+**Arrendadores:**  
+* Comisión reducida al 10%.
+
+### ⭐⭐⭐ 3 pruebas completadas → Máximo beneficio
+**Arrendatarios:**  
+* 20% de descuento en el primer kit.
+
+**Arrendadores:**  
+* Comisión 0%.
