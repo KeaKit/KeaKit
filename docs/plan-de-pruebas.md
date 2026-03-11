@@ -34,7 +34,7 @@ Las pruebas de integración verifican la correcta comunicación entre los difere
 
 ## 4. Pruebas de Aceptación
 
-Validan que el sistema cumple con los requerimientos desde el punto de vista del usuario final, actualmente cubren las funcionalidades pruncipales. Se redactan usando el formato Given-When-Then.
+Validan que el sistema cumple con los requerimientos desde el punto de vista del usuario final, actualmente cubren las funcionalidades principales. Se redactan usando el formato Given-When-Then.
 Se implementarán mediante el testing de interfaz de usuario, replicando el procedimiento de cada caso de prueba y grabandolo en scripts para poder ejecutar los tests de manera automatizada. 
 
 ### 4.1 CU-ARRENDADOR-01 - Subida de artículos
