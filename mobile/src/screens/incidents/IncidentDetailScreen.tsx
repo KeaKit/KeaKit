@@ -394,7 +394,7 @@ const IncidentDetailScreen: React.FC = () => {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
-              <Ionicons name="checkmark-circle" size={48} color={Colors.success} style={styles.modalIcon} />
+              <CheckCircle size={48} color={Colors.success} style={styles.modalIcon} />
               <Text style={styles.modalTitle}>¿Marcar como resuelta?</Text>
               <Text style={styles.modalMessage}>Esta acción cerrará la incidencia y no se podrán añadir más comentarios.</Text>
               <View style={styles.modalButtons}>
@@ -427,7 +427,7 @@ const IncidentDetailScreen: React.FC = () => {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
-              <Ionicons name="trash" size={48} color={Colors.error} style={styles.modalIcon} />
+              <Trash2 size={48} color={Colors.error} style={styles.modalIcon} />
               <Text style={styles.modalTitle}>¿Eliminar incidencia?</Text>
               <Text style={styles.modalMessage}>Esta acción es irreversible. Se eliminarán también todos los comentarios asociados.</Text>
               <View style={styles.modalButtons}>
