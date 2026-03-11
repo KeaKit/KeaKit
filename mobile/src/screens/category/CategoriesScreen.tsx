@@ -4,7 +4,14 @@ import {
   FlatList, TextInput, Alert, ActivityIndicator,
   Platform
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  Pencil, 
+  Trash2, 
+  Menu, 
+  Search, 
+  Plus 
+} from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -28,7 +35,6 @@ const CategoriesScreen: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Usamos nuestra interfaz extendida para el estado de la lista
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -48,10 +54,10 @@ const CategoriesScreen: React.FC = () => {
         data.map(async (cat) => {
           try {
             const count = await fetchArticleCountByCategory(cat.id, token);
-            return { ...cat, articleCount: count }; // Combinamos la categoría con su contador
+            return { ...cat, articleCount: count };
           } catch (error) {
             console.warn(`Error obteniendo contador para la categoría ${cat.id}`);
-            return { ...cat, articleCount: 0 }; // Si falla uno, le ponemos 0 por defecto
+            return { ...cat, articleCount: 0 };
           }
         })
       );
@@ -132,12 +138,12 @@ const CategoriesScreen: React.FC = () => {
             style={componentStyles.iconButton} 
             onPress={() => handleEditCategory(item)} 
           >
-            <Ionicons name="pencil" size={20} color={Colors.textPrimary} />
+            <Pencil size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
 
           {(item.articleCount === 0) && (
             <TouchableOpacity style={componentStyles.iconButton} onPress={() => handleDeleteCategory(item.id, item.name)}>
-              <Ionicons name="trash" size={20} color={Colors.textPrimary} />
+              <Trash2 size={20} color={Colors.textPrimary} />
             </TouchableOpacity>
           )}
         </View>
@@ -151,7 +157,7 @@ const CategoriesScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.containerWhite}>
       <View style={commonStyles.header}>
         <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={28} color={Colors.primary} />
+          <ArrowLeft size={28} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Gestión de categorías</Text>
         <View style={{ width: 40 }} />
@@ -159,7 +165,7 @@ const CategoriesScreen: React.FC = () => {
 
       <View style={[commonStyles.screenPadding, commonStyles.marginTopLg, { flex: 1 }]}>
         <View style={[componentStyles.searchBar, commonStyles.marginTopLg, commonStyles.marginBottomLg, styles.roundedSearch]}>
-          <Ionicons name="menu" size={24} color={Colors.textSecondary} />
+          <Menu size={24} color={Colors.textSecondary} />
           <TextInput
             style={componentStyles.searchInput}
             placeholder="Buscar..."
@@ -167,7 +173,7 @@ const CategoriesScreen: React.FC = () => {
             onChangeText={setSearchQuery}
             placeholderTextColor={Colors.textSecondary}
           />
-          <Ionicons name="search" size={24} color={Colors.textSecondary} />
+          <Search size={24} color={Colors.textSecondary} />
         </View>
 
         {isLoading ? (
@@ -184,7 +190,7 @@ const CategoriesScreen: React.FC = () => {
       </View>
 
       <TouchableOpacity style={styles.fab} onPress={handleCreateCategory} activeOpacity={0.85}>
-        <Ionicons name="add" size={32} color="#fff" />
+        <Plus size={32} color="#fff" />
       </TouchableOpacity>
     </SafeAreaView>
   );

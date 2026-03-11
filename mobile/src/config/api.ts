@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'https://backend-service-907955565973.europe-southwest1.run.app';
 
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,

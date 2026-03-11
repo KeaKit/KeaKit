@@ -10,7 +10,14 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  AlertCircle, 
+  ChevronUp, 
+  ChevronDown, 
+  Check, 
+  Save 
+} from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
@@ -59,7 +66,7 @@ const Field: React.FC<FieldProps> = ({
     />
     {!!error && (
       <View style={commonStyles.errorContainer}>
-        <Ionicons name="alert-circle" size={14} color={Colors.error} />
+        <AlertCircle size={14} color={Colors.error} />
         <Text style={commonStyles.errorText}>{error}</Text>
       </View>
     )}
@@ -72,15 +79,15 @@ const EditArticleScreen: React.FC = () => {
   const { user }    = useAuth();
   const { article } = route.params;
 
-  const [title,          setTitle]          = useState(article.title ?? '');
-  const [description,    setDescription]    = useState(article.description ?? '');
-  const [city,           setCity]           = useState(article.city ?? '');
-  const [pricePerMonth,  setPricePerMonth]  = useState(String(article.pricePerMonth ?? ''));
-  const [availableFrom,  setAvailableFrom]  = useState(article.availableFrom ?? '');
+  const [title,           setTitle]           = useState(article.title ?? '');
+  const [description,     setDescription]     = useState(article.description ?? '');
+  const [city,            setCity]            = useState(article.city ?? '');
+  const [pricePerMonth,   setPricePerMonth]   = useState(String(article.pricePerMonth ?? ''));
+  const [availableFrom,   setAvailableFrom]   = useState(article.availableFrom ?? '');
   const [availableUntil, setAvailableUntil] = useState(article.availableUntil ?? '');
-  const [category,       setCategory]       = useState<Category | null>(article.category ?? null);
-  const [imageUrl,       setImageUrl]       = useState(article.imageUrl ?? '');
-  const [purchaseDate,   setPurchaseDate]   = useState(article.purchaseDate ?? '');
+  const [category,        setCategory]       = useState<Category | null>(article.category ?? null);
+  const [imageUrl,        setImageUrl]       = useState(article.imageUrl ?? '');
+  const [purchaseDate,    setPurchaseDate]   = useState(article.purchaseDate ?? '');
 
   const [loading,      setLoading]      = useState(false);
   const [errors,       setErrors]       = useState<Record<string, string>>({});
@@ -174,7 +181,7 @@ const EditArticleScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.container}>
       <View style={commonStyles.header}>
         <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={28} color={Colors.primary} />
+          <ArrowLeft size={28} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Editar artículo</Text>
         <View style={{ width: 36 }} />
@@ -213,11 +220,15 @@ const EditArticleScreen: React.FC = () => {
                 {category ? category.name : 'Selecciona una categoría'}
               </Text>
             )}
-            <Ionicons name={categoryOpen ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textSecondary} />
+            {categoryOpen ? (
+              <ChevronUp size={20} color={Colors.textSecondary} />
+            ) : (
+              <ChevronDown size={20} color={Colors.textSecondary} />
+            )}
           </TouchableOpacity>
           {!!errors.category && (
             <View style={commonStyles.errorContainer}>
-              <Ionicons name="alert-circle" size={14} color={Colors.error} />
+              <AlertCircle size={14} color={Colors.error} />
               <Text style={commonStyles.errorText}>{errors.category}</Text>
             </View>
           )}
@@ -241,7 +252,7 @@ const EditArticleScreen: React.FC = () => {
                   <Text style={[styles.categoryOptionText, category?.id === cat.id && styles.categoryOptionTextSelected]}>
                     {cat.name}
                   </Text>
-                  {category?.id === cat.id && <Ionicons name="checkmark" size={18} color={Colors.primary} />}
+                  {category?.id === cat.id && <Check size={18} color={Colors.primary} />}
                 </TouchableOpacity>
               ))}
             </View>
@@ -286,7 +297,7 @@ const EditArticleScreen: React.FC = () => {
             <ActivityIndicator color={Colors.textWhite} />
           ) : (
             <View style={styles.submitContent}>
-              <Ionicons name="save-outline" size={20} color={Colors.textWhite} />
+              <Save size={20} color={Colors.textWhite} />
               <Text style={[commonStyles.primaryButtonText, { marginLeft: Spacing.sm }]}>
                 Guardar cambios
               </Text>

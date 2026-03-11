@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { ArrowLeft, Calendar, Truck, MapPin, Plus, ShoppingCart } from "lucide-react-native";
 import { DatePickerModal } from "react-native-paper-dates";
 import { es, registerTranslation } from "react-native-paper-dates";
 import { Provider as PaperProvider, MD3LightTheme, TextInput as PaperTextInput, Button, SegmentedButtons } from "react-native-paper";
@@ -460,7 +460,7 @@ const CreateKitScreen: React.FC = () => {
           style={componentStyles.iconButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <ArrowLeft size={24} color={Colors.primary} />
         </TouchableOpacity>
 
         <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
@@ -546,7 +546,7 @@ const CreateKitScreen: React.FC = () => {
               ? `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${startDate.getFullYear()} - ${String(endDate.getDate()).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${endDate.getFullYear()}`
               : "Selecciona rango de fechas del alquiler"}
           </Text>
-          <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
+          <Calendar size={20} color={Colors.primary} />
         </TouchableOpacity>
         <DatePickerModal
           locale="es"
@@ -598,12 +598,12 @@ const CreateKitScreen: React.FC = () => {
               {
                 value: 'COURIER',
                 label: 'Mensajería',
-                icon: 'truck-delivery',
+                icon: (props) => <Truck {...props} />,
               },
               {
                 value: 'MEETING_POINT',
                 label: 'Punto de encuentro',
-                icon: 'map-marker',
+                icon: (props) => <MapPin {...props} />,
               },
             ]}
             style={{ marginVertical: 12 }}
@@ -674,7 +674,7 @@ const CreateKitScreen: React.FC = () => {
           <Button
             mode="contained"
             onPress={openAddProductModal}
-            icon="plus"
+            icon={(props) => <Plus {...props} />}
             compact
             style={{ borderRadius: 8 }}
           >
@@ -811,7 +811,7 @@ const CreateKitScreen: React.FC = () => {
             onPress={() => setConfirmVisible(true)}
             disabled={submitting}
             loading={submitting}
-            icon="cart-outline"
+            icon={(props) => <ShoppingCart {...props} />}
             style={{ borderRadius: 8 }}
             contentStyle={{ paddingVertical: 8 }}
           >

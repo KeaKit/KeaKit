@@ -12,7 +12,16 @@ import {
   Modal,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  Flag, 
+  Briefcase, 
+  Box, 
+  ChevronDown, 
+  ChevronUp, 
+  CheckCircle2, 
+  Trash2 
+} from 'lucide-react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, KitResponse, KitStatus } from '../../types';
@@ -103,7 +112,6 @@ const KitDetailScreen: React.FC = () => {
             try {
               setDeleting(true);
               
-         
               const response = await fetch(`${BASE}/api/kits/${kitId}`, {
                 method: 'DELETE',
               });
@@ -175,7 +183,7 @@ const KitDetailScreen: React.FC = () => {
 
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <ArrowLeft size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle del Kit</Text>
         {kit.status === KitStatus.PENDING_VALIDATION && (
@@ -183,7 +191,7 @@ const KitDetailScreen: React.FC = () => {
           onPress={handleReportProblem} 
           style={styles.reportButton}
         >
-          <Ionicons name="flag-outline" size={22} color="#FF3B30" />
+          <Flag size={22} color="#FF3B30" />
         </TouchableOpacity>
         )}
         {kit.status !== KitStatus.PENDING_VALIDATION && (
@@ -195,7 +203,7 @@ const KitDetailScreen: React.FC = () => {
         
         <View style={styles.mainCard}>
           <View style={styles.iconCircle}>
-            <Ionicons name="briefcase" size={40} color={Colors.primary} />
+            <Briefcase size={40} color={Colors.primary} />
           </View>
           <Text style={styles.kitNameText}>{kit.name}</Text>
           <View style={styles.statusBadge}>
@@ -223,7 +231,7 @@ const KitDetailScreen: React.FC = () => {
                 <Text style={styles.itemName}>{item.title}</Text>
                 <Text style={styles.itemMeta}>{item.category} • {item.pricePerMonth}€/mes</Text>
               </View>
-              <Ionicons name="cube-outline" size={20} color="#DDD" />
+              <Box size={20} color="#DDD" />
             </View>
           ))}
 
@@ -235,7 +243,7 @@ const KitDetailScreen: React.FC = () => {
               <Text style={styles.verMasText}>
                 {expanded ? "Ver menos" : `Ver ${kit.items.length - 3} más...`}
               </Text>
-              <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color="#666" />
+              {expanded ? <ChevronUp size={16} color="#666" /> : <ChevronDown size={16} color="#666" />}
             </TouchableOpacity>
           )}
         </View>
@@ -247,13 +255,13 @@ const KitDetailScreen: React.FC = () => {
 
         {kit.status === KitStatus.PENDING_VALIDATION && (
           <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmKit}>
-            <Ionicons name="checkmark-done-outline" size={20} color="#04ac20" />
+            <CheckCircle2 size={20} color="#04ac20" />
             <Text style={styles.confirmButtonText}>Confirmar recepción</Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity style={styles.deleteButton} onPress={handleCancelKit}>
-          <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+          <Trash2 size={20} color="#FF3B30" />
           <Text style={styles.deleteButtonText}>Cancelar este alquiler</Text>
         </TouchableOpacity>
 
@@ -285,7 +293,7 @@ const KitDetailScreen: React.FC = () => {
                   >
                     <Text style={styles.modalItemText}>{item.title}</Text>
                     {isSelected && (
-                      <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+                      <CheckCircle2 size={20} color={Colors.primary} />
                     )}
                   </TouchableOpacity>
                 );

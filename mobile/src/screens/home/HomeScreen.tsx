@@ -9,7 +9,20 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  Package, 
+  UserCircle, 
+  PlusCircle, 
+  Box, 
+  User, 
+  Star, 
+  Users, 
+  LayoutGrid, 
+  AlertCircle, 
+  LogOut, 
+  LogIn, 
+  UserPlus 
+} from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -55,44 +68,37 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleCreateKit = () => {
-    console.log('Crear kit');
     navigation.navigate('CreateKit');
   };
 
   const handleRentItems = () => {
-    console.log('Poner a alquilar objetos');
     navigation.navigate('UploadArticle');
   };
 
   return (
     <SafeAreaView style={commonStyles.container}>
-      {/* Header - usando estilos comunes */}
       <View style={commonStyles.header}>
         <View style={styles.headerLeft} />
 
-        {/* Logo Central - usando estilos comunes */}
         <View style={commonStyles.logoContainer}>
           <View style={commonStyles.logoBox}>
-            <Ionicons name="cube" size={32} color={Colors.brandIcon} />
+            <Package size={32} color={Colors.brandIcon} />
           </View>
         </View>
 
-        {/* Botón de Perfil/Usuario */}
         <TouchableOpacity
           style={componentStyles.iconButton}
           onPress={() => setShowProfileMenu(true)}
         >
-          <Ionicons
-            name={user ? "person-circle" : "person-circle-outline"}
+          <UserCircle
             size={32}
             color={Colors.primary}
+            strokeWidth={user ? 2.5 : 1.5}
           />
         </TouchableOpacity>
       </View>
 
-      {/* Contenido Principal */}
       <View style={commonStyles.screenPadding}>
-        {/* Mensaje de Bienvenida - usando estilos comunes */}
         <View style={commonStyles.welcomeSection}>
           <Text style={commonStyles.welcomeTitle}>
             {user ? `¡Hola de nuevo ${user.name}!` : '¡Bienvenido a KeaKit!'}
@@ -103,7 +109,6 @@ const HomeScreen: React.FC = () => {
               : 'Crea kits y alquila objetos fácilmente'}
           </Text>
           
-          {/* Mostrar saldo disponible */}
           {user && (
             <View style={styles.balanceContainer}>
               <Text style={styles.balanceLabel}>Saldo disponible:</Text>
@@ -118,7 +123,6 @@ const HomeScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Botones Principales - usando estilos de componentes */}
         <View style={commonStyles.gapLg}>
           <TouchableOpacity
             style={componentStyles.actionButton}
@@ -126,7 +130,7 @@ const HomeScreen: React.FC = () => {
             activeOpacity={0.8}
           >
             <View style={componentStyles.actionIconContainer}>
-              <Ionicons name="add-circle" size={48} color={Colors.textWhite} />
+              <PlusCircle size={48} color={Colors.textWhite} />
             </View>
             <Text style={componentStyles.actionButtonText}>Crear Kits</Text>
             <Text style={componentStyles.actionButtonSubtext}>
@@ -140,7 +144,7 @@ const HomeScreen: React.FC = () => {
             activeOpacity={0.8}
           >
             <View style={componentStyles.actionIconContainer}>
-              <Ionicons name="cube-outline" size={48} color={Colors.textWhite} />
+              <Box size={48} color={Colors.textWhite} />
             </View>
             <Text style={componentStyles.actionButtonText}>Alquilar Objetos</Text>
             <Text style={componentStyles.actionButtonSubtext}>
@@ -150,7 +154,6 @@ const HomeScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Modal de Menú de Perfil - usando estilos de componentes */}
       <Modal
         visible={showProfileMenu}
         transparent
@@ -165,7 +168,7 @@ const HomeScreen: React.FC = () => {
             {user ? (
               <>
                 <View style={componentStyles.modalHeader}>
-                  <Ionicons name="person-circle" size={48} color={Colors.primary} />
+                  <UserCircle size={48} color={Colors.primary} />
                   <Text style={componentStyles.menuUserName}>{user.name}</Text>
                   <Text style={componentStyles.menuUserEmail}>{user.email}</Text>
                 </View>
@@ -179,7 +182,7 @@ const HomeScreen: React.FC = () => {
                     navigation.navigate('Profile');
                   }}
                 >
-                  <Ionicons name="person" size={24} color={Colors.primary} />
+                  <User size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Ver Perfil</Text>
                 </TouchableOpacity>
 
@@ -195,7 +198,7 @@ const HomeScreen: React.FC = () => {
                     }
                   }}
                 >
-                  <Ionicons name="star" size={24} color={Colors.warning} />
+                  <Star size={24} color={Colors.warning} />
                   <Text style={componentStyles.menuItemText}>Mis Valoraciones</Text>
                 </TouchableOpacity>
 
@@ -206,7 +209,7 @@ const HomeScreen: React.FC = () => {
                     navigation.navigate('MyArticles');
                   }}
                 >
-                  <Ionicons name="cube" size={24} color={Colors.primary} />
+                  <Box size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Mis Artículos</Text>
                 </TouchableOpacity>
 
@@ -218,7 +221,7 @@ const HomeScreen: React.FC = () => {
                       navigation.navigate('AdminUsers');
                     }}
                   >
-                    <Ionicons name="people" size={24} color={Colors.primary} />
+                    <Users size={24} color={Colors.primary} />
                     <Text style={componentStyles.menuItemText}>
                       Gestión de usuarios
                     </Text>
@@ -232,17 +235,18 @@ const HomeScreen: React.FC = () => {
                     navigation.navigate('MyKits');
                   }}
                 >
-                  <Ionicons name="cube" size={24} color={Colors.primary} />
+                  <Package size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Mis Kits</Text>
                 </TouchableOpacity>
-              <TouchableOpacity
+
+                <TouchableOpacity
                   style={componentStyles.menuItem}
                   onPress={() => {
                     setShowProfileMenu(false);
                     navigation.navigate('Categories');
                   }}
                 >
-                  <Ionicons name="reader" size={24} color={Colors.primary} />
+                  <LayoutGrid size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Categorías</Text>
                 </TouchableOpacity>
 
@@ -253,7 +257,7 @@ const HomeScreen: React.FC = () => {
                     navigation.navigate('MyIncidents');
                   }}
                 >
-                  <Ionicons name="alert-circle" size={24} color={Colors.info} />
+                  <AlertCircle size={24} color={Colors.info} />
                   <Text style={componentStyles.menuItemText}>Mis Incidencias</Text>
                 </TouchableOpacity>
 
@@ -261,7 +265,7 @@ const HomeScreen: React.FC = () => {
                   style={componentStyles.menuItem}
                   onPress={handleLogout}
                 >
-                  <Ionicons name="log-out" size={24} color={Colors.error} />
+                  <LogOut size={24} color={Colors.error} />
                   <Text style={[componentStyles.menuItemText, componentStyles.menuItemDanger]}>
                     Cerrar Sesión
                   </Text>
@@ -270,7 +274,7 @@ const HomeScreen: React.FC = () => {
             ) : (
               <>
                 <View style={componentStyles.modalHeader}>
-                  <Ionicons name="person-circle-outline" size={48} color={Colors.primary} />
+                  <UserCircle size={48} color={Colors.primary} />
                   <Text style={componentStyles.modalTitle}>Accede a tu cuenta</Text>
                 </View>
 
@@ -283,7 +287,7 @@ const HomeScreen: React.FC = () => {
                     navigation.navigate('Login');
                   }}
                 >
-                  <Ionicons name="log-in" size={24} color={Colors.primary} />
+                  <LogIn size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Iniciar Sesión</Text>
                 </TouchableOpacity>
 
@@ -294,7 +298,7 @@ const HomeScreen: React.FC = () => {
                     navigation.navigate('Register');
                   }}
                 >
-                  <Ionicons name="person-add" size={24} color={Colors.primary} />
+                  <UserPlus size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Registrarse</Text>
                 </TouchableOpacity>
               </>

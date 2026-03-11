@@ -12,7 +12,20 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ChevronLeft, 
+  AlertCircle, 
+  Clock, 
+  CheckCircle, 
+  Tag, 
+  User, 
+  Package, 
+  UserCircle, 
+  MessageSquare, 
+  MessagesSquare, 
+  Send, 
+  Trash2 
+} from 'lucide-react-native';
 import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -34,10 +47,10 @@ import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } f
 type DetailNav = NativeStackNavigationProp<RootStackParamList, 'IncidentDetail'>;
 type DetailRoute = RouteProp<RootStackParamList, 'IncidentDetail'>;
 
-const STATUS_CONFIG: Record<IncidentStatus, { label: string; color: string; icon: string }> = {
-  OPEN: { label: 'Abierta', color: Colors.warning, icon: 'alert-circle' },
-  IN_PROGRESS: { label: 'En progreso', color: Colors.info, icon: 'time' },
-  RESOLVED: { label: 'Resuelta', color: Colors.success, icon: 'checkmark-circle' },
+const STATUS_CONFIG: Record<IncidentStatus, { label: string; color: string; icon: any }> = {
+  OPEN: { label: 'Abierta', color: Colors.warning, icon: AlertCircle },
+  IN_PROGRESS: { label: 'En progreso', color: Colors.info, icon: Clock },
+  RESOLVED: { label: 'Resuelta', color: Colors.success, icon: CheckCircle },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -154,7 +167,7 @@ const IncidentDetailScreen: React.FC = () => {
       <View style={styles.detailContainer}>
         {/* Insignia de estado */}
         <View style={[styles.statusBadge, { backgroundColor: statusCfg.color + '20' }]}>
-          <Ionicons name={statusCfg.icon as any} size={16} color={statusCfg.color} />
+          <statusCfg.icon size={16} color={statusCfg.color} />
           <Text style={[styles.statusText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
         </View>
 
@@ -167,13 +180,13 @@ const IncidentDetailScreen: React.FC = () => {
         {/* Filas de información */}
         <View style={styles.infoSection}>
           <View style={styles.infoRow}>
-            <Ionicons name="pricetag" size={16} color={Colors.textSecondary} />
+            <Tag size={16} color={Colors.textSecondary} />
             <Text style={styles.infoLabel}>Tipo:</Text>
             <Text style={styles.infoValue}>{TYPE_LABELS[incident.type] || incident.type}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Ionicons name="person" size={16} color={Colors.textSecondary} />
+            <User size={16} color={Colors.textSecondary} />
             <Text style={styles.infoLabel}>
               {isReceived ? 'Enviada por:' : 'Creada por:'}
             </Text>
@@ -183,13 +196,13 @@ const IncidentDetailScreen: React.FC = () => {
           {incident.relatedItem && (
             <>
               <View style={styles.infoRow}>
-                <Ionicons name="cube" size={16} color={Colors.textSecondary} />
+                <Package size={16} color={Colors.textSecondary} />
                 <Text style={styles.infoLabel}>Objeto:</Text>
                 <Text style={styles.infoValue}>{incident.relatedItem.title}</Text>
               </View>
               {incident.relatedItem.owner && (
                 <View style={styles.infoRow}>
-                  <Ionicons name="person-circle" size={16} color={Colors.textSecondary} />
+                  <UserCircle size={16} color={Colors.textSecondary} />
                   <Text style={styles.infoLabel}>Propietario:</Text>
                   <Text style={styles.infoValue}>{incident.relatedItem.owner.name}</Text>
                 </View>
@@ -200,7 +213,7 @@ const IncidentDetailScreen: React.FC = () => {
 
         {/* Encabezado de comentarios */}
         <View style={styles.commentsHeader}>
-          <Ionicons name="chatbubbles-outline" size={20} color={Colors.textPrimary} />
+          <MessagesSquare size={20} color={Colors.textPrimary} />
           <Text style={styles.commentsTitle}>
             Comentarios ({comments.length})
           </Text>
@@ -228,7 +241,7 @@ const IncidentDetailScreen: React.FC = () => {
     if (incident?.status === 'RESOLVED') return null;
     return (
       <View style={styles.emptyComments}>
-        <Ionicons name="chatbubble-ellipses-outline" size={48} color={Colors.textLight} />
+        <MessageSquare size={48} color={Colors.textLight} />
         <Text style={styles.emptyCommentsText}>No hay comentarios todavía</Text>
         <Text style={styles.emptyCommentsSubtext}>Sé el primero en comentar</Text>
       </View>
@@ -240,7 +253,7 @@ const IncidentDetailScreen: React.FC = () => {
       <SafeAreaView style={commonStyles.container}>
         <View style={commonStyles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+            <ChevronLeft size={24} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={commonStyles.headerTitle}>Detalle</Text>
           <View style={{ width: 24 }} />
@@ -257,14 +270,14 @@ const IncidentDetailScreen: React.FC = () => {
       <SafeAreaView style={commonStyles.container}>
         <View style={commonStyles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+            <ChevronLeft size={24} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={commonStyles.headerTitle}>Detalle</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={commonStyles.centerContent}>
           <View style={commonStyles.errorContainer}>
-            <Ionicons name="alert-circle" size={16} color={Colors.error} />
+            <AlertCircle size={16} color={Colors.error} />
             <Text style={commonStyles.errorText}>{error || 'Incidencia no encontrada'}</Text>
           </View>
           <TouchableOpacity
@@ -283,7 +296,7 @@ const IncidentDetailScreen: React.FC = () => {
       {/* Cabecera */}
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <ChevronLeft size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle} numberOfLines={1}>
           {isReceived ? 'Incidencia recibida' : 'Mi incidencia'}
@@ -330,7 +343,7 @@ const IncidentDetailScreen: React.FC = () => {
               {submitting ? (
                 <ActivityIndicator size="small" color={Colors.textWhite} />
               ) : (
-                <Ionicons name="send" size={20} color={Colors.textWhite} />
+                <Send size={20} color={Colors.textWhite} />
               )}
             </TouchableOpacity>
           </View>
@@ -349,7 +362,7 @@ const IncidentDetailScreen: React.FC = () => {
                 <ActivityIndicator size="small" color={Colors.success} />
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle-outline" size={18} color={Colors.success} />
+                  <CheckCircle size={18} color={Colors.success} />
                   <Text style={styles.resolveButtonText}>Marcar resuelta</Text>
                 </>
               )}
@@ -364,7 +377,7 @@ const IncidentDetailScreen: React.FC = () => {
                 <ActivityIndicator size="small" color={Colors.error} />
               ) : (
                 <>
-                  <Ionicons name="trash-outline" size={18} color={Colors.error} />
+                  <Trash2 size={18} color={Colors.error} />
                   <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </>
               )}
