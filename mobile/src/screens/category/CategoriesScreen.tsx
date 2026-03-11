@@ -14,6 +14,9 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchAllCategories, deleteCategory, fetchArticleCountByCategory } from '../../services/categoryService';
 
 import { Colors, Spacing, commonStyles, componentStyles, FontSizes, FontWeights, BorderRadius } from '../../styles';
+import { categoriesScreenStyles } from '../../styles/categoriesScreenStyles';
+
+const { roundedSearch, listContainer, categoryCard, cardLeft, categoryAvatar, categoryName, cardRight, statusText, fab } = categoriesScreenStyles;
 
 type CategoriesNav = NativeStackNavigationProp<RootStackParamList, 'Categories'>;
 
@@ -28,7 +31,6 @@ const CategoriesScreen: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Usamos nuestra interfaz extendida para el estado de la lista
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -48,10 +50,10 @@ const CategoriesScreen: React.FC = () => {
         data.map(async (cat) => {
           try {
             const count = await fetchArticleCountByCategory(cat.id, token);
-            return { ...cat, articleCount: count }; // Combinamos la categoría con su contador
+            return { ...cat, articleCount: count };
           } catch (error) {
             console.warn(`Error obteniendo contador para la categoría ${cat.id}`);
-            return { ...cat, articleCount: 0 }; // Si falla uno, le ponemos 0 por defecto
+            return { ...cat, articleCount: 0 }; 
           }
         })
       );
@@ -110,20 +112,20 @@ const CategoriesScreen: React.FC = () => {
 
   const renderCategoryItem = ({ item }: { item: CategoryWithCount }) => (
     <TouchableOpacity 
-      style={styles.categoryCard} 
+      style={categoryCard} 
       activeOpacity={0.7}
       onPress={() => handleViewCategory(item)} 
     >
-      <View style={styles.cardLeft}>
-        <View style={styles.categoryAvatar} />
+      <View style={cardLeft}>
+        <View style={categoryAvatar} />
         <View style={commonStyles.centerContent}>
-          <Text style={styles.categoryName}>{item.name}</Text>
+          <Text style={categoryName}>{item.name}</Text>
           <Text style={commonStyles.bodySecondary}>{item.articleCount} artículos publicados</Text>
         </View>
       </View>
 
-      <View style={styles.cardRight}>
-        <Text style={[styles.statusText, { color: item.status === 'ACTIVE' ? Colors.success : Colors.warning }]}>
+      <View style={cardRight}>
+        <Text style={[statusText, { color: item.status === 'ACTIVE' ? Colors.success : Colors.warning }]}>
           {item.status === 'ACTIVE' ? 'Activo' : 'Borrador'}
         </Text>
         
@@ -158,7 +160,7 @@ const CategoriesScreen: React.FC = () => {
       </View>
 
       <View style={[commonStyles.screenPadding, commonStyles.marginTopLg, { flex: 1 }]}>
-        <View style={[componentStyles.searchBar, commonStyles.marginTopLg, commonStyles.marginBottomLg, styles.roundedSearch]}>
+        <View style={[componentStyles.searchBar, commonStyles.marginTopLg, commonStyles.marginBottomLg, roundedSearch]}>
           <Ionicons name="menu" size={24} color={Colors.textSecondary} />
           <TextInput
             style={componentStyles.searchInput}
@@ -177,29 +179,17 @@ const CategoriesScreen: React.FC = () => {
             data={filteredCategories}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderCategoryItem}
-            contentContainerStyle={styles.listContainer}
+            contentContainerStyle={listContainer}
             showsVerticalScrollIndicator={false}
           />
         )}
       </View>
 
-      <TouchableOpacity style={styles.fab} onPress={handleCreateCategory} activeOpacity={0.85}>
+      <TouchableOpacity style={fab} onPress={handleCreateCategory} activeOpacity={0.85}>
         <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  roundedSearch: { borderRadius: BorderRadius.full },
-  listContainer: { paddingBottom: 100 },
-  categoryCard: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: Colors.backgroundWhite, borderRadius: BorderRadius.full, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, marginBottom: Spacing.md, borderWidth: 1, borderColor: Colors.border },
-  cardLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  categoryAvatar: { width: 48, height: 48, borderRadius: BorderRadius.full, backgroundColor: Colors.textLight, marginRight: Spacing.md },
-  categoryName: { fontSize: FontSizes.base, fontWeight: FontWeights.bold, color: Colors.textPrimary, alignSelf: 'flex-start' },
-  cardRight: { alignItems: 'flex-end', justifyContent: 'center', gap: Spacing.xs },
-  statusText: { fontSize: FontSizes.sm, fontWeight: FontWeights.bold, marginRight: Spacing.sm },
-  fab: { position: 'absolute', bottom: 28, right: 24, width: 60, height: 60, borderRadius: 30, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 8 },
-});
 
 export default CategoriesScreen;

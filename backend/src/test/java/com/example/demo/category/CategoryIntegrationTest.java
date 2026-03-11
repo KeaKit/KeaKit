@@ -2,8 +2,11 @@ package com.example.demo.category;
 
 import com.example.demo.model.Category;
 import com.example.demo.model.CategoryStatus;
+import com.example.demo.model.User;
+import com.example.demo.model.UserRole;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ItemRepository;
+import com.example.demo.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,9 +14,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -36,6 +45,9 @@ class CategoryIntegrationTest {
     private ItemRepository itemRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     private Category savedCategory;
@@ -44,6 +56,24 @@ class CategoryIntegrationTest {
     void setUp() {
         itemRepository.deleteAll();
         categoryRepository.deleteAll();
+        
+        // Crear contexto de seguridad para saltar el checkAdminRole()
+        User adminUser = new User();
+        adminUser.setEmail("admin@test.com");
+        adminUser.setPassword("password");
+        adminUser.setName("Admin");
+        adminUser.setPhone("123456789");
+        adminUser.setRole(UserRole.ADMIN);
+        adminUser.setAddress("Address");
+        adminUser.setCountry("Country");
+        adminUser.setCity("City");
+        userRepository.save(adminUser);
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        Authentication auth = new UsernamePasswordAuthenticationToken("admin@test.com", "password", Collections.emptyList());
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
+
         Category category = new Category("Electrónica", "Dispositivos informáticos", 10.0, 2000.0);
         category.setStatus(CategoryStatus.ACTIVE);
         savedCategory = categoryRepository.save(category);
@@ -58,7 +88,7 @@ class CategoryIntegrationTest {
                 .content(objectMapper.writeValueAsString(newCategory)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Deportes"))
-                .andExpect(jsonPath("$.status").value("DRAFT")); // Asumiendo que por defecto se crea en DRAFT
+                .andExpect(jsonPath("$.status").value("DRAFT"));
     }
 
     @Test
