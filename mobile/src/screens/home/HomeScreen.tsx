@@ -235,6 +235,8 @@ const HomeScreen: React.FC = () => {
                   <Ionicons name="cube" size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Mis Kits</Text>
                 </TouchableOpacity>
+
+              {user?.role === 'ADMIN' && (
               <TouchableOpacity
                   style={componentStyles.menuItem}
                   onPress={() => {
@@ -245,7 +247,8 @@ const HomeScreen: React.FC = () => {
                   <Ionicons name="reader" size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Categorías</Text>
                 </TouchableOpacity>
-
+              )}
+              
                 <TouchableOpacity
                   style={componentStyles.menuItem}
                   onPress={() => {
