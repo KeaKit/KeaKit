@@ -62,9 +62,10 @@ public class KitControllerTest {
 
         mockMvc.perform(post("/api/kits/create")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Kit Test\",\"status\":\"ACTIVE\"}"))
+                .content("{\"name\":\"Kit Test\",\"country\":\"ES\",\"city\":\"MAD\",\"startDate\":\"2026-06-01\",\"endDate\":\"2026-06-10\",\"status\":\"DRAFT\",\"deliveryMethod\":\"COURIER\",\"tenantId\":1}"))
             .andExpect(status().isCreated());
     }
+
 
     @Test
     void createKit_error_returnsBadRequest() throws Exception {

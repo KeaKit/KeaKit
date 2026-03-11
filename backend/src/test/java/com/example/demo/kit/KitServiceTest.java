@@ -49,15 +49,16 @@ public class KitServiceTest {
     @Test
     void createKit_withExplicitStatus_success() {
         User tenant = createTestUser(1L, "Juan");
-        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid", 
-            LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.ACTIVE, null, null, tenant.getId(), List.of());
+        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid",
+            LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.DRAFT, null, null, tenant.getId(), List.of());
 
         mockUserAndKitSave(tenant);
 
         Kit res = kitService.create(req);
 
-        assertEquals(KitStatus.ACTIVE, res.getStatus());
+        assertEquals(KitStatus.DRAFT, res.getStatus());
     }
+
 
     @Test
     void createKit_withoutStatus_defaultsToDraft() {

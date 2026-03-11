@@ -277,6 +277,11 @@ public class KitService {
                 .map(sel -> {
                     Item item = itemRepository.findById(sel.itemId())
                             .orElseThrow(() -> new RuntimeException("Item not found: " + sel.itemId()));
+
+                    if (item.getTotalUnits() != null && sel.quantity() > item.getTotalUnits()) {
+                        throw new RuntimeException("Selected quantity exceeds available units");
+                    }
+
                     ItemMemento snapshot = item.createSnapshot(
                             sel.quantity(),
                             selectedMethod,
