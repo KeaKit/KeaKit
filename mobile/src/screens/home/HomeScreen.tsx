@@ -64,6 +64,11 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('UploadArticle');
   };
 
+  const handleCreateServices = () => {
+    console.log('Poner servicios en alquiler');
+    navigation.navigate('PromoteService');
+  };
+
   return (
     <SafeAreaView style={commonStyles.container}>
       {/* Header - usando estilos comunes */}
@@ -147,6 +152,21 @@ const HomeScreen: React.FC = () => {
               Pon tus productos en alquiler
             </Text>
           </TouchableOpacity>
+          {user?.role === 'USER' && (
+              <TouchableOpacity
+                style={[componentStyles.actionButton, componentStyles.actionButtonSecondary]}
+                onPress={handleCreateServices}
+                activeOpacity={0.8}
+              >
+                <View style={componentStyles.actionIconContainer}>
+                  <Ionicons name="construct-outline" size={48} color={Colors.textWhite} />
+                </View>
+                <Text style={componentStyles.actionButtonText}>Alquilar Servicios</Text>
+                <Text style={componentStyles.actionButtonSubtext}>
+                  Pon servicios en alquiler
+                </Text>
+              </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -235,7 +255,19 @@ const HomeScreen: React.FC = () => {
                   <Ionicons name="cube" size={24} color={Colors.primary} />
                   <Text style={componentStyles.menuItemText}>Mis Kits</Text>
                 </TouchableOpacity>
-              <TouchableOpacity
+                {user?.role === 'USER' && (
+                  <TouchableOpacity
+                    style={componentStyles.menuItem}
+                    onPress={() => {
+                      setShowProfileMenu(false);
+                      navigation.navigate('MyServices');
+                    }}
+                  >
+                    <Ionicons name="construct-outline" size={24} color={Colors.primary} />
+                    <Text style={componentStyles.menuItemText}>Mis servicios</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
                   style={componentStyles.menuItem}
                   onPress={() => {
                     setShowProfileMenu(false);

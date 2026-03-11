@@ -267,6 +267,10 @@ export type RootStackParamList = {
   EditArticle: { article: Article };
   Categories: undefined;
   CategoryForm: { category?: Category; mode: "view" | "edit" | "create" };
+  MyServices: undefined;
+  PromoteService: undefined;
+  EditService: { service: Service };
+  ServiceDetail: { serviceId: number };
 };
 
 export interface ProfileData {
@@ -276,6 +280,45 @@ export interface ProfileData {
   city: string;
   country: string;
 }
+
+export type ServiceStatus = 'DRAFT' | 'ACTIVE' | 'UNAVAILABLE';
+
+export interface Service {
+  id: number;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: Category;
+  status: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface ServicePayload {
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: { id: number };
+  status?: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface UserService {
+  id: number;
+  title: string;
+  pricePerMonth: number;
+  status: ServiceStatus;
+  rentedUntil: string | null;
+  city: string;
+  categoryName: string;
+}
+
+
 
 export const EUROPEAN_COUNTRIES = [
   { value: "Albania", label: "Albania" },
