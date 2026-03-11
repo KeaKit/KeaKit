@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   Pressable,
   Image,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -18,6 +17,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getMyArticles, deleteArticle, getArticleById } from '../../services/articleService';
 import { RootStackParamList, UserArticle } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
+import { useNotification } from '../../components/NotificationContext'; // 👈 Importar notificaciones
+import { ConfirmModal } from '../../components/ConfirmModal'; // 👈 Importar modal de confirmación
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
 type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
@@ -25,6 +26,7 @@ type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
 const MyArticlesScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<MyArticlesNav>();
+  const { showNotification } = useNotification(); // 👈 Hook de notificaciones
 
   const [articles, setArticles] = useState<UserArticle[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<UserArticle[]>([]);
@@ -32,6 +34,10 @@ const MyArticlesScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('ALL');
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  
+  // Estados para el modal de confirmación
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [articleToDelete, setArticleToDelete] = useState<UserArticle | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -49,6 +55,7 @@ const MyArticlesScreen: React.FC = () => {
           setFilteredArticles(applyFilter(filter, data));
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Error al cargar artículos');
+          showNotification('Error al cargar los artículos', 'error'); // 👈 Notificación
         } finally {
           setLoading(false);
         }
@@ -74,33 +81,50 @@ const MyArticlesScreen: React.FC = () => {
       const full = await getArticleById(item.id, user.token);
       navigation.navigate('EditArticle', { article: full });
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'No se pudo cargar el artículo');
+      showNotification(err.message || 'No se pudo cargar el artículo', 'error'); // 👈 Notificación
     }
   };
 
-  const handleDelete = (item: UserArticle) => {
+  const handleDeletePress = (item: UserArticle) => {
     if (item.status === 'RENTED') {
-      window.alert('Este artículo está actualmente alquilado. Espera a que finalice el alquiler para eliminarlo.');
+      showNotification(
+        'Este artículo está actualmente alquilado. Espera a que finalice el alquiler para eliminarlo.',
+        'error'
+      ); // 👈 Notificación
       return;
     }
+    
+    // Mostrar modal de confirmación
+    setArticleToDelete(item);
+    setConfirmModalVisible(true);
+  };
 
-    const confirmed = window.confirm(`¿Seguro que quieres eliminar "${item.title}"? Esta acción no se puede deshacer.`);
-    if (!confirmed) return;
+  const handleConfirmDelete = async () => {
+    if (!user || !articleToDelete) return;
+    
+    setConfirmModalVisible(false);
+    setDeletingId(articleToDelete.id);
+    
+    try {
+      await deleteArticle(articleToDelete.id, user.id, user.token);
+      const updated = articles.filter(a => a.id !== articleToDelete.id);
+      setArticles(updated);
+      setFilteredArticles(applyFilter(filter, updated));
+      showNotification('Artículo eliminado correctamente', 'success'); // 👈 Notificación éxito
+    } catch (err) {
+      showNotification(
+        err instanceof Error ? err.message : 'No se pudo eliminar el artículo',
+        'error'
+      ); // 👈 Notificación error
+    } finally {
+      setDeletingId(null);
+      setArticleToDelete(null);
+    }
+  };
 
-    (async () => {
-      if (!user) return;
-      try {
-        setDeletingId(item.id);
-        await deleteArticle(item.id, user.id, user.token);
-        const updated = articles.filter(a => a.id !== item.id);
-        setArticles(updated);
-        setFilteredArticles(applyFilter(filter, updated));
-      } catch (err) {
-        window.alert(err instanceof Error ? err.message : 'No se pudo eliminar el artículo');
-      } finally {
-        setDeletingId(null);
-      }
-    })();
+  const handleCancelDelete = () => {
+    setConfirmModalVisible(false);
+    setArticleToDelete(null);
   };
 
   const formatDate = (dateString: string | null): string => {
@@ -188,7 +212,7 @@ const MyArticlesScreen: React.FC = () => {
 
           <Pressable
             style={styles.deleteButton}
-            onPress={() => handleDelete(item)}
+            onPress={() => handleDeletePress(item)}
             disabled={isDeleting}
           >
             {isDeleting
@@ -277,6 +301,18 @@ const MyArticlesScreen: React.FC = () => {
       >
         <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
+
+      {/* Modal de confirmación para eliminar */}
+      <ConfirmModal
+        visible={confirmModalVisible}
+        title="Confirmar eliminación"
+        message={`¿Seguro que quieres eliminar "${articleToDelete?.title}"? Esta acción no se puede deshacer.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        confirmStyle="destructive"
+      />
     </SafeAreaView>
   );
 };
@@ -317,7 +353,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   headerRight: {
     width: 40,
@@ -390,7 +426,7 @@ const styles = StyleSheet.create({
   articleTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
     marginBottom: Spacing.xs,
   },
   priceRow: {

@@ -16,7 +16,7 @@ import { DatePickerModal } from 'react-native-paper-dates';
 import { es, registerTranslation } from 'react-native-paper-dates';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
-import { useNotification } from '../../components/NotificationContext'; // 👈 Importar
+import { useNotification } from '../../components/NotificationContext';
 
 registerTranslation('es', es);
 
@@ -50,7 +50,7 @@ const EditServiceScreen: React.FC = () => {
   const route = useRoute<EditServiceRoute>();
   const { user } = useAuth();
   const { service } = route.params;
-  const { showNotification } = useNotification(); // 👈 Hook de notificaciones
+  const { showNotification } = useNotification();
 
   const originalCity = service.city ?? '';
 
@@ -88,7 +88,7 @@ const EditServiceScreen: React.FC = () => {
         const data = await fetchAllCategories(user.token);
         setDbCategories(data.filter(c => c.status === 'ACTIVE'));
       } catch {
-        showNotification('No se pudieron cargar las categorías', 'error'); // 👈 Notificación
+        showNotification('No se pudieron cargar las categorías', 'error');
       } finally {
         setLoadingCategories(false);
       }
@@ -145,7 +145,7 @@ const EditServiceScreen: React.FC = () => {
   const handleSubmit = async () => {
     if (!validate()) return;
     if (!user) {
-      showNotification('Debes iniciar sesión para editar un servicio', 'error'); // 👈 Notificación
+      showNotification('Debes iniciar sesión para editar un servicio', 'error');
       return;
     }
 
@@ -164,7 +164,7 @@ const EditServiceScreen: React.FC = () => {
 
       await updateService(service.id, user.id, user.token, payload);
       
-      showNotification('Servicio actualizado correctamente', 'success'); // 👈 Notificación éxito
+      showNotification('Servicio actualizado correctamente', 'success');
       navigation.goBack();
       
     } catch (error: any) {

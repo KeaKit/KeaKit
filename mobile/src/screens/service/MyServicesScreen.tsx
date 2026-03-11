@@ -17,7 +17,7 @@ import { getMyServices, deleteService, getServiceById } from '../../services/ser
 import { RootStackParamList, Service, ServiceStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { useNotification } from '../../components/NotificationContext';
-import { ConfirmModal } from '../../components/ConfirmModal'; // 👈 Importar el modal
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 type MyServicesNav = NativeStackNavigationProp<RootStackParamList, 'MyServices'>;
 type FilterType = 'ALL' | 'ACTIVE' | 'UNAVAILABLE' | 'DRAFT';
