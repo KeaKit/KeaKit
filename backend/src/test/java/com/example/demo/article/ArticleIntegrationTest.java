@@ -27,29 +27,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 class ArticleIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ArticleRepository articleRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-    
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ArticleRepository articleRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private ObjectMapper objectMapper;
 
     private User savedOwner;
     private Article savedArticle;
-    private Category savedCategory; 
+    private Category savedCategory;
 
+    // Fechas futuras reutilizables (RN-ART-10)
+    private static final LocalDate FROM  = LocalDate.now().plusDays(1);
+    private static final LocalDate UNTIL = LocalDate.now().plusDays(30);
 
     @BeforeEach
     void setUp() {
         articleRepository.deleteAll();
+
         User owner = new User();
         owner.setName("Juan");
         owner.setEmail("juan@example.com");
@@ -57,10 +52,11 @@ class ArticleIntegrationTest {
         owner.setRole(UserRole.USER);
         owner.setCountry("España");
         owner.setCity("Sevilla");
-        owner.setAddress("Calle 123 matame otra vez");
+        owner.setAddress("Calle 123");
         owner.setPhone("123456789");
         savedOwner = userRepository.save(owner);
 
+        // Rango 5–500 para probar RN-ART-06
         Category category = new Category("Bricolaje", "Cosas de taller", 5.0, 500.0);
         category.setStatus(CategoryStatus.ACTIVE);
         savedCategory = categoryRepository.save(category);
@@ -71,9 +67,10 @@ class ArticleIntegrationTest {
         article.setCity("Madrid");
         article.setPricePerMonth(50.0);
         article.setStatus(ArticleStatus.AVAILABLE);
+        article.setAvailableFrom(FROM);     // RN-ART-10
+        article.setAvailableUntil(UNTIL);
         article.setOwner(savedOwner);
-        article.setCategory(savedCategory); 
-
+        article.setCategory(savedCategory);
         savedArticle = articleRepository.save(article);
     }
 
@@ -86,15 +83,17 @@ class ArticleIntegrationTest {
         newArticle.setDescription("Escalera de aluminio");
         newArticle.setCity("Barcelona");
         newArticle.setPricePerMonth(30.0);
+        newArticle.setAvailableFrom(FROM);
+        newArticle.setAvailableUntil(UNTIL);
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
                 .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.title").value("Escalera"))
-                .andExpect(jsonPath("$.city").value("Barcelona"));
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.title").value("Escalera"))
+            .andExpect(jsonPath("$.city").value("Barcelona"));
     }
 
     @Test
@@ -110,8 +109,8 @@ class ArticleIntegrationTest {
                 .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Owner not found"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Owner not found"));
     }
 
     @Test
@@ -126,8 +125,8 @@ class ArticleIntegrationTest {
                 .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Title is required"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Title is required"));
     }
 
     @Test
@@ -143,10 +142,47 @@ class ArticleIntegrationTest {
                 .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("pricePerMonth must be >= 0"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("pricePerMonth must be >= 0"));
     }
 
+    // RN-ART-06: precio fuera del rango de la categoría (5–500)
+    @Test
+    void testUploadArticle_Integration_Failure_PriceOutOfCategoryRange() throws Exception {
+        Article newArticle = new Article();
+        newArticle.setTitle("Grúa");
+        newArticle.setDescription("Grúa industrial");
+        newArticle.setCity("Bilbao");
+        newArticle.setPricePerMonth(9999.0);  // > maxPrice 500
+
+        mockMvc.perform(post("/api/article/upload")
+                .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newArticle)))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("pricePerMonth must be between")));
+    }
+
+    // RN-ART-03: descripción > 1000 caracteres
+    @Test
+    void testUploadArticle_Integration_Failure_DescriptionTooLong() throws Exception {
+        Article newArticle = new Article();
+        newArticle.setTitle("Taladro");
+        newArticle.setDescription("a".repeat(1001));
+        newArticle.setCity("Madrid");
+        newArticle.setPricePerMonth(50.0);
+
+        mockMvc.perform(post("/api/article/upload")
+                .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newArticle)))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Description cannot exceed 1000 characters"));
+    }
+
+    // RN-ART-11: availableFrom posterior a availableUntil
     @Test
     void testUploadArticle_Integration_Failure_InvalidDateRange() throws Exception {
         Article newArticle = new Article();
@@ -155,25 +191,43 @@ class ArticleIntegrationTest {
         newArticle.setCity("Bilbao");
         newArticle.setPricePerMonth(100.0);
         newArticle.setAvailableFrom(LocalDate.now().plusDays(10));
-        newArticle.setAvailableUntil(LocalDate.now());
+        newArticle.setAvailableUntil(LocalDate.now().plusDays(1));  
 
         mockMvc.perform(post("/api/article/upload")
                 .param("ownerId", savedOwner.getId().toString())
                 .param("categoryId", savedCategory.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("availableFrom must be before or equal to availableUntil"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("availableFrom must be before or equal to availableUntil"));
     }
 
-    // ------------ GET /api/article/all ------------
+    @Test
+    void testUploadArticle_Integration_Failure_AvailableFromInPast() throws Exception {
+        Article newArticle = new Article();
+        newArticle.setTitle("Sierra");
+        newArticle.setDescription("Sierra circular");
+        newArticle.setCity("Madrid");
+        newArticle.setPricePerMonth(50.0);
+        newArticle.setAvailableFrom(LocalDate.now().minusDays(1));  
+        newArticle.setAvailableUntil(LocalDate.now().plusDays(30));
+
+        mockMvc.perform(post("/api/article/upload")
+                .param("ownerId", savedOwner.getId().toString())
+                .param("categoryId", savedCategory.getId().toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newArticle)))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("availableFrom cannot be in the past"));
+    }
+
 
     @Test
     void testGetAllArticles_Integration() throws Exception {
         mockMvc.perform(get("/api/article/all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].title").value("Taladro"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Taladro"));
     }
 
     @Test
@@ -184,16 +238,17 @@ class ArticleIntegrationTest {
         second.setCity("Zaragoza");
         second.setPricePerMonth(40.0);
         second.setStatus(ArticleStatus.AVAILABLE);
+        second.setAvailableFrom(FROM);
+        second.setAvailableUntil(UNTIL);
         second.setCategory(savedCategory);
         second.setOwner(savedOwner);
         articleRepository.save(second);
 
         mockMvc.perform(get("/api/article/all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2));
     }
 
-    // ------------ PUT /api/article/{id} ------------
 
     @Test
     void testUpdateArticle_Integration() throws Exception {
@@ -204,11 +259,37 @@ class ArticleIntegrationTest {
                 .param("ownerId", savedOwner.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Taladro Percutor"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("Taladro Percutor"));
 
         Article inDb = articleRepository.findById(savedArticle.getId()).orElseThrow();
         assertThat(inDb.getTitle()).isEqualTo("Taladro Percutor");
+    }
+
+    @Test
+    void testUpdateArticle_Integration_Failure_DescriptionTooLong() throws Exception {
+        Article updateData = new Article();
+        updateData.setDescription("a".repeat(1001));
+
+        mockMvc.perform(put("/api/article/" + savedArticle.getId())
+                .param("ownerId", savedOwner.getId().toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateData)))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Description cannot exceed 1000 characters"));
+    }
+
+    @Test
+    void testUpdateArticle_Integration_Failure_PriceOutOfCategoryRange() throws Exception {
+        Article updateData = new Article();
+        updateData.setPricePerMonth(9999.0);
+
+        mockMvc.perform(put("/api/article/" + savedArticle.getId())
+                .param("ownerId", savedOwner.getId().toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateData)))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("pricePerMonth must be between")));
     }
 
     @Test
@@ -220,8 +301,8 @@ class ArticleIntegrationTest {
                 .param("ownerId", savedOwner.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Article not found"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Article not found"));
     }
 
     @Test
@@ -236,8 +317,8 @@ class ArticleIntegrationTest {
                 .param("ownerId", savedOwner.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Article is currently rented and cannot be edited"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Article is currently rented and cannot be edited"));
     }
 
     @Test
@@ -249,8 +330,8 @@ class ArticleIntegrationTest {
                 .param("ownerId", "999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Only the owner can modify this article"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Only the owner can modify this article"));
     }
 
     @Test
@@ -262,8 +343,8 @@ class ArticleIntegrationTest {
                 .param("ownerId", savedOwner.getId().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Cannot change status via update; use toggleRent endpoint"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Cannot change status via update; use toggleRent endpoint"));
     }
 
     // ------------ DELETE /api/article/{id} ------------
@@ -272,7 +353,7 @@ class ArticleIntegrationTest {
     void testDeleteArticle_Integration() throws Exception {
         mockMvc.perform(delete("/api/article/" + savedArticle.getId())
                 .param("ownerId", savedOwner.getId().toString()))
-                .andExpect(status().isNoContent());
+            .andExpect(status().isNoContent());
 
         assertThat(articleRepository.findById(savedArticle.getId())).isEmpty();
     }
@@ -281,8 +362,8 @@ class ArticleIntegrationTest {
     void testDeleteArticle_Failure_OwnerMismatch() throws Exception {
         mockMvc.perform(delete("/api/article/" + savedArticle.getId())
                 .param("ownerId", "999"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Only the owner can delete this article"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Only the owner can delete this article"));
 
         assertThat(articleRepository.existsById(savedArticle.getId())).isTrue();
     }
@@ -291,8 +372,8 @@ class ArticleIntegrationTest {
     void testDeleteArticle_Failure_ArticleNotFound() throws Exception {
         mockMvc.perform(delete("/api/article/999999")
                 .param("ownerId", savedOwner.getId().toString()))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Article not found"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Article not found"));
     }
 
     @Test
@@ -302,20 +383,19 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(delete("/api/article/" + savedArticle.getId())
                 .param("ownerId", savedOwner.getId().toString()))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Article is currently rented and cannot be deleted"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Article is currently rented and cannot be deleted"));
 
         assertThat(articleRepository.existsById(savedArticle.getId())).isTrue();
     }
 
-    // ------------ POST /api/article/{id}/toggle-rent ------------
 
     @Test
     void testToggleRent_Integration() throws Exception {
         mockMvc.perform(post("/api/article/" + savedArticle.getId() + "/toggle-rent")
                 .param("ownerId", savedOwner.getId().toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("RENTED"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("RENTED"));
 
         Article rentedInDb = articleRepository.findById(savedArticle.getId()).orElseThrow();
         assertThat(rentedInDb.getStatus()).isEqualTo(ArticleStatus.RENTED);
@@ -328,8 +408,8 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/" + savedArticle.getId() + "/toggle-rent")
                 .param("ownerId", savedOwner.getId().toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("AVAILABLE"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("AVAILABLE"));
 
         Article inDb = articleRepository.findById(savedArticle.getId()).orElseThrow();
         assertThat(inDb.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
@@ -342,42 +422,40 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(post("/api/article/" + savedArticle.getId() + "/toggle-rent")
                 .param("ownerId", savedOwner.getId().toString()))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Inactive articles cannot be rented"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Inactive articles cannot be rented"));
     }
 
     @Test
     void testToggleRent_Integration_Failure_OwnerMismatch() throws Exception {
         mockMvc.perform(post("/api/article/" + savedArticle.getId() + "/toggle-rent")
                 .param("ownerId", "999"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Only the owner can change rental status"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Only the owner can change rental status"));
     }
 
     @Test
     void testToggleRent_Integration_Failure_ArticleNotFound() throws Exception {
         mockMvc.perform(post("/api/article/999999/toggle-rent")
                 .param("ownerId", savedOwner.getId().toString()))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Article not found"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Article not found"));
     }
 
-    // ------------ GET "/api/article/category/{id}/count")------------
 
     @Test
     void testGetArticleCountByCategory_Integration() throws Exception {
         mockMvc.perform(get("/api/article/category/" + savedCategory.getId() + "/count"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("1")); // Debe haber 1 artículo
+            .andExpect(status().isOk())
+            .andExpect(content().string("1"));
     }
 
-    // ------------ GET "/api/article/category/{id}/latest")------------
 
     @Test
     void testGetLatestArticlesByCategory_Integration() throws Exception {
         mockMvc.perform(get("/api/article/category/" + savedCategory.getId() + "/latest"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].title").value("Taladro"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Taladro"));
     }
 }

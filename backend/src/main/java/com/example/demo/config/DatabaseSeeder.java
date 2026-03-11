@@ -92,8 +92,8 @@ public class DatabaseSeeder {
             // Al guardar el ArticleRepository, JPA gestiona la tabla 'items' y 'articles'
             articleRepo.save(laptop);
 
-            // 6. Servicio (Herencia de Item)
-            Service setupService = new Service();
+            // 4. Servicio (Herencia de Item)
+            ServiceItem setupService = new ServiceItem();
             setupService.setTitle("Instalación Software");
             setupService.setDescription("Configuración inicial a domicilio");
             setupService.setCategory(catTech);

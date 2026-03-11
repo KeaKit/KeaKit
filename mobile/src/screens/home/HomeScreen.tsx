@@ -1,30 +1,104 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
-  Modal,
-  Pressable,
-  ActivityIndicator,
+  ScrollView,
+  RefreshControl,
+  Animated,
+  Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../types';
-import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
+import { RootStackParamList, RentedItemResponse, Article } from '../../types';
+import { Colors } from '../../styles';
 import { getWalletByUserId } from '../../services/walletService';
+import { getRentedItems } from '../../services/incidentService';
+import { getMyArticles } from '../../services/articleService';
+import ProfileMenuModal from './ProfileMenuModal';
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
+// ─── Animated list item wrapper ──────────────────────────────────────────────
+const FadeInItem: React.FC<{ delay?: number; children: React.ReactNode }> = ({
+  delay = 0,
+  children,
+}) => {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(16)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 400, delay, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 400, delay, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+      {children}
+    </Animated.View>
+  );
+};
+
+// Initial animation
+const SkeletonPulse: React.FC<{ width?: number | string; height?: number; radius?: number; dark?: boolean }> = ({
+  width: w = '100%',
+  height: h = 16,
+  radius = 6,
+  dark = false,
+}) => {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        width: w as any,
+        height: h,
+        borderRadius: radius,
+        backgroundColor: dark ? 'rgba(255,255,255,0.3)' : '#E5E7EB',
+        opacity,
+      }}
+    />
+  );
+};
+
+// Status ENUM for item status
+const STATUS_CONFIG: Record<string, { label: string; dot: string }> = {
+  AVAILABLE: { label: 'Available', dot: '#10B981' }, 
+  RENTED:    { label: 'Rented',  dot: '#F59E0B' }, 
+  DEFAULT:   { label: 'Inactive',   dot: '#9CA3AF' }, 
+};
+
+// Main Component
 const HomeScreen: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigation = useNavigation<HomeNav>();
+
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [rentedItems, setRentedItems] = useState<RentedItemResponse[]>([]);
+  const [loadingRentals, setLoadingRentals] = useState(false);
+  const [myArticles, setMyArticles] = useState<Article[]>([]);
+  const [loadingArticles, setLoadingArticles] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const headerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -41,295 +115,532 @@ const HomeScreen: React.FC = () => {
         }
       }
     };
+    Animated.timing(headerAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+  }, []);
 
-    fetchBalance();
-  }, [user?.id, user?.token]);
-
-  const handleLogout = async () => {
-    setShowProfileMenu(false);
+  const fetchData = async () => {
+    if (!user?.id || !user?.token) return;
+    setLoadingBalance(true);
     try {
-      await signOut();
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      const wallet = await getWalletByUserId(user.id, user.token);
+      setBalance(wallet.balance);
+    } catch {
+      setBalance(null);
+    } finally {
+      setLoadingBalance(false);
+    }
+    setLoadingRentals(true);
+    try {
+      setRentedItems(await getRentedItems(user.id, user.token));
+    } catch {
+      setRentedItems([]);
+    } finally {
+      setLoadingRentals(false);
+    }
+    setLoadingArticles(true);
+    try {
+      setMyArticles(await getMyArticles(user.id, user.token));
+    } catch {
+      setMyArticles([]);
+    } finally {
+      setLoadingArticles(false);
     }
   };
 
-  const handleCreateKit = () => {
-    console.log('Crear kit');
-    navigation.navigate('CreateKit');
+  useEffect(() => { fetchData(); }, [user?.id, user?.token]);
+  useFocusEffect(React.useCallback(() => { fetchData(); }, [user?.id, user?.token]));
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
   };
 
-  const handleRentItems = () => {
-    console.log('Poner a alquilar objetos');
-    navigation.navigate('UploadArticle');
-  };
+  const activeRentals = rentedItems.filter(i => new Date(i.endDate) > new Date());
 
   return (
-    <SafeAreaView style={commonStyles.container}>
-      {/* Header - usando estilos comunes */}
-      <View style={commonStyles.header}>
-        <View style={styles.headerLeft} />
-
-        {/* Logo Central - usando estilos comunes */}
-        <View style={commonStyles.logoContainer}>
-          <View style={commonStyles.logoBox}>
-            <Ionicons name="cube" size={32} color={Colors.brandIcon} />
-          </View>
-        </View>
-
-        {/* Botón de Perfil/Usuario */}
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+      
+      {/* Header */}
+      <Animated.View
+        style={[
+          styles.header,
+          {
+            opacity: headerAnim,
+            transform: [{ translateY: headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] }) }],
+          },
+        ]}
+      >
+        <Text style={styles.headerGreeting}>Hola, {user ? user.name.split(' ')[0] : 'Invitado'}</Text>
+        {/* Profile icon */}
         <TouchableOpacity
-          style={componentStyles.iconButton}
+          style={styles.avatarBtn}
           onPress={() => setShowProfileMenu(true)}
+          activeOpacity={0.8}
         >
-          <Ionicons
-            name={user ? "person-circle" : "person-circle-outline"}
-            size={32}
-            color={Colors.primary}
-          />
+          <View style={styles.avatarIconWrap}>
+            <Ionicons name="person" size={20} color="#FFFFFF" />
+          </View>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
-      {/* Contenido Principal */}
-      <View style={commonStyles.screenPadding}>
-        {/* Mensaje de Bienvenida - usando estilos comunes */}
-        <View style={commonStyles.welcomeSection}>
-          <Text style={commonStyles.welcomeTitle}>
-            {user ? `¡Hola de nuevo ${user.name}!` : '¡Bienvenido a KeaKit!'}
-          </Text>
-          <Text style={commonStyles.welcomeSubtitle}>
-            {user
-              ? 'Gestiona tus kits y alquileres'
-              : 'Crea kits y alquila objetos fácilmente'}
-          </Text>
-          
-          {/* Mostrar saldo disponible */}
-          {user && (
-            <View style={styles.balanceContainer}>
-              <Text style={styles.balanceLabel}>Saldo disponible:</Text>
-              {loadingBalance ? (
-                <ActivityIndicator size="small" color={Colors.primary} />
-              ) : (
-                <Text style={styles.balanceAmount}>
-                  {balance !== null ? `${balance.toFixed(2)}€` : 'No disponible'}
-                </Text>
+      {/* Main scrollable container */}
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryHome} />
+        }
+      >
+        { /* Wallet */}
+        <FadeInItem delay={50}>
+          <TouchableOpacity 
+            activeOpacity={0.8} 
+            onPress={() => console.log('Navegar a futura pantalla de Wallet detalles')}
+          >
+            <LinearGradient
+              colors={[Colors.primaryHome, '#1e526e']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.card, styles.cardPrimary, styles.touchableCardLayout]}
+            >
+              <View style={styles.walletContentWrapper}>
+                <View style={styles.cardHeaderFlex}>
+                  <Text style={styles.cardTitleLight}>Mi Wallet</Text>
+                  <View style={[styles.iconRingLight, { borderColor: Colors.backgroundWhite }]}>
+                    <Ionicons name="wallet" size={18} color="#FFFFFF" />
+                  </View>
+                </View>
+                {loadingBalance ? (
+                  <SkeletonPulse width={120} height={38} radius={8} dark />
+                ) : (
+                  <Text style={styles.hugeValueLight}>
+                    {balance !== null ? `${balance.toFixed(2)}€` : '—'}
+                  </Text>
+                )}
+                <Text style={styles.cardSubtitleLight}>balance disponible</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#FFFFFF" style={styles.walletChevron} />
+            </LinearGradient>
+          </TouchableOpacity>
+        </FadeInItem>
+
+        {/* Item rented now card */}
+        {user && (
+          <FadeInItem delay={150}>
+            <TouchableOpacity 
+              style={[styles.card, styles.cardHorizontal, { backgroundColor: Colors.secondaryLavender }]} 
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('MyKits')}
+            >
+              <View style={[styles.largeCircleGraphic, { backgroundColor: 'rgba(255,255,255,0.7)' }]}>
+                <Ionicons name="layers" size={32} color={Colors.primaryHome} />
+              </View>
+              <View style={styles.cardHorizontalText}>
+                  {loadingRentals ? (
+                  <SkeletonPulse width={60} height={28} />
+                ) : (
+                  <Text style={styles.hugeValueDark}>{activeRentals.length}</Text>
+                )}
+                <Text style={styles.cardSubtitleDark}>artículos en uso</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color={Colors.primaryHome} />
+            </TouchableOpacity>
+          </FadeInItem>
+        )}
+
+        {/* Create kit and upload Article Cards */}
+        <FadeInItem delay={250}>
+          <View style={styles.gridRow}>
+            {/* Create kit card */}
+            <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryBlue }]}>
+              <View style={[styles.circleGraphic, { backgroundColor: 'rgba(255,255,255,0.7)' }]}>
+                <Ionicons name="cube" size={28} color={Colors.primaryHome} />
+              </View>
+              <View style={styles.gridCardContent}>
+                <Text style={styles.gridCardValueDark}>Kit</Text>
+                <Text style={styles.gridCardLabelDark}>Alquila tu propio kit</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.pillButtonPrimary} 
+                onPress={() => navigation.navigate('CreateKit')}
+              >
+                <Text style={styles.pillButtonTextLight}>Crear kit</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Upload Article card */}
+            <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryMint }]}>
+              <View style={[styles.circleGraphic, { backgroundColor: 'rgba(255,255,255,0.7)' }]}>
+                <Ionicons name="bag" size={28} color={Colors.primaryHome} />
+              </View>
+              <View style={styles.gridCardContent}>
+                <Text style={styles.gridCardValueDark}>Artículo</Text>
+                <Text style={styles.gridCardLabelDark}>Pon a alquilar tus objetos</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.pillButtonPrimary} 
+                onPress={() => navigation.navigate('UploadArticle')}
+              >
+                <Text style={styles.pillButtonTextLight}>Subir nuevo</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </FadeInItem>
+
+        {/* Article list */}
+        {user && (
+          <FadeInItem delay={350}>
+            <View style={[styles.card, styles.cardWhite, Shadows.medium]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <Text style={styles.cardTitleDark}>Mis artículos publicados</Text>
+              </View>
+              <View style={styles.listContainer}>
+                {loadingArticles
+                  ? Array.from({ length: 3 }).map((_, i) => <CompactSkeletonRow key={i} />)
+                  : myArticles.length === 0
+                  ? <EmptyTrayMessage icon="pricetags-outline" message="No tienes artículos publicados" />
+                  : myArticles.slice(0, 3).map((article, idx) => {
+                      const cfg = STATUS_CONFIG[article.status] ?? STATUS_CONFIG.DEFAULT;
+                      return (
+                        <CompactRow
+                          key={article.id}
+                          isLast={idx === Math.min(myArticles.length, 3) - 1}
+                          title={article.title}
+                          subtitle={cfg.label}
+                          price={`${article.pricePerMonth}€`}
+                          dotColor={cfg.dot}
+                        />
+                      );
+                    })}
+              </View>
+              
+              {!loadingArticles && myArticles.length > 3 && (
+                <TouchableOpacity style={styles.moreBtnPrimary} onPress={() => navigation.navigate('MyArticles')}>
+                  <Text style={styles.moreBtnTextLabelLight}>Ver todos los artículos →</Text>
+                </TouchableOpacity>
               )}
             </View>
-          )}
-        </View>
+          </FadeInItem>
+        )}
 
-        {/* Botones Principales - usando estilos de componentes */}
-        <View style={commonStyles.gapLg}>
-          <TouchableOpacity
-            style={componentStyles.actionButton}
-            onPress={handleCreateKit}
-            activeOpacity={0.8}
-          >
-            <View style={componentStyles.actionIconContainer}>
-              <Ionicons name="add-circle" size={48} color={Colors.textWhite} />
-            </View>
-            <Text style={componentStyles.actionButtonText}>Crear Kits</Text>
-            <Text style={componentStyles.actionButtonSubtext}>
-              Agrupa productos relacionados
-            </Text>
-          </TouchableOpacity>
+      </ScrollView>
 
-          <TouchableOpacity
-            style={[componentStyles.actionButton, componentStyles.actionButtonSecondary]}
-            onPress={handleRentItems}
-            activeOpacity={0.8}
-          >
-            <View style={componentStyles.actionIconContainer}>
-              <Ionicons name="cube-outline" size={48} color={Colors.textWhite} />
-            </View>
-            <Text style={componentStyles.actionButtonText}>Alquilar Objetos</Text>
-            <Text style={componentStyles.actionButtonSubtext}>
-              Pon tus productos en alquiler
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Modal de Menú de Perfil - usando estilos de componentes */}
-      <Modal
-        visible={showProfileMenu}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowProfileMenu(false)}
-      >
-        <Pressable
-          style={componentStyles.modalOverlay}
-          onPress={() => setShowProfileMenu(false)}
-        >
-          <View style={componentStyles.profileMenu}>
-            {user ? (
-              <>
-                <View style={componentStyles.modalHeader}>
-                  <Ionicons name="person-circle" size={48} color={Colors.primary} />
-                  <Text style={componentStyles.menuUserName}>{user.name}</Text>
-                  <Text style={componentStyles.menuUserEmail}>{user.email}</Text>
-                </View>
-
-                <View style={componentStyles.modalDivider} />
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('Profile');
-                  }}
-                >
-                  <Ionicons name="person" size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Ver Perfil</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    if (user) {
-                      navigation.navigate('UserRatings', {
-                        userId: user.id,
-                        userName: user.name,
-                      });
-                    }
-                  }}
-                >
-                  <Ionicons name="star" size={24} color={Colors.warning} />
-                  <Text style={componentStyles.menuItemText}>Mis Valoraciones</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('MyArticles');
-                  }}
-                >
-                  <Ionicons name="cube" size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Mis Artículos</Text>
-                </TouchableOpacity>
-
-                {user?.role === 'ADMIN' && (
-                  <TouchableOpacity
-                    style={componentStyles.menuItem}
-                    onPress={() => {
-                      setShowProfileMenu(false);
-                      navigation.navigate('AdminUsers');
-                    }}
-                  >
-                    <Ionicons name="people" size={24} color={Colors.primary} />
-                    <Text style={componentStyles.menuItemText}>
-                      Gestión de usuarios
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('MyKits');
-                  }}
-                >
-                  <Ionicons name="cube" size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Mis Kits</Text>
-                </TouchableOpacity>
-              <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('Categories');
-                  }}
-                >
-                  <Ionicons name="reader" size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Categorías</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('MyIncidents');
-                  }}
-                >
-                  <Ionicons name="alert-circle" size={24} color={Colors.info} />
-                  <Text style={componentStyles.menuItemText}>Mis Incidencias</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={handleLogout}
-                >
-                  <Ionicons name="log-out" size={24} color={Colors.error} />
-                  <Text style={[componentStyles.menuItemText, componentStyles.menuItemDanger]}>
-                    Cerrar Sesión
-                  </Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <View style={componentStyles.modalHeader}>
-                  <Ionicons name="person-circle-outline" size={48} color={Colors.primary} />
-                  <Text style={componentStyles.modalTitle}>Accede a tu cuenta</Text>
-                </View>
-
-                <View style={componentStyles.modalDivider} />
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('Login');
-                  }}
-                >
-                  <Ionicons name="log-in" size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Iniciar Sesión</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('Register');
-                  }}
-                >
-                  <Ionicons name="person-add" size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Registrarse</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </Pressable>
-      </Modal>
+      <ProfileMenuModal visible={showProfileMenu} onClose={() => setShowProfileMenu(false)} />
     </SafeAreaView>
   );
 };
 
-// Estilos locales específicos de esta pantalla (solo lo que no se puede reutilizar)
-const styles = StyleSheet.create({
-  headerLeft: {
-    width: 32, // Espaciador para centrar el logo
+// ─── Sub-components para las listas internas ──────────────────────────────────
+
+const CompactRow: React.FC<{
+  title: string;
+  subtitle: string;
+  price: string;
+  dotColor: string;
+  isLast?: boolean;
+}> = ({ title, subtitle, price, dotColor, isLast }) => (
+  <View style={[styles.compactRow, isLast && styles.compactRowLast]}>
+    <View style={styles.compactRowLeft}>
+      <Text style={styles.compactRowTitle} numberOfLines={1}>{title}</Text>
+      <Text style={styles.compactRowSubtitle}>{subtitle}</Text>
+    </View>
+    <View style={styles.compactRowRight}>
+      <Text style={styles.compactRowPrice}>{price}</Text>
+      <View style={[styles.compactRowDot, { backgroundColor: dotColor }]} />
+    </View>
+  </View>
+);
+
+const CompactSkeletonRow: React.FC = () => (
+  <View style={styles.compactRow}>
+    <View style={styles.compactRowLeft}>
+      <SkeletonPulse width="80%" height={14} />
+      <SkeletonPulse width="50%" height={12} radius={4} />
+    </View>
+    <SkeletonPulse width={40} height={16} radius={6} />
+  </View>
+);
+
+const EmptyTrayMessage: React.FC<{ icon: any; message: string }> = ({ icon, message }) => (
+  <View style={styles.emptyTrayContent}>
+    <Ionicons name={icon} size={32} color="#D1D5DB" />
+    <Text style={styles.emptyTrayMessage}>{message}</Text>
+  </View>
+);
+
+// ─── Sombreado genérico (Shadows) ───────────────────────────────────────────────────────────
+const Shadows = {
+  medium: {
+    shadowColor: '#2d6e91',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  balanceContainer: {
+};
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  // Fondo principal BLANCO puro
+  root: {
+    flex: 1,
+    backgroundColor: '#FFFFFF', 
+  },
+
+  // Header
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    paddingVertical: 12,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+  },
+  headerGreeting: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: Colors.primaryHome, // Texto azul oscuro
+    letterSpacing: -0.5,
+  },
+  avatarBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryHome, // Círculo azul oscuro
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Scroll
+  scroll: {
     paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingBottom: 40,
+    gap: 16,
+  },
+
+  // Base Card
+  card: {
+    borderRadius: 16,
+    padding: 20,
+  },
+
+  // Tarjeta Blanca (Mis Artículos)
+  cardWhite: {
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(0,0,0,0.02)', // Borde casi invisible para definición
   },
-  balanceLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginRight: 8,
+
+  // Tarjeta Primaria Oscura (Wallet)
+  cardPrimary: {
+    // Gradiente aplicado en el componente
   },
-  balanceAmount: {
+
+  // Layouts específicos para la tarjeta Wallet pulsable
+  touchableCardLayout: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  walletContentWrapper: {
+    flex: 1, // Ocupa todo el espacio para empujar la flecha a la derecha
+  },
+  walletChevron: {
+    marginLeft: 12, // Espacio entre el texto y la flecha
+  },
+
+  // Contenidos de Cards OSCURAS (Wallet)
+  cardHeaderFlex: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  cardTitleLight: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.primary,
+    fontWeight: '800',
+    color: '#FFFFFF', // Texto blanco
+    letterSpacing: -0.3,
+  },
+  iconRingLight: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hugeValueLight: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#FFFFFF', // Texto blanco
+    letterSpacing: -1,
+    marginBottom: 2,
+  },
+  cardSubtitleLight: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)', // Texto blanco con opacidad
+    fontWeight: '500',
+  },
+
+  // Contenidos de Cards CLARAS (Alquileres / Grid / Lista)
+  hugeValueDark: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: Colors.primaryHome, // Texto azul oscuro
+    letterSpacing: -1,
+    marginBottom: 2,
+  },
+  cardTitleDark: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.primaryHome,
+    letterSpacing: -0.3,
+  },
+  cardSubtitleDark: {
+    fontSize: 14,
+    color: Colors.textPrimaryHome, // Texto gris oscuro
+    fontWeight: '500',
+  },
+
+  // Contenidos de Card 2 (Alquileres Horizontal)
+  cardHorizontal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  largeCircleGraphic: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  cardHorizontalText: {
+    flex: 1,
+  },
+
+  // Grid 50/50 (Acciones)
+  gridRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  gridCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 20,
+  },
+  circleGraphic: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  gridCardContent: {
+    alignItems: 'center',
+    flex: 1,
+    marginBottom: 20,
+  },
+  gridCardValueDark: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: Colors.primaryHome,
+    marginBottom: 2,
+  },
+  gridCardLabelDark: {
+    fontSize: 12,
+    color: Colors.textPrimaryHome,
+    textAlign: 'center',
+    paddingHorizontal: 4,
+  },
+  pillButtonPrimary: {
+    width: '100%',
+    paddingVertical: 10,
+    borderRadius: 999, // Botón pastilla relleno
+    backgroundColor: Colors.primaryHome, // Botón azul oscuro
+    alignItems: 'center',
+  },
+  pillButtonTextLight: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF', // Texto blanco
+  },
+
+  // Card 5 (Lista interna)
+  listContainer: {
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  compactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  compactRowLast: {
+    borderBottomWidth: 0,
+  },
+  compactRowLeft: {
+    flex: 1,
+    gap: 4,
+  },
+  compactRowTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.primaryHome,
+  },
+  compactRowSubtitle: {
+    fontSize: 13,
+    color: Colors.textPrimaryHome,
+  },
+  compactRowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  compactRowPrice: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.primaryHome,
+  },
+  compactRowDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+
+  // Empty y More
+  emptyTrayContent: {
+    alignItems: 'center',
+    paddingVertical: 30,
+    gap: 8,
+  },
+  emptyTrayMessage: {
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  moreBtnPrimary: {
+    marginTop: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryHome, // Botón azul oscuro ancho
+    alignItems: 'center',
+  },
+  moreBtnTextLabelLight: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF', // Texto blanco
   },
 });
 

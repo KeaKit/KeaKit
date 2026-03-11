@@ -47,12 +47,8 @@ export const commonStyles = StyleSheet.create({
   logoBox: {
     width: 60,
     height: 60,
-    backgroundColor: Colors.brandBeige,
-    borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Colors.brandBorder,
   },
 
   // Botones principales
@@ -73,7 +69,7 @@ export const commonStyles = StyleSheet.create({
   },
 
   secondaryButton: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: Colors.primary,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.base,
     paddingHorizontal: Spacing.xl,

@@ -101,26 +101,7 @@ export interface KitPaymentDTO {
   courierPrice: number;
 }
 
-export interface RatingCreateRequest {
-  revieweeId: number;
-  kitId: number;
-  score: number;
-  comment?: string;
-}
-
-export interface RatingResponse {
-  id: number;
-  reviewerId: number;
-  reviewerName: string;
-  revieweeId: number;
-  revieweeName: string;
-  kitId: number;
-  kitName: string;
-  score: number;
-  comment: string;
-  type: string;
-  createdAt: string;
-}
+export type ArticleCondition = 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN';
 
 export interface Article {
   id: number;
@@ -136,6 +117,7 @@ export interface Article {
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
   totalUnits?: number;
+  condition: ArticleCondition | null;
 }
 
 export interface ArticlePayload {
@@ -150,6 +132,7 @@ export interface ArticlePayload {
   imageUrl?: string;
   purchaseDate?: string;
   totalUnits?: number;
+  condition?: ArticleCondition;
 }
 
 export interface Item {
@@ -243,8 +226,6 @@ export interface Category {
   minPrice: number;
   maxPrice: number;
 }
-
-// === Incidents ===
 
 export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
 export type IncidentStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
