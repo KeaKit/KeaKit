@@ -46,6 +46,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/article/**").authenticated()
                 .requestMatchers("/api/services/**").authenticated()
                 .requestMatchers("/api/users/**").authenticated()
+                .requestMatchers("/api/ratings/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/services/active", "/api/services/{id}").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
