@@ -69,9 +69,11 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#103a57" />
-      </TouchableOpacity>
+      {navigation.canGoBack() && (
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#103a57" />
+        </TouchableOpacity>
+      )}
 
       <Image
         source={require('../../../assets/logo.png')}
