@@ -46,6 +46,9 @@ export const API_ROUTES = {
 
   // Payments
   CREATE_PAYMENT_INTENT:     `${BASE_URL}/api/payments/create`,
+  PROCESS_PAYMENT_STRIPE:    (kitId: number) => `${BASE_URL}/api/payments/process/stripe/${kitId}`,
+  PROCESS_PAYMENT_WALLET:    (kitId: number) => `${BASE_URL}/api/payments/process/wallet/${kitId}`,
+  GET_KIT_PAYMENT_BY_ID:     (kitId: number) => `${BASE_URL}/api/kits/payment/${kitId}`,
 } as const;
 
 export default BASE_URL;

@@ -471,8 +471,9 @@ const CreateKitScreen: React.FC = () => {
       console.error("🔥 ERROR: No se pudo crear el kit.");
       return;
     }
+    console.log("Created kit:", createdKit);
 
-    navigation.navigate("Checkout", createdKit);
+    navigation.navigate("Checkout", { kitId: createdKit.id });
   };
 
   const customTheme = {

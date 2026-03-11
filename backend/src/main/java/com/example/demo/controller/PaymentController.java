@@ -4,8 +4,6 @@ import com.example.demo.service.PaymentService;
 
 import com.stripe.model.PaymentIntent;
 import com.stripe.exception.StripeException;
-import com.stripe.model.Event;
-import com.stripe.net.Webhook;
 
 import java.util.Map;
 
@@ -14,6 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -36,48 +36,31 @@ public class PaymentController {
         }
     }
 
-    @PostMapping("/process")
-    public ResponseEntity<String> processPayment(
-            @RequestBody String payload,
-            @RequestHeader(value = "Stripe-Signature", required = false) String sigHeader) {
-        // TODO: Revisar y completar esta función
+    @PostMapping("/process/stripe/{kitId}")
+    public ResponseEntity<String> processPayment(@PathVariable Long kitId, @RequestBody String paymentIntentStatus) {
 
-        Event event;
-
-        try {
-            if ("test".equals(sigHeader)) {
-                // Modo test: deserializamos directamente desde JSON
-                event = Event.GSON.fromJson(payload, Event.class);
-            } else {
-                // Validación real con firma de Stripe
-                event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
+        if (paymentIntentStatus.replace("\"", "").equals("succeeded")) {
+            try {
+                paymentService.processPayment(kitId, false); // El pago se hizo a través de Stripe, no con wallet
+                return ResponseEntity.ok("Pago procesado correctamente");
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Error al procesar el pago: " + e.getMessage());
             }
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Se esperaba un estado de pago succeeded, pero se recibió: " + paymentIntentStatus);
+        }
+    }
+
+    @PostMapping("/process/wallet/{kitId}")
+    public ResponseEntity<String> processWalletPayment(@PathVariable Long kitId) {
+        try {
+            paymentService.processPayment(kitId, true); // El pago se hizo con wallet
+            return ResponseEntity.ok("Pago con billetera procesado correctamente");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error de validación: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al procesar el pago con billetera: " + e.getMessage());
         }
-
-        // Procesamos el evento
-        if ("payment_intent.succeeded".equals(event.getType())) {
-            event.getDataObjectDeserializer().getObject().ifPresent(stripeObject -> {
-                if (stripeObject instanceof PaymentIntent) {
-                    PaymentIntent paymentIntent = (PaymentIntent) stripeObject;
-                    System.out.println("¡Pago exitoso! ID: " + paymentIntent.getId());
-                    System.out.println("Monto: " + paymentIntent.getAmount());
-
-                    // Recuperar metadata del kit
-                    Map<String, String> metadata = paymentIntent.getMetadata();
-                    System.out.println("Kit: " + metadata.get("kit_name"));
-                    System.out.println("Usuario: " + metadata.get("user_id"));
-                    System.out.println("Fechas: " + metadata.get("start_date") + " - " + metadata.get("end_date"));
-                    System.out.println("Items: " + metadata.get("items"));
-
-                    // Aquí creas el kit en la base de datos usando los metadata
-                }
-            });
-        }
-
-        return ResponseEntity.ok("Procesado");
     }
 
 }
