@@ -9,10 +9,12 @@ import com.example.demo.model.Transaction;
 import com.example.demo.model.TransactionType;
 import com.example.demo.model.Wallet;
 import com.example.demo.model.Item;
+import com.example.demo.model.Kit;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.KitResponse.KitItemResponse;
 import com.example.demo.dto.KitPaymentDTO;
 import com.example.demo.repository.TransactionRepository;
+import com.example.demo.repository.KitRepository;
 
 import com.stripe.Stripe;
 import com.stripe.model.PaymentIntent;
@@ -38,7 +40,13 @@ public class PaymentService {
     private ItemService itemService;
 
     @Autowired
+    private OrderConfirmationEmailService emailService;
+
+    @Autowired
     private TransactionRepository transactionRepository;
+
+    @Autowired
+    private KitRepository kitRepository;
 
     @Value("${stripe.api.key}")
     private String stripeApiKey;
@@ -115,7 +123,13 @@ public class PaymentService {
                 Transaction payOwnerTransaction = payItemToOwner(ownerId, itemPrice);
                 transactionRepository.save(payOwnerTransaction);
             }
+            // 5. Marcamos el kit como pagado
             kitService.markAsPaid(kitId);
+            // 6. Enviamos email de confirmación al arrendatario
+            // TODO: Utilizar KitResponse
+            Kit kitEntity = kitRepository.findById(kitId).orElseThrow(() -> new RuntimeException("Kit not found"));
+            emailService.sendOrderConfirmation(kitEntity);
+
         } catch (Exception e) {
             throw new RuntimeException("Error processing payment: " + e.getMessage());
         }

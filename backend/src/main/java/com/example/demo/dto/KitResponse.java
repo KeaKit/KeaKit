@@ -49,7 +49,7 @@ public class KitResponse {
     private DeliveryMethod deliveryMethod;
     private String meetingPoint;
     private Double courierPrice;
-    private Long tenantId;
+    private Long tenantId; // TODO: Añadir más datos sobre tenant (email)
     private List<Long> itemIds;
     private List<KitItemResponse> items;
     private Integer totalSelectedItems;
