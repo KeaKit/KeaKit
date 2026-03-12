@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
+import com.example.demo.dto.UserUpdateData;
 import com.example.demo.exception.InvalidCredentialsException;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundException;
@@ -141,5 +142,55 @@ class UserServiceTest {
         assertThrows(InvalidCredentialsException.class, () -> userService.login(loginRequest));
 
         verify(jwtUtil, never()).generateToken(any(), any());
+    }
+
+    @Test
+    void getUserById_success_returnsUserResponse() {
+        when(userRepository.findById(10L)).thenReturn(Optional.of(existingUser));
+
+        UserResponse response = userService.getUserById(10L);
+
+        assertNotNull(response);
+        assertEquals(10L, response.getId());
+        assertEquals("new.user@test.com", response.getEmail());
+        assertEquals("New User", response.getName());
+    }
+
+    @Test
+    void getUserById_userNotFound_throwsUserNotFoundException() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.getUserById(999L));
+    }
+
+    @Test
+    void updateUser_success_updatesOnlyProvidedFields() {
+        UserUpdateData updateData = new UserUpdateData();
+        updateData.setName("Updated Name");
+        updateData.setCity("Valencia");
+
+        when(userRepository.findById(10L)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UserResponse response = userService.updateUser(10L, updateData);
+
+        assertNotNull(response);
+        assertEquals("Updated Name", response.getName());
+        assertEquals("Valencia", response.getCity());
+        assertEquals("new.user@test.com", response.getEmail());
+
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    void updateUser_userNotFound_throwsUserNotFoundException() {
+        UserUpdateData updateData = new UserUpdateData();
+        updateData.setName("Updated Name");
+
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser(999L, updateData));
+
+        verify(userRepository, never()).save(any(User.class));
     }
 }
