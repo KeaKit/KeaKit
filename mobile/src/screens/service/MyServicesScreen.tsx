@@ -8,28 +8,27 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Pressable,
-  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { getMyArticles, deleteArticle, getArticleById } from '../../services/articleService';
-import { RootStackParamList, UserArticle } from '../../types';
+import { getMyServices, deleteService, getServiceById } from '../../services/servicesService';
+import { RootStackParamList, Service, ServiceStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
-import { useNotification } from '../../components/NotificationContext'; // 👈 Importar notificaciones
-import { ConfirmModal } from '../../components/ConfirmModal'; // 👈 Importar modal de confirmación
+import { useNotification } from '../../components/NotificationContext';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
-type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
-type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
+type MyServicesNav = NativeStackNavigationProp<RootStackParamList, 'MyServices'>;
+type FilterType = 'ALL' | 'ACTIVE' | 'UNAVAILABLE' | 'DRAFT';
 
-const MyArticlesScreen: React.FC = () => {
+const MyServicesScreen: React.FC = () => {
   const { user } = useAuth();
-  const navigation = useNavigation<MyArticlesNav>();
-  const { showNotification } = useNotification(); // 👈 Hook de notificaciones
+  const navigation = useNavigation<MyServicesNav>();
+  const { showNotification } = useNotification();
 
-  const [articles, setArticles] = useState<UserArticle[]>([]);
-  const [filteredArticles, setFilteredArticles] = useState<UserArticle[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('ALL');
@@ -37,94 +36,95 @@ const MyArticlesScreen: React.FC = () => {
   
   // Estados para el modal de confirmación
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [articleToDelete, setArticleToDelete] = useState<UserArticle | null>(null);
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      const loadArticles = async () => {
+      const loadServices = async () => {
         if (!user) {
-          setError('Debes iniciar sesión para ver tus artículos');
+          setError('Debes iniciar sesión para ver tus servicios');
           setLoading(false);
           return;
         }
         try {
           setLoading(true);
           setError(null);
-          const data = await getMyArticles(user.id, user.token);
-          setArticles(data);
-          setFilteredArticles(applyFilter(filter, data));
+          const data = await getMyServices(user.id, user.token);
+          setServices(data);
+          setFilteredServices(applyFilter(filter, data));
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'Error al cargar artículos');
-          showNotification('Error al cargar los artículos', 'error'); // 👈 Notificación
+          setError(err instanceof Error ? err.message : 'Error al cargar servicios');
+          showNotification('Error al cargar los servicios', 'error');
         } finally {
           setLoading(false);
         }
       };
-      loadArticles();
+      loadServices();
     }, [user])
   );
 
-  const applyFilter = (f: FilterType, data: UserArticle[]) => {
-    if (f === 'AVAILABLE') return data.filter(a => a.status === 'AVAILABLE');
-    if (f === 'RENTED')    return data.filter(a => a.status === 'RENTED');
+  const applyFilter = (f: FilterType, data: Service[]) => {
+    if (f === 'ACTIVE') return data.filter(s => s.status === 'ACTIVE');
+    if (f === 'UNAVAILABLE') return data.filter(s => s.status === 'UNAVAILABLE');
+    if (f === 'DRAFT') return data.filter(s => s.status === 'DRAFT');
     return data;
   };
 
   const handleFilter = (f: FilterType) => {
     setFilter(f);
-    setFilteredArticles(applyFilter(f, articles));
+    setFilteredServices(applyFilter(f, services));
   };
 
-  const handleEdit = async (item: UserArticle) => {
+  const handleEdit = async (item: Service) => {
     if (!user) return;
     try {
-      const full = await getArticleById(item.id, user.token);
-      navigation.navigate('EditArticle', { article: full });
+      const full = await getServiceById(item.id, user.token);
+      navigation.navigate('EditService', { service: full });
     } catch (err: any) {
-      showNotification(err.message || 'No se pudo cargar el artículo', 'error'); // 👈 Notificación
+      showNotification(err.message || 'No se pudo cargar el servicio', 'error');
     }
   };
 
-  const handleDeletePress = (item: UserArticle) => {
-    if (item.status === 'RENTED') {
+  const handleDeletePress = (item: Service) => {
+    if (item.status === 'UNAVAILABLE') {
       showNotification(
-        'Este artículo está actualmente alquilado. Espera a que finalice el alquiler para eliminarlo.',
+        'Este servicio está actualmente alquilado. Espera a que finalice el alquiler para eliminarlo.',
         'error'
-      ); // 👈 Notificación
+      );
       return;
     }
     
     // Mostrar modal de confirmación
-    setArticleToDelete(item);
+    setServiceToDelete(item);
     setConfirmModalVisible(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!user || !articleToDelete) return;
+    if (!user || !serviceToDelete) return;
     
     setConfirmModalVisible(false);
-    setDeletingId(articleToDelete.id);
+    setDeletingId(serviceToDelete.id);
     
     try {
-      await deleteArticle(articleToDelete.id, user.id, user.token);
-      const updated = articles.filter(a => a.id !== articleToDelete.id);
-      setArticles(updated);
-      setFilteredArticles(applyFilter(filter, updated));
-      showNotification('Artículo eliminado correctamente', 'success'); // 👈 Notificación éxito
+      await deleteService(serviceToDelete.id, user.id, user.token);
+      const updated = services.filter(s => s.id !== serviceToDelete.id);
+      setServices(updated);
+      setFilteredServices(applyFilter(filter, updated));
+      showNotification('Servicio eliminado correctamente', 'success');
     } catch (err) {
       showNotification(
-        err instanceof Error ? err.message : 'No se pudo eliminar el artículo',
+        err instanceof Error ? err.message : 'No se pudo eliminar el servicio',
         'error'
-      ); // 👈 Notificación error
+      );
     } finally {
       setDeletingId(null);
-      setArticleToDelete(null);
+      setServiceToDelete(null);
     }
   };
 
   const handleCancelDelete = () => {
     setConfirmModalVisible(false);
-    setArticleToDelete(null);
+    setServiceToDelete(null);
   };
 
   const formatDate = (dateString: string | null): string => {
@@ -136,68 +136,67 @@ const MyArticlesScreen: React.FC = () => {
     } catch { return dateString; }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: ServiceStatus) => {
     switch (status) {
-      case 'AVAILABLE': return '#28a745';
-      case 'RENTED':    return '#ffc107';
-      case 'INACTIVE':  return '#6c757d';
-      default:          return '#999';
+      case 'ACTIVE': return '#28a745';
+      case 'UNAVAILABLE': return '#ffc107';
+      case 'DRAFT': return '#6c757d';
+      default: return '#999';
     }
   };
 
-  const translateStatus = (status: string) => {
+  const translateStatus = (status: ServiceStatus) => {
     switch (status) {
-      case 'AVAILABLE': return 'Disponible';
-      case 'RENTED':    return 'Alquilado';
-      case 'INACTIVE':  return 'Inactivo';
-      default:          return status;
+      case 'ACTIVE': return 'Activo';
+      case 'UNAVAILABLE': return 'Ocupado';
+      case 'DRAFT': return 'Borrador';
+      default: return status;
     }
   };
 
   const getFilterLabel = (f: FilterType): string => {
     switch (f) {
-      case 'ALL':       return `Todos (${articles.length})`;
-      case 'AVAILABLE': return `Disponibles (${articles.filter(a => a.status === 'AVAILABLE').length})`;
-      case 'RENTED':    return `Alquilados (${articles.filter(a => a.status === 'RENTED').length})`;
+      case 'ALL': return `Todos (${services.length})`;
+      case 'ACTIVE': return `Activos (${services.filter(s => s.status === 'ACTIVE').length})`;
+      case 'UNAVAILABLE': return `Ocupados (${services.filter(s => s.status === 'UNAVAILABLE').length})`;
+      case 'DRAFT': return `Borradores (${services.filter(s => s.status === 'DRAFT').length})`;
     }
   };
 
-  const renderArticle = ({ item }: { item: UserArticle }) => {
+  const renderService = ({ item }: { item: Service }) => {
     const isDeleting = deletingId === item.id;
     return (
-      <View style={styles.articleCard}>
+      <View style={styles.serviceCard}>
         <TouchableOpacity
           style={styles.cardPressable}
           onPress={() => handleEdit(item)}
           activeOpacity={0.85}
         >
-          <View style={styles.imageContainer}>
-            {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
-            ) : (
-              <View style={styles.noImagePlaceholder}>
-                <Ionicons name="image-outline" size={40} color="#ccc" />
-              </View>
-            )}
+          <View style={styles.iconContainer}>
+            <Ionicons name="construct-outline" size={40} color={Colors.primary} />
           </View>
 
-          <View style={styles.articleInfo}>
-            <Text style={styles.articleTitle} numberOfLines={2}>{item.title}</Text>
+          <View style={styles.serviceInfo}>
+            <Text style={styles.serviceTitle} numberOfLines={2}>{item.title}</Text>
+            <View style={styles.detailRow}>
+              <Ionicons name="location-outline" size={14} color="#666" />
+              <Text style={styles.detailText}>{item.city}</Text>
+            </View>
             <View style={styles.priceRow}>
               <Ionicons name="cash-outline" size={16} color={Colors.primary} />
-              <Text style={styles.articlePrice}>{`€${item.pricePerMonth.toFixed(2)}/mes`}</Text>
+              <Text style={styles.servicePrice}>{`€${item.pricePerMonth.toFixed(2)}/mes`}</Text>
             </View>
             <View style={styles.statusRow}>
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
                 <Text style={styles.statusText}>{translateStatus(item.status)}</Text>
               </View>
             </View>
-            {item.status === 'RENTED' && item.rentedUntil && (
-              <View style={styles.dateRow}>
-                <Ionicons name="calendar-outline" size={16} color="#666" />
-                <Text style={styles.dateText}>{`Hasta: ${formatDate(item.rentedUntil)}`}</Text>
-              </View>
-            )}
+            <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={14} color="#666" />
+              <Text style={styles.dateText}>
+                {formatDate(item.availableFrom)} - {formatDate(item.availableUntil)}
+              </Text>
+            </View>
           </View>
         </TouchableOpacity>
 
@@ -230,7 +229,7 @@ const MyArticlesScreen: React.FC = () => {
       <SafeAreaView style={commonStyles.container}>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Cargando artículos...</Text>
+          <Text style={styles.loadingText}>Cargando servicios...</Text>
         </View>
       </SafeAreaView>
     );
@@ -256,12 +255,12 @@ const MyArticlesScreen: React.FC = () => {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mis Artículos</Text>
+        <Text style={styles.headerTitle}>Mis Servicios</Text>
         <View style={styles.headerRight} />
       </View>
 
       <View style={styles.filterContainer}>
-        {(['ALL', 'AVAILABLE', 'RENTED'] as FilterType[]).map((f) => (
+        {(['ALL', 'ACTIVE', 'UNAVAILABLE', 'DRAFT'] as FilterType[]).map((f) => (
           <TouchableOpacity
             key={f}
             style={[styles.filterButton, filter === f && styles.filterButtonActive]}
@@ -274,21 +273,21 @@ const MyArticlesScreen: React.FC = () => {
         ))}
       </View>
 
-      {filteredArticles.length === 0 ? (
+      {filteredServices.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="cube-outline" size={80} color="#ccc" />
+          <Ionicons name="construct-outline" size={80} color="#ccc" />
           <Text style={styles.emptyText}>
             {filter === 'ALL'
-              ? 'No tienes artículos subidos'
-              : `No tienes artículos ${filter === 'AVAILABLE' ? 'disponibles' : 'alquilados'}`}
+              ? 'No tienes servicios publicados'
+              : `No tienes servicios ${filter === 'ACTIVE' ? 'activos' : filter === 'UNAVAILABLE' ? 'ocupados' : 'en borrador'}`}
           </Text>
-          <Text style={styles.emptySubtext}>Pulsa el botón + para subir tu primer artículo</Text>
+          <Text style={styles.emptySubtext}>Pulsa el botón + para publicar tu primer servicio</Text>
         </View>
       ) : (
         <FlatList
-          data={filteredArticles}
+          data={filteredServices}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={renderArticle}
+          renderItem={renderService}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
@@ -296,17 +295,17 @@ const MyArticlesScreen: React.FC = () => {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('UploadArticle')}
+        onPress={() => navigation.navigate('PromoteService')}
         activeOpacity={0.85}
       >
         <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
 
-      {/* Modal de confirmación para eliminar */}
+      {/* Modal de confirmación */}
       <ConfirmModal
         visible={confirmModalVisible}
         title="Confirmar eliminación"
-        message={`¿Seguro que quieres eliminar "${articleToDelete?.title}"? Esta acción no se puede deshacer.`}
+        message={`¿Seguro que quieres eliminar "${serviceToDelete?.title}"? Esta acción no se puede deshacer.`}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         confirmText="Eliminar"
@@ -317,6 +316,7 @@ const MyArticlesScreen: React.FC = () => {
   );
 };
 
+// Los estilos se mantienen igual
 const styles = StyleSheet.create({
   centerContainer: {
     flex: 1,
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   filterText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: '#666',
   },
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     paddingBottom: 100,
   },
-  articleCard: {
+  serviceCard: {
     flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -403,31 +403,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flex: 1,
   },
-  imageContainer: {
-    width: 100,
-    height: 100,
-  },
-  articleImage: {
-    width: '100%',
-    height: '100%',
-  },
-  noImagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f5f5f5',
+  iconContainer: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#f0f8ff',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  articleInfo: {
+  serviceInfo: {
     flex: 1,
     padding: Spacing.md,
     justifyContent: 'space-between',
   },
-  articleTitle: {
+  serviceTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.textPrimaryHome,
     marginBottom: Spacing.xs,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  detailText: {
+    fontSize: 13,
+    color: '#666',
   },
   priceRow: {
     flexDirection: 'row',
@@ -435,7 +437,7 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: Spacing.xs,
   },
-  articlePrice: {
+  servicePrice: {
     fontSize: 15,
     fontWeight: '700',
     color: Colors.primary,
@@ -446,12 +448,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     borderRadius: 12,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: '#fff',
   },
@@ -461,7 +463,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dateText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#666',
   },
   actionsContainer: {
@@ -518,4 +520,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MyArticlesScreen;
+export default MyServicesScreen;

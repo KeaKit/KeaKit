@@ -268,9 +268,28 @@ const HomeScreen: React.FC = () => {
                 style={styles.pillButtonPrimary} 
                 onPress={() => navigation.navigate('UploadArticle')}
               >
-                <Text style={styles.pillButtonTextLight}>Subir nuevo</Text>
+                <Text style={styles.pillButtonTextLight}>Subir artículo</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Upload Service card */}
+            {user?.role === 'USER' && (
+            <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryCoral }]}>
+              <View style={[styles.circleGraphic, { backgroundColor: 'rgba(255,255,255,0.7)' }]}>
+                <Ionicons name="construct-outline" size={28} color={Colors.primaryHome} />
+              </View>
+              <View style={styles.gridCardContent}>
+                <Text style={styles.gridCardValueDark}>Servicio</Text>
+                <Text style={styles.gridCardLabelDark}>Ofrece servicios</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.pillButtonPrimary} 
+                onPress={() => navigation.navigate('PromoteService')}
+              >
+                <Text style={styles.pillButtonTextLight}>Publicar servicio</Text>
+              </TouchableOpacity>
+            </View>
+            )}
           </View>
         </FadeInItem>
 
