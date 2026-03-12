@@ -38,9 +38,11 @@ Para facilitar el análisis de los datos, las preguntas de la encuesta se organi
 
 El análisis del feedback obtenido a través de las encuestas permitirá evaluar la evolución de la percepción de los usuarios piloto a lo largo de los distintos sprints. Para ello, cada participante deberá indicar con qué usuario ha realizado la valoración, lo que facilitará identificar tendencias individuales y globales, así como detectar mejoras o retrocesos en la experiencia de uso.
 
-A partir de estos resultados se definirán **objetivos de mejora** para cada sprint, permitiendo comprobar si las acciones implementadas han tenido un impacto positivo en la satisfacción de los usuarios. Este proceso iterativo es esencial para garantizar que el producto evoluciona de forma alineada con las necesidades reales de los participantes.
+A partir de estos resultados se definirán **objetivos de mejora** para cada sprint, priorizando las incidencias y necesidades detectadas mediante una **tabla de priorización MoSCoW**. Este sistema permite clasificar cada error o propuesta de mejora según su criticidad (Must, Should, Could, Won’t), garantizando que el equipo aborda primero los aspectos que tienen un mayor impacto en la experiencia del usuario.
 
-Asimismo, se considera fundamental que los usuarios piloto perciban que su opinión tiene un efecto directo en el desarrollo del proyecto. Por ello, el feedback recibido será analizado, priorizado y tenido en cuenta para la **planificación de mejoras** sobre los aspectos señalados.
+Este proceso iterativo es esencial para asegurar que el producto evoluciona de forma alineada con las necesidades reales de los participantes. Además, la utilización de la tabla MoSCoW facilita una planificación más clara y estructurada, permitiendo comprobar si las acciones implementadas han tenido un impacto positivo en la satisfacción de los usuarios.
+
+Asimismo, se considera fundamental que los usuarios piloto perciban que su opinión tiene un efecto directo en el desarrollo del proyecto. Por ello, el feedback recibido será analizado, priorizado y utilizado como base para la **planificación de mejoras**, asegurando que cada sprint incorpora avances significativos en las áreas señaladas por los participantes.
 
 ## Portal de incidencias
 
