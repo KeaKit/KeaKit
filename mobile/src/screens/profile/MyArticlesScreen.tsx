@@ -161,7 +161,7 @@ const MyArticlesScreen: React.FC = () => {
             <Text style={styles.articleTitle} numberOfLines={2}>{item.title}</Text>
             <View style={styles.priceRow}>
               <Ionicons name="cash-outline" size={16} color={Colors.primary} />
-              <Text style={styles.articlePrice}>{`€${item.pricePerMonth.toFixed(2)}/mes`}</Text>
+              <Text style={styles.articlePrice}>{`${item.pricePerMonth.toFixed(2)}€/mes`}</Text>
             </View>
             <View style={styles.statusRow}>
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
