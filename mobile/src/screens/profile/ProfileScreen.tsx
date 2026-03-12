@@ -78,7 +78,7 @@ const ProfileScreen: React.FC = () => {
     { label: 'Ciudad', value: user.city, icon: 'business-outline' },
   ];
 
-  const actionButtons: ActionButton[] = [
+  const baseButtons: ActionButton[] = [
     {
       label: 'Editar perfil',
       icon: 'pencil-outline',
@@ -97,13 +97,27 @@ const ProfileScreen: React.FC = () => {
       onPress: () => {navigation.navigate('MyArticles');},
       variant: 'secondary',
     },
-    {
-      label: 'Cerrar sesión',
-      icon: 'log-out-outline',
-      onPress: () => {handleLogout()},
-      variant: 'danger',
-    },
   ];
+
+  const roleSpecificButtons: ActionButton[] = [];
+
+  if(user.role === 'USER'){
+    roleSpecificButtons.push({
+      label: 'Mis servicios',
+      icon: 'construct-outline',
+      onPress: () => {navigation.navigate('MyServices');},
+      variant:'secondary',
+    });
+  }
+
+  const logoutButton: ActionButton = {
+    label: 'Cerrar sesión',
+    icon: 'log-out-outline',
+    onPress: handleLogout,
+    variant: 'danger',
+  };
+
+  const actionButtons = [...baseButtons, ...roleSpecificButtons, logoutButton]
 
   const getButtonStyle = (variant?: string) => {
     switch (variant) {
