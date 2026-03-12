@@ -148,4 +148,49 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(AccessForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleAccessForbidden(
+            AccessForbiddenException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.FORBIDDEN.value(),
+            "Forbidden",
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(
+            UnauthorizedException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.UNAUTHORIZED.value(),
+            "Unauthorized",
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(NotEnoughBalanceException.class)
+    public ResponseEntity<ErrorResponse> handleNotEnoughBalance(
+            NotEnoughBalanceException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.PAYMENT_REQUIRED.value(),
+            "Payment Required",
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.PAYMENT_REQUIRED);
+    }
 }
