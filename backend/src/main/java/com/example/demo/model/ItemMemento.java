@@ -43,8 +43,6 @@ public class ItemMemento {
 
     private String imageUrlAtRental;
 
-    private String chatChannel;
-
     public Long getId() {
         return id;
     }
@@ -141,11 +139,4 @@ public class ItemMemento {
         this.imageUrlAtRental = imageUrlAtRental;
     }
 
-    public String getChatChannel() {
-        return chatChannel;
-    }
-
-    public void setChatChannel(String chatChannel) {
-        this.chatChannel = chatChannel;
-    }
 }

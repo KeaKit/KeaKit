@@ -32,6 +32,7 @@ const KitDetailScreen: React.FC = () => {
   
   const kitId = route.params?.kitId;
 
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [kit, setKit] = useState<KitResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
@@ -243,7 +244,7 @@ const KitDetailScreen: React.FC = () => {
         </View>
 
         <View style={styles.priceContainer}>
-          <Text style={styles.totalLabel}>TOTAL MENSUAL ESTIMADO</Text>
+          <Text style={styles.totalLabel}>TOTAL</Text>
           <Text style={styles.totalValue}>{kit.totalPrice?.toLocaleString('es-ES')} €</Text>
         </View>
 
@@ -258,18 +259,7 @@ const KitDetailScreen: React.FC = () => {
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
             style={styles.deleteButton}
-            onPress={async () => {
-              try {
-                const res = await fetch(API_ROUTES.KIT_CANCEL(kit.id), {
-                  method: "PATCH",
-                });
-                if (!res.ok) throw new Error("No se pudo cancelar");
-                Alert.alert("Cancelado", "Kit cancelado.");
-                navigation.goBack();
-              } catch (e) {
-                Alert.alert("Error", "No se pudo cancelar.");
-              }
-            }}
+            onPress={() => setCancelModalVisible(true)}
           >
             <Text style={styles.deleteButtonText}>Eliminar kit</Text>
           </TouchableOpacity>
@@ -284,6 +274,54 @@ const KitDetailScreen: React.FC = () => {
         )}
 
       </ScrollView>
+
+      <Modal
+        visible={cancelModalVisible}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Cancelar Kit</Text>
+            <Text style={styles.modalSubtitle}>
+              ¿Estás seguro de que deseas eliminar este kit? Esta acción no se puede deshacer.
+            </Text>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setCancelModalVisible(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalSubmitButton}
+                onPress={async () => {
+                  try {
+                    setDeleting(true);
+                    const response = await fetch(`${BASE}/api/kits/${kitId}`, {
+                      method: 'DELETE',
+                    });
+                    if (!response.ok) throw new Error('No se pudo eliminar');
+                    Alert.alert('Éxito', 'El kit ha sido eliminado correctamente.');
+                    navigation.goBack();
+                  } catch (error) {
+                    Alert.alert('Error', 'No se pudo eliminar el kit.');
+                  } finally {
+                    setDeleting(false);
+                    setCancelModalVisible(false);
+                  }
+                }}
+              >
+                <Text style={styles.modalSubmitText}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+
 
       <Modal
         visible={reportModalVisible}

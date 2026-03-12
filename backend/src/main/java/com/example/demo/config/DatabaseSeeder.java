@@ -116,11 +116,11 @@ public class DatabaseSeeder {
             kitRepo.save(myKit);
 
             // 7.1 ItemMemento
-            ItemMemento snap1 = laptop.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint(), null);
+            ItemMemento snap1 = laptop.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint());
             snap1.setKit(myKit);
             snap1.setPriceAtRental(laptop.getPricePerMonth());
 
-            ItemMemento snap2 = setupService.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint(), null);
+            ItemMemento snap2 = setupService.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint());
             snap2.setKit(myKit);
             snap2.setPriceAtRental(setupService.getPricePerMonth());
 

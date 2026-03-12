@@ -11,11 +11,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SelectPicker } from '../../components/SelectPicker';
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
 import { es, registerTranslation } from "react-native-paper-dates";
+import { useLocationPicker } from '../../hooks/useLocationPicker';
 import {
   Provider as PaperProvider,
   MD3LightTheme,
@@ -24,6 +26,7 @@ import {
   SegmentedButtons,
 } from "react-native-paper";
 
+import { EUROPEAN_COUNTRIES } from '../../types';
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
@@ -38,6 +41,7 @@ import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
 } from "./createKitSelection";
+import { styles } from "../../styles/uploadArticleScreenStyles";
 
 const COMISION = 0.2; // 20% de comisión sobre el precio total del kit
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
@@ -120,6 +124,14 @@ const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
   const { user } = useAuth();
 
+    const {
+      selectedCountry,
+      selectedCity,
+      setSelectedCity,
+      cities,
+      loadingCities,
+      onCountryChange,
+    } = useLocationPicker();
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -544,45 +556,60 @@ const CreateKitScreen: React.FC = () => {
             <Text style={commonStyles.errorText}>{errors.name}</Text>
           ) : null}
 
-          <View style={createKitStyles.row}>
-            <View style={createKitStyles.rowItem}>
-              <PaperTextInput
-                mode="outlined"
-                label="País"
-                value={country}
-                onChangeText={(value) => {
-                  setCountry(value);
-                  clearFieldError("country");
-                }}
-                error={!!errors.country}
-                style={{ backgroundColor: Colors.backgroundWhite }}
-                outlineColor={Colors.border}
-                activeOutlineColor={Colors.primary}
-              />
-              {errors.country ? (
-                <Text style={commonStyles.errorText}>{errors.country}</Text>
-              ) : null}
+            {/* País */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>País</Text>
+              <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
+                <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+                <SelectPicker
+                  options={EUROPEAN_COUNTRIES}
+                  selectedValue={selectedCountry}
+                  placeholder="Selecciona un país"
+                  onValueChange={(value: string) => {
+                    onCountryChange(value);
+                    clearFieldError('country');
+                    clearFieldError('city');
+                    setCountry(value);
+                  }}
+                />
+              </View>
+              {!!errors.country && (
+                <View style={commonStyles.errorContainer}>
+                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                  <Text style={commonStyles.errorText}>{errors.country}</Text>
+                </View>
+              )}
             </View>
 
-            <View style={createKitStyles.rowItem}>
-              <PaperTextInput
-                mode="outlined"
-                label="Ciudad"
-                value={city}
-                onChangeText={(value) => {
-                  setCity(value);
-                  clearFieldError("city");
-                }}
-                error={!!errors.city}
-                style={{ backgroundColor: Colors.backgroundWhite }}
-                outlineColor={Colors.border}
-                activeOutlineColor={Colors.primary}
-              />
-              {errors.city ? (
-                <Text style={commonStyles.errorText}>{errors.city}</Text>
-              ) : null}
+            {/* Ciudad */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Ciudad</Text>
+              <View style={[styles.pickerWrapper, errors.city ? styles.pickerWrapperError : null]}>
+                <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+                {loadingCities ? (
+                  <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
+                ) : (
+                  <SelectPicker
+                    options={cities.map(c => ({ label: c, value: c }))}
+                    selectedValue={selectedCity}
+                    placeholder={selectedCountry ? 'Selecciona una ciudad' : 'Primero elige un país'}
+                    disabled={cities.length === 0}
+                    onValueChange={(value: string) => {
+                      setSelectedCity(value);
+                      setCity(value);
+                      clearFieldError('city');
+                    }}
+                  />
+                )}
+              </View>
+              {!!errors.city && (
+                <View style={commonStyles.errorContainer}>
+                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                  <Text style={commonStyles.errorText}>{errors.city}</Text>
+                </View>
+              )}
             </View>
-          </View>
+
 
           <TouchableOpacity
             style={[

@@ -286,8 +286,7 @@ public class KitService {
                             sel.quantity(),
                             selectedMethod,
                             shippingFee,
-                            pickupAddress,
-                            null);
+                            pickupAddress);
                     snapshot.setPriceAtRental(sel.pricePerMonth());
                     return snapshot;
                 })

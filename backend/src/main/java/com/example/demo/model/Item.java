@@ -171,7 +171,7 @@ public abstract class Item {
         this.allowMonthFractions = allowMonthFractions;
     }
 
-    public ItemMemento createSnapshot(Integer selectedUnits, DeliveryMethod selectedMethod, Double shippingFeeAtRental, String pickupAddressSnapshot, String chatChannel) {
+    public ItemMemento createSnapshot(Integer selectedUnits, DeliveryMethod selectedMethod, Double shippingFeeAtRental, String pickupAddressSnapshot) {
         ItemMemento snapshot = new ItemMemento();
         snapshot.setOriginalItemId(this.id);
         snapshot.setSelectedUnits(selectedUnits != null ? selectedUnits : 1);
@@ -185,7 +185,6 @@ public abstract class Item {
         if (this instanceof Article) {
             snapshot.setImageUrlAtRental(((Article) this).getImageUrl());
         }
-        snapshot.setChatChannel(chatChannel);
         return snapshot;
     }
 
