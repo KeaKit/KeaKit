@@ -12,7 +12,9 @@ import com.example.demo.model.Item;
 import com.example.demo.model.Kit;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.KitResponse.KitItemResponse;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.dto.KitPaymentDTO;
+import com.example.demo.dto.UserResponse;
 import com.example.demo.repository.TransactionRepository;
 import com.example.demo.repository.KitRepository;
 
@@ -21,13 +23,18 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.exception.StripeException;
 
+import com.example.demo.exception.UserNotFoundException;
+import com.example.demo.exception.NotEnoughBalanceException;
+
 import jakarta.annotation.PostConstruct;
 
 @Service
 public class PaymentService {
 
-    // TODO: Crear una wallet fija para observar el dinero que administra la empresa
-    private static final Long KEAKIT_WALLET_ID = 1L;
+    @Value("${ADMIN_EMAIL:admin@keakit.com}")
+    private static String KEAKIT_ADMIN_EMAIL;
+
+    // TODO: Ajustar comisión según la configuración del administrador
     private static final Double PLATFORM_FEE_PERCENTAGE = 0.2;
 
     @Autowired
@@ -41,6 +48,9 @@ public class PaymentService {
 
     @Autowired
     private OrderConfirmationEmailService emailService;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private TransactionRepository transactionRepository;
@@ -75,7 +85,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public void processPayment(Long kitId, Boolean payWithWallet) throws RuntimeException {
+    public void processPayment(Long kitId, Boolean payWithWallet) throws RuntimeException, ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
         try {
             // 1. Cobrar al arrendatario
             KitResponse kit = kitService.findById(kitId);
@@ -127,7 +137,7 @@ public class PaymentService {
             kitService.markAsPaid(kitId);
             // 6. Enviamos email de confirmación al arrendatario
             // TODO: Utilizar KitResponse
-            Kit kitEntity = kitRepository.findById(kitId).orElseThrow(() -> new RuntimeException("Kit not found"));
+            Kit kitEntity = kitRepository.findById(kitId).orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
             emailService.sendOrderConfirmation(kitEntity);
 
         } catch (Exception e) {
@@ -139,35 +149,41 @@ public class PaymentService {
         return Math.round(amount * 100.0) / 100.0;
     }
 
-    private Transaction payWithWallet(Long tenantId, Double amount) throws RuntimeException {
+    private Transaction payWithWallet(Long tenantId, Double amount) throws ResourceNotFoundException, NotEnoughBalanceException {
         Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
         if (tenantWallet.getBalance() < amount) {
-            throw new RuntimeException("Not enough balance in wallet");
+            throw new NotEnoughBalanceException("Not enough balance in wallet. Required: " + amount + ", Available: " + tenantWallet.getBalance());
         }
         Transaction givePayment = new Transaction(-amount, tenantWallet, TransactionType.PAYOUT);
         return givePayment;
     }
 
-    private Transaction sendGuaranteeToKeaKit(Double guarantee) throws RuntimeException {
-        Wallet keakitWallet = walletService.getWalletByUserId(KEAKIT_WALLET_ID);
+    private Transaction sendGuaranteeToKeaKit(Double guarantee) throws ResourceNotFoundException, UserNotFoundException {
+        Wallet keakitWallet = getKeaKitWallet();
         Transaction guaranteeTransaction = new Transaction(guarantee, keakitWallet, TransactionType.GUARANTEE_DEPOSIT);
         return guaranteeTransaction;
     }
 
-    private Transaction payItemToOwner(Long ownerId, Double amount) throws RuntimeException {
+    private Transaction payItemToOwner(Long ownerId, Double amount) throws ResourceNotFoundException {
         Wallet ownerWallet = walletService.getWalletByUserId(ownerId);
         Transaction payOwnerTransaction = new Transaction(amount, ownerWallet, TransactionType.PAYOUT);
         return payOwnerTransaction;
     }
 
-    private Transaction transferFee(Double amount) throws RuntimeException {
-        Wallet keakitWallet = walletService.getWalletByUserId(KEAKIT_WALLET_ID);
+    private Transaction transferFee(Double amount) throws ResourceNotFoundException, UserNotFoundException {
+        Wallet keakitWallet = getKeaKitWallet();
         Transaction feeTransaction = new Transaction(amount, keakitWallet, TransactionType.FEE);
         return feeTransaction;
     }
 
     private Double toEuros(Integer amountInCents) {
         return amountInCents / 100.0;
+    }
+
+    private Wallet getKeaKitWallet() throws ResourceNotFoundException, UserNotFoundException {
+        UserResponse keakitAdmin = userService.getUserByEmail(KEAKIT_ADMIN_EMAIL);
+        Wallet keakitWallet = walletService.getWalletByUserId(keakitAdmin.getId());
+        return keakitWallet;
     }
 
 }

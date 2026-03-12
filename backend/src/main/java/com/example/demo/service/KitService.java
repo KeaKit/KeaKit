@@ -13,6 +13,7 @@ import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitPaymentDTO;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.RentedItemResponse;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.Item;
 import com.example.demo.model.Kit;
@@ -115,9 +116,9 @@ public class KitService {
                 toCents(courierPrice));
     }
 
-    public KitPaymentDTO getKitPayment(Long kitId) {
+    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException{
         Kit kit = kitRepository.findById(kitId)
-                .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
 
         double subtotalPrice = kit.getKitItems().stream()
                 .mapToDouble(ki -> ki.getPricePerMonth() * ki.getQuantity())

@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
 import com.example.demo.exception.ResourceNotFoundException;
-import com.example.demo.model.User;
 import com.example.demo.model.Transaction;
 import com.example.demo.model.Wallet;
 import com.example.demo.repository.TransactionRepository;
@@ -21,17 +20,12 @@ public class WalletService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    public void createWalletForUser(User user) {
-        Wallet wallet = new Wallet(user);
-        walletRepository.save(wallet);
-    }
-
-    public Wallet getWalletByUserId(Long userId) {
+    public Wallet getWalletByUserId(Long userId) throws ResourceNotFoundException {
         return walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user: " + userId));
     }
 
-    public List<Transaction> getTransactionsForUser(Long userId) {
+    public List<Transaction> getTransactionsForUser(Long userId) throws ResourceNotFoundException {
         Wallet wallet = getWalletByUserId(userId);
         return transactionRepository.findByDestinationWalletIdOrderByTimestampDesc(wallet.getId());
     }

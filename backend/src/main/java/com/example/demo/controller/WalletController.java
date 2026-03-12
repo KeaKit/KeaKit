@@ -8,9 +8,12 @@ import com.example.demo.service.WalletService;
 import com.example.demo.service.AuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.example.demo.exception.AccessForbiddenException;
+import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.exception.UnauthorizedException;
 
 import java.util.List;
 
@@ -25,18 +28,14 @@ public class WalletController {
     private AuthService authService;
 
     @GetMapping("/my-wallet")
-    public ResponseEntity<?> getLogedUserWallet() {
+    public ResponseEntity<?> getLogedUserWallet() throws ResourceNotFoundException, UnauthorizedException {
         Long userId = authService.getAuthenticatedUserId();
         if (userId == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(authService.createErrorResponse("Usuario no autenticado"));
+            throw new UnauthorizedException("Usuario no autenticado");
         }
         Wallet wallet = walletService.getWalletByUserId(userId);
         if (wallet == null) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(authService.createErrorResponse("Wallet no encontrada para el usuario"));
+            throw new ResourceNotFoundException("Wallet no encontrada para el usuario");
         }
         WalletDTO walletDTO = toDTO(wallet);
 
@@ -44,57 +43,45 @@ public class WalletController {
     }
 
     @GetMapping("/my-wallet/transactions")
-    public ResponseEntity<?> getLogedUserWalletTransactions() {
+    public ResponseEntity<List<TransactionDTO>> getLogedUserWalletTransactions()
+            throws ResourceNotFoundException, UnauthorizedException {
         Long userId = authService.getAuthenticatedUserId();
-        if (userId == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(authService.createErrorResponse("Usuario no autenticado"));
-        }
+
         List<Transaction> transactions = walletService.getTransactionsForUser(userId);
 
-        if (transactions == null || transactions.isEmpty())
-            return ResponseEntity.ok(List.of());
-
-        List<TransactionDTO> transactionDTOs = transactions.stream()
+        List<TransactionDTO> transactionDTOs = transactions.stream() // Si no hay transacciones, devuelve una lista
+                                                                     // vacía
                 .map(this::toDTO)
                 .toList();
+
         return ResponseEntity.ok(transactionDTOs);
     }
 
     // Rutas de administrador para acceder a cualquier wallet y sus transacciones
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getWalletByUserId(@PathVariable Long userId) {
+    public ResponseEntity<WalletDTO> getWalletByUserId(@PathVariable Long userId)
+            throws ResourceNotFoundException, UnauthorizedException, AccessForbiddenException {
 
-        ResponseEntity<?> accessValidation = authService.validateAccess(userId);
-        if (accessValidation != null) {
-            return accessValidation;
-        }
+        authService.validateAccess(userId);
 
         Wallet wallet = walletService.getWalletByUserId(userId);
-        if (wallet == null) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(authService.createErrorResponse("Wallet no encontrada para el usuario"));
-        }
         WalletDTO walletDTO = toDTO(wallet);
+
         return ResponseEntity.ok(walletDTO);
     }
 
     @GetMapping("/user/{userId}/transactions")
-    public ResponseEntity<?> getWalletTransactions(@PathVariable Long userId) {
+    public ResponseEntity<List<TransactionDTO>> getWalletTransactions(@PathVariable Long userId)
+            throws ResourceNotFoundException, UnauthorizedException, AccessForbiddenException {
 
-        ResponseEntity<?> accessValidation = authService.validateAccess(userId);
-        if (accessValidation != null) {
-            return accessValidation;
-        }
+        authService.validateAccess(userId);
 
         List<Transaction> transactions = walletService.getTransactionsForUser(userId);
-        if (transactions == null || transactions.isEmpty())
-            return ResponseEntity.ok(List.of());
+
         List<TransactionDTO> transactionDTOs = transactions.stream()
                 .map(this::toDTO)
                 .toList();
+
         return ResponseEntity.ok(transactionDTOs);
     }
 
