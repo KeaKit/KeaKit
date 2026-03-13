@@ -40,6 +40,11 @@ const KitDetailScreen: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [actionModalVisible, setActionModalVisible] = useState(false);
+  const [actionModalTitle, setActionModalTitle] = useState('');
+  const [actionModalMessage, setActionModalMessage] = useState('');
+  const [onActionConfirm, setOnActionConfirm] = useState<() => void>(() => () => {});
+
 
   useEffect(() => {
     const fetchKitDetail = async () => {
@@ -51,7 +56,6 @@ const KitDetailScreen: React.FC = () => {
         setKit(data);
       } catch (e) {
         console.error(e);
-        Alert.alert("Error", "No se pudo conectar con el servidor.");
       } finally {
         setLoading(false);
       }
@@ -59,39 +63,32 @@ const KitDetailScreen: React.FC = () => {
     if (kitId) fetchKitDetail();
   }, [kitId]);
 
-  const handleConfirmKit = () => {
-    Alert.alert(
-      "Confirmar Alquiler",
-      "¿Estás seguro de que deseas confirmar la recepción de este kit? Esta acción implica que todos los productos coinciden con la descripción, imágenes y estado prometido.",
-      [
-        { text: "No, mantener", style: "cancel" },
-        {
-          text: "Sí, confirmar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setConfirming(true);
-              
-              const response = await fetch(`${BASE}/api/kits/confirm/${kitId}`, {
-                method: 'PATCH',
-              });
+const handleConfirmKit = async () => {
+  try {
+    setConfirming(true);
 
-              if (response.ok) {
-                Alert.alert("Éxito", "El kit ha sido confirmado correctamente.");
-                navigation.goBack();
-              } else {
-                throw new Error("Error en el servidor");
-              }
-            } catch (error) {
-              Alert.alert("Aviso", "No se pudo procesar la confirmación en el servidor real.");
-            } finally {
-              setConfirming(false);
-            }
-          }
-        }
-      ]
-    );
-  };
+    const response = await fetch(`${BASE}/api/kits/confirm/${kitId}`, {
+      method: 'PATCH',
+    });
+
+    if (response.ok) {
+      navigation.goBack();
+    } else {
+      console.error("Error en el servidor al confirmar el kit");
+    }
+  } catch (error) {
+    console.error("No se pudo procesar la confirmación:", error);
+  } finally {
+    setConfirming(false);
+  }
+};
+
+  const openActionModal = (title: string, message: string, onConfirm: () => void) => {
+  setActionModalTitle(title);
+  setActionModalMessage(message);
+  setOnActionConfirm(() => onConfirm);
+  setActionModalVisible(true);
+};  
 
 
   const handleReportProblem = () => {
@@ -108,13 +105,13 @@ const KitDetailScreen: React.FC = () => {
 
   const handleSubmitReport = () => {
     if (selectedItems.length === 0) {
-      Alert.alert("Selecciona al menos un producto");
+      console.log("Selecciona al menos un producto");
       return;
     }
 
     console.log("Productos reportados:", selectedItems);
 
-    Alert.alert("Reporte enviado correctamente");
+    console.log("Reporte enviado correctamente");
     setReportModalVisible(false);
     setSelectedItems([]);
   };
@@ -225,7 +222,26 @@ const KitDetailScreen: React.FC = () => {
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
             style={styles.deleteButton}
-            onPress={() => setCancelModalVisible(true)}
+            onPress={() => openActionModal(
+              'Eliminar Kit',
+              '¿Estás seguro de que deseas eliminar este kit? Esta acción no se puede deshacer.',
+              async () => {
+                try {
+                  setDeleting(true);
+                  const response = await fetch(`${BASE}/api/kits/${kitId}`, {
+                    method: 'DELETE',
+                  });
+                  if (!response.ok) throw new Error('No se pudo eliminar');
+                  console.log('Éxito', 'El kit ha sido eliminado correctamente.');
+                  navigation.goBack();
+                } catch (error) {
+                  console.error('Error', 'No se pudo eliminar el kit.');
+                } finally {
+                  setDeleting(false);
+                  setActionModalVisible(false);
+                }
+              }
+            )}
           >
             <Text style={styles.deleteButtonText}>Eliminar kit</Text>
           </TouchableOpacity>
@@ -233,7 +249,14 @@ const KitDetailScreen: React.FC = () => {
 
 
         {kit.status === KitStatus.PAID && (
-          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmKit}>
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={() => openActionModal(
+              'Confirmar Recepción',
+              '¿Deseas confirmar la recepción de este kit?',
+              handleConfirmKit
+            )}
+          >
             <Ionicons name="checkmark-done-outline" size={20} color="#04ac20" />
             <Text style={styles.confirmButtonText}>Confirmar recepción</Text>
           </TouchableOpacity>
@@ -270,10 +293,10 @@ const KitDetailScreen: React.FC = () => {
                       method: 'DELETE',
                     });
                     if (!response.ok) throw new Error('No se pudo eliminar');
-                    Alert.alert('Éxito', 'El kit ha sido eliminado correctamente.');
+                    console.log('Éxito', 'El kit ha sido eliminado correctamente.');
                     navigation.goBack();
                   } catch (error) {
-                    Alert.alert('Error', 'No se pudo eliminar el kit.');
+                    console.error('Error', 'No se pudo eliminar el kit.');
                   } finally {
                     setDeleting(false);
                     setCancelModalVisible(false);
@@ -287,8 +310,35 @@ const KitDetailScreen: React.FC = () => {
         </View>
       </Modal>
 
+      <Modal
+          visible={actionModalVisible}
+          transparent
+          animationType="fade"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>{actionModalTitle}</Text>
+              <Text style={styles.modalSubtitle}>{actionModalMessage}</Text>
 
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setActionModalVisible(false)}
+                >
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
 
+                <TouchableOpacity
+                  style={styles.modalSubmitButton}
+                  onPress={onActionConfirm}
+                >
+                  <Text style={styles.modalSubmitText}>Aceptar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      
       <Modal
         visible={reportModalVisible}
         transparent

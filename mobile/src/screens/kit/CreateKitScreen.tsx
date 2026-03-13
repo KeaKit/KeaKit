@@ -950,7 +950,6 @@ const CreateKitScreen: React.FC = () => {
                   setSubmitting(true);
                   const created = await createKit(payload, user.token);
                   if (created) {
-                    Alert.alert("Guardado", "Kit guardado como borrador.");
                     navigation.navigate("MyKits");
                   }
                 } catch (e) {
