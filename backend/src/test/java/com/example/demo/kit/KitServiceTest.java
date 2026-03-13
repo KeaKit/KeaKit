@@ -127,8 +127,6 @@ public class KitServiceTest {
         // Mocks
         when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
         when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
-        when(walletRepository.findByUserId(owner.getId())).thenReturn(Optional.of(new Wallet()));
-        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         mockUserAndKitSave(tenant);
 
         // Ejecutar
