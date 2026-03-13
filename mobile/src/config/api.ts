@@ -16,6 +16,11 @@ export const API_ROUTES = {
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
+  GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,
+  CONFIRM_KIT: (id: number) => `${BASE_URL}/api/kits/confirm/${id}`,
+  KIT_PAYMENT: `${BASE_URL}/api/kits/payment`,
+  KIT_MARK_PAID: (id: number) => `${BASE_URL}/api/kits/${id}/pay`,
+  KIT_CANCEL: (id: number) => `${BASE_URL}/api/kits/${id}/cancel`,
   MY_ARTICLES: (userId: number) => `${BASE_URL}/api/article/my-articles/${userId}`,
   UPLOAD_ARTICLE: (ownerId: number,categoryId: number) => `${BASE_URL}/api/article/upload?ownerId=${ownerId}&categoryId=${categoryId}`,
   UPLOAD_ARTICLE_WITH_IMAGE: (ownerId: number, categoryId: number) => `${BASE_URL}/api/article/upload-with-image?ownerId=${ownerId}&categoryId=${categoryId}`,
@@ -28,6 +33,7 @@ export const API_ROUTES = {
   GET_LATEST_ARTICLES_BY_CATEGORY: (categoryId: number) => `${BASE_URL}/api/article/category/${categoryId}/latest`,
   GET_NUMBER_OF_ARTICLES_BY_CATEGORY: (categoryId: number) => `${BASE_URL}/api/article/category/${categoryId}/count`,
   ALL_ITEMS: `${BASE_URL}/api/items/all`,
+  ITEMS_FOR_RENT: (ownerId: number) => `${BASE_URL}/api/items/for-rent/${ownerId}`,
 
   // Incidents
   CREATE_INCIDENT:            `${BASE_URL}/api/incidents`,
@@ -42,7 +48,11 @@ export const API_ROUTES = {
   ADD_INCIDENT_COMMENT:       (incidentId: number) => `${BASE_URL}/api/incidents/${incidentId}/comments`,
 
   // Kits / Rented items
+    MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
+
+  // Payments
+  SIMULATE_PAYMENT:           `${BASE_URL}/api/payments/pay-kit`,
 
   // Services
   ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,

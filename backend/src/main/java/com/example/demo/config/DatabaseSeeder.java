@@ -1,11 +1,13 @@
 package com.example.demo.config;
 
-import com.example.demo.model.*; // Ajusta a tus modelos
+import com.example.demo.model.*; 
 import com.example.demo.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.List;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,14 +18,14 @@ public class DatabaseSeeder {
     @Bean
     CommandLineRunner initDatabase(
             UserRepository userRepo,
+            WalletRepository walletRepo,
+            TransactionRepository transactionRepo,
             CategoryRepository catRepo,
             ItemRepository itemRepo,
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
-            KitItemRepository kitItemRepo,
             RatingRepository ratingRepo,
-            WalletRepository walletRepo,
             PasswordEncoder passwordEncoder) {
         return args -> {
             
@@ -33,32 +35,37 @@ public class DatabaseSeeder {
             owner.setEmail("owner@example.com");
             owner.setPassword(passwordEncoder.encode("password123"));
             owner.setRole(UserRole.USER);
-            owner.setCountry("Spain");
+            owner.setCountry("España");
             owner.setCity("Sevilla");
             owner.setAddress("Calle 123 matame otra vez");
             owner.setPhone("123456789");
-            Wallet ownerWallet = new Wallet();
-            ownerWallet.setUser(owner);
-            ownerWallet.setAvailableBalance(500.0);
             userRepo.save(owner);
-            walletRepo.save(ownerWallet);
 
             User tenant = new User();
             tenant.setName("Lucía Renter");
             tenant.setEmail("tenant@example.com");
             tenant.setPassword(passwordEncoder.encode("password123"));
             tenant.setRole(UserRole.USER);
-            tenant.setCountry("Spain");
+            tenant.setCountry("España");
             tenant.setCity("Sevilla");
             tenant.setAddress("Calle 123 matame otra vez");
             tenant.setPhone("223456789");
-            Wallet tenantWallet = new Wallet();
-            tenantWallet.setUser(tenant);
-            tenantWallet.setAvailableBalance(500.0);
             userRepo.save(tenant);
+
+            // 2. Wallets
+            Wallet ownerWallet = new Wallet(owner);
+            walletRepo.save(ownerWallet);
+            Wallet tenantWallet = new Wallet(tenant);
             walletRepo.save(tenantWallet);
 
-            // 2. Categorías
+            // 3. Transacciones
+            Transaction initialDeposit = new Transaction();
+            initialDeposit.setAmount(500.0);
+            initialDeposit.setType(TransactionType.PAYOUT);
+            initialDeposit.setDestinationWallet(ownerWallet);
+            transactionRepo.save(initialDeposit);
+
+            // 4. Categorías
             Category catTech = new Category();
             catTech.setName("Tecnología");
             catTech.setDescription("Dispositivos y servicios técnicos");
@@ -67,17 +74,21 @@ public class DatabaseSeeder {
             catTech.setStatus(CategoryStatus.ACTIVE);
             catRepo.save(catTech);
 
-            // 3. Artículo (Herencia de Item)
+            // 5. Artículo (Herencia de Item)
             // Según tus logs: id de article referencia a id de item
             Article laptop = new Article();
             laptop.setTitle("MacBook Pro");
             laptop.setDescription("16 pulgadas, M2");
             laptop.setCategory(catTech);
+            laptop.setCity("Sevilla");
             laptop.setOwner(owner);
             laptop.setPricePerMonth(150.0);
             laptop.setTotalUnits(1);
             laptop.setStatus(ArticleStatus.AVAILABLE);
             laptop.setPurchaseDate(LocalDate.now().minusMonths(6));
+            laptop.setAvailableFrom(LocalDate.now());
+            laptop.setAvailableUntil(LocalDate.now().plusMonths(36));
+
             // Al guardar el ArticleRepository, JPA gestiona la tabla 'items' y 'articles'
             articleRepo.save(laptop);
 
@@ -86,12 +97,15 @@ public class DatabaseSeeder {
             setupService.setTitle("Instalación Software");
             setupService.setDescription("Configuración inicial a domicilio");
             setupService.setCategory(catTech);
+            setupService.setCity("Sevilla");
             setupService.setOwner(owner);
             setupService.setPricePerMonth(50.0);
             setupService.setTotalUnits(10);
+            setupService.setAvailableFrom(LocalDate.now());
+            setupService.setAvailableUntil(LocalDate.now().plusMonths(36));
             serviceRepo.save(setupService);
 
-            // 5. Kit (El Alquiler)
+            // 7. Kit (El Alquiler)
             Kit myKit = new Kit();
             myKit.setName("Pack Trabajo Remoto");
             myKit.setTenant(tenant);
@@ -101,20 +115,20 @@ public class DatabaseSeeder {
             myKit.setEndDate(LocalDate.now().plusMonths(1));
             kitRepo.save(myKit);
 
-            // 5.1 KitItems (relación intermedia)
-            KitItem kitItem1 = new KitItem();
-            kitItem1.setKit(myKit);
-            kitItem1.setItem(laptop);
-            kitItem1.setQuantity(1);
-            kitItemRepo.save(kitItem1);
+            // 7.1 ItemMemento
+            ItemMemento snap1 = laptop.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint());
+            snap1.setKit(myKit);
+            snap1.setPriceAtRental(laptop.getPricePerMonth());
 
-            KitItem kitItem2 = new KitItem();
-            kitItem2.setKit(myKit);
-            kitItem2.setItem(setupService);
-            kitItem2.setQuantity(1);
-            kitItemRepo.save(kitItem2);
+            ItemMemento snap2 = setupService.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint());
+            snap2.setKit(myKit);
+            snap2.setPriceAtRental(setupService.getPricePerMonth());
 
-            // 6. Rating
+            myKit.setSnapshots(List.of(snap1, snap2));
+            kitRepo.save(myKit);
+
+
+            // 8. Rating
             Rating feedback = new Rating();
             feedback.setKit(myKit);
             feedback.setReviewer(tenant);

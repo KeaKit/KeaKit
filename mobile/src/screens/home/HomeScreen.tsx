@@ -90,7 +90,7 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeNav>();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [availableBalance, setAvailableBalance] = useState<number | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [rentedItems, setRentedItems] = useState<RentedItemResponse[]>([]);
   const [loadingRentals, setLoadingRentals] = useState(false);
@@ -101,6 +101,20 @@ const HomeScreen: React.FC = () => {
   const headerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    const fetchBalance = async () => {
+      if (user?.id && user?.token) {
+        setLoadingBalance(true);
+        try {
+          const wallet = await getWalletByUserId(user.id, user.token);
+          setBalance(wallet.balance);
+        } catch (error) {
+          console.error('Error al cargar el saldo:', error);
+          setBalance(null);
+        } finally {
+          setLoadingBalance(false);
+        }
+      }
+    };
     Animated.timing(headerAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
   }, []);
 
@@ -109,9 +123,9 @@ const HomeScreen: React.FC = () => {
     setLoadingBalance(true);
     try {
       const wallet = await getWalletByUserId(user.id, user.token);
-      setAvailableBalance(wallet.availableBalance);
+      setBalance(wallet.balance);
     } catch {
-      setAvailableBalance(null);
+      setBalance(null);
     } finally {
       setLoadingBalance(false);
     }
@@ -201,7 +215,7 @@ const HomeScreen: React.FC = () => {
                   <SkeletonPulse width={120} height={38} radius={8} dark />
                 ) : (
                   <Text style={styles.hugeValueLight}>
-                    {availableBalance !== null ? `${availableBalance.toFixed(2)}€` : '—'}
+                    {balance !== null ? `${balance.toFixed(2)}€` : '—'}
                   </Text>
                 )}
                 <Text style={styles.cardSubtitleLight}>balance disponible</Text>

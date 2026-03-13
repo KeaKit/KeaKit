@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { KitResponse, KitStatus, RootStackParamList } from "../../types";
+import { API_ROUTES } from "../../config/api";
 import { Colors, Spacing, commonStyles } from "../../styles";
 
 type MyKitsNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
@@ -28,14 +29,21 @@ const MyKitsScreen: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
-      const url = `http://${host}:8080/api/kits/my-kits/${user.id}`;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
+      const response = await fetch(API_ROUTES.MY_KITS(user.id), {
+        headers: user.token
+          ? {
+              Authorization: `Bearer ${user.token}`,
+              "Content-Type": "application/json",
+            }
+          : undefined,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       const data = await response.json();
-      setKits(data);
+      setKits(data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED));
     } catch (err) {
       console.log('[MyKits] error:', err);
       setError("Error al cargar alquileres");
@@ -68,18 +76,16 @@ const MyKitsScreen: React.FC = () => {
 
   const getStatusInfo = (status: KitStatus) => {
     switch (status) {
-      case KitStatus.PENDING:
-        return { label: "Pendiente de pago", color: "#fd7e14" };
+      case KitStatus.DRAFT:
+        return { label: "Modo borrador", color: "#14fdfdff" };
       case KitStatus.PAID:
         return { label: "Pagado", color: "#17a2b8" };
-      case KitStatus.PENDING_VALIDATION:
-        return { label: "Pendiente de validación", color: "#ffc107" };
       case KitStatus.ACTIVE:
         return { label: "Activo", color: "#28a745" };
-      case KitStatus.COMPLETED:
-        return { label: "Completado", color: "#6c757d" };
       case KitStatus.CANCELLED:
         return { label: "Cancelado", color: "#dc3545" };
+      case KitStatus.FINISHED:
+        return { label: "Finalizado", color: "#6c757d" };
 
       default:
         return { label: status, color: "#999" };

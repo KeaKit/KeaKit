@@ -57,14 +57,15 @@ public class KitControllerTest {
 
     @Test
     void createKit_withStatus_returnsCreated() throws Exception {
-        KitResponse response = new KitResponse(new Kit());
-        when(kitService.create(any())).thenReturn(response);
+        Kit kit = new Kit();
+        when(kitService.create(any())).thenReturn(kit);
 
         mockMvc.perform(post("/api/kits/create")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Kit Test\",\"status\":\"ACTIVE\"}"))
+                .content("{\"name\":\"Kit Test\",\"country\":\"ES\",\"city\":\"MAD\",\"startDate\":\"2026-06-01\",\"endDate\":\"2026-06-10\",\"status\":\"DRAFT\",\"deliveryMethod\":\"COURIER\",\"tenantId\":1}"))
             .andExpect(status().isCreated());
     }
+
 
     @Test
     void createKit_error_returnsBadRequest() throws Exception {
@@ -79,13 +80,13 @@ public class KitControllerTest {
     @Test
     void getKit_success_returnsStatus() throws Exception {
         Kit kit = new Kit();
-        kit.setStatus(KitStatus.COMPLETED);
+        kit.setStatus(KitStatus.FINISHED);
 
         when(kitService.findById(1L)).thenReturn(new KitResponse(kit));
 
         mockMvc.perform(get("/api/kits/1"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("COMPLETED"));
+            .andExpect(jsonPath("$.status").value("FINISHED"));
     }
 
     @Test

@@ -55,6 +55,8 @@ class KitIntegrationTest {
         tenant.setPhone("223456789");
         tenant = userRepository.save(tenant);
 
+
+
         savedKit = new Kit();
         savedKit.setName("Kit Inicial");
         savedKit.setCountry("España");
@@ -74,22 +76,26 @@ class KitIntegrationTest {
     @Test
     void testCreateKit_success() throws Exception {
         String json = """
-        {
-            "name": "Kit Nuevo",
-            "country": "España",
-            "city": "Madrid",
-            "startDate": "2024-05-01",
-            "endDate": "2024-05-10",
-            "status": "PENDING",
-            "tenantId": %d
-        }
-        """.formatted(tenant.getId());
+                        {
+                  "name": "Kit Nuevo",
+                  "country": "España",
+                  "city": "Madrid",
+                  "startDate": "2026-06-15",
+                  "endDate": "2026-06-30",
+                  "status": "DRAFT",
+                  "deliveryMethod": "MEETING_POINT",
+                  "meetingPoint": "Plaza Mayor, bajo la estatua",
+                  "tenantId": %d,
+                  "itemSelections": [
+                  ]
+                }
+                        """.formatted(tenant.getId());
 
         mockMvc.perform(post("/api/kits/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.status").value("DRAFT"))
                 .andExpect(jsonPath("$.name").value("Kit Nuevo"));
     }
 
@@ -97,13 +103,18 @@ class KitIntegrationTest {
     void testCreateKit_invalidDates() throws Exception {
         String json = """
         {
-            "name": "Kit Malo",
-            "country": "España",
-            "city": "Madrid",
-            "startDate": "2024-05-10",
-            "endDate": "2024-05-01",
-            "tenantId": %d
-        }
+                  "name": "Kit Nuevo",
+                  "country": "España",
+                  "city": "Madrid",
+                  "startDate": "2026-06-30",
+                  "endDate": "2026-06-15",
+                  "status": "DRAFT",
+                  "deliveryMethod": "MEETING_POINT",
+                  "meetingPoint": "Plaza Mayor, bajo la estatua",
+                  "tenantId": %d,
+                  "itemSelections": [
+                  ]
+                }
         """.formatted(tenant.getId());
 
         mockMvc.perform(post("/api/kits/create")
@@ -134,7 +145,7 @@ class KitIntegrationTest {
     void testUpdateKit_changeStatus() throws Exception {
         String json = """
         {
-            "status": "COMPLETED"
+            "status": "FINISHED"
         }
         """;
 
@@ -142,10 +153,10 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(jsonPath("$.status").value("FINISHED"));
 
         Kit updated = kitRepository.findById(savedKit.getId()).orElseThrow();
-        assertThat(updated.getStatus()).isEqualTo(KitStatus.COMPLETED);
+        assertThat(updated.getStatus()).isEqualTo(KitStatus.FINISHED);
     }
 
     @Test

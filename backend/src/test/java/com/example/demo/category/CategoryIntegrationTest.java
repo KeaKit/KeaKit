@@ -21,6 +21,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.demo.repository.KitRepository;
+import com.example.demo.repository.RatingRepository;
 
 import java.util.Collections;
 
@@ -48,12 +50,20 @@ class CategoryIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private KitRepository kitRepository;
+
+    @Autowired
+    private RatingRepository ratingRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     private Category savedCategory;
 
     @BeforeEach
     void setUp() {
+        ratingRepository.deleteAll();
+        kitRepository.deleteAll();
         itemRepository.deleteAll();
         categoryRepository.deleteAll();
         

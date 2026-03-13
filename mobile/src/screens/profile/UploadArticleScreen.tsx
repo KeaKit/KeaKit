@@ -19,6 +19,7 @@ import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNotification } from '../../components/NotificationContext';
 
+
 registerTranslation('es', es);
 
 type UploadNav = NativeStackNavigationProp<RootStackParamList, 'UploadArticle'>;
@@ -580,6 +581,7 @@ const UploadArticleScreen: React.FC = () => {
     </PaperProvider>
   );
 };
+
 
 const styles = StyleSheet.create({
   // ── Layout ────────────────────────────────────────────────────────────────

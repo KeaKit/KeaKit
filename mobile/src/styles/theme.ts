@@ -24,6 +24,7 @@ export const Colors = {
   backgroundWhite: '#FFFFFF',   
   backgroundCard: '#FFFFFF',    
 
+  textPrimary: '#1A1A1A',
   textSecondary: '#7A7A7A',
   textLight: '#9CA3AF', 
   textWhite: '#FFFFFF', 
