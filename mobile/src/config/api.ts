@@ -50,6 +50,17 @@ export const API_ROUTES = {
 
   // Payments
   SIMULATE_PAYMENT:           `${BASE_URL}/api/payments/pay-kit`,
+
+  // Services
+  ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,
+  MY_SERVICES: (userId: number) => `${BASE_URL}/api/services/my-services?ownerId=${userId}`,
+  GET_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}`,
+  PROMOTE_SERVICE: `${BASE_URL}/api/services/promote`,
+  UPDATE_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}`,
+  DELETE_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}`,
+  REQUEST_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}/request`,
+  RELEASE_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}/release`,
+
 } as const;
 
 export default BASE_URL;

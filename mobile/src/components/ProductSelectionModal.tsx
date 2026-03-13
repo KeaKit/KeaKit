@@ -12,6 +12,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { TextInput as PaperTextInput, Button } from "react-native-paper";
 import { Colors, commonStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../types";
+import { useNavigation } from "@react-navigation/native";
+
+type ProductSelectionNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 type CatalogProduct = {
   id: number;
@@ -20,6 +25,7 @@ type CatalogProduct = {
   status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
   category?: string;
   city?: string;
+  ownerId: number;
   ownerName?: string;
   imageUrl?: string | null;
   totalUnits: number;
@@ -73,6 +79,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   endDate,
   
 }) => {
+  const navigation = useNavigation<ProductSelectionNav>();
+
   // Calcular disponibilidad de productos basado en fechas
   const productsWithAvailability = React.useMemo(() => {
     if (!startDate || !endDate) {
@@ -134,6 +142,15 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
     return mapped;
   }, [filteredProducts, startDate, endDate, showOnlyAvailable]);
+
+  const navigateToUserReviews = (ownerId: number, ownerName: string) => {
+    onDismiss();
+    navigation.navigate('UserRatings', {
+      userId: ownerId,
+      userName: ownerName,
+    });
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={createKitStyles.modalOverlay}>
@@ -304,7 +321,14 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       </Text>
 
                       <Text style={commonStyles.caption}>
-                        {p.ownerName ? `${p.ownerName} · ` : ""}
+                          {p.ownerName ? (
+                            <Text
+                              style={{ color: "#007AFF" }} 
+                              onPress={() => navigateToUserReviews(p.ownerId, p.ownerName || "")}
+                            >
+                              {`${p.ownerName} · `}
+                            </Text>
+                          ) : ""}
                         {p.city ? `${p.city} · ` : ""}
                         {p.category ? `${p.category}` : ""}
                       </Text>

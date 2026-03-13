@@ -84,7 +84,7 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
                 style={componentStyles.menuItem}
                 onPress={() => navigateTo('MyArticles')}
               >
-                <Ionicons name="cube" size={24} color={Colors.primary} />
+                <Ionicons name="bag" size={24} color={Colors.primary} />
                 <Text style={componentStyles.menuItemText}>Mis Artículos</Text>
               </TouchableOpacity>
 
@@ -115,6 +115,14 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
               >
                 <Ionicons name="cube" size={24} color={Colors.primary} />
                 <Text style={componentStyles.menuItemText}>Mis Kits</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
+                onPress={() => navigateTo('MyServices')}
+              >
+                <Ionicons name="construct-outline" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Mis Servicios</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
