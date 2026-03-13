@@ -166,7 +166,7 @@ const CheckoutScreen: React.FC = () => {
       </Text>
 
       {items.length === 0 ? (
-        <Text>No hay items en el kit.</Text> // TODO: No debería llegar a esta pantalla si no hay ningún item. Comprobar en CreateKitScreen que no se pueda avanzar sin seleccionar al menos un item. 
+        <Text>No hay items en el kit.</Text>
       ) : (
         items.map((item, index) => (
           <View

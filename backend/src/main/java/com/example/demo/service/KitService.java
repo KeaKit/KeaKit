@@ -31,6 +31,8 @@ import java.util.ArrayList;
 
 @Service
 public class KitService {
+    // TODO: Revisar reglas de negocio, validaciones y excepciones.
+    
     @Autowired
     private KitRepository kitRepository;
 
@@ -101,10 +103,24 @@ public class KitService {
         kit.setAppliedCommissionRate(PLATFORM_FEE_PERCENTAGE);
         kit.setAppliedGuaranteeRate(PLATFORM_GUARANTEE_PERCENTAGE);
 
+        if(request.tenantId() == null){
+            throw new RuntimeException("Tenant ID is required");
+        }
+
         if (request.tenantId() != null) {
             User tenant = userRepository.findById(request.tenantId())
                     .orElseThrow(() -> new RuntimeException("Tenant not found"));
             kit.setTenant(tenant);
+        }
+
+        if(!selections.isEmpty()){
+            for (KitCreateRequest.ItemSelectionRequest item : selections) {
+                Item foundItem = itemRepository.findById(item.itemId())
+                        .orElseThrow(() -> new RuntimeException("Item not found: " + item.itemId()));
+                if (request.tenantId() == foundItem.getOwner().getId()) {
+                    throw new RuntimeException("Tenant cannot select their own items");
+                }
+            }
         }
 
         List<ItemMemento> snapshots = itemSelectionToSnapshots(
