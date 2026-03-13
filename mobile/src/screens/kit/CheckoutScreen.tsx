@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { View, StyleSheet, Linking } from "react-native";
+import { Button, Modal, Portal, Text } from "react-native-paper";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { API_ROUTES } from "../../config/api";
 import { useNavigation } from "@react-navigation/native";
@@ -24,6 +24,17 @@ export default function CheckoutScreen({ route }: Props) {
   const [balance, setBalance] = useState(0);
   const [enoughBalance, setEnoughBalance] = useState(false);
   const [amount, setAmount] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [isPaymentIntentError, setIsPaymentIntentError] = useState(false);
+
+  const isStripePayDisabled = !stripe || loading || !cardComplete;
+  const isWalletPayDisabled = loading || !enoughBalance;
+
+  const showErrorModal = (message: string) => {
+    setError(message);
+    setErrorModalVisible(true);
+  };
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -35,6 +46,7 @@ export default function CheckoutScreen({ route }: Props) {
           console.error("Error al cargar el saldo:", error);
           setBalance(0);
           setEnoughBalance(false);
+          showErrorModal("No se pudo cargar el saldo de tu wallet.");
         }
       }
     };
@@ -59,6 +71,7 @@ export default function CheckoutScreen({ route }: Props) {
 
         if (!response.ok) {
           console.error("Error al obtener el monto del kit:", response.status);
+          showErrorModal("No se pudo obtener el importe del kit.");
           return;
         }
 
@@ -78,6 +91,7 @@ export default function CheckoutScreen({ route }: Props) {
         }
       } catch (error) {
         console.error("Error al obtener el monto del kit:", error);
+        showErrorModal("Ha ocurrido un error al obtener el importe del kit.");
       }
     };
 
@@ -127,6 +141,7 @@ export default function CheckoutScreen({ route }: Props) {
             "Respuesta del backend:",
             await walletPaymentResult.text(),
           );
+          showErrorModal("No se pudo procesar el pago con saldo de KeaKit.");
           return;
         }
       } else {
@@ -145,12 +160,14 @@ export default function CheckoutScreen({ route }: Props) {
 
         if (!clientSecret) {
           console.error("No se pudo obtener el client secret");
+          showErrorModal("No se pudo iniciar el pago con Stripe.");
           return;
         }
 
         const cardElement = elements?.getElement(CardElement);
         if (!stripe || !cardElement || !elements) {
           console.error("Stripe o CardElement no están disponibles");
+          showErrorModal("Stripe no está disponible en este momento.");
           return;
         }
 
@@ -161,7 +178,9 @@ export default function CheckoutScreen({ route }: Props) {
         });
 
         if (result.error) {
-          console.error("❌ Error en el pago:", result.error?.message);
+          setIsPaymentIntentError(true);
+          console.error("❌ Error al procesar el pago con Stripe:", result.error?.message);
+          showErrorModal("No se pudo procesar el pago con Stripe: " + result.error?.message);
           return;
         } else {
           console.log(
@@ -186,6 +205,7 @@ export default function CheckoutScreen({ route }: Props) {
           if (!paymentResult.ok) {
             console.error("❌ Error al procesar el pago en el backend");
             console.log("Respuesta del backend:", await paymentResult.text());
+            showErrorModal("El pago se realizó, pero no se pudo confirmar en el backend.");
             return;
           }
         }
@@ -193,6 +213,7 @@ export default function CheckoutScreen({ route }: Props) {
       navigation.navigate("MyKits");
     } catch (error) {
       console.error("❌ Error:", error);
+      showErrorModal("Ha ocurrido un error inesperado durante el pago.");
     } finally {
       setLoading(false);
     }
@@ -230,10 +251,16 @@ export default function CheckoutScreen({ route }: Props) {
       <Button
         mode="contained"
         onPress={() => handlePayment(false)}
-        disabled={!stripe || loading || !cardComplete}
+        disabled={isStripePayDisabled}
         loading={loading}
-        style={styles.button}
+        style={[styles.button, isStripePayDisabled && styles.buttonDisabled]}
         contentStyle={styles.buttonContent}
+        buttonColor={isStripePayDisabled ? "#C7D0DB" : "#1A3A52"}
+        textColor={isStripePayDisabled ? "#6B7280" : "#FFFFFF"}
+        labelStyle={[
+          styles.primaryButtonLabel,
+          isStripePayDisabled && styles.primaryButtonLabelDisabled,
+        ]}
       >
         Pagar con Stripe
       </Button>
@@ -241,10 +268,16 @@ export default function CheckoutScreen({ route }: Props) {
         <Button
           mode="contained"
           onPress={() => handlePayment(true)}
-          disabled={loading || !enoughBalance}
+          disabled={isWalletPayDisabled}
           loading={loading}
-          style={styles.button}
+          style={[styles.button, isWalletPayDisabled && styles.buttonDisabled]}
           contentStyle={styles.buttonContent}
+          buttonColor={isWalletPayDisabled ? "#C7D0DB" : "#0F766E"}
+          textColor={isWalletPayDisabled ? "#6B7280" : "#FFFFFF"}
+          labelStyle={[
+            styles.primaryButtonLabel,
+            isWalletPayDisabled && styles.primaryButtonLabelDisabled,
+          ]}
         >
           Pagar con mi saldo de KeaKit
         </Button>
@@ -253,8 +286,10 @@ export default function CheckoutScreen({ route }: Props) {
         mode="outlined"
         onPress={() => navigation.goBack()}
         disabled={loading}
-        style={styles.button}
+        style={[styles.outlinedButton, loading && styles.outlinedButtonDisabled]}
         contentStyle={styles.buttonContent}
+        textColor={loading ? "#9CA3AF" : "#1A3A52"}
+        labelStyle={[styles.secondaryButtonLabel, loading && styles.secondaryButtonLabelDisabled]}
       >
         Cancelar
       </Button>
@@ -262,6 +297,41 @@ export default function CheckoutScreen({ route }: Props) {
       <Text variant="bodySmall" style={styles.testCard}>
         Tarjeta de prueba: 4242 4242 4242 4242 | Exp: 12/34 | CVV: 123
       </Text>
+
+      <Portal>
+        <Modal
+          visible={errorModalVisible}
+          onDismiss={() => setErrorModalVisible(false)}
+          contentContainerStyle={styles.errorModalContainer}
+        >
+          <Text variant="titleMedium" style={styles.errorModalTitle}>
+            Error en el pago
+          </Text>
+          <Text style={styles.errorModalMessage}>{error ?? "Ha ocurrido un error."}</Text>
+          {isPaymentIntentError && (
+            <Text style={styles.errorModalMessage}>
+              ¿Eres desarrollador? Revisa este{" "}
+            <Text
+              style={styles.errorModalLink}
+              onPress={() => Linking.openURL("https://teams.microsoft.com/l/message/19:b67b2f676f2441bfb3a2aa815b23d9f8@thread.tacv2/1773437428081?tenantId=ef4a684e-81b5-491c-a98e-c7b31be6c469&groupId=f0cbe5b1-fa30-4983-8517-30fe68999067&parentMessageId=1773437428081&teamName=ISPP&channelName=Incidencias&createdTime=1773437428081")}
+            >
+              post de Teams
+            </Text>.</Text>
+          )}
+          <Button
+            mode="contained"
+            onPress={() => {
+              setErrorModalVisible(false)
+              setIsPaymentIntentError(false);
+            }}
+            style={styles.errorModalButton}
+            buttonColor="#1A3A52"
+            textColor="#FFFFFF"
+          >
+            Entendido
+          </Button>
+        </Modal>
+      </Portal>
     </View>
   );
 }
@@ -270,30 +340,89 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#F4F7FB",
   },
   title: {
     marginBottom: 20,
     fontWeight: "bold",
+    color: "#1F2937",
   },
   cardContainer: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#CBD5E1",
     borderRadius: 8,
     padding: 16,
     marginBottom: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
   },
   button: {
     marginTop: 10,
     borderRadius: 8,
+    backgroundColor: "#1A3A52",
+  },
+  buttonDisabled: {
+    backgroundColor: "#C7D0DB",
+    opacity: 1,
+  },
+  outlinedButton: {
+    marginTop: 10,
+    borderRadius: 8,
+    borderColor: "#1A3A52",
+    borderWidth: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  outlinedButtonDisabled: {
+    borderColor: "#D1D5DB",
+    backgroundColor: "#F3F4F6",
   },
   buttonContent: {
     paddingVertical: 8,
+    minHeight: 44,
+  },
+  primaryButtonLabel: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+  primaryButtonLabelDisabled: {
+    color: "#6B7280",
+  },
+  secondaryButtonLabel: {
+    color: "#1A3A52",
+    fontWeight: "700",
+  },
+  secondaryButtonLabelDisabled: {
+    color: "#9CA3AF",
   },
   testCard: {
     marginTop: 12,
     textAlign: "center",
-    color: "#666",
+    color: "#374151",
+  },
+  errorModalContainer: {
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 24,
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  errorModalTitle: {
+    fontWeight: "700",
+    marginBottom: 10,
+    color: "#111827",
+  },
+  errorModalMessage: {
+    color: "#1F2937",
+    marginBottom: 10,
+    lineHeight: 20,
+  },
+  errorModalLink: {
+    color: "#1D4ED8",
+    fontWeight: "700",
+    textDecorationLine: "underline",
+    marginBottom: 16,
+  },
+  errorModalButton: {
+    alignSelf: "flex-end",
   },
 });
