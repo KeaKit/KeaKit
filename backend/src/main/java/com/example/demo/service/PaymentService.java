@@ -32,7 +32,7 @@ import jakarta.annotation.PostConstruct;
 public class PaymentService {
 
     @Value("${ADMIN_EMAIL:admin@keakit.com}")
-    private static String KEAKIT_ADMIN_EMAIL;
+    private String KEAKIT_ADMIN_EMAIL;
 
     // TODO: Ajustar comisión según la configuración del administrador
     private static final Double PLATFORM_FEE_PERCENTAGE = 0.2;
