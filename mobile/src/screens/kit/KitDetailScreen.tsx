@@ -93,40 +93,6 @@ const KitDetailScreen: React.FC = () => {
     );
   };
 
-  const handleCancelKit = () => {
-    Alert.alert(
-      "Cancelar Alquiler",
-      "¿Estás seguro de que deseas eliminar este kit? Esta acción es irreversible.",
-      [
-        { text: "No, mantener", style: "cancel" },
-        {
-          text: "Sí, eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setDeleting(true);
-              
-         
-              const response = await fetch(`${BASE}/api/kits/${kitId}`, {
-                method: 'DELETE',
-              });
-
-              if (response.ok) {
-                Alert.alert("Éxito", "El kit ha sido cancelado correctamente.");
-                navigation.goBack();
-              } else {
-                throw new Error("Error en el servidor");
-              }
-            } catch (error) {
-              Alert.alert("Aviso", "No se pudo procesar el borrado en el servidor real.");
-            } finally {
-              setDeleting(false);
-            }
-          }
-        }
-      ]
-    );
-  };
 
   const handleReportProblem = () => {
     setReportModalVisible(true);
@@ -282,7 +248,7 @@ const KitDetailScreen: React.FC = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Cancelar Kit</Text>
+            <Text style={styles.modalTitle}>eliminar Kit</Text>
             <Text style={styles.modalSubtitle}>
               ¿Estás seguro de que deseas eliminar este kit? Esta acción no se puede deshacer.
             </Text>

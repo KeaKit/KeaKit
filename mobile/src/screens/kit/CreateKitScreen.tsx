@@ -196,7 +196,7 @@ const CreateKitScreen: React.FC = () => {
     try {
       setLoadingCatalog(true);
 
-      const res = await fetch(API_ROUTES.ALL_ITEMS, {
+      const res = await fetch(API_ROUTES.ITEMS_FOR_RENT(user.id), {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
