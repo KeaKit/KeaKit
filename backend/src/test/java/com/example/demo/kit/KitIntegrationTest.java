@@ -47,7 +47,7 @@ class KitIntegrationTest {
         tenant = new User();
         tenant.setName("Cristina");
         tenant.setEmail("cris@example.com");
-        tenant.setPassword("123");
+        tenant.setPassword("123456");
         tenant.setRole(UserRole.USER);
         tenant.setCountry("España");
         tenant.setCity("Sevilla");
@@ -82,7 +82,7 @@ class KitIntegrationTest {
                   "city": "Madrid",
                   "startDate": "2026-06-15",
                   "endDate": "2026-06-30",
-                  "status": "PENDING",
+                  "status": "DRAFT",
                   "deliveryMethod": "MEETING_POINT",
                   "meetingPoint": "Plaza Mayor, bajo la estatua",
                   "tenantId": %d,
@@ -95,7 +95,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.status").value("DRAFT"))
                 .andExpect(jsonPath("$.name").value("Kit Nuevo"));
     }
 
@@ -108,7 +108,7 @@ class KitIntegrationTest {
                   "city": "Madrid",
                   "startDate": "2026-06-30",
                   "endDate": "2026-06-15",
-                  "status": "PENDING",
+                  "status": "DRAFT",
                   "deliveryMethod": "MEETING_POINT",
                   "meetingPoint": "Plaza Mayor, bajo la estatua",
                   "tenantId": %d,
@@ -145,7 +145,7 @@ class KitIntegrationTest {
     void testUpdateKit_changeStatus() throws Exception {
         String json = """
         {
-            "status": "COMPLETED"
+            "status": "FINISHED"
         }
         """;
 
@@ -153,10 +153,10 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(jsonPath("$.status").value("FINISHED"));
 
         Kit updated = kitRepository.findById(savedKit.getId()).orElseThrow();
-        assertThat(updated.getStatus()).isEqualTo(KitStatus.COMPLETED);
+        assertThat(updated.getStatus()).isEqualTo(KitStatus.FINISHED);
     }
 
     @Test

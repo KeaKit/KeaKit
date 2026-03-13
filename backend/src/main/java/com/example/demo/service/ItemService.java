@@ -19,6 +19,12 @@ public class ItemService {
         return itemRepository.findAll();
     }
 
+    public List<Item> findItemsForRent(Long ownerId) {
+        List<Item> allItemsForRent = itemRepository.findAll()
+            .stream().filter(x-> x.getOwner().getId() != ownerId).toList();
+        return allItemsForRent;
+    }
+
     public Item findById(Long id) {
         return itemRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Item not found"));

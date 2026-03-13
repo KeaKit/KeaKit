@@ -98,8 +98,9 @@ public class RatingService {
 
     private RatingType determineRatingType(User reviewer, User reviewee, Kit kit) {
         boolean reviewerIsTenant = kit.getTenant() != null && kit.getTenant().getId().equals(reviewer.getId());
-        boolean reviewerIsOwner = kit.getItems().stream()
-                .anyMatch(item -> item.getOwner() != null && item.getOwner().getId().equals(reviewer.getId()));
+        boolean reviewerIsOwner = kit.getSnapshots().stream()
+                .anyMatch(snapshot -> snapshot.getOwnerAtRental() != null
+                        && snapshot.getOwnerAtRental().getId().equals(reviewer.getId()));
 
         if (reviewerIsTenant) {
             return RatingType.RENTER_TO_OWNER;

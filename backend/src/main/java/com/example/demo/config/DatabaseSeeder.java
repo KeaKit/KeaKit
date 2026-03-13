@@ -1,11 +1,13 @@
 package com.example.demo.config;
 
-import com.example.demo.model.*; // Ajusta a tus modelos
+import com.example.demo.model.*; 
 import com.example.demo.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.List;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,7 +25,6 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
-            KitItemRepository kitItemRepo,
             RatingRepository ratingRepo,
             PasswordEncoder passwordEncoder) {
         return args -> {
@@ -79,6 +80,7 @@ public class DatabaseSeeder {
             laptop.setTitle("MacBook Pro");
             laptop.setDescription("16 pulgadas, M2");
             laptop.setCategory(catTech);
+            laptop.setCity("Sevilla");
             laptop.setOwner(owner);
             laptop.setPricePerMonth(150.0);
             laptop.setTotalUnits(1);
@@ -90,11 +92,12 @@ public class DatabaseSeeder {
             // Al guardar el ArticleRepository, JPA gestiona la tabla 'items' y 'articles'
             articleRepo.save(laptop);
 
-            // 6. Servicio (Herencia de Item)
-            Service setupService = new Service();
+            // 4. Servicio (Herencia de Item)
+            ServiceItem setupService = new ServiceItem();
             setupService.setTitle("Instalación Software");
             setupService.setDescription("Configuración inicial a domicilio");
             setupService.setCategory(catTech);
+            setupService.setCity("Sevilla");
             setupService.setOwner(owner);
             setupService.setPricePerMonth(50.0);
             setupService.setTotalUnits(10);
@@ -112,18 +115,18 @@ public class DatabaseSeeder {
             myKit.setEndDate(LocalDate.now().plusMonths(1));
             kitRepo.save(myKit);
 
-            // 7.1 KitItems (relación intermedia)
-            KitItem kitItem1 = new KitItem();
-            kitItem1.setKit(myKit);
-            kitItem1.setItem(laptop);
-            kitItem1.setQuantity(1);
-            kitItemRepo.save(kitItem1);
+            // 7.1 ItemMemento
+            ItemMemento snap1 = laptop.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint());
+            snap1.setKit(myKit);
+            snap1.setPriceAtRental(laptop.getPricePerMonth());
 
-            KitItem kitItem2 = new KitItem();
-            kitItem2.setKit(myKit);
-            kitItem2.setItem(setupService);
-            kitItem2.setQuantity(1);
-            kitItemRepo.save(kitItem2);
+            ItemMemento snap2 = setupService.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint());
+            snap2.setKit(myKit);
+            snap2.setPriceAtRental(setupService.getPricePerMonth());
+
+            myKit.setSnapshots(List.of(snap1, snap2));
+            kitRepo.save(myKit);
+
 
             // 8. Rating
             Rating feedback = new Rating();

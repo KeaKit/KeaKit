@@ -1,8 +1,8 @@
 package com.example.demo.dto;
 
-import com.example.demo.model.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class RegisterRequest {
@@ -18,6 +18,7 @@ public class RegisterRequest {
     private String name;
 
     @NotBlank(message = "Phone is required")
+    @Pattern(regexp = "^[0-9\\-\\+]{9,15}$", message = "Phone number must be valid")
     private String phone;
 
     @NotBlank(message = "Address is required")

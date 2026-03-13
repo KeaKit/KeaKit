@@ -86,7 +86,7 @@ export interface KitCreateRequest {
   city: string;
   startDate: string;
   endDate: string;
-  status?: "PENDING" | "APPROVED" | "CANCELLED";
+  status?: KitStatus;
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
   tenantId: number;
@@ -97,30 +97,11 @@ export interface KitPaymentDTO {
   totalPrice: number;
   subtotalPrice: number;
   guarantee: number;
-  fee: number;
+  platformfee: number;
   courierPrice: number;
 }
 
-export interface RatingCreateRequest {
-  revieweeId: number;
-  kitId: number;
-  score: number;
-  comment?: string;
-}
-
-export interface RatingResponse {
-  id: number;
-  reviewerId: number;
-  reviewerName: string;
-  revieweeId: number;
-  revieweeName: string;
-  kitId: number;
-  kitName: string;
-  score: number;
-  comment: string;
-  type: string;
-  createdAt: string;
-}
+export type ArticleCondition = 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN';
 
 export interface Article {
   id: number;
@@ -136,6 +117,7 @@ export interface Article {
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
   totalUnits?: number;
+  condition: ArticleCondition | null;
 }
 
 export interface ArticlePayload {
@@ -150,6 +132,7 @@ export interface ArticlePayload {
   imageUrl?: string;
   purchaseDate?: string;
   totalUnits?: number;
+  condition?: ArticleCondition;
 }
 
 export interface Item {
@@ -162,13 +145,13 @@ export interface Item {
 }
 
 export enum KitStatus {
-  PENDING = "PENDING",
+  DRAFT = "DRAFT",
   PAID = "PAID",
-  PENDING_VALIDATION = "PENDING VALIDATION",
   ACTIVE = "ACTIVE",
-  COMPLETED = "COMPLETED",
   CANCELLED = "CANCELLED",
+  FINISHED = "FINISHED",
 }
+
 export interface Kit {
   id: number;
   name: string;
@@ -202,6 +185,14 @@ export interface Kit {
   totalPrice?: number;
 }
 
+export interface KitItemResponse {
+  itemId: number;
+  quantity: number;
+  pricePerMonth: number;
+  name?: string | null;
+  category?: string | null;
+  imageUrl?: string | null;
+}
 
 export interface KitResponse {
   id: number;
@@ -215,15 +206,18 @@ export interface KitResponse {
   deliveryNotification?: string;
   status?: KitStatus;
   tenantId: number;
-  items?: Item[];
+  items?: KitItemResponse[];
   itemIds?: number[];
+  subtotalPrice?: number;
+  guaranteePrice?: number;
+  platformFee?: number;
   totalPrice?: number;
   deliveryMethod?: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
   courierPrice?: number;
-  itemSelections?: KitItemSelection[];
   totalSelectedItems?: number;
 }
+
 export interface Category {
   id: number;
   name: string;
@@ -232,8 +226,6 @@ export interface Category {
   minPrice: number;
   maxPrice: number;
 }
-
-// === Incidents ===
 
 export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
 export type IncidentStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
@@ -316,6 +308,10 @@ export type RootStackParamList = {
   EditArticle: { article: Article };
   Categories: undefined;
   CategoryForm: { category?: Category; mode: "view" | "edit" | "create" };
+  MyServices: undefined;
+  PromoteService: undefined;
+  EditService: { service: Service };
+  ServiceDetail: { serviceId: number };
 };
 
 export interface ProfileData {
@@ -325,6 +321,45 @@ export interface ProfileData {
   city: string;
   country: string;
 }
+
+export type ServiceStatus = 'DRAFT' | 'ACTIVE' | 'UNAVAILABLE';
+
+export interface Service {
+  id: number;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: Category;
+  status: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface ServicePayload {
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: { id: number };
+  status?: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface UserService {
+  id: number;
+  title: string;
+  pricePerMonth: number;
+  status: ServiceStatus;
+  rentedUntil: string | null;
+  city: string;
+  categoryName: string;
+}
+
+
 
 export const EUROPEAN_COUNTRIES = [
   { value: "Albania", label: "Albania" },

@@ -194,7 +194,7 @@ export default function CheckoutScreen({ route }: Props) {
               },
             },
           }}
-          onChange={(event) => {
+          onChange={(event: { complete: boolean }) => {
             setCardComplete(event.complete);
           }}
         />

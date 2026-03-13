@@ -13,15 +13,19 @@ public class Article extends Item {
     @Enumerated(EnumType.STRING)
     private ArticleStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private ArticleCondition condition; 
+
     private LocalDate purchaseDate;
 
     public Article() {}
 
-    public Article(String title, String description, String city, String country, Double pricePerMonth, LocalDate availableFrom, LocalDate availableUntil, Category category, User owner, String imageUrl, ArticleStatus status, LocalDate purchaseDate) {
+    public Article(String title, String description, String city, String country, Double pricePerMonth, LocalDate availableFrom, LocalDate availableUntil, Category category, User owner, String imageUrl, ArticleStatus status, LocalDate purchaseDate, ArticleCondition condition) {
         super(title, description, city, pricePerMonth, availableFrom, availableUntil, category, owner);
         this.imageUrl = imageUrl;
         this.status = status;
         this.purchaseDate = purchaseDate;
+        this.condition = condition;
     }
 
     public String getImageUrl() {
@@ -46,6 +50,14 @@ public class Article extends Item {
 
     public void setPurchaseDate(LocalDate purchaseDate) {
         this.purchaseDate = purchaseDate;
+    }
+
+    public ArticleCondition getCondition() { 
+        return condition; 
+    }
+    
+    public void setCondition(ArticleCondition condition) { 
+        this.condition = condition; 
     }
 
 }

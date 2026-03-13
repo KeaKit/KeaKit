@@ -1,9 +1,9 @@
 package com.example.demo.dto;
 
-import com.example.demo.model.Kit;
-import com.example.demo.model.KitItem;
-import com.example.demo.model.KitStatus;
 import com.example.demo.model.DeliveryMethod;
+import com.example.demo.model.ItemMemento;
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -17,11 +17,24 @@ public class KitResponse {
         private Long itemId;
         private Integer quantity;
         private Double pricePerMonth;
+        private String name;
+        private String category;
+        private String imageUrl;
 
-        public KitItemResponse(Long itemId, Integer quantity, Double pricePerMonth) {
+        public KitItemResponse(
+            Long itemId,
+            Integer quantity,
+            Double pricePerMonth,
+            String name,
+            String category,
+            String imageUrl
+        ) {
             this.itemId = itemId;
             this.quantity = quantity;
             this.pricePerMonth = pricePerMonth;
+            this.name = name;
+            this.category = category;
+            this.imageUrl = imageUrl;
         }
 
         public Long getItemId() {
@@ -31,8 +44,21 @@ public class KitResponse {
         public Integer getQuantity() {
             return quantity;
         }
+
         public Double getPricePerMonth() {
             return pricePerMonth;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
         }
     }
 
@@ -53,6 +79,10 @@ public class KitResponse {
     private List<Long> itemIds;
     private List<KitItemResponse> items;
     private Integer totalSelectedItems;
+    private Double subtotalPrice;
+    private Double guaranteePrice;
+    private Double platformFee;
+    private Double totalPrice;
 
     public KitResponse(Kit kit) {
         this.id = kit.getId();
@@ -69,11 +99,18 @@ public class KitResponse {
         this.meetingPoint = kit.getMeetingPoint();
         this.courierPrice = kit.getCourierPrice();
         this.tenantId = kit.getTenant() != null ? kit.getTenant().getId() : null;
-        List<KitItem> kitItems = kit.getKitItems() != null ? kit.getKitItems() : List.of();
 
-        this.items = kitItems.stream()
-            .filter(kitItem -> kitItem.getItem() != null && kitItem.getItem().getId() != null)
-            .map(kitItem -> new KitItemResponse(kitItem.getItem().getId(), kitItem.getQuantity(), kitItem.getPricePerMonth()))
+        List<ItemMemento> snapshots = kit.getSnapshots() != null ? kit.getSnapshots() : List.of();
+
+        this.items = snapshots.stream()
+            .map(s -> new KitItemResponse(
+                s.getOriginalItemId(),
+                s.getSelectedUnits(),
+                s.getPriceAtRental(),
+                s.getNameAtRental(),
+                s.getCategoryAtRental() != null ? s.getCategoryAtRental().getName() : null,
+                s.getImageUrlAtRental()
+            ))
             .collect(Collectors.toList());
 
         this.totalSelectedItems = this.items.stream()
@@ -84,33 +121,39 @@ public class KitResponse {
             .map(KitItemResponse::getItemId)
             .distinct()
             .collect(Collectors.toCollection(ArrayList::new));
+
+        this.subtotalPrice = kit.calculateSubtotal();
+        this.guaranteePrice = kit.calculateTotalGuarantee();
+        this.platformFee = kit.calculatePlatformFee();
+        this.totalPrice = kit.calculateTotal();
     }
 
     public Long getId() {
-        return id; 
-    }
-    public String getName() { 
-        return name; 
+        return id;
     }
 
-    public String getCountry() { 
-        return country; 
+    public String getName() {
+        return name;
     }
 
-    public String getCity() { 
-        return city; 
+    public String getCountry() {
+        return country;
+    }
+
+    public String getCity() {
+        return city;
     }
 
     public LocalDate getOrderDate() {
         return orderDate;
     }
 
-    public LocalDate getStartDate() { 
-        return startDate; 
+    public LocalDate getStartDate() {
+        return startDate;
     }
-    
-    public LocalDate getEndDate() { 
-        return endDate; 
+
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
     public LocalDate getEstimatedDeliveryDate() {
@@ -120,7 +163,7 @@ public class KitResponse {
     public String getDeliveryNotification() {
         return deliveryNotification;
     }
-    
+
     public KitStatus getStatus() {
         return status;
     }
@@ -137,8 +180,8 @@ public class KitResponse {
         return courierPrice;
     }
 
-    public List<Long> getItemIds() { 
-        return itemIds; 
+    public List<Long> getItemIds() {
+        return itemIds;
     }
 
     public List<KitItemResponse> getItems() {
@@ -149,8 +192,24 @@ public class KitResponse {
         return totalSelectedItems;
     }
 
-    public Long getTenantId() { 
-        return tenantId; 
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public Double getSubtotalPrice() {
+        return subtotalPrice;
+    }
+
+    public Double getGuaranteePrice() {
+        return guaranteePrice;
+    }
+
+    public Double getPlatformFee() {
+        return platformFee;
+    }
+
+    public Double getTotalPrice() {
+        return totalPrice;
     }
 
     private LocalDate calculateEstimatedDeliveryDate(LocalDate orderDate, LocalDate startDate) {
@@ -191,5 +250,4 @@ public class KitResponse {
         }
         return prefix + " llegará el " + estimatedDeliveryDate;
     }
-
 }

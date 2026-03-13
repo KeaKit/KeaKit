@@ -1,21 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Modal,
-  Pressable,
   SafeAreaView,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SelectPicker } from '../../components/SelectPicker';
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
 import { es, registerTranslation } from "react-native-paper-dates";
+import { useLocationPicker } from '../../hooks/useLocationPicker';
 import {
   Provider as PaperProvider,
   MD3LightTheme,
@@ -24,12 +23,13 @@ import {
   SegmentedButtons,
 } from "react-native-paper";
 
+import { EUROPEAN_COUNTRIES } from '../../types';
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
 import { API_ROUTES } from "../../config/api";
-import { RootStackParamList } from "../../types";
+import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
@@ -38,6 +38,7 @@ import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
 } from "./createKitSelection";
+import { styles } from "../../styles/uploadArticleScreenStyles";
 
 const COMISION = 0.2; // 20% de comisión sobre el precio total del kit
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
@@ -67,6 +68,7 @@ type CatalogProduct = {
   status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
   category?: string;
   city?: string;
+  ownerId: number;
   ownerName?: string;
   imageUrl?: string | null;
   totalUnits: number;
@@ -120,6 +122,14 @@ const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
   const { user } = useAuth();
 
+    const {
+      selectedCountry,
+      selectedCity,
+      setSelectedCity,
+      cities,
+      loadingCities,
+      onCountryChange,
+    } = useLocationPicker();
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -150,6 +160,7 @@ const CreateKitScreen: React.FC = () => {
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [payment, setPayment] = useState<KitPaymentDTO | null>(null);
 
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
@@ -183,7 +194,7 @@ const CreateKitScreen: React.FC = () => {
     try {
       setLoadingCatalog(true);
 
-      const res = await fetch(API_ROUTES.ALL_ITEMS, {
+      const res = await fetch(API_ROUTES.ITEMS_FOR_RENT(user.id), {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -215,6 +226,7 @@ const CreateKitScreen: React.FC = () => {
             ? p.category
             : (p.category?.name ?? ""),
         city: p.city ?? "",
+        ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
         imageUrl: p.imageUrl ?? null,
         totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
@@ -415,53 +427,35 @@ const CreateKitScreen: React.FC = () => {
     const validation = validate();
     if (!validation.valid || !validation.payloadDates) return;
 
+    const payload: KitCreateRequest = {
+      name: name.trim(),
+      country: country.trim(),
+      city: city.trim(),
+      startDate: validation.payloadDates.startIso,
+      endDate: validation.payloadDates.endIso,
+      deliveryMethod,
+      meetingPoint:
+        deliveryMethod === "MEETING_POINT"
+          ? meetingPoint.trim()
+          : deliveryMethod === "COURIER"
+            ? courierAddress.trim()
+            : undefined,
+      tenantId: user.id,
+      itemSelections: selectedProducts.map((p) => ({
+        itemId: p.id,
+        quantity: selectedQuantities[p.id] ?? 1,
+        pricePerMonth: p.pricePerMonth,
+      })),
+    };
+
     const handleCreateKit = async () => {
-      if (!user?.id || !user.token) {
-        console.error("🔥 ERROR al crear kit: Usuario no autenticado");
-        return;
-      }
-
-      const validation = validate();
-      if (!validation.valid || !validation.payloadDates) {
-        console.error("🔥 ERROR al crear kit: Campos requeridos incompletos");
-        return;
-      }
-
       try {
         setSubmitting(true);
-
-        const payload = {
-          name: name.trim(),
-          country: country.trim(),
-          city: city.trim(),
-          startDate: validation.payloadDates.startIso,
-          endDate: validation.payloadDates.endIso,
-          deliveryMethod,
-          // En el record de Java solo tenemos 'meetingPoint'
-          // Si es COURIER, mandamos la dirección en ese mismo campo o lo dejamos undefined
-          meetingPoint:
-            deliveryMethod === "MEETING_POINT"
-              ? meetingPoint.trim()
-              : deliveryMethod === "COURIER"
-                ? courierAddress.trim()
-                : undefined,
-
-          tenantId: user.id,
-          itemSelections: selectedProducts.map((p) => ({
-            itemId: p.id,
-            quantity: selectedQuantities[p.id] ?? 1,
-            pricePerMonth: p.pricePerMonth,
-          })),
-        };
-
-        console.log("📦 Creando kit con payload:", payload);
-
         const response = await createKit(payload, user.token);
-
-        console.log("✅ Kit creado exitosamente:", response);
         return response;
       } catch (error) {
         console.error("🔥 ERROR al crear kit:", error);
+        return null;
       } finally {
         setSubmitting(false);
       }
@@ -475,6 +469,7 @@ const CreateKitScreen: React.FC = () => {
 
     navigation.navigate("Checkout", { kitId: createdKit.id });
   };
+
 
   const customTheme = {
     ...MD3LightTheme,
@@ -536,45 +531,60 @@ const CreateKitScreen: React.FC = () => {
             <Text style={commonStyles.errorText}>{errors.name}</Text>
           ) : null}
 
-          <View style={createKitStyles.row}>
-            <View style={createKitStyles.rowItem}>
-              <PaperTextInput
-                mode="outlined"
-                label="País"
-                value={country}
-                onChangeText={(value) => {
-                  setCountry(value);
-                  clearFieldError("country");
-                }}
-                error={!!errors.country}
-                style={{ backgroundColor: Colors.backgroundWhite }}
-                outlineColor={Colors.border}
-                activeOutlineColor={Colors.primary}
-              />
-              {errors.country ? (
-                <Text style={commonStyles.errorText}>{errors.country}</Text>
-              ) : null}
+            {/* País */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>País</Text>
+              <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
+                <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+                <SelectPicker
+                  options={EUROPEAN_COUNTRIES}
+                  selectedValue={selectedCountry}
+                  placeholder="Selecciona un país"
+                  onValueChange={(value: string) => {
+                    onCountryChange(value);
+                    clearFieldError('country');
+                    clearFieldError('city');
+                    setCountry(value);
+                  }}
+                />
+              </View>
+              {!!errors.country && (
+                <View style={commonStyles.errorContainer}>
+                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                  <Text style={commonStyles.errorText}>{errors.country}</Text>
+                </View>
+              )}
             </View>
 
-            <View style={createKitStyles.rowItem}>
-              <PaperTextInput
-                mode="outlined"
-                label="Ciudad"
-                value={city}
-                onChangeText={(value) => {
-                  setCity(value);
-                  clearFieldError("city");
-                }}
-                error={!!errors.city}
-                style={{ backgroundColor: Colors.backgroundWhite }}
-                outlineColor={Colors.border}
-                activeOutlineColor={Colors.primary}
-              />
-              {errors.city ? (
-                <Text style={commonStyles.errorText}>{errors.city}</Text>
-              ) : null}
+            {/* Ciudad */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Ciudad</Text>
+              <View style={[styles.pickerWrapper, errors.city ? styles.pickerWrapperError : null]}>
+                <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+                {loadingCities ? (
+                  <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
+                ) : (
+                  <SelectPicker
+                    options={cities.map(c => ({ label: c, value: c }))}
+                    selectedValue={selectedCity}
+                    placeholder={selectedCountry ? 'Selecciona una ciudad' : 'Primero elige un país'}
+                    disabled={cities.length === 0}
+                    onValueChange={(value: string) => {
+                      setSelectedCity(value);
+                      setCity(value);
+                      clearFieldError('city');
+                    }}
+                  />
+                )}
+              </View>
+              {!!errors.city && (
+                <View style={commonStyles.errorContainer}>
+                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                  <Text style={commonStyles.errorText}>{errors.city}</Text>
+                </View>
+              )}
             </View>
-          </View>
+
 
           <TouchableOpacity
             style={[
@@ -877,6 +887,57 @@ const CreateKitScreen: React.FC = () => {
                 €
               </Text>
             </View>
+
+            <Button
+              mode="outlined"
+              onPress={async () => {
+                if (!user?.id || !user.token) {
+                  setErrors({ general: "Necesitas iniciar sesión." });
+                  return;
+                }
+
+                const validation = validate();
+                if (!validation.valid || !validation.payloadDates) return;
+
+                const payload: KitCreateRequest = {
+                  name: name.trim(),
+                  country: country.trim(),
+                  city: city.trim(),
+                  startDate: validation.payloadDates.startIso,
+                  endDate: validation.payloadDates.endIso,
+                  deliveryMethod,
+                  meetingPoint:
+                    deliveryMethod === "MEETING_POINT"
+                      ? meetingPoint.trim()
+                      : deliveryMethod === "COURIER"
+                        ? courierAddress.trim()
+                        : undefined,
+                  tenantId: user.id,
+                  itemSelections: selectedProducts.map((p) => ({
+                    itemId: p.id,
+                    quantity: selectedQuantities[p.id] ?? 1,
+                    pricePerMonth: p.pricePerMonth,
+                  })),
+                  status: KitStatus.DRAFT,
+                };
+
+                try {
+                  setSubmitting(true);
+                  const created = await createKit(payload, user.token);
+                  if (created) {
+                    navigation.navigate("MyKits");
+                  }
+                } catch (e) {
+                  console.error("Error guardando borrador:", e);
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+              style={{ borderRadius: 8, marginBottom: 8 }}
+            >
+              Guardar para pagar más tarde
+            </Button>
+
 
             <Button
               mode="contained"

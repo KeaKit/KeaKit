@@ -5,7 +5,6 @@ import com.example.demo.model.KitStatus;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
@@ -20,7 +19,7 @@ public record KitCreateRequest(
         @NotNull DeliveryMethod deliveryMethod,
         String meetingPoint,
         @NotNull Long tenantId,
-        @NotEmpty List<ItemSelectionRequest> itemSelections) {
+        List<ItemSelectionRequest> itemSelections) {
 
     public record ItemSelectionRequest(
             @NotNull Long itemId,
