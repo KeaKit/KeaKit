@@ -16,6 +16,8 @@ export const API_ROUTES = {
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
+  GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,
+  CONFIRM_KIT: (id: number) => `${BASE_URL}/api/kits/confirm/${id}`,
   KIT_PAYMENT: `${BASE_URL}/api/kits/payment`,
   KIT_MARK_PAID: (id: number) => `${BASE_URL}/api/kits/${id}/pay`,
   KIT_CANCEL: (id: number) => `${BASE_URL}/api/kits/${id}/cancel`,
@@ -46,6 +48,7 @@ export const API_ROUTES = {
   ADD_INCIDENT_COMMENT:       (incidentId: number) => `${BASE_URL}/api/incidents/${incidentId}/comments`,
 
   // Kits / Rented items
+    MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
 
   // Payments

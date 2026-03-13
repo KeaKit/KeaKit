@@ -10,7 +10,6 @@ import {
   Image,
   Alert,
   Modal,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -27,8 +26,6 @@ const KitDetailScreen: React.FC = () => {
   const route = useRoute<KitDetailRouteProp>();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "KitDetail">>();
   const { user } = useAuth();
-  const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
-  const BASE = `http://${host}:8080`;
   
   const kitId = route.params?.kitId;
 
@@ -50,7 +47,14 @@ const KitDetailScreen: React.FC = () => {
     const fetchKitDetail = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${BASE}/api/kits/${kitId}`);
+        const response = await fetch(API_ROUTES.GET_KIT(kitId), {
+          headers: user?.token
+            ? {
+                Authorization: `Bearer ${user.token}`,
+                "Content-Type": "application/json",
+              }
+            : undefined,
+        });
         if (!response.ok) throw new Error('Error al obtener kit');
         const data = await response.json();
         setKit(data);
@@ -61,14 +65,20 @@ const KitDetailScreen: React.FC = () => {
       }
     };
     if (kitId) fetchKitDetail();
-  }, [kitId]);
+  }, [kitId, user?.token]);
 
 const handleConfirmKit = async () => {
   try {
     setConfirming(true);
 
-    const response = await fetch(`${BASE}/api/kits/confirm/${kitId}`, {
+    const response = await fetch(API_ROUTES.CONFIRM_KIT(kitId), {
       method: 'PATCH',
+      headers: user?.token
+        ? {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          }
+        : undefined,
     });
 
     if (response.ok) {
@@ -228,8 +238,14 @@ const handleConfirmKit = async () => {
               async () => {
                 try {
                   setDeleting(true);
-                  const response = await fetch(`${BASE}/api/kits/${kitId}`, {
+                  const response = await fetch(API_ROUTES.GET_KIT(kitId), {
                     method: 'DELETE',
+                    headers: user?.token
+                      ? {
+                          Authorization: `Bearer ${user.token}`,
+                          "Content-Type": "application/json",
+                        }
+                      : undefined,
                   });
                   if (!response.ok) throw new Error('No se pudo eliminar');
                   console.log('Éxito', 'El kit ha sido eliminado correctamente.');
@@ -289,8 +305,14 @@ const handleConfirmKit = async () => {
                 onPress={async () => {
                   try {
                     setDeleting(true);
-                    const response = await fetch(`${BASE}/api/kits/${kitId}`, {
+                    const response = await fetch(API_ROUTES.GET_KIT(kitId), {
                       method: 'DELETE',
+                      headers: user?.token
+                        ? {
+                            Authorization: `Bearer ${user.token}`,
+                            "Content-Type": "application/json",
+                          }
+                        : undefined,
                     });
                     if (!response.ok) throw new Error('No se pudo eliminar');
                     console.log('Éxito', 'El kit ha sido eliminado correctamente.');

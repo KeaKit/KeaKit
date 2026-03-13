@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { KitResponse, KitStatus, RootStackParamList } from "../../types";
+import { API_ROUTES } from "../../config/api";
 import { Colors, Spacing, commonStyles } from "../../styles";
 
 type MyKitsNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
@@ -28,12 +29,19 @@ const MyKitsScreen: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
-      const url = `http://${host}:8080/api/kits/my-kits/${user.id}`;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
+      const response = await fetch(API_ROUTES.MY_KITS(user.id), {
+        headers: user.token
+          ? {
+              Authorization: `Bearer ${user.token}`,
+              "Content-Type": "application/json",
+            }
+          : undefined,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       const data = await response.json();
       setKits(data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED));
     } catch (err) {
