@@ -48,8 +48,14 @@ export default function CheckoutScreen({ route }: Props) {
       try {
         const response = await fetch(API_ROUTES.GET_KIT_PAYMENT_BY_ID(kitId), {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers: user?.token
+            ? {
+                Authorization: `Bearer ${user.token}`,
+                "Content-Type": "application/json",
+              }
+            : undefined,
         });
+        console.log("Respuesta al obtener el monto del kit:", response);
 
         if (!response.ok) {
           console.error("Error al obtener el monto del kit:", response.status);
@@ -88,7 +94,12 @@ export default function CheckoutScreen({ route }: Props) {
         API_ROUTES.GET_KIT_PAYMENT_BY_ID(kitId),
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers: user?.token
+            ? {
+                Authorization: `Bearer ${user.token}`,
+                "Content-Type": "application/json",
+              }
+            : undefined,
         },
       );
 
@@ -100,7 +111,12 @@ export default function CheckoutScreen({ route }: Props) {
           API_ROUTES.PROCESS_PAYMENT_WALLET(kitId),
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: user?.token
+              ? {
+                  Authorization: `Bearer ${user.token}`,
+                  "Content-Type": "application/json",
+                }
+              : undefined,
             body: JSON.stringify(kitPaymentData.totalPrice),
           },
         );
@@ -116,7 +132,12 @@ export default function CheckoutScreen({ route }: Props) {
       } else {
         const res = await fetch(API_ROUTES.CREATE_PAYMENT_INTENT, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: user?.token
+            ? {
+                Authorization: `Bearer ${user.token}`,
+                "Content-Type": "application/json",
+              }
+            : undefined,
           body: JSON.stringify(kitPaymentData.totalPrice),
         });
 
@@ -141,6 +162,7 @@ export default function CheckoutScreen({ route }: Props) {
 
         if (result.error) {
           console.error("❌ Error en el pago:", result.error?.message);
+          return;
         } else {
           console.log(
             "✅ Dinero recibido en Stripe. 🔗 Ver en: https://dashboard.stripe.com/test/payments/" +
@@ -151,7 +173,12 @@ export default function CheckoutScreen({ route }: Props) {
             API_ROUTES.PROCESS_PAYMENT_STRIPE(kitId),
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: user?.token
+                ? {
+                    Authorization: `Bearer ${user.token}`,
+                    "Content-Type": "application/json",
+                  }
+                : undefined,
               body: JSON.stringify(result.paymentIntent.status),
             },
           );
