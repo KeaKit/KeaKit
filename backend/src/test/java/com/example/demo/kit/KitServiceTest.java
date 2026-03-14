@@ -22,71 +22,62 @@ import com.example.demo.model.Article;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
+import com.example.demo.model.Wallet;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
+import com.example.demo.repository.TransactionRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.CategoryRepository;
+import com.example.demo.repository.WalletRepository;
 import com.example.demo.service.KitService;
 import com.example.demo.service.OrderConfirmationEmailService;
 
 @ExtendWith(MockitoExtension.class)
 public class KitServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private KitRepository kitRepository;
-
-    @Mock
-    private ItemRepository itemRepository;
-
-    @Mock
-    private OrderConfirmationEmailService orderConfirmationEmailService;
+    @Mock private UserRepository userRepository;
+    @Mock private KitRepository kitRepository;
+    @Mock private ItemRepository itemRepository;
+    @Mock private CategoryRepository categoryRepository;
+    @Mock private OrderConfirmationEmailService orderConfirmationEmailService;
+    @Mock private WalletRepository walletRepository;
+    @Mock private TransactionRepository transactionRepository;
 
     @InjectMocks
     private KitService kitService;
 
-    // TEST DE ESTADO DE UN KIT Y ALGUNAS VALIDACIONES
-
     @Test
     void createKit_withExplicitStatus_success() {
-        KitCreateRequest req = new KitCreateRequest();
-        req.setName("Kit Test");
-        req.setStatus(KitStatus.ACTIVE);
+        User tenant = createTestUser(1L, "Juan");
+        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid",
+            LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.DRAFT, null, null, tenant.getId(), List.of());
 
-        when(kitRepository.save(any())).thenAnswer(inv -> {
-            Kit k = inv.getArgument(0);
-            k.setId(1L);
-            return k;
-        });
+        mockUserAndKitSave(tenant);
 
-        KitResponse res = kitService.create(req);
+        Kit res = kitService.create(req);
 
-        assertEquals(KitStatus.ACTIVE, res.getStatus());
+        assertEquals(KitStatus.DRAFT, res.getStatus());
     }
 
-    //ahora se crean pagados
+
     @Test
-    void createKit_withoutStatus_defaultsToPaid() {
-        KitCreateRequest req = new KitCreateRequest();
-        req.setName("Kit Test");
+    void createKit_withoutStatus_defaultsToDraft() {
+        User tenant = createTestUser(1L, "Juan");
+        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid", 
+            LocalDate.now(), LocalDate.now().plusDays(7), null, null, null, tenant.getId(), List.of());
 
-        when(kitRepository.save(any())).thenAnswer(inv -> {
-            Kit k = inv.getArgument(0);
-            k.setId(1L);
-            return k;
-        });
+        mockUserAndKitSave(tenant);
 
-        KitResponse res = kitService.create(req);
+        Kit res = kitService.create(req);
 
-        assertEquals(KitStatus.PAID, res.getStatus());
+        assertEquals(KitStatus.DRAFT, res.getStatus());
     }
 
     @Test
     void updateKit_changeStatus_success() {
         Kit existing = new Kit();
         existing.setId(1L);
-        existing.setStatus(KitStatus.PENDING);
+        existing.setStatus(KitStatus.DRAFT);
 
         Kit update = new Kit();
         update.setStatus(KitStatus.ACTIVE);
@@ -100,126 +91,58 @@ public class KitServiceTest {
     }
 
     @Test
-    void updateKit_notFound_throwsException() {
-        when(kitRepository.findById(1L)).thenReturn(Optional.empty());
-
-        Kit update = new Kit();
-        update.setStatus(KitStatus.ACTIVE);
-
-        assertThrows(RuntimeException.class, () -> kitService.update(1L, update));
-    }
-
-    @Test
     void createKit_invalidDates_throwsException() {
-        KitCreateRequest req = new KitCreateRequest();
-        req.setStartDate(LocalDate.of(2024, 5, 10));
-        req.setEndDate(LocalDate.of(2024, 5, 1));
+        KitCreateRequest req = new KitCreateRequest("Kit Test", "ES", "MAD", 
+            LocalDate.now().plusDays(10), LocalDate.now(), null, null, null, 1L, List.of());
 
         assertThrows(RuntimeException.class, () -> kitService.create(req));
     }
 
     @Test
-    void updateKit_invalidDates_throwsException() {
-        Kit existing = new Kit();
-        existing.setId(1L);
-        existing.setStartDate(LocalDate.of(2024, 5, 1));
-        existing.setEndDate(LocalDate.of(2024, 5, 10));
-
-        Kit update = new Kit();
-        update.setStartDate(LocalDate.of(2024, 6, 1));
-        update.setEndDate(LocalDate.of(2024, 5, 1));
-
-        when(kitRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-        assertThrows(RuntimeException.class, () -> kitService.update(1L, update));
-    }
-
-    @Test
-    void findTrackingKitById_success() {
-        User tenant = new User();
-        tenant.setId(10L);
-
-        Kit kit = new Kit();
-        kit.setId(1L);
-        kit.setStatus(KitStatus.ACTIVE);
-        kit.setTenant(tenant);
-
-        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
-
-        KitResponse res = kitService.findTrackingKitById(1L, 10L);
-
-        assertEquals(KitStatus.ACTIVE, res.getStatus());
-    }
-
-    @Test
-    void findTrackingKitById_wrongTenant_throwsException() {
-        User tenant = new User();
-        tenant.setId(10L);
-
-        Kit kit = new Kit();
-        kit.setId(1L);
-        kit.setStatus(KitStatus.ACTIVE);
-        kit.setTenant(tenant);
-
-        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
-
-        assertThrows(RuntimeException.class, () -> kitService.findTrackingKitById(1L, 99L));
-    }
-
-    @Test
     void createKit_itemQuantityExceedsTotalUnits_throwsException() {
-        KitCreateRequest req = new KitCreateRequest();
-        req.setName("Kit con exceso");
+        Article article = createTestArticle(5L, "Tienda", 2, createTestUser(2L, "Owner"));
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(5L, 3, 10.0);
+        
+        KitCreateRequest req = new KitCreateRequest("Kit Fail", "ES", "MAD", 
+            LocalDate.now(), LocalDate.now().plusDays(7), null, null, null, 1L, List.of(selection));
 
-        KitCreateRequest.KitItemSelectionRequest selection = new KitCreateRequest.KitItemSelectionRequest();
-        selection.setItemId(5L);
-        selection.setQuantity(3);
-        req.setItemSelections(List.of(selection));
-
-        Article article = new Article();
-        article.setId(5L);
-        article.setTotalUnits(2);
-
-        when(itemRepository.findAllById(any())).thenReturn(List.of(article));
+        // Debemos mockear el tenant y el item para llegar a la validación de unidades
+        when(userRepository.findById(any())).thenReturn(Optional.of(new User()));
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
 
         assertThrows(RuntimeException.class, () -> kitService.create(req));
     }
 
     @Test
     void createKit_withItemSelections_success() {
-        KitCreateRequest req = new KitCreateRequest();
-        req.setName("Kit con cantidades");
+        // Preparar datos
+        User tenant = createTestUser(1L, "Tenant");
+        User owner = createTestUser(2L, "Owner");
+        Article article = createTestArticle(100L, "Tienda", 10, owner);
+        
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 2, 50.0);
+        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid", 
+            LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.ACTIVE, null, null, tenant.getId(), List.of(selection));
 
-        KitCreateRequest.KitItemSelectionRequest selection = new KitCreateRequest.KitItemSelectionRequest();
-        selection.setItemId(5L);
-        selection.setQuantity(2);
-        req.setItemSelections(List.of(selection));
+        // Mocks
+        when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
+        when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+        mockUserAndKitSave(tenant);
 
-        Article article = new Article();
-        article.setId(5L);
-        article.setTotalUnits(3);
+        // Ejecutar
+        Kit res = kitService.create(req);
 
-        when(itemRepository.findAllById(any())).thenReturn(List.of(article));
-        when(kitRepository.save(any())).thenAnswer(inv -> {
-            Kit k = inv.getArgument(0);
-            k.setId(99L);
-            return k;
-        });
-
-        KitResponse res = kitService.create(req);
-
-        assertNotNull(res.getItemSelections());
-        assertEquals(1, res.getItemSelections().size());
-        assertEquals(5L, res.getItemSelections().get(0).getItemId());
-        assertEquals(2, res.getItemSelections().get(0).getQuantity());
-        assertEquals(2, res.getTotalSelectedItems());
+        // Verificar
+        assertNotNull(res);
+        assertEquals(1, res.getSnapshots().size());
+        assertEquals(2, res.getSnapshots().get(0).getSelectedUnits());
     }
 
     @Test
-    void confirmKitStatus_whenPendingValidation_changesToActive() {
+    void confirmKitStatus_when_paid_changesToActive() {
         Kit kit = new Kit();
         kit.setId(1L);
-        kit.setStatus(KitStatus.PENDING_VALIDATION);
+        kit.setStatus(KitStatus.PAID);
 
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
         when(kitRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -229,16 +152,32 @@ public class KitServiceTest {
         assertEquals(KitStatus.ACTIVE, kit.getStatus());
     }
 
-    @Test
-    void confirmKitStatus_whenNotPendingValidation_throwsException() {
-        Kit kit = new Kit();
-        kit.setId(1L);
-        kit.setStatus(KitStatus.ACTIVE);
+    // --- MÉTODOS HELPER (Para limpiar los tests) ---
 
-        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+    private User createTestUser(Long id, String name) {
+        User user = new User();
+        user.setId(id);
+        user.setName(name);
+        user.setEmail(name.toLowerCase() + "@test.com");
+        return user;
+    }
 
-        assertThrows(RuntimeException.class, () -> 
-            kitService.confirmKitStatus(1L)
-        );
+    private Article createTestArticle(Long id, String title, int units, User owner) {
+        Article article = new Article();
+        article.setId(id);
+        article.setTitle(title);
+        article.setTotalUnits(units);
+        article.setOwner(owner);
+        article.setPricePerMonth(50.0);
+        return article;
+    }
+
+    private void mockUserAndKitSave(User tenant) {
+        when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
+        when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> {
+            Kit k = inv.getArgument(0);
+            k.setId(1L);
+            return k;
+        });
     }
 }

@@ -71,6 +71,13 @@ export interface UserArticle {
 export interface KitItemSelection {
   itemId: number;
   quantity: number;
+  pricePerMonth: number;
+}
+
+export interface ItemSelectionRequest {
+  itemId: number;
+  quantity: number;
+  pricePerMonth: number;
 }
 
 export interface KitCreateRequest {
@@ -79,12 +86,19 @@ export interface KitCreateRequest {
   city: string;
   startDate: string;
   endDate: string;
+  status?: KitStatus;
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
-  courierAddress?: string;
   tenantId: number;
-  itemIds?: number[];
-  itemSelections?: KitItemSelection[];
+  itemSelections: ItemSelectionRequest[]; 
+}
+
+export interface KitPaymentDTO {
+  totalPrice: number;
+  subtotalPrice: number;
+  guarantee: number;
+  platformfee: number;
+  courierPrice: number;
 }
 
 export type ArticleCondition = 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN';
@@ -127,15 +141,57 @@ export interface Item {
   description: string;
   pricePerMonth: number;
   category: string;
+  quantity?: number;
 }
 
 export enum KitStatus {
-  PENDING = "PENDING",
+  DRAFT = "DRAFT",
   PAID = "PAID",
-  PENDING_VALIDATION = "PENDING VALIDATION",
   ACTIVE = "ACTIVE",
-  COMPLETED = "COMPLETED",
   CANCELLED = "CANCELLED",
+  FINISHED = "FINISHED",
+}
+
+export interface Kit {
+  id: number;
+  name: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  orderDate?: string;
+  status: KitStatus;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint?: string;
+  courierPrice?: number;
+  tenant: {
+    id: number;
+    email: string;
+    password: string;
+    name: string;
+    role: "ADMIN" | "USER";
+    phone: string;
+    address: string;
+    city: string;
+    country: string;
+  };
+  kitItems: {
+    id: number;
+    item: Item;
+    quantity: number;
+    pricePerMonth: number;
+  }[];
+  items?: Item[];
+  totalPrice?: number;
+}
+
+export interface KitItemResponse {
+  itemId: number;
+  quantity: number;
+  pricePerMonth: number;
+  name?: string | null;
+  category?: string | null;
+  imageUrl?: string | null;
 }
 
 export interface KitResponse {
@@ -150,13 +206,15 @@ export interface KitResponse {
   deliveryNotification?: string;
   status?: KitStatus;
   tenantId: number;
-  items?: Item[];
+  items?: KitItemResponse[];
   itemIds?: number[];
+  subtotalPrice?: number;
+  guaranteePrice?: number;
+  platformFee?: number;
   totalPrice?: number;
   deliveryMethod?: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
   courierPrice?: number;
-  itemSelections?: KitItemSelection[];
   totalSelectedItems?: number;
 }
 
@@ -234,24 +292,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   CreateKit: undefined;
-  Checkout: {
-    kitData: {
-      name: string;
-      country: string;
-      city: string;
-      startDate: string;
-      endDate: string;
-      deliveryMethod: "COURIER" | "MEETING_POINT";
-      meetingPoint?: string;
-      courierAddress?: string;
-      items: {
-        id: number;
-        quantity: number;
-        pricePerMonth: number;
-        ownerId: number;
-      }[];
-    };
-  };
+  Checkout: {kitId: number};
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
@@ -267,6 +308,10 @@ export type RootStackParamList = {
   EditArticle: { article: Article };
   Categories: undefined;
   CategoryForm: { category?: Category; mode: "view" | "edit" | "create" };
+  MyServices: undefined;
+  PromoteService: undefined;
+  EditService: { service: Service };
+  ServiceDetail: { serviceId: number };
 };
 
 export interface ProfileData {
@@ -276,6 +321,45 @@ export interface ProfileData {
   city: string;
   country: string;
 }
+
+export type ServiceStatus = 'DRAFT' | 'ACTIVE' | 'UNAVAILABLE';
+
+export interface Service {
+  id: number;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: Category;
+  status: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface ServicePayload {
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: { id: number };
+  status?: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface UserService {
+  id: number;
+  title: string;
+  pricePerMonth: number;
+  status: ServiceStatus;
+  rentedUntil: string | null;
+  city: string;
+  categoryName: string;
+}
+
+
 
 export const EUROPEAN_COUNTRIES = [
   { value: "Albania", label: "Albania" },

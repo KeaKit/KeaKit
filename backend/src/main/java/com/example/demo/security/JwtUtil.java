@@ -28,9 +28,10 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email, UserRole role) {
+    public String generateToken(String email, Long userId, UserRole role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", email);
+        claims.put("userId", userId);
         claims.put("role", role.name());
         return createToken(claims, email);
     }
@@ -60,8 +61,24 @@ public class JwtUtil {
         }
     }
 
+    /**
+     * Extrae el token JWT del header Authorization
+     * @param authHeader Header "Authorization" con formato "Bearer <token>"
+     * @return El token JWT sin el prefijo "Bearer ", o null si es inválido
+     */
+    public String extractTokenFromAuthHeader(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
+    }
+
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
     }
 
     public UserRole extractRole(String token) {

@@ -32,4 +32,8 @@ app:
 
 sendgrid:
   api-key: ${SENDGRID_API_KEY:}
-  from-email: ${SENDGRID_FROM_EMAIL:no-reply@keakit.app}
+  from-email: ${SENDGRID_FROM_EMAIL:}
+
+stripe:
+  api:
+    key: ${STRIPE_SECRET_KEY:sk_test_default_key} # Reemplaza con clave real para que funcione

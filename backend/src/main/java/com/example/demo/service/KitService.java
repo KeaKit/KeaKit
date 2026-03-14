@@ -1,56 +1,51 @@
 package com.example.demo.service;
 
 import java.time.LocalDate;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.dto.KitCreateRequest;
+import com.example.demo.dto.KitPaymentDTO;
 import com.example.demo.dto.KitResponse;
-import com.example.demo.model.DeliveryMethod;
 import com.example.demo.dto.RentedItemResponse;
+import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.Item;
+import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
-import com.example.demo.model.KitItem;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
-import com.example.demo.model.Wallet;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.WalletRepository;
-import java.util.ArrayList;
 
 @Service
 public class KitService {
+    // TODO: Revisar reglas de negocio, validaciones y excepciones.
+    
+    @Autowired
+    private KitRepository kitRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
+
+    @Autowired
+    private OrderConfirmationEmailService orderConfirmationEmailService;
 
     private static final double PLATFORM_COURIER_PRICE = 9.99;
 
-    private final KitRepository kitRepository;
-    private final UserRepository userRepository;
-    private final ItemRepository itemRepository;
-    private final OrderConfirmationEmailService orderConfirmationEmailService;
+    private static final double PLATFORM_FEE_PERCENTAGE = 0.2; // TODO: Ajustar comisión según la configuración del administrador
 
-    private final WalletRepository walletRepository;
-
-    public KitService(
-        KitRepository kitRepository,
-        UserRepository userRepository,
-        ItemRepository itemRepository,
-        OrderConfirmationEmailService orderConfirmationEmailService,
-        WalletRepository walletRepository
-    ) {
-        this.kitRepository = kitRepository;
-        this.userRepository = userRepository;
-        this.itemRepository = itemRepository;
-        this.orderConfirmationEmailService = orderConfirmationEmailService;
-        this.walletRepository = walletRepository;
-    }
+    // TODO: Obtener la garantía de la configuración hecha por el admin
+    private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2; 
 
     public List<Kit> findAll() {
         return kitRepository.findAll();
@@ -58,26 +53,34 @@ public class KitService {
 
     public KitResponse findById(Long id) {
         Kit kit = kitRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
         return new KitResponse(kit);
     }
 
     @Transactional
-    public KitResponse create(KitCreateRequest request) {
+    public Kit create(KitCreateRequest request) {
         Kit kit = new Kit();
-        kit.setName(request.getName());
-        kit.setCountry(request.getCountry());
-        kit.setCity(request.getCity());
-        kit.setStartDate(request.getStartDate());
-        kit.setEndDate(request.getEndDate());
-        kit.setStatus(request.getStatus() != null ? request.getStatus() : KitStatus.PAID); //se crea cuando se paga
+        kit.setName(request.name());
+        kit.setCountry(request.country());
+        kit.setCity(request.city());
+        kit.setStartDate(request.startDate());
+        kit.setEndDate(request.endDate());
+        KitStatus status = request.status() != null ? request.status() : KitStatus.DRAFT;
+        kit.setStatus(status);
 
-        DeliveryMethod deliveryMethod = request.getDeliveryMethod() != null
-            ? request.getDeliveryMethod()
-            : DeliveryMethod.COURIER;
+        List<KitCreateRequest.ItemSelectionRequest> selections =
+                request.itemSelections() != null ? request.itemSelections() : List.of();
+
+        if (status != KitStatus.DRAFT && selections.isEmpty()) {
+            throw new RuntimeException("Item selections are required unless kit is DRAFT");
+        }
+
+        DeliveryMethod deliveryMethod = request.deliveryMethod() != null
+                ? request.deliveryMethod()
+                : DeliveryMethod.COURIER;
         kit.setDeliveryMethod(deliveryMethod);
 
-        String meetingPoint = request.getMeetingPoint() != null ? request.getMeetingPoint().trim() : null;
+        String meetingPoint = request.meetingPoint() != null ? request.meetingPoint().trim() : null;
         if (deliveryMethod == DeliveryMethod.MEETING_POINT && (meetingPoint == null || meetingPoint.isEmpty())) {
             throw new RuntimeException("Meeting point is required when delivery method is MEETING_POINT");
         }
@@ -89,55 +92,109 @@ public class KitService {
             kit.setCourierPrice(null);
         }
 
-        if (request.getTenantId() != null) {
-            User tenant = userRepository.findById(request.getTenantId())
-                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+        kit.setAppliedCommissionRate(PLATFORM_FEE_PERCENTAGE);
+        kit.setAppliedGuaranteeRate(PLATFORM_GUARANTEE_PERCENTAGE);
+
+        if(request.tenantId() == null){
+            throw new RuntimeException("Tenant ID is required");
+        }
+
+        if (request.tenantId() != null) {
+            User tenant = userRepository.findById(request.tenantId())
+                    .orElseThrow(() -> new RuntimeException("Tenant not found"));
             kit.setTenant(tenant);
         }
 
-        List<KitItem> kitItems = buildKitItemsFromRequest(request);
-        if (!kitItems.isEmpty()) {
-            kit.setKitItems(kitItems);
+        if(!selections.isEmpty()){
+            for (KitCreateRequest.ItemSelectionRequest item : selections) {
+                Item foundItem = itemRepository.findById(item.itemId())
+                        .orElseThrow(() -> new RuntimeException("Item not found: " + item.itemId()));
+                if (request.tenantId() == foundItem.getOwner().getId()) {
+                    throw new RuntimeException("Tenant cannot select their own items");
+                }
+            }
         }
 
+        List<ItemMemento> snapshots = itemSelectionToSnapshots(
+                selections,
+                kit.getDeliveryMethod(),
+                kit.getCourierPrice(),
+                kit.getMeetingPoint());
+
+        if (!snapshots.isEmpty()) {
+            kit.setSnapshots(snapshots);
+}
         validateDates(kit.getStartDate(), kit.getEndDate());
 
         Kit savedKit = kitRepository.save(kit);
-        for (KitItem kitItem : savedKit.getKitItems()) {
-    Item item = kitItem.getItem();
-    User owner = item.getOwner(); // asumiendo que Item tiene referencia a su dueño
-    if (owner != null) {
-        Wallet ownerWallet = walletRepository.findByUserId(owner.getId());
 
-        // Precio total del item: precio por unidad * cantidad
-        double totalAmount = item.getPricePerMonth() * kitItem.getQuantity();
-
-        // Sumar a la wallet disponible
-        ownerWallet.setAvailableBalance(ownerWallet.getAvailableBalance() + totalAmount);
-
-        walletRepository.save(ownerWallet);
+        return savedKit;
     }
-}
-        return new KitResponse(savedKit);
+
+     public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+        double subtotalPrice = request.itemSelections().stream()
+                .mapToDouble(item -> item.pricePerMonth() * item.quantity())
+                .sum();
+        double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
+        double courierPrice = 0.0;
+        if (request.deliveryMethod() == DeliveryMethod.COURIER) {
+            courierPrice = PLATFORM_COURIER_PRICE;
+        }
+        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        return new KitPaymentDTO(
+                toCents(totalPrice),
+                toCents(subtotalPrice),
+                toCents(guarantee),
+                toCents(courierPrice));
+        }
+
+    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException{
+        Kit kit = kitRepository.findById(kitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
+
+        double subtotalPrice = kit.getSnapshots().stream()
+                .mapToDouble(ki -> ki.getPriceAtRental() * ki.getSelectedUnits())
+                .sum();
+        double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
+        double courierPrice = kit.getDeliveryMethod() == DeliveryMethod.COURIER ? PLATFORM_COURIER_PRICE : 0.0;
+        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        return new KitPaymentDTO(
+                toCents(totalPrice),
+                toCents(subtotalPrice),
+                toCents(guarantee),
+                toCents(courierPrice));
+    }
+
+    private Integer toCents(Double amount) {
+        return (amount != null) ? (int) Math.round(amount * 100) : 0;
     }
 
     public KitResponse update(Long id, Kit updateData) {
         Kit kit = kitRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
 
-        if (updateData.getName() != null) kit.setName(updateData.getName());
-        if (updateData.getCountry() != null) kit.setCountry(updateData.getCountry());
-        if (updateData.getCity() != null) kit.setCity(updateData.getCity());
-        if (updateData.getStartDate() != null) kit.setStartDate(updateData.getStartDate());
-        if (updateData.getEndDate() != null) kit.setEndDate(updateData.getEndDate());
-        if (updateData.getStatus() != null) kit.setStatus(updateData.getStatus());
-        if (updateData.getDeliveryMethod() != null) kit.setDeliveryMethod(updateData.getDeliveryMethod());
-        if (updateData.getMeetingPoint() != null) kit.setMeetingPoint(updateData.getMeetingPoint());
-        if (updateData.getTenant() != null) kit.setTenant(updateData.getTenant());
-        if (updateData.getKitItems() != null && !updateData.getKitItems().isEmpty()) {
-            kit.setKitItems(updateData.getKitItems());
-        } else if (updateData.getItems() != null) {
-            kit.setItems(updateData.getItems());
+        if (updateData.getName() != null)
+            kit.setName(updateData.getName());
+        if (updateData.getCountry() != null)
+            kit.setCountry(updateData.getCountry());
+        if (updateData.getCity() != null)
+            kit.setCity(updateData.getCity());
+        if (updateData.getStartDate() != null)
+            kit.setStartDate(updateData.getStartDate());
+        if (updateData.getEndDate() != null)
+            kit.setEndDate(updateData.getEndDate());
+        if (updateData.getStatus() != null)
+            kit.setStatus(updateData.getStatus());
+        if (updateData.getDeliveryMethod() != null)
+            kit.setDeliveryMethod(updateData.getDeliveryMethod());
+        if (updateData.getMeetingPoint() != null)
+            kit.setMeetingPoint(updateData.getMeetingPoint());
+        if (updateData.getTenant() != null)
+            kit.setTenant(updateData.getTenant());
+        if (updateData.getSnapshots() != null && !updateData.getSnapshots().isEmpty()) {
+            kit.setSnapshots(updateData.getSnapshots());
         }
 
         if (kit.getDeliveryMethod() == DeliveryMethod.COURIER) {
@@ -173,8 +230,10 @@ public class KitService {
         List<Kit> activeKits = findActiveKitsByTenant(tenantId);
         List<RentedItemResponse> result = new ArrayList<>();
         for (Kit kit : activeKits) {
-            for (Item item : kit.getItems()) {
-                result.add(new RentedItemResponse(item, kit));
+            if (kit.getStatus() == KitStatus.PAID || kit.getStatus()== KitStatus.ACTIVE) {
+                for (ItemMemento snapshot : kit.getSnapshots()) {
+                    result.add(new RentedItemResponse(snapshot, kit));
+                }
             }
         }
         return result;
@@ -183,13 +242,13 @@ public class KitService {
     public List<KitResponse> findByTenantId(Long tenantId) {
         List<Kit> kits = kitRepository.findByTenantId(tenantId);
         return kits.stream()
-            .map(KitResponse::new)
-            .collect(java.util.stream.Collectors.toList());
+                .map(KitResponse::new)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public KitResponse findTrackingKitById(Long kitId, Long tenantId) {
         Kit kit = kitRepository.findById(kitId)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
         if (kit.getTenant() == null || !kit.getTenant().getId().equals(tenantId)) {
             throw new RuntimeException("Kit does not belong to the specified tenant");
         }
@@ -198,79 +257,66 @@ public class KitService {
 
     public void confirmKitStatus(Long id) {
         Kit kit = kitRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
 
-        if (kit.getStatus() != KitStatus.PENDING_VALIDATION) {
-            throw new RuntimeException(
-                "The kit can only be confirmed if its status is PENDING_VALIDATION"
-            );
+        if (kit.getStatus() != KitStatus.PAID) {
+            throw new RuntimeException("The kit can only be confirmed if its status is PAID");
         }
-
         kit.setStatus(KitStatus.ACTIVE);
+
         Kit savedKit = kitRepository.save(kit);
         orderConfirmationEmailService.sendOrderConfirmation(savedKit);
     }
 
-    private List<KitItem> buildKitItemsFromRequest(KitCreateRequest request) {
-        Map<Long, Integer> quantitiesByItemId = new LinkedHashMap<>();
+    private List<ItemMemento> itemSelectionToSnapshots(List<KitCreateRequest.ItemSelectionRequest> itemSelections,
+            DeliveryMethod selectedMethod,
+            Double shippingFee,
+            String pickupAddress) {
+        return itemSelections.stream()
+                .map(sel -> {
+                    Item item = itemRepository.findById(sel.itemId())
+                            .orElseThrow(() -> new RuntimeException("Item not found: " + sel.itemId()));
 
-        if (request.getItemSelections() != null && !request.getItemSelections().isEmpty()) {
-            for (KitCreateRequest.KitItemSelectionRequest selection : request.getItemSelections()) {
-                if (selection == null || selection.getItemId() == null) {
-                    throw new RuntimeException("Each selected item must include itemId");
-                }
-                int quantity = selection.getQuantity() != null ? selection.getQuantity() : 1;
-                if (quantity < 1) {
-                    throw new RuntimeException("Quantity must be at least 1");
-                }
-                quantitiesByItemId.merge(selection.getItemId(), quantity, Integer::sum);
-            }
-        } else if (request.getItemIds() != null && !request.getItemIds().isEmpty()) {
-            for (Long itemId : request.getItemIds()) {
-                if (itemId == null) {
-                    throw new RuntimeException("Item id cannot be null");
-                }
-                quantitiesByItemId.merge(itemId, 1, Integer::sum);
-            }
-        }
+                    if (item.getTotalUnits() != null && sel.quantity() > item.getTotalUnits()) {
+                        throw new RuntimeException("Selected quantity exceeds available units");
+                    }
 
-        if (quantitiesByItemId.isEmpty()) {
-            return List.of();
-        }
-
-        List<Item> foundItems = itemRepository.findAllById(quantitiesByItemId.keySet());
-        Set<Long> foundItemIds = foundItems.stream()
-            .map(Item::getId)
-            .collect(Collectors.toSet());
-
-        for (Long itemId : quantitiesByItemId.keySet()) {
-            if (!foundItemIds.contains(itemId)) {
-                throw new RuntimeException("Item not found: " + itemId);
-            }
-        }
-
-        Map<Long, Item> itemById = foundItems.stream()
-            .collect(Collectors.toMap(Item::getId, item -> item));
-
-        return quantitiesByItemId.entrySet().stream()
-            .map(entry -> {
-                Item item = itemById.get(entry.getKey());
-                int requestedQuantity = entry.getValue();
-                int totalUnits = item.getTotalUnits() != null ? item.getTotalUnits() : 1;
-
-                if (requestedQuantity > totalUnits) {
-                    throw new RuntimeException(
-                        "Requested quantity for item " + item.getId() + " exceeds available units (" + totalUnits + ")"
-                    );
-                }
-
-                KitItem kitItem = new KitItem();
-                kitItem.setItem(item);
-                kitItem.setQuantity(requestedQuantity);
-                return kitItem;
-            })
-            .collect(Collectors.toList());
+                    ItemMemento snapshot = item.createSnapshot(
+                            sel.quantity(),
+                            selectedMethod,
+                            shippingFee,
+                            pickupAddress);
+                    snapshot.setPriceAtRental(sel.pricePerMonth());
+                    return snapshot;
+                })
+                .collect(Collectors.toList());
     }
 
-}
+    public KitResponse markAsPaid(Long id) {
+        Kit kit = kitRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Kit not found"));
 
+        if (kit.getStatus() != KitStatus.DRAFT) {
+            throw new RuntimeException("Only DRAFT kits can be paid");
+        }
+
+        kit.setStatus(KitStatus.PAID);
+        Kit saved = kitRepository.save(kit);
+        return new KitResponse(saved);
+    }
+
+    public KitResponse cancel(Long id) {
+        Kit kit = kitRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Kit not found"));
+
+        if (kit.getStatus() == KitStatus.ACTIVE || kit.getStatus() == KitStatus.FINISHED) {
+            throw new RuntimeException("Cannot cancel ACTIVE or FINISHED kits");
+        }
+
+        kit.setStatus(KitStatus.CANCELLED);
+        Kit saved = kitRepository.save(kit);
+        return new KitResponse(saved);
+    }
+
+
+}

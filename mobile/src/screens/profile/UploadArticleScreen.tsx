@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, TextInput, Alert, ActivityIndicator, Image,
+  ScrollView, TextInput, ActivityIndicator, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -17,6 +17,8 @@ import { DatePickerModal } from 'react-native-paper-dates';
 import { es, registerTranslation } from 'react-native-paper-dates';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
+import { useNotification } from '../../components/NotificationContext';
+
 
 registerTranslation('es', es);
 
@@ -95,6 +97,7 @@ const UploadArticleScreen: React.FC = () => {
   const navigation = useNavigation<UploadNav>();
   const { user } = useAuth();
   const token = (user as any)?.token || '';
+  const { showNotification } = useNotification();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -143,7 +146,7 @@ const UploadArticleScreen: React.FC = () => {
         const data = await fetchAllCategories(token);
         setDbCategories(data.filter(c => c.status === 'ACTIVE'));
       } catch {
-        Alert.alert('Aviso', 'No se pudieron cargar las categorías del servidor.');
+        showNotification('No se pudieron cargar las categorías', 'error');
       } finally {
         setLoadingCategories(false);
       }
@@ -165,7 +168,7 @@ const UploadArticleScreen: React.FC = () => {
         clearError('image');
       }
     } catch {
-      Alert.alert('Error', 'No se pudo seleccionar la imagen');
+      showNotification('No se pudo seleccionar la imagen', 'error');
     }
   };
 
@@ -173,7 +176,7 @@ const UploadArticleScreen: React.FC = () => {
     try {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert('Permiso requerido', 'Se requiere acceso a la cámara para tomar fotos');
+        showNotification('Se requiere acceso a la cámara para tomar fotos', 'error');
         return;
       }
       const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [4, 3], quality: 0.8 });
@@ -183,7 +186,7 @@ const UploadArticleScreen: React.FC = () => {
         clearError('image');
       }
     } catch {
-      Alert.alert('Error', 'No se pudo tomar la foto');
+      showNotification('No se pudo tomar la foto', 'error');
     }
   };
 
@@ -217,12 +220,21 @@ const UploadArticleScreen: React.FC = () => {
       newErrors.purchaseDate = 'Fecha de compra no válida';
 
     setErrors(newErrors);
+    
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      showNotification(firstError, 'error');
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    if (!user) { Alert.alert('Error', 'Debes estar autenticado para subir un artículo.'); return; }
+    if (!user) { 
+      showNotification('Debes iniciar sesión para subir un artículo', 'error');
+      return; 
+    }
     setLoading(true);
     try {
       const payload: ArticlePayload = {
@@ -242,9 +254,11 @@ const UploadArticleScreen: React.FC = () => {
       } else {
         await uploadArticle(user.id, selectedCategory!.id, user.token, payload);
       }
+      
+      showNotification('Artículo publicado correctamente', 'success');
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert('Error', error.message ?? 'No se pudo subir el artículo');
+      showNotification(error.message ?? 'No se pudo subir el artículo', 'error'); 
     } finally {
       setLoading(false);
     }
@@ -568,12 +582,13 @@ const UploadArticleScreen: React.FC = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
   // ── Layout ────────────────────────────────────────────────────────────────
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   scrollContent: {
     padding: Spacing.lg,
@@ -601,7 +616,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   optional: {
     fontSize: 13,
@@ -639,7 +654,7 @@ const styles = StyleSheet.create({
   },
   categorySelectorText: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   categoryDropdown: {
     backgroundColor: Colors.backgroundWhite,
@@ -662,7 +677,7 @@ const styles = StyleSheet.create({
   },
   categoryOptionText: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
   },
   categoryOptionTextSelected: {
     fontWeight: '700',
@@ -683,7 +698,7 @@ const styles = StyleSheet.create({
   },
   dateSelectorText: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: Colors.textPrimaryHome,
     flex: 1,
   },
   dateRightIcons: {
@@ -720,7 +735,7 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     height: 180,
     width: '100%',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundWhite,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.border,
@@ -779,7 +794,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.border,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundWhite,
   },
   conditionChipActive: {
     borderColor: Colors.primary,

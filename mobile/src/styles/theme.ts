@@ -19,10 +19,12 @@ export const Colors = {
   secondaryLavender: '#d6d0f8',
   secondaryBlue: '#8ec2db',
   secondaryMint: '#c3f1d1',
+  secondaryCoral: '#FFD6C0',
 
   backgroundWhite: '#FFFFFF',   
   backgroundCard: '#FFFFFF',    
 
+  textPrimary: '#1A1A1A',
   textSecondary: '#7A7A7A',
   textLight: '#9CA3AF', 
   textWhite: '#FFFFFF', 

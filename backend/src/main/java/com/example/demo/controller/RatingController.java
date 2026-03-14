@@ -2,7 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.RatingCreateRequest;
 import com.example.demo.dto.RatingResponse;
-import com.example.demo.security.JwtUtil;
+import com.example.demo.service.AuthService;
 import com.example.demo.service.RatingService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,15 +21,13 @@ public class RatingController {
     private RatingService ratingService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private AuthService authService;
 
     @PostMapping
     public ResponseEntity<RatingResponse> create(
-            @Valid @RequestBody RatingCreateRequest request,
-            @RequestHeader("Authorization") String authorizationHeader) {
+            @Valid @RequestBody RatingCreateRequest request) {
 
-        String token = authorizationHeader.substring(7);
-        String email = jwtUtil.extractEmail(token);
+        String email = authService.getAuthenticatedUserEmail();
         RatingResponse response = ratingService.create(request, email);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -53,12 +51,9 @@ public class RatingController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRating(
-            @PathVariable Long id,
-            @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<Void> deleteRating(@PathVariable Long id) {
 
-        String token = authorizationHeader.substring(7);
-        String email = jwtUtil.extractEmail(token);
+        String email = authService.getAuthenticatedUserEmail();
         ratingService.deleteById(id, email);
         return ResponseEntity.ok().build();
     }
