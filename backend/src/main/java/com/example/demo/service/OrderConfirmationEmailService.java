@@ -156,12 +156,12 @@ public class OrderConfirmationEmailService {
     }
 
     private String formatTotalItems(Kit kit) {
-        if (kit.getKitItems() == null || kit.getKitItems().isEmpty()) {
+        if (kit.getSnapshots() == null || kit.getSnapshots().isEmpty()) {
             return "0";
         }
 
-        int totalItems = kit.getKitItems().stream()
-            .mapToInt(kitItem -> kitItem.getQuantity() != null ? kitItem.getQuantity() : 0)
+        int totalItems = kit.getSnapshots().stream()
+            .mapToInt(snapshot -> snapshot.getSelectedUnits() != null ? snapshot.getSelectedUnits() : 0)
             .sum();
 
         return safeValue(totalItems);
@@ -171,6 +171,52 @@ public class OrderConfirmationEmailService {
         try {
             ClassPathResource templateResource = new ClassPathResource(TEMPLATE_PATH);
             String template = StreamUtils.copyToString(templateResource.getInputStream(), StandardCharsets.UTF_8);
+
+            StringBuilder itemsHtml = new StringBuilder();
+            if (kit.getSnapshots() == null || kit.getSnapshots().isEmpty()) {
+                itemsHtml.append("<tr><td style=\"padding:12px 0; font-size:14px; color:#7a7a7a;\">No hay artículos en este pedido.</td></tr>");
+            } else {
+                for (var snapshot : kit.getSnapshots()) {
+                    String rawImg = snapshot.getImageUrlAtRental();
+                    String img;
+                    if (rawImg == null || rawImg.isBlank() || rawImg.equals("-")) {
+                        img = "https://via.placeholder.com/64?text=Img";
+                    } else {
+                        img = escapeHtml(rawImg);
+                    }
+                    String name = safeValue(snapshot.getNameAtRental());
+                    String qty = safeValue(snapshot.getSelectedUnits());
+                    Double priceAtRental = snapshot.getPriceAtRental();
+                    Double subtotal = null;
+                    if (priceAtRental != null) {
+                        int units = snapshot.getSelectedUnits() != null ? snapshot.getSelectedUnits() : 1;
+                        subtotal = priceAtRental * units;
+                    }
+
+                    itemsHtml.append("<tr style=\"border-bottom:1px solid #e8ecf1;\">")
+                        .append("<td style=\"padding:12px 8px; width:80px; vertical-align:middle;\">")
+                        .append("<img src=\"")
+                        .append(img)
+                        .append("\" alt=\"")
+                        .append(name)
+                        .append("\" width=\"64\" height=\"64\" style=\"display:block; border-radius:8px; object-fit:cover;\" />")
+                        .append("</td>")
+                        .append("<td style=\"padding:12px 8px; vertical-align:middle;\">")
+                        .append("<p style=\"margin:0; font-weight:700; color:#2d6e91;\">")
+                        .append(name)
+                        .append("</p>")
+                        .append("<p style=\"margin:4px 0 0 0; font-size:13px; color:#7a7a7a;\">Cantidad: ")
+                        .append(qty)
+                        .append("</p>")
+                        .append("</td>")
+                        .append("<td style=\"padding:12px 8px; vertical-align:middle; text-align:right; width:120px;\">")
+                        .append("<p style=\"margin:0; font-weight:800; color:#2d6e91;\">")
+                        .append(formatCurrency(subtotal, "-"))
+                        .append("</p>")
+                        .append("</td>")
+                        .append("</tr>");
+                }
+            }
 
             return template
                 .replace("{{tenantName}}", safeValue(tenantName))
@@ -185,7 +231,8 @@ public class OrderConfirmationEmailService {
                 .replace("{{meetingPoint}}", formatMeetingPoint(kit))
                 .replace("{{courierPrice}}", formatCourierPrice(kit))
                 .replace("{{totalItems}}", formatTotalItems(kit))
-                .replace("{{totalPrice}}", formatCurrency(kit.getTotalPrice(), "-"));
+                .replace("{{totalPrice}}", formatCurrency(kit.calculateTotal(), "-"))
+                .replace("{{itemsRows}}", itemsHtml.toString());
         } catch (IOException ex) {
             logger.error("No se pudo cargar la plantilla HTML de confirmación", ex);
             return "<p>Tu pedido ha sido confirmado correctamente. ID: " + safeValue(kit.getId()) + "</p>";
