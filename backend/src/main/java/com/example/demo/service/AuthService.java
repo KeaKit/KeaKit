@@ -1,11 +1,6 @@
 package com.example.demo.service;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -13,6 +8,12 @@ import org.springframework.stereotype.Service;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtAuthenticationToken;
+
+import com.example.demo.exception.UnauthorizedException;
+import com.example.demo.exception.AccessForbiddenException;
+import com.example.demo.exception.ResourceNotFoundException;
+
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -25,12 +26,13 @@ public class AuthService {
      * 
      * @return JwtAuthenticationToken o null si no está autenticado o no es del tipo correcto
      */
-    private JwtAuthenticationToken getJwtAuthenticationToken() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof JwtAuthenticationToken) {
-            return (JwtAuthenticationToken) authentication;
-        }
-        return null;
+    private JwtAuthenticationToken getJwtAuthenticationToken() throws UnauthorizedException {
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+            .filter(Authentication::isAuthenticated)
+            .filter(auth -> auth instanceof JwtAuthenticationToken)
+            .map(auth -> (JwtAuthenticationToken) auth)
+            .filter(jwt -> jwt.getUserId() != null)
+            .orElseThrow(() -> new UnauthorizedException("Token no válido o sesión expirada"));
     }
 
     /**
@@ -38,7 +40,7 @@ public class AuthService {
      * 
      * @return ID del usuario o null si no está autenticado
      */
-    public Long getAuthenticatedUserId() {
+    public Long getAuthenticatedUserId() throws UnauthorizedException {
         JwtAuthenticationToken jwtAuth = getJwtAuthenticationToken();
         return jwtAuth != null ? jwtAuth.getUserId() : null;
     }
@@ -48,7 +50,7 @@ public class AuthService {
      * 
      * @return Rol del usuario o null si no está autenticado
      */
-    public UserRole getAuthenticatedUserRole() {
+    public UserRole getAuthenticatedUserRole() throws UnauthorizedException {
         JwtAuthenticationToken jwtAuth = getJwtAuthenticationToken();
         return jwtAuth != null ? jwtAuth.getRole() : null;
     }
@@ -58,7 +60,7 @@ public class AuthService {
      * 
      * @return Email del usuario o null si no está autenticado
      */
-    public String getAuthenticatedUserEmail() {
+    public String getAuthenticatedUserEmail() throws UnauthorizedException {
         JwtAuthenticationToken jwtAuth = getJwtAuthenticationToken();
         return jwtAuth != null ? jwtAuth.getEmail() : null;
     }
@@ -68,7 +70,7 @@ public class AuthService {
      * 
      * @return true si es ADMIN, false en caso contrario
      */
-    public boolean isAdmin() {
+    public boolean isAdmin() throws UnauthorizedException {
         UserRole role = getAuthenticatedUserRole();
         return role == UserRole.ADMIN;
     }
@@ -79,7 +81,7 @@ public class AuthService {
      * @param resourceUserId ID del usuario propietario del recurso
      * @return true si es el propietario, false en caso contrario
      */
-    public boolean isOwner(Long resourceUserId) {
+    public boolean isOwner(Long resourceUserId) throws UnauthorizedException {
         Long authenticatedUserId = getAuthenticatedUserId();
         return authenticatedUserId != null && authenticatedUserId.equals(resourceUserId);
     }
@@ -90,7 +92,7 @@ public class AuthService {
      * @param resourceUserId ID del usuario propietario del recurso
      * @return true si tiene acceso, false en caso contrario
      */
-    public boolean hasAccess(Long resourceUserId) {
+    public boolean hasAccess(Long resourceUserId) throws UnauthorizedException {
         return isAdmin() || isOwner(resourceUserId);
     }
 
@@ -101,47 +103,24 @@ public class AuthService {
      * @return ResponseEntity con error si no tiene acceso, null si tiene acceso
      *         permitido
      */
-    public ResponseEntity<?> validateAccess(Long resourceUserId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("Usuario no autenticado"));
-        }
-
+    public void validateAccess(Long resourceUserId) throws UnauthorizedException, AccessForbiddenException, ResourceNotFoundException {
         JwtAuthenticationToken jwtAuth = getJwtAuthenticationToken();
 
-        if (jwtAuth == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("Token JWT no válido"));
-        }
-
-        if (jwtAuth.getUserId() == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("Token JWT no contiene información de usuario válida"));
-        }
-
-        // Verificar que el usuario del recurso existe en el sistema
         if (resourceUserId != null && !userRepository.existsById(resourceUserId)) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(createErrorResponse("Usuario no encontrado en el sistema"));
+            throw new ResourceNotFoundException("Usuario no encontrado en el sistema");
         }
 
         if (jwtAuth.getRole() == UserRole.ADMIN) {
-            return null;
+            return;
+        }
+
+        if (jwtAuth.getUserId() == null) {
+            throw new UnauthorizedException("Token JWT no contiene información de usuario válida");
         }
 
         if (!jwtAuth.getUserId().equals(resourceUserId)) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body(createErrorResponse("No tienes permisos para acceder a este recurso"));
+            throw new AccessForbiddenException("No tienes permisos para acceder a este recurso");
         }
-
-        return null;
     }
 
     /**
@@ -150,26 +129,11 @@ public class AuthService {
      * @return ResponseEntity con error si no está autenticado, null si está
      *         autenticado
      */
-    public ResponseEntity<?> requireAuthentication() {
+    public void requireAuthentication() throws UnauthorizedException {
         Long userId = getAuthenticatedUserId();
         if (userId == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("Usuario no autenticado"));
+            throw new UnauthorizedException("Usuario no autenticado");
         }
-        return null;
-    }
-
-    /**
-     * Crea una respuesta de error en formato JSON
-     * 
-     * @param message Mensaje de error
-     * @return Map con el error
-     */
-    public Map<String, String> createErrorResponse(String message) {
-        Map<String, String> error = new HashMap<>();
-        error.put("error", message);
-        return error;
     }
 
 }

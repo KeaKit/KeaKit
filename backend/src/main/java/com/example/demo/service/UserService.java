@@ -6,7 +6,10 @@ import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserUpdateData;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
+import com.example.demo.model.Wallet;
+import com.example.demo.repository.WalletRepository;
 import com.example.demo.exception.InvalidCredentialsException;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.repository.UserRepository;
@@ -30,7 +33,7 @@ public class UserService {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private WalletService walletService;
+    private WalletRepository walletRepository;
 
     public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -50,10 +53,19 @@ public class UserService {
                 request.getCountry());
 
         User savedUser = userRepository.save(user);
-        walletService.createWalletForUser(savedUser);
+        this.createWalletForUser(savedUser);
 
         String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId(), savedUser.getRole());
         return new UserResponse(savedUser, token);
+    }
+
+    private void createWalletForUser(User user) {
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found. Cannot create wallet.");
+        }
+        Wallet wallet = new Wallet(user);
+
+        walletRepository.save(wallet);
     }
 
     public UserResponse login(LoginRequest request) {
@@ -99,6 +111,12 @@ public class UserService {
 
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return new UserResponse(user);
+    }
+
+    public UserResponse getUserByEmail(String email) throws UserNotFoundException {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return new UserResponse(user);
     }

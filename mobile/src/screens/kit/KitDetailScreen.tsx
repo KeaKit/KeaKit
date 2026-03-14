@@ -224,7 +224,7 @@ const handleConfirmKit = async () => {
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
             style={styles.confirmButton}
-            onPress={() => navigation.navigate("Checkout", kit)}
+            onPress={() => navigation.navigate("Checkout", { kitId: kit.id })}
           >
             <Text style={styles.confirmButtonText}>Realizar pedido</Text>
           </TouchableOpacity>

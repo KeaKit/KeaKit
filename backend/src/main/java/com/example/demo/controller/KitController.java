@@ -67,11 +67,22 @@ public class KitController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
+    
     @PostMapping("/payment")
     public ResponseEntity<?> getKitPayment(@Valid @RequestBody KitCreateRequest request) {
         // No es necesario que el kit esté en el repositorio para calcular su precio
         try {
             KitPaymentDTO response = kitService.getKitPayment(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/payment/{kitId}")
+    public ResponseEntity<?> getKitPayment(@PathVariable Long kitId) {
+        try {
+            KitPaymentDTO response = kitService.getKitPayment(kitId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

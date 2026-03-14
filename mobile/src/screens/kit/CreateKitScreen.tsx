@@ -1,13 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Modal,
-  Pressable,
   SafeAreaView,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -463,38 +460,14 @@ const CreateKitScreen: React.FC = () => {
         setSubmitting(false);
       }
     };
-
-    try {
-      // 1) Calcular precios en backend
-      const paymentRes = await fetch(API_ROUTES.KIT_PAYMENT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!paymentRes.ok) {
-        const errorText = await paymentRes.text();
-        throw new Error(`Error en cálculo de pago: ${errorText}`);
-      }
-
-      const paymentData = await paymentRes.json();
-      setPayment(paymentData);
-
-      // 2) Crear el kit
-      const createdKit = await handleCreateKit();
-      console.log("tenantId:", user.id);
-      if (!createdKit) {
-        console.error("🔥 ERROR: No se pudo crear el kit.");
-        return;
-      }
-
-      navigation.navigate("Checkout", createdKit);
-    } catch (error) {
-      console.error("🔥 ERROR al crear kit:", error);
+    const createdKit = await handleCreateKit();
+    if (!createdKit) {
+      console.error("🔥 ERROR: No se pudo crear el kit.");
+      return;
     }
+    console.log("Created kit:", createdKit);
+
+    navigation.navigate("Checkout", { kitId: createdKit.id });
   };
 
 

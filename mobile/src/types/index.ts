@@ -292,7 +292,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   CreateKit: undefined;
-  Checkout: KitResponse;
+  Checkout: {kitId: number};
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };

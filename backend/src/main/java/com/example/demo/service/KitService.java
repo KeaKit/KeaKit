@@ -2,7 +2,7 @@ package com.example.demo.service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,22 +12,17 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitPaymentDTO;
 import com.example.demo.dto.KitResponse;
-import com.example.demo.model.DeliveryMethod;
 import com.example.demo.dto.RentedItemResponse;
+import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.Item;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
-import com.example.demo.model.Transaction;
-import com.example.demo.model.TransactionType;
 import com.example.demo.model.User;
-import com.example.demo.model.Wallet;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
-import com.example.demo.repository.TransactionRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.WalletRepository;
-import java.util.ArrayList;
 
 @Service
 public class KitService {
@@ -43,17 +38,14 @@ public class KitService {
     private ItemRepository itemRepository;
 
     @Autowired
-    private WalletRepository walletRepository;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
     private OrderConfirmationEmailService orderConfirmationEmailService;
 
     private static final double PLATFORM_COURIER_PRICE = 9.99;
-    private static final double PLATFORM_FEE_PERCENTAGE = 0.2; // TODO: Obtener la comisión de la configuración hecha por el admin
-    private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2; // TODO: Obtener la garantía de la configuración hecha por el admin
+
+    private static final double PLATFORM_FEE_PERCENTAGE = 0.2; // TODO: Ajustar comisión según la configuración del administrador
+
+    // TODO: Obtener la garantía de la configuración hecha por el admin
+    private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2; 
 
     public List<Kit> findAll() {
         return kitRepository.findAll();
@@ -136,34 +128,10 @@ public class KitService {
 
         Kit savedKit = kitRepository.save(kit);
 
-        if (status == KitStatus.PAID || status == KitStatus.ACTIVE) {
-            for (ItemMemento snapshot : snapshots) {
-                User owner = snapshot.getOwnerAtRental();
-                if (owner != null) {
-                    Optional<Wallet> ownerWallet = walletRepository.findByUserId(owner.getId());
-                    if (ownerWallet.isEmpty()) {
-                        throw new RuntimeException("Owner wallet not found for user: " + owner.getId());
-                    }
-
-                    Wallet targetWallet = ownerWallet.get();
-
-                    double price = snapshot.getPriceAtRental() != null ? snapshot.getPriceAtRental() : 0.0;
-                    int qty = snapshot.getSelectedUnits() != null ? snapshot.getSelectedUnits() : 0;
-                    double totalAmount = price * qty;
-
-                    Transaction transaction = new Transaction();
-                    transaction.setAmount(totalAmount);
-                    transaction.setType(TransactionType.PAYOUT);
-                    transaction.setDestinationWallet(targetWallet);
-
-                    transactionRepository.save(transaction);
-                }
-            }
-        }
         return savedKit;
     }
 
-    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+     public KitPaymentDTO getKitPayment(KitCreateRequest request) {
         double subtotalPrice = request.itemSelections().stream()
                 .mapToDouble(item -> item.pricePerMonth() * item.quantity())
                 .sum();
@@ -173,15 +141,30 @@ public class KitService {
             courierPrice = PLATFORM_COURIER_PRICE;
         }
         double totalPrice = subtotalPrice + guarantee + courierPrice;
-        double platformFee = subtotalPrice * PLATFORM_FEE_PERCENTAGE;
 
         return new KitPaymentDTO(
                 toCents(totalPrice),
                 toCents(subtotalPrice),
                 toCents(guarantee),
-                toCents(platformFee),
-                toCents(courierPrice)
-        );
+                toCents(courierPrice));
+        }
+
+    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException{
+        Kit kit = kitRepository.findById(kitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
+
+        double subtotalPrice = kit.getSnapshots().stream()
+                .mapToDouble(ki -> ki.getPriceAtRental() * ki.getSelectedUnits())
+                .sum();
+        double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
+        double courierPrice = kit.getDeliveryMethod() == DeliveryMethod.COURIER ? PLATFORM_COURIER_PRICE : 0.0;
+        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        return new KitPaymentDTO(
+                toCents(totalPrice),
+                toCents(subtotalPrice),
+                toCents(guarantee),
+                toCents(courierPrice));
     }
 
     private Integer toCents(Double amount) {

@@ -115,6 +115,15 @@ public class DatabaseSeeder {
             myKit.setEndDate(LocalDate.now().plusMonths(1));
             kitRepo.save(myKit);
 
+            Kit pendingPaidKit = new Kit();
+            pendingPaidKit.setName("Pack Trabajo Remoto");
+            pendingPaidKit.setTenant(tenant);
+            pendingPaidKit.setStatus(KitStatus.DRAFT);
+            pendingPaidKit.setDeliveryMethod(DeliveryMethod.COURIER);
+            pendingPaidKit.setStartDate(LocalDate.now());
+            pendingPaidKit.setEndDate(LocalDate.now().plusMonths(1));
+            kitRepo.save(pendingPaidKit);
+
             // 7.1 ItemMemento
             ItemMemento snap1 = laptop.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint());
             snap1.setKit(myKit);
@@ -126,6 +135,17 @@ public class DatabaseSeeder {
 
             myKit.setSnapshots(List.of(snap1, snap2));
             kitRepo.save(myKit);
+
+            ItemMemento snap3 = laptop.createSnapshot(1, pendingPaidKit.getDeliveryMethod(), pendingPaidKit.getCourierPrice(), pendingPaidKit.getMeetingPoint());
+            snap3.setKit(pendingPaidKit);
+            snap3.setPriceAtRental(laptop.getPricePerMonth());
+
+            ItemMemento snap4 = setupService.createSnapshot(1, pendingPaidKit.getDeliveryMethod(), pendingPaidKit.getCourierPrice(), pendingPaidKit.getMeetingPoint());
+            snap4.setKit(pendingPaidKit);
+            snap4.setPriceAtRental(setupService.getPricePerMonth());
+
+            pendingPaidKit.setSnapshots(List.of(snap3, snap4));
+            kitRepo.save(pendingPaidKit);
 
 
             // 8. Rating

@@ -32,6 +32,7 @@ public class OrderConfirmationEmailService {
     private String fromEmail;
 
     public void sendOrderConfirmation(Kit kit) {
+        // TODO: Utilizar KitResponse
         if (kit == null || kit.getTenant() == null || kit.getTenant().getEmail() == null || kit.getTenant().getEmail().isBlank()) {
             logger.warn("No se puede enviar confirmación: el kit o email del arrendatario es inválido");
             return;
