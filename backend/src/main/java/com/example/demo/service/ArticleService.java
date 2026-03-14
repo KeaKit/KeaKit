@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
+import com.example.demo.model.Wallet;
 import com.example.demo.model.Category;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Kit;
@@ -21,6 +23,7 @@ import com.example.demo.model.KitStatus;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.WalletRepository;
 import com.example.demo.repository.CategoryRepository;
 
 @Service
@@ -29,18 +32,26 @@ public class ArticleService {
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final PaymentService paymentService;
+    private final WalletRepository walletRepository;
     private final KitRepository kitRepository;
+
+    @Autowired
+    private WalletService walletService;
+    
 
     private final CloudinaryService cloudinaryService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
-                          KitRepository kitRepository, CategoryRepository categoryRepository,
+                          KitRepository kitRepository, CategoryRepository categoryRepository, PaymentService paymentService, WalletRepository walletRepository,
                           CloudinaryService cloudinaryService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.kitRepository = kitRepository;
         this.categoryRepository = categoryRepository;
         this.cloudinaryService = cloudinaryService;
+        this.paymentService = paymentService;
+        this.walletRepository = walletRepository;
     }
 
     public Article createWithImage(Article article, MultipartFile image, Long ownerId, Long categoryId) throws IOException {
@@ -278,37 +289,43 @@ public class ArticleService {
         Kit activeKit = kitRepository.findActiveKitByItemId(articleId, KitStatus.ACTIVE)
             .orElseThrow(() -> new RuntimeException("No active Kit found for this article"));
 
-        double depositAmount = article.getPricePerMonth() * 0.20;
+        Long tenantId = activeKit.getTenant().getId();
+        String tenantEmail = activeKit.getTenant().getEmail();
+        
+        Double amountProcessed;
+        try {
+            // Delegamos TODA la lógica de transacciones al PaymentService
+            amountProcessed = paymentService.processGuaranteeReturn(
+                activeKit.getId(), 
+                ownerId, 
+                tenantId, 
+                request.condition()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Error procesando la devolución de la garantía: " + e.getMessage());
+        }
 
         String resolution;
-        double amountProcessed;
         String message;
 
         if ("GOOD".equalsIgnoreCase(request.condition())) {
             resolution = "DEPOSIT_RETURNED";
-            amountProcessed = depositAmount;
-            message = "Artículo devuelto en buen estado. Se devuelve el 20% de garantía (" + depositAmount + "€) al arrendatario.";
-
-            // TODO: Llamar a Stripe para transferir el dinero de vuelta al arrendatario
-
+            message = "Artículo devuelto en buen estado. Se devuelve la garantía exacta (" + amountProcessed + "€) al monedero del arrendatario.";
         } else if ("DAMAGED".equalsIgnoreCase(request.condition())) {
             resolution = "DEPOSIT_RETAINED";
-            amountProcessed = depositAmount;
-            message = "Artículo con daños. Se retiene la garantía de " + depositAmount + "€ al arrendatario.";
-
-            // TODO: Transferir el dinero retenido a la cuenta del dueño
-
+            message = "Artículo con daños. Se retiene la garantía de " + amountProcessed + "€ y se ha añadido al monedero del propietario.";
         } else {
             throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
         }
 
+        // Liberar el artículo
         article.setStatus(ArticleStatus.AVAILABLE);
         article.setAvailableUntil(null);
         articleRepository.save(article);
 
         return new ReturnResponse(
             articleId,
-            activeKit.getTenant().getEmail(),
+            tenantEmail,
             resolution,
             amountProcessed,
             message

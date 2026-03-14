@@ -145,6 +145,37 @@ public class PaymentService {
         }
     }
 
+    @Transactional
+    public Double processGuaranteeReturn(Long kitId, Long ownerId, Long tenantId, String condition) throws Exception {
+        // 1. Obtenemos la cantidad exacta de la fianza para este Kit
+        KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId);
+        Double guaranteeAmount = toEuros(paymentInfo.guarantee());
+
+        // 2. Extraemos el dinero del monedero de KeaKit (que lo estaba custodiando)
+        Wallet keakitWallet = getKeaKitWallet();
+        Transaction keakitDeduct = new Transaction(-guaranteeAmount, keakitWallet, TransactionType.GUARANTEE_REFUND);
+        transactionRepository.save(keakitDeduct);
+
+        // 3. Destinamos el dinero al monedero correspondiente
+        if ("GOOD".equalsIgnoreCase(condition)) {
+            // Devolvemos la fianza al monedero del inquilino
+            Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
+            Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
+            transactionRepository.save(tenantReceive);
+
+        } else if ("DAMAGED".equalsIgnoreCase(condition)) {
+            // Compensamos al propietario enviando la fianza a su monedero
+            Wallet ownerWallet = walletService.getWalletByUserId(ownerId);
+            Transaction ownerReceive = new Transaction(guaranteeAmount, ownerWallet, TransactionType.PAYOUT);
+            transactionRepository.save(ownerReceive);
+
+        } else {
+            throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
+        }
+
+        return guaranteeAmount;
+    }
+
     private Double toMoney(Double amount) {
         return Math.round(amount * 100.0) / 100.0;
     }
