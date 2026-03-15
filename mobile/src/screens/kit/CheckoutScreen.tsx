@@ -179,8 +179,13 @@ export default function CheckoutScreen({ route }: Props) {
 
         if (result.error) {
           setIsPaymentIntentError(true);
-          console.error("❌ Error al procesar el pago con Stripe:", result.error?.message);
-          showErrorModal("No se pudo procesar el pago con Stripe: " + result.error?.message);
+          console.error(
+            "❌ Error al procesar el pago con Stripe:",
+            result.error?.message,
+          );
+          showErrorModal(
+            "No se pudo procesar el pago con Stripe: " + result.error?.message,
+          );
           return;
         } else {
           console.log(
@@ -205,7 +210,9 @@ export default function CheckoutScreen({ route }: Props) {
           if (!paymentResult.ok) {
             console.error("❌ Error al procesar el pago en el backend");
             console.log("Respuesta del backend:", await paymentResult.text());
-            showErrorModal("El pago se realizó, pero no se pudo confirmar en el backend.");
+            showErrorModal(
+              "El pago se realizó, pero no se pudo confirmar en el backend.",
+            );
             return;
           }
         }
@@ -286,10 +293,16 @@ export default function CheckoutScreen({ route }: Props) {
         mode="outlined"
         onPress={() => navigation.goBack()}
         disabled={loading}
-        style={[styles.outlinedButton, loading && styles.outlinedButtonDisabled]}
+        style={[
+          styles.outlinedButton,
+          loading && styles.outlinedButtonDisabled,
+        ]}
         contentStyle={styles.buttonContent}
         textColor={loading ? "#9CA3AF" : "#1A3A52"}
-        labelStyle={[styles.secondaryButtonLabel, loading && styles.secondaryButtonLabelDisabled]}
+        labelStyle={[
+          styles.secondaryButtonLabel,
+          loading && styles.secondaryButtonLabelDisabled,
+        ]}
       >
         Cancelar
       </Button>
@@ -307,21 +320,29 @@ export default function CheckoutScreen({ route }: Props) {
           <Text variant="titleMedium" style={styles.errorModalTitle}>
             Error en el pago
           </Text>
-          <Text style={styles.errorModalMessage}>{error ?? "Ha ocurrido un error."}</Text>
+          <Text style={styles.errorModalMessage}>
+            {error ?? "Ha ocurrido un error."}
+          </Text>
           {isPaymentIntentError && (
             <Text style={styles.errorModalMessage}>
               ¿Eres desarrollador? Revisa este{" "}
-            <Text
-              style={styles.errorModalLink}
-              onPress={() => Linking.openURL("https://teams.microsoft.com/l/message/19:b67b2f676f2441bfb3a2aa815b23d9f8@thread.tacv2/1773437428081?tenantId=ef4a684e-81b5-491c-a98e-c7b31be6c469&groupId=f0cbe5b1-fa30-4983-8517-30fe68999067&parentMessageId=1773437428081&teamName=ISPP&channelName=Incidencias&createdTime=1773437428081")}
-            >
-              post de Teams
-            </Text>.</Text>
+              <Text
+                style={styles.errorModalLink}
+                onPress={() =>
+                  Linking.openURL(
+                    "https://teams.microsoft.com/l/message/19:b67b2f676f2441bfb3a2aa815b23d9f8@thread.tacv2/1773437428081?tenantId=ef4a684e-81b5-491c-a98e-c7b31be6c469&groupId=f0cbe5b1-fa30-4983-8517-30fe68999067&parentMessageId=1773437428081&teamName=ISPP&channelName=Incidencias&createdTime=1773437428081",
+                  )
+                }
+              >
+                post de Teams
+              </Text>
+              .
+            </Text>
           )}
           <Button
             mode="contained"
             onPress={() => {
-              setErrorModalVisible(false)
+              setErrorModalVisible(false);
               setIsPaymentIntentError(false);
             }}
             style={styles.errorModalButton}
