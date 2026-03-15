@@ -146,6 +146,13 @@ const handleConfirmKit = async () => {
 
   if (!kit) return null;
 
+  const navigateToUserReviews = (ownerId: number, ownerName: string) => {
+    navigation.navigate('UserRatings', {
+      userId: ownerId,
+      userName: ownerName,
+    });
+  };
+
   return (
     <SafeAreaView style={commonStyles.container}>
 
@@ -197,7 +204,15 @@ const handleConfirmKit = async () => {
             <View key={item.itemId} style={styles.itemCard}>
               <View style={styles.itemInfo}>
                 <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemMeta}>{item.category} • {item.pricePerMonth}€/mes</Text>
+                <Text style={styles.itemMeta}>                          
+                  {item.ownerName ? (
+                  <Text
+                    style={{ color: "#007AFF" }} 
+                    onPress={() => navigateToUserReviews(item.ownerId, item.ownerName)}
+                  >
+                    {item.ownerName}
+                  </Text>
+                ) : ""} • {item.category} • {item.pricePerMonth}€/mes</Text>
               </View>
               <Ionicons name="cube-outline" size={20} color="#DDD" />
             </View>

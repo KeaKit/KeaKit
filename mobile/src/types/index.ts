@@ -192,6 +192,8 @@ export interface KitItemResponse {
   name?: string | null;
   category?: string | null;
   imageUrl?: string | null;
+  ownerId: number;
+  ownerName: string;
 }
 
 export interface KitResponse {

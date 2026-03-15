@@ -20,6 +20,8 @@ public class KitResponse {
         private String name;
         private String category;
         private String imageUrl;
+        private Long ownerId;
+        private String ownerName;
 
         public KitItemResponse(
             Long itemId,
@@ -27,7 +29,9 @@ public class KitResponse {
             Double pricePerMonth,
             String name,
             String category,
-            String imageUrl
+            String imageUrl,
+            Long ownerId,
+            String ownerName
         ) {
             this.itemId = itemId;
             this.quantity = quantity;
@@ -35,6 +39,8 @@ public class KitResponse {
             this.name = name;
             this.category = category;
             this.imageUrl = imageUrl;
+            this.ownerId = ownerId;
+            this.ownerName = ownerName;
         }
 
         public Long getItemId() {
@@ -59,6 +65,14 @@ public class KitResponse {
 
         public String getImageUrl() {
             return imageUrl;
+        }
+
+        public Long getOwnerId() {
+            return ownerId;
+        }
+
+        public String getOwnerName() {
+            return ownerName;
         }
     }
 
@@ -109,7 +123,9 @@ public class KitResponse {
                 s.getPriceAtRental(),
                 s.getNameAtRental(),
                 s.getCategoryAtRental() != null ? s.getCategoryAtRental().getName() : null,
-                s.getImageUrlAtRental()
+                s.getImageUrlAtRental(),
+                s.getOwnerAtRental().getId(),
+                s.getOwnerAtRental().getName()
             ))
             .collect(Collectors.toList());
 
