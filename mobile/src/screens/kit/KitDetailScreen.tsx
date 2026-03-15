@@ -153,6 +153,14 @@ const handleConfirmKit = async () => {
     });
   };
 
+  const createReview = (kitId: number, revieweeId: number, revieweeName: string) => {
+    navigation.navigate('CreateRating', {
+      kitId: kitId,
+      revieweeId: revieweeId,
+      revieweeName: revieweeName
+    });
+  };
+
   return (
     <SafeAreaView style={commonStyles.container}>
 
@@ -202,19 +210,33 @@ const handleConfirmKit = async () => {
         <View style={styles.itemsContainer}>
           {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => (
             <View key={item.itemId} style={styles.itemCard}>
+              
               <View style={styles.itemInfo}>
                 <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemMeta}>                          
+
+                <Text style={styles.itemMeta}>
                   {item.ownerName ? (
-                  <Text
-                    style={{ color: "#007AFF" }} 
-                    onPress={() => navigateToUserReviews(item.ownerId, item.ownerName)}
-                  >
-                    {item.ownerName}
-                  </Text>
-                ) : ""} • {item.category} • {item.pricePerMonth}€/mes</Text>
+                    <Text
+                      style={{ color: "#007AFF" }}
+                      onPress={() => navigateToUserReviews(item.ownerId, item.ownerName)}
+                    >
+                      {item.ownerName}
+                    </Text>
+                  ) : ""} • {item.category} • {item.pricePerMonth}€/mes
+                </Text>
               </View>
+
               <Ionicons name="cube-outline" size={20} color="#DDD" />
+
+              <TouchableOpacity
+                style={styles.itemButton}
+                onPress={() => createReview(kitId, item.ownerId, item.ownerName)}
+              >
+                <Ionicons name="star-outline" size={18} color="#666" />
+                <Text style={styles.itemButtonText}
+                >Valorar</Text>
+              </TouchableOpacity>
+
             </View>
           ))}
 
@@ -478,6 +500,8 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#666', fontWeight: '600', },
   modalSubmitButton: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: Colors.primary, alignItems: 'center' },
   modalSubmitText: { color: '#FFF', fontWeight: 'bold' },
+  itemButton: { marginLeft: 20, flexDirection: "column", alignItems: "center", padding: 6 },
+  itemButtonText: { fontSize: 12, color: "#666", fontWeight: "600" },
 });
 
 export default KitDetailScreen;
