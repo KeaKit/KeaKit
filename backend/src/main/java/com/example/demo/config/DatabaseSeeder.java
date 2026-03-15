@@ -88,6 +88,7 @@ public class DatabaseSeeder {
             laptop.setPurchaseDate(LocalDate.now().minusMonths(6));
             laptop.setAvailableFrom(LocalDate.now());
             laptop.setAvailableUntil(LocalDate.now().plusMonths(36));
+            laptop.setImageUrl("https://i.imgur.com/bY7sIB3.png");
 
             // Al guardar el ArticleRepository, JPA gestiona la tabla 'items' y 'articles'
             articleRepo.save(laptop);
