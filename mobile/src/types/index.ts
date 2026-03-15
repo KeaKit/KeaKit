@@ -359,6 +359,18 @@ export interface UserService {
   categoryName: string;
 }
 
+export interface Wallet {
+  id: number;
+  balance: number;
+  transactions: Transaction[];
+}
+
+export interface Transaction {
+  id: number;
+  amount: number;
+  type: 'PAYOUT' | 'FEE' | 'GUARANTEE_DEPOSIT' | 'GUARANTEE_REFUND' | 'REFUND';
+  timestamp: Date;
+}
 
 
 export const EUROPEAN_COUNTRIES = [

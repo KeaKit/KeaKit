@@ -2,13 +2,21 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Linking } from "react-native";
 import { Button, Modal, Portal, Text } from "react-native-paper";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
-import { API_ROUTES } from "../../config/api";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../types";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from "@react-navigation/native-stack";
+import { KitPaymentDTO, RootStackParamList } from "../../types";
 import { useAuth } from "../../context/AuthContext";
-import { getWalletByUserId } from "../../services/walletService";
+import { getLoggedUserWallet } from "../../services/walletService";
+import { getKitPayment } from "../../services/kitService";
+import {
+  processPaymentWithWallet,
+  createPaymentIntent,
+  confirmStripePayment,
+  processPaymentWithStripe,
+} from "../../services/paymentService";
 
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
@@ -20,15 +28,20 @@ export default function CheckoutScreen({ route }: Props) {
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [cardComplete, setCardComplete] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [balance, setBalance] = useState(0);
-  const [enoughBalance, setEnoughBalance] = useState(false);
-  const [amount, setAmount] = useState(null);
+  const [enoughBalance, setEnoughBalance] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [isPaymentIntentError, setIsPaymentIntentError] = useState(false);
+  const [totalPrice, setTotalPrice] = useState<number | null>(null);
 
-  const isStripePayDisabled = !stripe || loading || !cardComplete;
+  const isStripePayDisabled =
+    !stripe ||
+    loading ||
+    !cardComplete ||
+    !elements ||
+    elements?.getElement(CardElement) === null;
   const isWalletPayDisabled = loading || !enoughBalance;
 
   const showErrorModal = (message: string) => {
@@ -36,191 +49,140 @@ export default function CheckoutScreen({ route }: Props) {
     setErrorModalVisible(true);
   };
 
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (user?.id && user?.token) {
-        try {
-          const wallet = await getWalletByUserId(user.id, user.token);
-          setBalance(wallet.balance);
-        } catch (error) {
-          console.error("Error al cargar el saldo:", error);
-          setBalance(0);
-          setEnoughBalance(false);
-          showErrorModal("No se pudo cargar el saldo de tu wallet.");
-        }
+  async function fetchBalance() {
+    if (user?.id && user?.token) {
+      try {
+        const wallet = await getLoggedUserWallet(user.token);
+        setBalance(wallet.balance);
+      } catch (error) {
+        console.error("Error al cargar el saldo:", error);
+        setBalance(0);
+        setEnoughBalance(false);
+        showErrorModal("No se pudo cargar el saldo de tu wallet.");
       }
-    };
+    }
+  }
 
+  async function fetchKitTotalPrice() {
+    try {
+      const kitPaymentResponse: KitPaymentDTO = await getKitPayment(
+        kitId,
+        user?.token ?? "",
+      );
+      console.log("Respuesta al obtener el monto del kit:", kitPaymentResponse);
+      setTotalPrice(kitPaymentResponse.totalPrice);
+    } catch (error) {
+      console.error("Error al obtener el monto del kit:", error);
+      showErrorModal(
+        "Ha ocurrido un error al obtener el importe del kit.\n" +
+          (error as Error).message,
+      );
+      throw error;
+    }
+  }
+
+  async function calculateEnoughBalance() {
+    await fetchBalance();
+    await fetchKitTotalPrice();
+    if (totalPrice !== null && totalPrice !== undefined) {
+      if (totalPrice > 0 && balance * 100 >= totalPrice) {
+        setEnoughBalance(true);
+      } else {
+        setEnoughBalance(false);
+        console.log(
+          "Saldo insuficiente para pagar con KeaKit. Balance: " +
+            balance +
+            "€ Monto del kit: " +
+            totalPrice / 100 +
+            "€",
+        );
+      }
+    }
+  }
+
+  // Use effects
+
+  useEffect(() => {
     fetchBalance();
   }, [user?.id, user?.token]);
 
   useEffect(() => {
-    // TODO: Cambiar esta lógica al service
-    const fetchAmount = async () => {
-      try {
-        const response = await fetch(API_ROUTES.GET_KIT_PAYMENT_BY_ID(kitId), {
-          method: "GET",
-          headers: user?.token
-            ? {
-                Authorization: `Bearer ${user.token}`,
-                "Content-Type": "application/json",
-              }
-            : undefined,
-        });
-        console.log("Respuesta al obtener el monto del kit:", response);
-
-        if (!response.ok) {
-          console.error("Error al obtener el monto del kit:", response.status);
-          showErrorModal("No se pudo obtener el importe del kit.");
-          return;
-        }
-
-        const data = await response.json();
-        setAmount(data.totalPrice);
-        if (data.totalPrice > 0 && balance * 100 >= data.totalPrice) {
-          setEnoughBalance(true);
-        } else {
-          console.log(
-            "Saldo insuficiente para pagar con KeaKit. Balance:",
-            balance,
-            "€ Monto del kit:",
-            data.totalPrice / 100,
-            "€",
-          );
-          setEnoughBalance(false);
-        }
-      } catch (error) {
-        console.error("Error al obtener el monto del kit:", error);
-        showErrorModal("Ha ocurrido un error al obtener el importe del kit.");
-      }
-    };
-
-    fetchAmount();
+    calculateEnoughBalance();
   }, [kitId]);
 
+  const executeStripePayment = async (kitTotalPrice: number) => {
+    console.log("Procesando pago con Stripe...");
+    console.log("loading:", loading);
+
+    const cardElement = elements?.getElement(CardElement);
+
+    if (!stripe || !cardComplete || !elements || !cardElement) {
+      console.error("Stripe o CardElement no están disponibles");
+      showErrorModal("Stripe no está disponible en este momento.");
+      return;
+    }
+
+    try {
+      const createPaymentIntentResponse = await createPaymentIntent(
+        kitTotalPrice ?? 0,
+        user?.token ?? "",
+      );
+
+      const clientSecret = createPaymentIntentResponse.clientSecret;
+
+      const confirmCardPayment = await confirmStripePayment(
+        clientSecret,
+        cardElement,
+        stripe,
+      );
+
+      if (confirmCardPayment.error) return;
+
+      console.log(
+        "✅ Dinero recibido en Stripe. 🔗 Ver en: https://dashboard.stripe.com/test/payments/" +
+          confirmCardPayment.paymentIntent.id,
+      );
+
+      await processPaymentWithStripe(
+        kitId,
+        user?.token ?? "",
+        confirmCardPayment.paymentIntent.status,
+      );
+
+      console.log("✅ Pago con Stripe procesado exitosamente en el backend.");
+    } catch (error) {
+      console.error("Error durante el proceso de pago con Stripe:", error);
+      showErrorModal(
+        "Ha ocurrido un error durante el pago con Stripe.\n" +
+          (error as Error).message,
+      );
+      throw error;
+    }
+  };
+
   const handlePayment = async (wallet: boolean) => {
-    // TODO: Cambiar esta lógica al service
     setLoading(true);
     console.log("Iniciando proceso de pago para kitId:", kitId);
 
     try {
-      const kitPaymentResponse = await fetch(
-        API_ROUTES.GET_KIT_PAYMENT_BY_ID(kitId),
-        {
-          method: "GET",
-          headers: user?.token
-            ? {
-                Authorization: `Bearer ${user.token}`,
-                "Content-Type": "application/json",
-              }
-            : undefined,
-        },
-      );
-
-      const kitPaymentData = await kitPaymentResponse.json();
+      await fetchKitTotalPrice();
+      if (totalPrice === null) {
+        throw new Error("No se pudo obtener el monto total del kit.");
+      }
 
       if (wallet) {
-        console.log("Procesando pago con saldo de KeaKit.");
-        const walletPaymentResult = await fetch(
-          API_ROUTES.PROCESS_PAYMENT_WALLET(kitId),
-          {
-            method: "POST",
-            headers: user?.token
-              ? {
-                  Authorization: `Bearer ${user.token}`,
-                  "Content-Type": "application/json",
-                }
-              : undefined,
-            body: JSON.stringify(kitPaymentData.totalPrice),
-          },
-        );
-
-        if (!walletPaymentResult.ok) {
-          console.error("❌ Error al procesar el pago con saldo en el backend");
-          console.log(
-            "Respuesta del backend:",
-            await walletPaymentResult.text(),
-          );
-          showErrorModal("No se pudo procesar el pago con saldo de KeaKit.");
-          return;
-        }
+        await processPaymentWithWallet(kitId, user?.token ?? "", totalPrice);
+        console.log("✅ Pago con wallet procesado exitosamente.");
       } else {
-        const res = await fetch(API_ROUTES.CREATE_PAYMENT_INTENT, {
-          method: "POST",
-          headers: user?.token
-            ? {
-                Authorization: `Bearer ${user.token}`,
-                "Content-Type": "application/json",
-              }
-            : undefined,
-          body: JSON.stringify(kitPaymentData.totalPrice),
-        });
-
-        const { clientSecret } = await res.json();
-
-        if (!clientSecret) {
-          console.error("No se pudo obtener el client secret");
-          showErrorModal("No se pudo iniciar el pago con Stripe.");
-          return;
-        }
-
-        const cardElement = elements?.getElement(CardElement);
-        if (!stripe || !cardElement || !elements) {
-          console.error("Stripe o CardElement no están disponibles");
-          showErrorModal("Stripe no está disponible en este momento.");
-          return;
-        }
-
-        const result = await stripe?.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: cardElement,
-          },
-        });
-
-        if (result.error) {
-          setIsPaymentIntentError(true);
-          console.error(
-            "❌ Error al procesar el pago con Stripe:",
-            result.error?.message,
-          );
-          showErrorModal(
-            "No se pudo procesar el pago con Stripe: " + result.error?.message,
-          );
-          return;
-        } else {
-          console.log(
-            "✅ Dinero recibido en Stripe. 🔗 Ver en: https://dashboard.stripe.com/test/payments/" +
-              result.paymentIntent.id,
-          );
-
-          const paymentResult = await fetch(
-            API_ROUTES.PROCESS_PAYMENT_STRIPE(kitId),
-            {
-              method: "POST",
-              headers: user?.token
-                ? {
-                    Authorization: `Bearer ${user.token}`,
-                    "Content-Type": "application/json",
-                  }
-                : undefined,
-              body: JSON.stringify(result.paymentIntent.status),
-            },
-          );
-
-          if (!paymentResult.ok) {
-            console.error("❌ Error al procesar el pago en el backend");
-            console.log("Respuesta del backend:", await paymentResult.text());
-            showErrorModal(
-              "El pago se realizó, pero no se pudo confirmar en el backend.",
-            );
-            return;
-          }
-        }
+        await executeStripePayment(totalPrice);
       }
       navigation.navigate("MyKits");
     } catch (error) {
       console.error("❌ Error:", error);
-      showErrorModal("Ha ocurrido un error inesperado durante el pago.");
+      showErrorModal(
+        "Ha ocurrido un error inesperado durante el pago." +
+          (error as Error).message,
+      );
     } finally {
       setLoading(false);
     }

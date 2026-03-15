@@ -58,6 +58,10 @@ export const API_ROUTES = {
   GET_KIT_PAYMENT_BY_ID:     (kitId: number) => `${BASE_URL}/api/kits/payment/${kitId}`,
   SIMULATE_PAYMENT:           `${BASE_URL}/api/payments/pay-kit`,
 
+  // Wallet
+  GET_WALLET_BY_USER_ID:     (userId: number) => `${BASE_URL}/api/wallet/user/${userId}`,
+  GET_MY_WALLET:             `${BASE_URL}/api/wallet/my-wallet`,
+
   // Services
   ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,
   MY_SERVICES: (userId: number) => `${BASE_URL}/api/services/my-services?ownerId=${userId}`,
