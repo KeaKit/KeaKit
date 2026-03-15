@@ -318,5 +318,88 @@ public class KitService {
         return new KitResponse(saved);
     }
 
+    @Transactional
+    public KitResponse addItemToKit(Long kitId, Long itemId, Long userId) {
+        // 1. Verificamos que el usuario existe
+        userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Obtenemos el Kit y el Item
+        Kit kit = kitRepository.findById(kitId)
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
+
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item not found"));
+
+        // Aseguramos que la lista de snapshots esté inicializada
+        List<ItemMemento> snapshots = kit.getSnapshots();
+        if (snapshots == null) {
+            snapshots = new ArrayList<>();
+            kit.setSnapshots(snapshots);
+        }
+
+        // 3. Evitamos duplicados usando getOriginalItemId()
+        boolean alreadyExists = snapshots.stream()
+                .anyMatch(snapshot -> snapshot.getOriginalItemId() != null && 
+                                      snapshot.getOriginalItemId().equals(itemId));
+        
+        if (alreadyExists) {
+            throw new RuntimeException("This item is already in the kit");
+        }
+
+        // 4. Creamos el Snapshot para el nuevo objeto
+        ItemMemento newSnapshot = item.createSnapshot(
+                1, 
+                kit.getDeliveryMethod(), 
+                kit.getCourierPrice(), 
+                kit.getMeetingPoint()
+        );
+        newSnapshot.setPriceAtRental(item.getPricePerMonth()); 
+        
+        // ¡IMPORTANTE! Relación bidireccional: asignamos el kit al memento
+        newSnapshot.setKit(kit);
+
+        // 5. Añadimos a la lista y guardamos el kit
+        snapshots.add(newSnapshot);
+
+        Kit savedKit = kitRepository.save(kit);
+        return new KitResponse(savedKit);
+    }
+
+    @Transactional
+    public KitResponse removeItemFromKit(Long kitId, Long itemId, Long userId) {
+        // 1. Verificamos que el usuario existe
+        userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Obtenemos el Kit
+        Kit kit = kitRepository.findById(kitId)
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
+
+        List<ItemMemento> snapshots = kit.getSnapshots();
+        if (snapshots == null || snapshots.isEmpty()) {
+            throw new RuntimeException("Kit is already empty");
+        }
+
+        // 3. Buscamos el snapshot por su originalItemId
+        ItemMemento snapshotToRemove = snapshots.stream()
+                .filter(s -> s.getOriginalItemId() != null && s.getOriginalItemId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Item is not part of this kit"));
+
+        // 4. Regla de negocio: El kit no puede quedar vacío
+        if (snapshots.size() <= 1) {
+            throw new RuntimeException("A kit cannot be empty. It must contain at least one item.");
+        }
+
+        // 5. Eliminamos la relación y guardamos
+        snapshots.remove(snapshotToRemove);
+        
+        // Desvinculamos el kit del memento por buenas prácticas con JPA
+        snapshotToRemove.setKit(null); 
+
+        Kit savedKit = kitRepository.save(kit);
+        return new KitResponse(savedKit);
+    }
 
 }
