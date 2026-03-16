@@ -49,15 +49,13 @@ const AppNavigator: React.FC = () => {
     <NotificationProvider>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? (
-          <>
-            {user.role === 'ADMIN' ? (
-              <Stack.Screen name="Home" component={AdminHomeScreen} />
-            ) : (
-              <Stack.Screen name="Home" component={HomeScreen} />
-            )}
-
-              <Stack.Screen name="Home"          component={HomeScreen} />
+          {user ? (
+            <>
+              {user.role === 'ADMIN' ? (
+                <Stack.Screen name="Home" component={AdminHomeScreen} />
+              ) : (
+                <Stack.Screen name="Home" component={HomeScreen} />
+              )}
               <Stack.Screen name="Profile" component={ProfileScreen} />
               <Stack.Screen name="EditProfile" component={EditProfileScreen} />
               <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
