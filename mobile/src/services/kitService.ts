@@ -43,3 +43,14 @@ export async function getKitPayment(
 
   return handleResponse<KitPaymentDTO>(res);
 }
+
+export async function getKit(kitId: number,
+  token: string,
+): Promise<KitResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT(kitId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<KitResponse>(res);
+}
