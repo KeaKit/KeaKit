@@ -8,7 +8,6 @@ export const commonStyles = StyleSheet.create({
   // Contenedores
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 
   containerWhite: {
