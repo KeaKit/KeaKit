@@ -23,6 +23,8 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import { RootStackParamList } from '../types';
 import EditArticleScreen from '../screens/profile/EditArticleScreen';
+import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
+
 import KitDetailScreen from '../screens/kit/KitDetailScreen';
 import CategoriesScreen from '../screens/category/CategoriesScreen';
 import CategoryFormScreen from '../screens/category/CategoryFormScreen';
@@ -44,12 +46,16 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <NotificationProvider> {/* 👈 Envolver toda la navegación */}
+    <NotificationProvider>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {user ? (
             <>
-              <Stack.Screen name="Home"          component={HomeScreen} />
+              {user.role === 'ADMIN' ? (
+                <Stack.Screen name="Home" component={AdminHomeScreen} />
+              ) : (
+                <Stack.Screen name="Home" component={HomeScreen} />
+              )}
               <Stack.Screen name="Profile" component={ProfileScreen} />
               <Stack.Screen name="EditProfile" component={EditProfileScreen} />
               <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
