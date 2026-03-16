@@ -21,7 +21,8 @@ export const Colors = {
   secondaryMint: '#c3f1d1',
   secondaryCoral: '#FFD6C0',
 
-  backgroundWhite: '#FFFFFF',   
+  backgroundWhite: '#FFFFFF',
+  backgroundGray: '#f0f4ff',   
   backgroundCard: '#FFFFFF',    
 
   textPrimary: '#1A1A1A',
@@ -40,7 +41,8 @@ export const Colors = {
   info: '#3B82F6',  
 
   overlay: 'rgba(45, 110, 145, 0.4)',
-  shadowColor: '#2d6e91',  
+  shadowColor: '#2d6e91',
+  transparent: 'rgba(0, 0, 0, 0)',  
 } as const;
 
 export const Spacing = {
