@@ -189,9 +189,9 @@ export interface KitItemResponse {
   itemId: number;
   quantity: number;
   pricePerMonth: number;
-  name?: string | null;
-  category?: string | null;
-  imageUrl?: string | null;
+  name: string;
+  category: string;
+  imageUrl: string;
 }
 
 export interface KitResponse {
@@ -199,23 +199,23 @@ export interface KitResponse {
   name: string;
   country: string;
   city: string;
-  orderDate?: string;
+  orderDate: string; // LocalDate -> ISO String
   startDate: string;
   endDate: string;
-  estimatedDeliveryDate?: string;
-  deliveryNotification?: string;
-  status?: KitStatus;
+  estimatedDeliveryDate: string;
+  deliveryNotification: string;
+  status: KitStatus;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint: string;
+  courierPrice: number;
   tenantId: number;
-  items?: KitItemResponse[];
-  itemIds?: number[];
-  subtotalPrice?: number;
-  guaranteePrice?: number;
-  platformFee?: number;
-  totalPrice?: number;
-  deliveryMethod?: "COURIER" | "MEETING_POINT";
-  meetingPoint?: string;
-  courierPrice?: number;
-  totalSelectedItems?: number;
+  itemIds: number[];
+  items: KitItemResponse[];
+  totalSelectedItems: number;
+  subtotalPrice: number;
+  guaranteePrice: number;
+  platformFee: number;
+  totalPrice: number;
 }
 
 export interface Category {
