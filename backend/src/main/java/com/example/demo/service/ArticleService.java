@@ -31,16 +31,19 @@ public class ArticleService {
     private final CategoryRepository categoryRepository;
     private final KitRepository kitRepository;
 
+    private final DefaultKitService defaultKitService;
+
     private final CloudinaryService cloudinaryService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
                           KitRepository kitRepository, CategoryRepository categoryRepository,
-                          CloudinaryService cloudinaryService) {
+                          CloudinaryService cloudinaryService, DefaultKitService defaultKitService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.kitRepository = kitRepository;
         this.categoryRepository = categoryRepository;
         this.cloudinaryService = cloudinaryService;
+        this.defaultKitService = defaultKitService;
     }
 
     public Article createWithImage(Article article, MultipartFile image, Long ownerId, Long categoryId) throws IOException {
@@ -222,6 +225,8 @@ public class ArticleService {
             }
         }
 
+        defaultKitService.removeArticleFromAllDefaultKits(id);
+
         articleRepository.deleteById(id);
     }
 
@@ -240,6 +245,7 @@ public class ArticleService {
 
         if (status == ArticleStatus.AVAILABLE) {
             article.setStatus(ArticleStatus.RENTED);
+            defaultKitService.removeArticleFromAllDefaultKits(article.getId());
         } else if (status == ArticleStatus.RENTED) {
             article.setStatus(ArticleStatus.AVAILABLE);
         }

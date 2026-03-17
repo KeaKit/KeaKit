@@ -11,6 +11,7 @@ import com.example.demo.model.DefaultKitItem;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.DefaultKitItemRepository;
 import com.example.demo.repository.DefaultKitRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class DefaultKitService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private DefaultKitItemRepository defaultKitItemRepository;
 
     private String getCurrentUserEmail() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -120,4 +124,10 @@ public class DefaultKitService {
         DefaultKit defaultKit = getDefaultKitById(id);
         defaultKitRepository.delete(defaultKit);
     }
+
+    @Transactional
+    public void removeArticleFromAllDefaultKits(Long articleId) {
+    defaultKitItemRepository.deleteByArticleId(articleId);
+}
+
 }
