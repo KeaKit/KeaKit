@@ -8,7 +8,8 @@ export const Colors = {
   primaryLight: '#2C5F7C',     
   primaryDark: '#0F2534',  
 
-  primaryHome: '#2d6e91',           
+  primaryHome: '#2d6e91',
+  primaryHomeOpacity: 'rgba(45, 110, 145, 0.15)',      
   backgroundHome: '#fcfff5',        
   textPrimaryHome: '#595959', 
 

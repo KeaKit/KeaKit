@@ -207,7 +207,7 @@ export interface KitResponse {
   status: KitStatus;
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint: string;
-  courierPrice: number;
+  courierPrice?: number;
   tenantId: number;
   itemIds: number[];
   items: KitItemResponse[];

@@ -22,6 +22,8 @@ import { Header } from "../../components/Header";
 import { ItemPaymentComponent } from "../../components/ItemPaymentComponent";
 import { Colors, Spacing } from "../../styles";
 import { LinearGradient } from "expo-linear-gradient";
+import { KitPaymentResumeComponent } from "../../components/KitPaymentResumeComponent";
+import { KeakitButton } from "../../components/KeakitButton";
 
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
@@ -39,8 +41,8 @@ export default function CheckoutScreen({ route }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [isPaymentIntentError, setIsPaymentIntentError] = useState(false);
-  const [totalPrice, setTotalPrice] = useState<number | null>(null);
   const [kitDetails, setKitDetails] = useState<KitResponse>();
+  const [kitPrices, setKitPrices] = useState<KitPaymentDTO | null>(null);
 
   const isStripePayDisabled =
     !stripe ||
@@ -69,14 +71,14 @@ export default function CheckoutScreen({ route }: Props) {
     }
   }
 
-  async function fetchKitTotalPrice() {
+  async function fetchKitPrice() {
     try {
       const kitPaymentResponse: KitPaymentDTO = await getKitPayment(
         kitId,
         user?.token ?? "",
       );
+      setKitPrices(kitPaymentResponse);
       console.log("Respuesta al obtener el monto del kit:", kitPaymentResponse);
-      setTotalPrice(kitPaymentResponse.totalPrice);
     } catch (error) {
       console.error("Error al obtener el monto del kit:", error);
       showErrorModal(
@@ -89,9 +91,9 @@ export default function CheckoutScreen({ route }: Props) {
 
   async function calculateEnoughBalance() {
     await fetchBalance();
-    await fetchKitTotalPrice();
-    if (totalPrice !== null && totalPrice !== undefined) {
-      if (totalPrice > 0 && balance * 100 >= totalPrice) {
+    await fetchKitPrice();
+    if (kitPrices?.totalPrice !== null && kitPrices?.totalPrice !== undefined) {
+      if (kitPrices.totalPrice > 0 && balance * 100 >= kitPrices.totalPrice) {
         setEnoughBalance(true);
       } else {
         setEnoughBalance(false);
@@ -99,7 +101,7 @@ export default function CheckoutScreen({ route }: Props) {
           "Saldo insuficiente para pagar con KeaKit. Balance: " +
             balance +
             "€ Monto del kit: " +
-            totalPrice / 100 +
+            kitPrices?.totalPrice / 100 +
             "€",
         );
       }
@@ -124,12 +126,13 @@ export default function CheckoutScreen({ route }: Props) {
 
   useEffect(() => {
     calculateEnoughBalance();
+    fetchKitPrice();
     fetchKitDetails();
   }, [kitId]);
 
   const executeStripePayment = async (kitTotalPrice: number) => {
     console.log("Procesando pago con Stripe...");
-    console.log("loading:", loading);
+    setLoading(true);
 
     const cardElement = elements?.getElement(CardElement);
 
@@ -167,7 +170,9 @@ export default function CheckoutScreen({ route }: Props) {
       );
 
       console.log("✅ Pago con Stripe procesado exitosamente en el backend.");
+      setLoading(false);
     } catch (error) {
+      setLoading(false);
       console.error("Error durante el proceso de pago con Stripe:", error);
       showErrorModal(
         "Ha ocurrido un error durante el pago con Stripe.\n" +
@@ -182,16 +187,16 @@ export default function CheckoutScreen({ route }: Props) {
     console.log("Iniciando proceso de pago para kitId:", kitId);
 
     try {
-      await fetchKitTotalPrice();
-      if (totalPrice === null) {
+      await fetchKitPrice();
+      if (kitPrices === null || kitPrices.totalPrice === null) {
         throw new Error("No se pudo obtener el monto total del kit.");
       }
 
       if (wallet) {
-        await processPaymentWithWallet(kitId, user?.token ?? "", totalPrice);
+        await processPaymentWithWallet(kitId, user?.token ?? "", kitPrices.totalPrice);
         console.log("✅ Pago con wallet procesado exitosamente.");
       } else {
-        await executeStripePayment(totalPrice);
+        await executeStripePayment(kitPrices.totalPrice);
       }
       navigation.navigate("MyKits");
     } catch (error) {
@@ -245,7 +250,10 @@ export default function CheckoutScreen({ route }: Props) {
       </View>
       {/* Footer */}
       <View style={styles.footerContainer}>
-        {/* TODO: Resumen del pago */}
+        {kitPrices !== null && (
+          <KitPaymentResumeComponent kitPrices={kitPrices} />
+        )}
+
         <View style={styles.cardContainer}>
           <CardElement
             options={{
@@ -268,60 +276,9 @@ export default function CheckoutScreen({ route }: Props) {
           />
         </View>
 
-        <Button
-          mode="contained"
-          onPress={() => handlePayment(false)}
-          disabled={isStripePayDisabled}
-          loading={loading}
-          style={[styles.button, isStripePayDisabled && styles.buttonDisabled]}
-          contentStyle={styles.buttonContent}
-          buttonColor={isStripePayDisabled ? "#C7D0DB" : "#1A3A52"}
-          textColor={isStripePayDisabled ? "#6B7280" : "#FFFFFF"}
-          labelStyle={[
-            styles.primaryButtonLabel,
-            isStripePayDisabled && styles.primaryButtonLabelDisabled,
-          ]}
-        >
-          Pagar con Stripe
-        </Button>
-        {enoughBalance && (
-          <Button
-            mode="contained"
-            onPress={() => handlePayment(true)}
-            disabled={isWalletPayDisabled}
-            loading={loading}
-            style={[
-              styles.button,
-              isWalletPayDisabled && styles.buttonDisabled,
-            ]}
-            contentStyle={styles.buttonContent}
-            buttonColor={isWalletPayDisabled ? "#C7D0DB" : "#0F766E"}
-            textColor={isWalletPayDisabled ? "#6B7280" : "#FFFFFF"}
-            labelStyle={[
-              styles.primaryButtonLabel,
-              isWalletPayDisabled && styles.primaryButtonLabelDisabled,
-            ]}
-          >
-            Pagar con mi saldo de KeaKit
-          </Button>
-        )}
-        <Button
-          mode="outlined"
-          onPress={() => navigation.goBack()}
-          disabled={loading}
-          style={[
-            styles.outlinedButton,
-            loading && styles.outlinedButtonDisabled,
-          ]}
-          contentStyle={styles.buttonContent}
-          textColor={loading ? "#9CA3AF" : "#1A3A52"}
-          labelStyle={[
-            styles.secondaryButtonLabel,
-            loading && styles.secondaryButtonLabelDisabled,
-          ]}
-        >
-          Cancelar
-        </Button>
+        <KeakitButton title="Pagar con Stripe" onPress={() => handlePayment(false)} disabled={isStripePayDisabled} variant="blue" loading={loading} />
+        <KeakitButton title="Pagar con mi saldo de KeaKit" onPress={() => handlePayment(true)} disabled={isWalletPayDisabled} variant="green" loading={loading}/>
+        <KeakitButton title="Cancelar" onPress={() => navigation.goBack()} disabled={loading} variant="violet" />
 
         <Text variant="bodySmall" style={styles.testCard}>
           Tarjeta de prueba: 4242 4242 4242 4242 | Exp: 12/34 | CVV: 123
@@ -429,46 +386,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  },
-  button: {
-    marginTop: 10,
-    borderRadius: 8,
-    backgroundColor: "#1A3A52",
-    width: "100%",
-  },
-  buttonDisabled: {
-    backgroundColor: "#C7D0DB",
-    opacity: 1,
-  },
-  outlinedButton: {
-    marginTop: 10,
-    borderRadius: 8,
-    borderColor: "#1A3A52",
-    borderWidth: 1,
-    backgroundColor: "#FFFFFF",
-    width: "100%",
-  },
-  outlinedButtonDisabled: {
-    borderColor: "#D1D5DB",
-    backgroundColor: "#F3F4F6",
-  },
-  buttonContent: {
-    paddingVertical: 8,
-    minHeight: 44,
-  },
-  primaryButtonLabel: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-  },
-  primaryButtonLabelDisabled: {
-    color: "#6B7280",
-  },
-  secondaryButtonLabel: {
-    color: "#1A3A52",
-    fontWeight: "700",
-  },
-  secondaryButtonLabelDisabled: {
-    color: "#9CA3AF",
   },
   testCard: {
     marginTop: 12,
