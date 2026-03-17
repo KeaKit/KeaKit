@@ -20,7 +20,7 @@ import {
 } from "../../services";
 
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, commonStyles, FontSizes, Spacing } from "../../styles";
+import { Colors, commonStyles, FontSizes, Shadows, Spacing } from "../../styles";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Header,
@@ -45,7 +45,6 @@ export default function CheckoutScreen({ route }: Props) {
   const [enoughBalance, setEnoughBalance] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
-  const [isPaymentIntentError, setIsPaymentIntentError] = useState(false);
   const [kitDetails, setKitDetails] = useState<KitResponse>();
   const [kitPrices, setKitPrices] = useState<KitPaymentDTO | null>(null);
 
@@ -350,18 +349,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   cardContainer: {
+    ...Shadows.small,
     borderWidth: 1,
     borderColor: "#CBD5E1",
     borderRadius: 8,
     padding: 16,
     marginBottom: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.white,
     width: "100%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   testCard: {
     marginTop: Spacing.sm,

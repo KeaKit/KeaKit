@@ -1,5 +1,5 @@
 import { API_ROUTES } from "../config/api";
-import { Wallet } from "../types";
+import { Wallet, Transaction } from "../types";
 import { handleResponse, fetchWithTimeout, jsonHeaders } from "./utils";
 
 export const getWalletByUserId = async (
@@ -22,3 +22,12 @@ export const getLoggedUserWallet = async (token: string): Promise<Wallet> => {
 
   return handleResponse<Wallet>(res);
 };
+
+export const getLoggedUserTransactions = async (token: string): Promise<Transaction[]> => {
+  const res = await fetchWithTimeout(API_ROUTES.GET_MY_TRANSACTIONS, {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<Transaction[]>(res);
+}

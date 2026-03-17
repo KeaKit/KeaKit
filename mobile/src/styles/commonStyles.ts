@@ -156,13 +156,14 @@ export const commonStyles = StyleSheet.create({
   title: {
     fontSize: FontSizes.xxxl,
     fontWeight: FontWeights.bold,
-    color: Colors.textPrimary,
+    color: Colors.primaryHome,
   },
 
   subtitle: {
     fontSize: FontSizes.xl,
-    fontWeight: FontWeights.semibold,
-    color: Colors.textPrimary,
+    fontWeight: FontWeights.bold,
+    color: Colors.primaryHome,
+    marginBottom: 15
   },
 
   body: {

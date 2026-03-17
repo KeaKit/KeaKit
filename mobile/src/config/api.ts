@@ -48,7 +48,7 @@ export const API_ROUTES = {
   ADD_INCIDENT_COMMENT:       (incidentId: number) => `${BASE_URL}/api/incidents/${incidentId}/comments`,
 
   // Kits / Rented items
-    MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
+  MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
 
   // Payments
@@ -61,6 +61,7 @@ export const API_ROUTES = {
   // Wallet
   GET_WALLET_BY_USER_ID:     (userId: number) => `${BASE_URL}/api/wallet/user/${userId}`,
   GET_MY_WALLET:             `${BASE_URL}/api/wallet/my-wallet`,
+  GET_MY_TRANSACTIONS:       `${BASE_URL}/api/wallet/my-wallet/transactions`,
 
   // Services
   ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,

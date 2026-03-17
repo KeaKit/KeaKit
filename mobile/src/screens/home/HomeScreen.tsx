@@ -7,7 +7,6 @@ import {
   ScrollView,
   RefreshControl,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,65 +16,12 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, RentedItemResponse, Article } from '../../types';
 import { Colors } from '../../styles';
-import { getWalletByUserId } from '../../services/walletService';
-import { getRentedItems } from '../../services/incidentService';
-import { getMyArticles } from '../../services/articleService';
+import { getWalletByUserId,getRentedItems,getMyArticles } from '../../services';
+import { SkeletonPulse, FadeInItem } from '../../components';
 import ProfileMenuModal from './ProfileMenuModal';
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
-// ─── Animated list item wrapper ──────────────────────────────────────────────
-const FadeInItem: React.FC<{ delay?: number; children: React.ReactNode }> = ({
-  delay = 0,
-  children,
-}) => {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(16)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 400, delay, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 400, delay, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      {children}
-    </Animated.View>
-  );
-};
-
-// Initial animation
-const SkeletonPulse: React.FC<{ width?: number | string; height?: number; radius?: number; dark?: boolean }> = ({
-  width: w = '100%',
-  height: h = 16,
-  radius = 6,
-  dark = false,
-}) => {
-  const opacity = useRef(new Animated.Value(0.4)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={{
-        width: w as any,
-        height: h,
-        borderRadius: radius,
-        backgroundColor: dark ? 'rgba(255,255,255,0.3)' : '#E5E7EB',
-        opacity,
-      }}
-    />
-  );
-};
 
 // Status ENUM for item status
 const STATUS_CONFIG: Record<string, { label: string; dot: string }> = {
@@ -196,7 +142,7 @@ const HomeScreen: React.FC = () => {
         <FadeInItem delay={50}>
           <TouchableOpacity 
             activeOpacity={0.8} 
-            onPress={() => console.log('Navegar a futura pantalla de Wallet detalles')}
+            onPress={() => navigation.navigate('Wallet')}
           >
             <LinearGradient
               colors={[Colors.primaryHome, '#1e526e']}

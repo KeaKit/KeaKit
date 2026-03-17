@@ -312,6 +312,7 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
+  Wallet: undefined;
 };
 
 export interface ProfileData {
@@ -362,14 +363,24 @@ export interface UserService {
 export interface Wallet {
   id: number;
   balance: number;
-  transactions: Transaction[];
+  userId: number;
+  createdAt: string; // ISO String para emular LocalDateTime
 }
 
 export interface Transaction {
   id: number;
   amount: number;
-  type: 'PAYOUT' | 'FEE' | 'GUARANTEE_DEPOSIT' | 'GUARANTEE_REFUND' | 'REFUND';
-  timestamp: Date;
+  type: TransactionType;
+  walletId: number;
+  createdAt: string;
+}
+
+export enum TransactionType {
+  PAYOUT = 'PAYOUT',
+  FEE = 'FEE',
+  GUARANTEE_DEPOSIT = 'GUARANTEE_DEPOSIT',
+  GUARANTEE_REFUND = 'GUARANTEE_REFUND',
+  REFUND = 'REFUND'
 }
 
 
