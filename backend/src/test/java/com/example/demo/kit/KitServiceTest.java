@@ -31,6 +31,7 @@ import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.WalletRepository;
 import com.example.demo.service.KitService;
 import com.example.demo.service.OrderConfirmationEmailService;
+import com.example.demo.service.PlatformConfigService;
 
 @ExtendWith(MockitoExtension.class)
 public class KitServiceTest {
@@ -42,6 +43,7 @@ public class KitServiceTest {
     @Mock private OrderConfirmationEmailService orderConfirmationEmailService;
     @Mock private WalletRepository walletRepository;
     @Mock private TransactionRepository transactionRepository;
+    @Mock private PlatformConfigService platformConfigService;
 
     @InjectMocks
     private KitService kitService;
@@ -53,23 +55,22 @@ public class KitServiceTest {
             LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.DRAFT, null, null, tenant.getId(), List.of());
 
         mockUserAndKitSave(tenant);
+        when(platformConfigService.getCommissionRate()).thenReturn(0.2);
 
         Kit res = kitService.create(req);
-
         assertEquals(KitStatus.DRAFT, res.getStatus());
     }
-
 
     @Test
     void createKit_withoutStatus_defaultsToDraft() {
         User tenant = createTestUser(1L, "Juan");
-        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid", 
+        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid",
             LocalDate.now(), LocalDate.now().plusDays(7), null, null, null, tenant.getId(), List.of());
 
         mockUserAndKitSave(tenant);
+        when(platformConfigService.getCommissionRate()).thenReturn(0.2);
 
         Kit res = kitService.create(req);
-
         assertEquals(KitStatus.DRAFT, res.getStatus());
     }
 
@@ -100,39 +101,39 @@ public class KitServiceTest {
 
     @Test
     void createKit_itemQuantityExceedsTotalUnits_throwsException() {
-        Article article = createTestArticle(5L, "Tienda", 2, createTestUser(2L, "Owner"));
-        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(5L, 3, 10.0);
-        
-        KitCreateRequest req = new KitCreateRequest("Kit Fail", "ES", "MAD", 
-            LocalDate.now(), LocalDate.now().plusDays(7), null, null, null, 1L, List.of(selection));
+        User owner = createTestUser(2L, "Owner");
+        Article article = createTestArticle(5L, "Tienda", 2, owner);
 
-        // Debemos mockear el tenant y el item para llegar a la validación de unidades
-        when(userRepository.findById(any())).thenReturn(Optional.of(new User()));
+        // Tenant distinto al owner para no lanzar "Tenant cannot select their own items" antes
+        User tenant = createTestUser(1L, "Tenant");
+
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(5L, 3, 10.0);
+        KitCreateRequest req = new KitCreateRequest("Kit Fail", "ES", "MAD",
+            LocalDate.now(), LocalDate.now().plusDays(7), null, null, null, tenant.getId(), List.of(selection));
+
+        when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
         when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(platformConfigService.getCommissionRate()).thenReturn(0.2);
 
         assertThrows(RuntimeException.class, () -> kitService.create(req));
     }
 
     @Test
     void createKit_withItemSelections_success() {
-        // Preparar datos
         User tenant = createTestUser(1L, "Tenant");
         User owner = createTestUser(2L, "Owner");
         Article article = createTestArticle(100L, "Tienda", 10, owner);
         
         KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 2, 50.0);
-        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid", 
+        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid",
             LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.ACTIVE, null, null, tenant.getId(), List.of(selection));
 
-        // Mocks
         when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
         when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+        when(platformConfigService.getCommissionRate()).thenReturn(0.2);
         mockUserAndKitSave(tenant);
 
-        // Ejecutar
         Kit res = kitService.create(req);
-
-        // Verificar
         assertNotNull(res);
         assertEquals(1, res.getSnapshots().size());
         assertEquals(2, res.getSnapshots().get(0).getSelectedUnits());

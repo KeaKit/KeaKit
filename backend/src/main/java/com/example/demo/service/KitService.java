@@ -42,7 +42,8 @@ public class KitService {
 
     private static final double PLATFORM_COURIER_PRICE = 9.99;
 
-    private static final double PLATFORM_FEE_PERCENTAGE = 0.2; // TODO: Ajustar comisión según la configuración del administrador
+    @Autowired
+    private PlatformConfigService platformConfigService;
 
     // TODO: Obtener la garantía de la configuración hecha por el admin
     private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2; 
@@ -92,7 +93,7 @@ public class KitService {
             kit.setCourierPrice(null);
         }
 
-        kit.setAppliedCommissionRate(PLATFORM_FEE_PERCENTAGE);
+        kit.setAppliedCommissionRate(platformConfigService.getCommissionRate());
         kit.setAppliedGuaranteeRate(PLATFORM_GUARANTEE_PERCENTAGE);
 
         if(request.tenantId() == null){
