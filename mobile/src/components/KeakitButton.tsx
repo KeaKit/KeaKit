@@ -1,9 +1,9 @@
 import React, { useRef, useState } from "react";
 import { Text, StyleSheet, Pressable, Animated, Platform, ViewStyle, StyleProp, View, ActivityIndicator } from "react-native";
-import { Colors, FontSizes, FontWeights } from "../styles/theme";
+import { BorderRadius, Colors, FontSizes, FontWeights, Shadows } from "../styles/theme";
 
 
-type ButtonVariant = "blue" | "violet" | "green";
+type ButtonVariant = "blue" | "violet" | "green" | "modalBlue";
 
 interface KeakitButtonProps {
   title: string;
@@ -38,6 +38,7 @@ export const KeakitButton = ({
     switch (variant) {
       case "violet": return styles.violet;
       case "green": return styles.green;
+      case "modalBlue": return styles.modalBlue;
       default: return styles.blue;
     }
   };
@@ -87,17 +88,15 @@ export const KeakitButton = ({
 };
 
 const styles = StyleSheet.create({
-  container: { width: "100%" },
+  container: {
+    width: "100%",
+    borderRadius: BorderRadius.md,
+  },
   button: {
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: BorderRadius.md,
     alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    ...Platform.select({
-      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-      android: { elevation: 3 },
-    }),
+    justifyContent: "center"
   },
   buttonText: {
     fontSize: FontSizes.base,
@@ -110,6 +109,7 @@ const styles = StyleSheet.create({
   violet: { backgroundColor: Colors.secondaryLavender },
   green: { backgroundColor: Colors.secondaryMint },
   disabled: { backgroundColor: Colors.primaryHomeOpacity, opacity: 0.6 },
+  modalBlue: { backgroundColor: Colors.primaryHome, width: '40%', alignSelf: 'center' },
   
   textDisabled: { color: Colors.textSecondary },
   textBlue: { color: Colors.textWhite },

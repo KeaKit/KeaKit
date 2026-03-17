@@ -10,40 +10,22 @@ export const KitPaymentResumeComponent = ({
   kitPrices: KitPaymentDTO;
 }) => {
   return (
-    <View style={{ flex: 1, width: "100%" }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 8,
-        }}
-      >
+    <View style={styles.container}>
+      <View style={styles.row}>
         <Text style={commonStyles.caption}>Subtotal productos</Text>
         <Text style={commonStyles.caption}>
           {(kitPrices.subtotalPrice / 100).toFixed(2)}€
         </Text>
       </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 12,
-        }}
-      >
+      <View style={styles.row}>
         <Text style={commonStyles.caption}>Garantía (20%)</Text>
         <Text style={commonStyles.caption}>
           {(kitPrices.guarantee / 100).toFixed(2)}€
         </Text>
       </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 12,
-        }}
-      >
+      <View style={styles.row}>
         <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
         <Text style={commonStyles.caption}>
           {(kitPrices.courierPrice / 100).toFixed(2)}€
@@ -61,7 +43,7 @@ export const KitPaymentResumeComponent = ({
           marginBottom: 16,
         }}
       >
-        <Text style={[commonStyles.caption, styles.total]}>Total a pagar</Text>
+        <Text style={styles.total}>Total a pagar</Text>
         <Text style={styles.totalPrice}>
           {(kitPrices.totalPrice / 100).toFixed(2)}€
         </Text>
@@ -71,9 +53,18 @@ export const KitPaymentResumeComponent = ({
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    width: "100%",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
   total: {
     color: Colors.primaryHome,
-    fontWeight: "600",
+    fontWeight: FontWeights.semibold,
     fontSize: FontSizes.lg,
   },
   totalPrice: {

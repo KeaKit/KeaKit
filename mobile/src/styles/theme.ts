@@ -36,6 +36,7 @@ export const Colors = {
   borderLight: '#F3F4F6',
   borderPrimary: 'rgba(45, 110, 145, 0.15)',
 
+  white: '#FFFFFF',
   success: '#10B981',     
   error: '#EF4444',           
   warning: '#F59E0B',       

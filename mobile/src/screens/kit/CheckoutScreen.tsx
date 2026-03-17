@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Linking, ScrollView } from "react-native";
-import { Button, Modal, Portal, Text } from "react-native-paper";
+import { View, StyleSheet, ScrollView } from "react-native";
+import { Text } from "react-native-paper";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -9,21 +9,26 @@ import {
 } from "@react-navigation/native-stack";
 import { KitPaymentDTO, KitResponse, RootStackParamList } from "../../types";
 import { useAuth } from "../../context/AuthContext";
-import { getLoggedUserWallet } from "../../services/walletService";
-import { getKitPayment, getKit } from "../../services/kitService";
 import {
+  getLoggedUserWallet,
+  getKitPayment,
+  getKit,
   processPaymentWithWallet,
   createPaymentIntent,
   confirmStripePayment,
   processPaymentWithStripe,
-} from "../../services/paymentService";
+} from "../../services";
+
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Header } from "../../components/Header";
-import { ItemPaymentComponent } from "../../components/ItemPaymentComponent";
-import { Colors, Spacing } from "../../styles";
+import { Colors, commonStyles, FontSizes, Spacing } from "../../styles";
 import { LinearGradient } from "expo-linear-gradient";
-import { KitPaymentResumeComponent } from "../../components/KitPaymentResumeComponent";
-import { KeakitButton } from "../../components/KeakitButton";
+import {
+  Header,
+  ItemPaymentComponent,
+  KitPaymentResumeComponent,
+  KeakitButton,
+  KeakitModal,
+} from "../../components";
 
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
@@ -193,7 +198,11 @@ export default function CheckoutScreen({ route }: Props) {
       }
 
       if (wallet) {
-        await processPaymentWithWallet(kitId, user?.token ?? "", kitPrices.totalPrice);
+        await processPaymentWithWallet(
+          kitId,
+          user?.token ?? "",
+          kitPrices.totalPrice,
+        );
         console.log("✅ Pago con wallet procesado exitosamente.");
       } else {
         await executeStripePayment(kitPrices.totalPrice);
@@ -201,10 +210,14 @@ export default function CheckoutScreen({ route }: Props) {
       navigation.navigate("MyKits");
     } catch (error) {
       console.error("❌ Error:", error);
-      showErrorModal(
-        "Ha ocurrido un error inesperado durante el pago." +
-          (error as Error).message,
-      );
+      let errorMessage =
+        "Ha ocurrido un error durante el proceso de pago.\n" +
+        (error as Error).message;
+      if ((error as Error).message.includes("payment_intent")) {
+        errorMessage +=
+          "\n\n¿Eres desarrollador? Este error es conocido.\nRevisa el foro de incidencias de Teams.";
+      }
+      showErrorModal(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -222,7 +235,7 @@ export default function CheckoutScreen({ route }: Props) {
       <View style={styles.content}>
         <LinearGradient
           colors={[Colors.backgroundGray, Colors.transparent]}
-          style={styles.gradientTop}
+          style={[styles.gradient, styles.gradientTop]}
           pointerEvents="none"
         />
         <ScrollView
@@ -232,7 +245,7 @@ export default function CheckoutScreen({ route }: Props) {
           {kitDetails?.items.length === 0 ? (
             <Text>No hay artículos en este kit</Text>
           ) : (
-            kitDetails?.items.map((item) => ( 
+            kitDetails?.items.map((item) => (
               <ItemPaymentComponent
                 key={item.itemId}
                 item={item}
@@ -244,12 +257,12 @@ export default function CheckoutScreen({ route }: Props) {
         </ScrollView>
         <LinearGradient
           colors={[Colors.transparent, Colors.backgroundGray]}
-          style={styles.gradientBottom}
+          style={[styles.gradient, styles.gradientBottom]}
           pointerEvents="none"
         />
       </View>
       {/* Footer */}
-      <View style={styles.footerContainer}>
+      <View style={commonStyles.footerContainer}>
         {kitPrices !== null && (
           <KitPaymentResumeComponent kitPrices={kitPrices} />
         )}
@@ -276,56 +289,37 @@ export default function CheckoutScreen({ route }: Props) {
           />
         </View>
 
-        <KeakitButton title="Pagar con Stripe" onPress={() => handlePayment(false)} disabled={isStripePayDisabled} variant="blue" loading={loading} />
-        <KeakitButton title="Pagar con mi saldo de KeaKit" onPress={() => handlePayment(true)} disabled={isWalletPayDisabled} variant="green" loading={loading}/>
-        <KeakitButton title="Cancelar" onPress={() => navigation.goBack()} disabled={loading} variant="violet" />
+        <KeakitButton
+          title="Pagar con Stripe"
+          onPress={() => handlePayment(false)}
+          disabled={isStripePayDisabled}
+          variant="blue"
+          loading={loading}
+        />
+        <KeakitButton
+          title="Pagar con mi saldo de KeaKit"
+          onPress={() => handlePayment(true)}
+          disabled={isWalletPayDisabled}
+          variant="green"
+          loading={loading}
+        />
+        <KeakitButton
+          title="Cancelar"
+          onPress={() => navigation.goBack()}
+          disabled={loading}
+          variant="violet"
+        />
 
-        <Text variant="bodySmall" style={styles.testCard}>
+        <Text style={[commonStyles.caption, styles.testCard]}>
           Tarjeta de prueba: 4242 4242 4242 4242 | Exp: 12/34 | CVV: 123
         </Text>
 
-        <Portal>
-          <Modal
-            visible={errorModalVisible}
-            onDismiss={() => setErrorModalVisible(false)}
-            contentContainerStyle={styles.errorModalContainer}
-          >
-            <Text variant="titleMedium" style={styles.errorModalTitle}>
-              Error en el pago
-            </Text>
-            <Text style={styles.errorModalMessage}>
-              {error ?? "Ha ocurrido un error."}
-            </Text>
-            {isPaymentIntentError && (
-              <Text style={styles.errorModalMessage}>
-                ¿Eres desarrollador? Revisa este{" "}
-                <Text
-                  style={styles.errorModalLink}
-                  onPress={() =>
-                    Linking.openURL(
-                      "https://teams.microsoft.com/l/message/19:b67b2f676f2441bfb3a2aa815b23d9f8@thread.tacv2/1773437428081?tenantId=ef4a684e-81b5-491c-a98e-c7b31be6c469&groupId=f0cbe5b1-fa30-4983-8517-30fe68999067&parentMessageId=1773437428081&teamName=ISPP&channelName=Incidencias&createdTime=1773437428081",
-                    )
-                  }
-                >
-                  post de Teams
-                </Text>
-                .
-              </Text>
-            )}
-            <Button
-              mode="contained"
-              onPress={() => {
-                setErrorModalVisible(false);
-                setIsPaymentIntentError(false);
-              }}
-              style={styles.errorModalButton}
-              buttonColor="#1A3A52"
-              textColor="#FFFFFF"
-            >
-              Entendido
-            </Button>
-          </Modal>
-        </Portal>
+        <KeakitModal
+          visible={errorModalVisible}
+          onDismiss={() => setErrorModalVisible(false)}
+          message={error ?? "Ha ocurrido un error."}
+          variant="error"
+        />
       </View>
     </SafeAreaView>
   );
@@ -341,36 +335,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  footerContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: Spacing.md,
-    backgroundColor: Colors.backgroundWhite,
-    padding: 50,
-    paddingTop: 30,
-    paddingBottom: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  gradientTop: {
-    position: 'absolute',
+  gradient: {
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     height: 20,
-    marginTop: 20,
     zIndex: 1,
   },
+  gradientTop: {
+    marginTop: 20,
+  },
   gradientBottom: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 20,
     marginBottom: 20,
   },
   cardContainer: {
@@ -388,35 +364,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   testCard: {
-    marginTop: 12,
-    textAlign: "center",
-    color: "#374151",
-  },
-  errorModalContainer: {
-    backgroundColor: "#FFFFFF",
-    marginHorizontal: 24,
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  errorModalTitle: {
-    fontWeight: "700",
-    marginBottom: 10,
-    color: "#111827",
-  },
-  errorModalMessage: {
-    color: "#1F2937",
-    marginBottom: 10,
-    lineHeight: 20,
-  },
-  errorModalLink: {
-    color: "#1D4ED8",
-    fontWeight: "700",
-    textDecorationLine: "underline",
-    marginBottom: 16,
-  },
-  errorModalButton: {
-    alignSelf: "flex-end",
+    marginTop: Spacing.sm,
+    fontSize: FontSizes.xs,
   },
 });
