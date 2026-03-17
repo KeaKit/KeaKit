@@ -126,7 +126,7 @@ export default function WalletScreen() {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })
-                : "0.00"}{" "}
+                : "0,00"}{" "}
               €
             </Text>
           )}
