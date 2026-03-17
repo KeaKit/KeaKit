@@ -4,21 +4,45 @@ const REQUEST_TIMEOUT_MS = 12000;
 export async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const contentType = res.headers.get("content-type") ?? "";
-    let message = `HTTP ${res.status}`;
+    let message = `Error ${res.status}`;
 
     try {
       if (contentType.includes("application/json")) {
         const payload = await res.json();
         message = payload.message || payload.error || JSON.stringify(payload);
       } else {
-        message = await res.text();
+        const text = await res.text();
+        message = text || `Error ${res.status}`;
       }
-    } catch {}
+    } catch {
+    }
 
-    throw new Error(message || `HTTP ${res.status}`);
+    throw new Error(message);
   }
 
-  return res.json() as Promise<T>;
+  if (res.status === 204) {
+    // Respuesta "204 No Content" (Común en DELETE)
+    return {} as T;
+  }
+
+  const contentType = res.headers.get("content-type") ?? "";
+
+  if (!contentType.includes("application/json")) {
+    // Respuesta en formano no json
+    const text = await res.text();
+    return text as unknown as T;
+  }
+
+  try {
+    // Cuerpo json vacio
+    const text = await res.text();
+    if (!text) {
+      return {} as T;
+    }
+    return JSON.parse(text) as T;
+  } catch (error) {
+    throw new Error("La respuesta del servidor no es un JSON válido");
+  }
 }
 
 export async function fetchWithTimeout(

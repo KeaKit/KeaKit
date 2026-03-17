@@ -54,3 +54,12 @@ export async function getKit(kitId: number,
 
   return handleResponse<KitResponse>(res);
 }
+
+export async function deleteKit(kitId: number, token: string): Promise<void> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT(kitId), {
+    method: "DELETE",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<void>(res);
+}

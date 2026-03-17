@@ -17,6 +17,7 @@ import {
   createPaymentIntent,
   confirmStripePayment,
   processPaymentWithStripe,
+  deleteKit,
 } from "../../services";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -229,13 +230,24 @@ export default function CheckoutScreen({ route }: Props) {
     }
   };
 
+  const handleKitDelete = async () => {
+    try {
+      await deleteKit(kitId, user?.token ?? "");
+    } catch (error) {
+      console.error('Error', 'No se pudo eliminar el kit.');
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <Header
         title="Pagar el kit"
         showBack={true}
-        onBack={() => navigation.goBack()}
+        onBack={() => {
+          handleKitDelete();
+          navigation.goBack()
+        }}
       />
       {/* Items */}
       <View style={styles.content}>
@@ -325,7 +337,7 @@ export default function CheckoutScreen({ route }: Props) {
         <FadeInItem delay={50}>
           <KeakitButton
             title="Cancelar"
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate("KitDetail", { kitId })}
             disabled={loading}
             variant="violet"
           />
