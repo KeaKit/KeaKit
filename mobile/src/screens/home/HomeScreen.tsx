@@ -16,7 +16,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, RentedItemResponse, Article } from '../../types';
 import { Colors } from '../../styles';
-import { getWalletByUserId,getRentedItems,getMyArticles } from '../../services';
+import { getLoggedUserWallet, getRentedItems,getMyArticles } from '../../services';
 import { SkeletonPulse, FadeInItem } from '../../components';
 import ProfileMenuModal from './ProfileMenuModal';
 
@@ -46,29 +46,11 @@ const HomeScreen: React.FC = () => {
 
   const headerAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (user?.id && user?.token) {
-        setLoadingBalance(true);
-        try {
-          const wallet = await getWalletByUserId(user.id, user.token);
-          setBalance(wallet.balance);
-        } catch (error) {
-          console.error('Error al cargar el saldo:', error);
-          setBalance(null);
-        } finally {
-          setLoadingBalance(false);
-        }
-      }
-    };
-    Animated.timing(headerAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-  }, []);
-
   const fetchData = async () => {
     if (!user?.id || !user?.token) return;
     setLoadingBalance(true);
     try {
-      const wallet = await getWalletByUserId(user.id, user.token);
+      const wallet = await getLoggedUserWallet(user.token);
       setBalance(wallet.balance);
     } catch {
       setBalance(null);
@@ -93,7 +75,10 @@ const HomeScreen: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, [user?.id, user?.token]);
+  useEffect(() => {
+    Animated.timing(headerAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+    fetchData()
+  }, [user?.id, user?.token]);
   useFocusEffect(React.useCallback(() => { fetchData(); }, [user?.id, user?.token]));
 
   const onRefresh = async () => {
@@ -125,7 +110,7 @@ const HomeScreen: React.FC = () => {
           activeOpacity={0.8}
         >
           <View style={styles.avatarIconWrap}>
-            <Ionicons name="person" size={20} color="#FFFFFF" />
+            <Ionicons name="person" size={20} color={Colors.white} />
           </View>
         </TouchableOpacity>
       </Animated.View>
@@ -161,12 +146,15 @@ const HomeScreen: React.FC = () => {
                   <SkeletonPulse width={120} height={38} radius={8} dark />
                 ) : (
                   <Text style={styles.hugeValueLight}>
-                    {balance !== null ? `${balance.toFixed(2)}€` : '—'}
+                    {balance !== null ? `${balance.toLocaleString("es-ES", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} €` : '0,00 €'}
                   </Text>
                 )}
                 <Text style={styles.cardSubtitleLight}>balance disponible</Text>
               </View>
-              <Ionicons name="chevron-forward" size={24} color="#FFFFFF" style={styles.walletChevron} />
+              <Ionicons name="chevron-forward" size={24} color={Colors.white} style={styles.walletChevron} />
             </LinearGradient>
           </TouchableOpacity>
         </FadeInItem>
