@@ -20,7 +20,13 @@ import {
 } from "../../services";
 
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, commonStyles, FontSizes, Shadows, Spacing } from "../../styles";
+import {
+  Colors,
+  commonStyles,
+  FontSizes,
+  Shadows,
+  Spacing,
+} from "../../styles";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Header,
@@ -28,6 +34,7 @@ import {
   KitPaymentResumeComponent,
   KeakitButton,
   KeakitModal,
+  FadeInItem,
 } from "../../components";
 
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
@@ -244,14 +251,21 @@ export default function CheckoutScreen({ route }: Props) {
           {kitDetails?.items.length === 0 ? (
             <Text>No hay artículos en este kit</Text>
           ) : (
-            kitDetails?.items.map((item) => (
-              <ItemPaymentComponent
-                key={item.itemId}
-                item={item}
-                startDate={kitDetails.startDate}
-                endDate={kitDetails.endDate}
-              />
-            ))
+            kitDetails?.items.map((item, index) => {
+              const BASE_DELAY = 150;
+              const STAGGER = 300;
+              const calculatedDelay = BASE_DELAY + index * STAGGER;
+              return (
+                <FadeInItem key={item.itemId} delay={calculatedDelay}>
+                  <ItemPaymentComponent
+                    key={item.itemId}
+                    item={item}
+                    startDate={kitDetails.startDate}
+                    endDate={kitDetails.endDate}
+                  />
+                </FadeInItem>
+              );
+            })
           )}
         </ScrollView>
         <LinearGradient
@@ -263,51 +277,59 @@ export default function CheckoutScreen({ route }: Props) {
       {/* Footer */}
       <View style={commonStyles.footerContainer}>
         {kitPrices !== null && (
-          <KitPaymentResumeComponent kitPrices={kitPrices} />
+          <FadeInItem delay={50}>
+            <KitPaymentResumeComponent kitPrices={kitPrices} />
+          </FadeInItem>
         )}
-
-        <View style={styles.cardContainer}>
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize: "16px",
-                  color: "#424770",
-                  "::placeholder": {
-                    color: "#aab7c4",
+        <FadeInItem delay={50}>
+          <View style={styles.cardContainer}>
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: "16px",
+                    color: "#424770",
+                    "::placeholder": {
+                      color: "#aab7c4",
+                    },
+                  },
+                  invalid: {
+                    color: "#9e2146",
                   },
                 },
-                invalid: {
-                  color: "#9e2146",
-                },
-              },
-            }}
-            onChange={(event: { complete: boolean }) => {
-              setCardComplete(event.complete);
-            }}
+              }}
+              onChange={(event: { complete: boolean }) => {
+                setCardComplete(event.complete);
+              }}
+            />
+          </View>
+        </FadeInItem>
+        <FadeInItem delay={50}>
+          <KeakitButton
+            title="Pagar con Stripe"
+            onPress={() => handlePayment(false)}
+            disabled={isStripePayDisabled}
+            variant="blue"
+            loading={loading}
           />
-        </View>
-
-        <KeakitButton
-          title="Pagar con Stripe"
-          onPress={() => handlePayment(false)}
-          disabled={isStripePayDisabled}
-          variant="blue"
-          loading={loading}
-        />
-        <KeakitButton
-          title="Pagar con mi saldo de KeaKit"
-          onPress={() => handlePayment(true)}
-          disabled={isWalletPayDisabled}
-          variant="green"
-          loading={loading}
-        />
-        <KeakitButton
-          title="Cancelar"
-          onPress={() => navigation.goBack()}
-          disabled={loading}
-          variant="violet"
-        />
+        </FadeInItem>
+        <FadeInItem delay={50}>
+          <KeakitButton
+            title="Pagar con mi saldo de KeaKit"
+            onPress={() => handlePayment(true)}
+            disabled={isWalletPayDisabled}
+            variant="green"
+            loading={loading}
+          />
+        </FadeInItem>
+        <FadeInItem delay={50}>
+          <KeakitButton
+            title="Cancelar"
+            onPress={() => navigation.goBack()}
+            disabled={loading}
+            variant="violet"
+          />
+        </FadeInItem>
 
         <Text style={[commonStyles.caption, styles.testCard]}>
           Tarjeta de prueba: 4242 4242 4242 4242 | Exp: 12/34 | CVV: 123
