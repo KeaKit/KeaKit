@@ -64,7 +64,17 @@ public class DatabaseSeeder {
             initialDeposit.setType(TransactionType.PAYOUT);
             initialDeposit.setDestinationWallet(ownerWallet);
             transactionRepo.save(initialDeposit);
-
+            Transaction tenantDeposit = new Transaction();
+            tenantDeposit.setAmount(200.0);
+            tenantDeposit.setType(TransactionType.PAYOUT);
+            tenantDeposit.setDestinationWallet(tenantWallet);
+            transactionRepo.save(tenantDeposit);
+            Transaction tenantDeposit2 = new Transaction();
+            tenantDeposit2.setAmount(2.5);
+            tenantDeposit2.setType(TransactionType.PAYOUT);
+            tenantDeposit2.setDestinationWallet(tenantWallet);
+            transactionRepo.save(tenantDeposit2);
+            
             // 4. Categorías
             Category catTech = new Category();
             catTech.setName("Tecnología");
