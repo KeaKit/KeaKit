@@ -3,6 +3,8 @@ package com.example.demo.service;
 import com.example.demo.dto.DefaultKitCreateRequest;
 import com.example.demo.exception.AccessForbiddenException;
 import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.exception.UnauthorizedException;
+import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.Article;
 import com.example.demo.model.DefaultKit;
 import com.example.demo.model.DefaultKitItem;
@@ -32,6 +34,11 @@ public class DefaultKitService {
     private UserRepository userRepository;
 
     private String getCurrentUserEmail() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new UnauthorizedException("No se ha proporcionado un token de autenticación válido");
+        }
+        
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails) {
             return ((UserDetails) principal).getUsername();
@@ -43,7 +50,7 @@ public class DefaultKitService {
     private void checkUserAdmin() {
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
-            .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+            .orElseThrow(() -> new UserNotFoundException("Usuario autenticado no encontrado"));
 
         if (currentUser.getRole() != UserRole.ADMIN) {
             throw new AccessForbiddenException("No tienes permiso para ver el siguiente contenido");
@@ -55,7 +62,6 @@ public class DefaultKitService {
     }
 
     public DefaultKit getDefaultKitById(Long id) {
-        checkUserAdmin();
         return defaultKitRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se ha encontrado el Kit Predeterminado con ID: " + id));
     }
