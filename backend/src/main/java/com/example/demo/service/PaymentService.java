@@ -34,8 +34,8 @@ public class PaymentService {
     @Value("${ADMIN_EMAIL:admin@keakit.com}")
     private String KEAKIT_ADMIN_EMAIL;
 
-    // TODO: Ajustar comisión según la configuración del administrador
-    private static final Double PLATFORM_FEE_PERCENTAGE = 0.2;
+    @Autowired
+    private PlatformConfigService platformConfigService;
 
     @Autowired
     private WalletService walletService;
@@ -123,8 +123,9 @@ public class PaymentService {
 
                 if (!isPilotUser) {
                     // 4. Si el usuario no es piloto, aplicamos la comisión de la plataforma
-                    itemPrice = toMoney(item.getPricePerMonth() * item.getQuantity() * (1 - PLATFORM_FEE_PERCENTAGE));
-                    Double feeAmount = toMoney(item.getPricePerMonth() * item.getQuantity() * PLATFORM_FEE_PERCENTAGE);
+                    double commissionRate = platformConfigService.getCommissionRate();
+                    itemPrice = toMoney(item.getPricePerMonth() * item.getQuantity() * (1 - commissionRate));
+                    Double feeAmount = toMoney(item.getPricePerMonth() * item.getQuantity() * commissionRate);
                     Transaction feeTransaction = transferFee(feeAmount);
                     transactionRepository.save(feeTransaction);
                 }
