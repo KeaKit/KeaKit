@@ -61,6 +61,29 @@ public class DefaultKitService {
         }
     }
 
+    private void validateDefaultKitRequest(DefaultKitCreateRequest request) {
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del kit predeterminado no puede estar vacío.");
+        }
+        if (request.getName().length() > 255) {
+            throw new IllegalArgumentException("El nombre del kit predeterminado no puede superar los 255 caracteres.");
+        }
+        
+        if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {
+            throw new IllegalArgumentException("La descripción del kit predeterminado no puede estar vacía.");
+        }
+        if (request.getDescription().length() > 1000) {
+            throw new IllegalArgumentException("La descripción del kit predeterminado no puede superar los 1000 caracteres.");
+        }
+        
+        if (request.getBasePrice() == null) {
+            throw new IllegalArgumentException("El precio base del kit predeterminado es obligatorio.");
+        }
+        if (request.getBasePrice() < 0) {
+            throw new IllegalArgumentException("El precio base del kit predeterminado no puede ser un valor negativo.");
+        }
+    }
+
     public List<DefaultKit> getAllDefaultKits() {
         return defaultKitRepository.findAll();
     }
@@ -73,6 +96,7 @@ public class DefaultKitService {
     @Transactional
     public DefaultKit createDefaultKit(DefaultKitCreateRequest request) {
         checkUserAdmin();
+        validateDefaultKitRequest(request);
 
         DefaultKit defaultKit = new DefaultKit();
         defaultKit.setName(request.getName());
@@ -95,12 +119,29 @@ public class DefaultKitService {
     @Transactional
     public DefaultKit updateDefaultKit(Long id, DefaultKitCreateRequest request) {
         checkUserAdmin();
-
+        
         DefaultKit defaultKit = getDefaultKitById(id);
 
-        if (request.getName() != null) defaultKit.setName(request.getName());
-        if (request.getDescription() != null) defaultKit.setDescription(request.getDescription());
-        if (request.getBasePrice() != null) defaultKit.setBasePrice(request.getBasePrice());
+        if (request.getName() != null) {
+            if (request.getName().trim().isEmpty() || request.getName().length() > 255) {
+                throw new IllegalArgumentException("El nombre del kit predeterminado es inválido o demasiado largo.");
+            }
+            defaultKit.setName(request.getName().trim());
+        }
+
+        if (request.getDescription() != null) {
+            if (request.getDescription().trim().isEmpty() || request.getDescription().length() > 1000) {
+                throw new IllegalArgumentException("La descripción del kit predeterminado es inválida o demasiado larga.");
+            }
+            defaultKit.setDescription(request.getDescription().trim());
+        }
+
+        if (request.getBasePrice() != null) {
+            if (request.getBasePrice() < 0) {
+                throw new IllegalArgumentException("El precio base del kit predeterminado no puede ser un valor negativo.");
+            }
+            defaultKit.setBasePrice(request.getBasePrice());
+        }
 
         if (request.getArticleIds() != null) {
             defaultKit.getItems().clear(); 
