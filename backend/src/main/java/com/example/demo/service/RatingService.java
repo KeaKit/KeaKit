@@ -44,6 +44,10 @@ public class RatingService {
             throw new InvalidRatingException("You cannot rate yourself");
         }
 
+        if (!kit.getStatus().equals(KitStatus.FINISHED)) {
+            throw new InvalidRatingException("You cannot rate a not finished kit rent");
+        }
+
         if (ratingRepository.existsByReviewerIdAndRevieweeIdAndKitId(
                 reviewer.getId(), reviewee.getId(), kit.getId())) {
             throw new DuplicateRatingException("You have already rated this user for this kit");

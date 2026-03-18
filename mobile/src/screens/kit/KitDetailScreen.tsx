@@ -228,14 +228,14 @@ const handleConfirmKit = async () => {
 
               <Ionicons name="cube-outline" size={20} color="#DDD" />
 
-              <TouchableOpacity
+              {kit.status === "FINISHED" && (<TouchableOpacity
                 style={styles.itemButton}
                 onPress={() => createReview(kitId, item.ownerId, item.ownerName)}
               >
                 <Ionicons name="star-outline" size={18} color="#666" />
                 <Text style={styles.itemButtonText}
                 >Valorar</Text>
-              </TouchableOpacity>
+              </TouchableOpacity>)}
 
             </View>
           ))}
