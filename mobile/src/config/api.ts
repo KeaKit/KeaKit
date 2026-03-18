@@ -15,6 +15,7 @@ export const API_ROUTES = {
   GET_RATINGS_BY_USER:   (userId: number) => `${BASE_URL}/api/ratings/given/${userId}`,
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
+  HAS_REVIEWED_ITEMS: `${BASE_URL}/api/ratings/has-reviewed`,
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
   GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,
   CONFIRM_KIT: (id: number) => `${BASE_URL}/api/kits/confirm/${id}`,
