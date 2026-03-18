@@ -17,16 +17,16 @@ public class DefaultKitItem {
     private DefaultKit defaultKit;
 
     @ManyToOne(fetch = FetchType.EAGER) 
-    @JoinColumn(name = "article_id", nullable = false)
-    private Article article;
+    @JoinColumn(name = "item_id", nullable = false) // Ahora apunta a item_id
+    private Item item;
 
     // Constructores
     public DefaultKitItem() {
     }
 
-    public DefaultKitItem(DefaultKit defaultKit, Article article) {
+    public DefaultKitItem(DefaultKit defaultKit, Item item) {
         this.defaultKit = defaultKit;
-        this.article = article;
+        this.item = item;
     }
 
     // Getters y Setters
@@ -46,11 +46,11 @@ public class DefaultKitItem {
         this.defaultKit = defaultKit;
     }
 
-    public Article getArticle() {
-        return article;
+    public Item getItem() {
+        return item;
     }
 
-    public void setArticle(Article article) {
-        this.article = article;
+    public void setItem(Item item) {
+        this.item = item;
     }
 }

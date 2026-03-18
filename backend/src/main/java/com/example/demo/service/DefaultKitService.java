@@ -8,11 +8,13 @@ import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.Article;
 import com.example.demo.model.DefaultKit;
 import com.example.demo.model.DefaultKitItem;
+import com.example.demo.model.Item;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.DefaultKitItemRepository;
 import com.example.demo.repository.DefaultKitRepository;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,7 +31,7 @@ public class DefaultKitService {
     private DefaultKitRepository defaultKitRepository;
     
     @Autowired
-    private ArticleRepository articleRepository;
+    private ItemRepository itemRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -75,13 +77,6 @@ public class DefaultKitService {
         if (request.getDescription().length() > 1000) {
             throw new IllegalArgumentException("La descripción del kit predeterminado no puede superar los 1000 caracteres.");
         }
-        
-        if (request.getBasePrice() == null) {
-            throw new IllegalArgumentException("El precio base del kit predeterminado es obligatorio.");
-        }
-        if (request.getBasePrice() < 0) {
-            throw new IllegalArgumentException("El precio base del kit predeterminado no puede ser un valor negativo.");
-        }
     }
 
     public List<DefaultKit> getAllDefaultKits() {
@@ -93,6 +88,17 @@ public class DefaultKitService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se ha encontrado el Kit Predeterminado con ID: " + id));
     }
 
+    private void calculateAndSetBasePrice(DefaultKit defaultKit) {
+        double total = 0.0;
+        if (defaultKit.getItems() != null) {
+            for (DefaultKitItem kitItem : defaultKit.getItems()) {
+                // ATENCIÓN: Cambia getPricePerDay() por getPrice() si tu modelo Article se llama así
+                total += kitItem.getItem().getPricePerMonth(); 
+            }
+        }
+        defaultKit.setBasePrice(total);
+    }
+
     @Transactional
     public DefaultKit createDefaultKit(DefaultKitCreateRequest request) {
         checkUserAdmin();
@@ -101,18 +107,17 @@ public class DefaultKitService {
         DefaultKit defaultKit = new DefaultKit();
         defaultKit.setName(request.getName());
         defaultKit.setDescription(request.getDescription());
-        defaultKit.setBasePrice(request.getBasePrice());
 
-        if (request.getArticleIds() != null && !request.getArticleIds().isEmpty()) {
-            for (Long articleId : request.getArticleIds()) {
-                Article article = articleRepository.findById(articleId)
-                        .orElseThrow(() -> new ResourceNotFoundException("No se puede crear el kit. Artículo no encontrado con ID: " + articleId));
+        if (request.getItemsIds() != null && !request.getItemsIds().isEmpty()) {
+            for (Long itemId : request.getItemsIds()) {
+                Item item = itemRepository.findById(itemId)
+                        .orElseThrow(() -> new ResourceNotFoundException("No se puede crear el kit. Item no encontrado con ID: " + itemId));
                 
-                DefaultKitItem item = new DefaultKitItem(defaultKit, article);
-                defaultKit.getItems().add(item);
+                DefaultKitItem defatulDefaultKitItem = new DefaultKitItem(defaultKit, item);
+                defaultKit.getItems().add(defatulDefaultKitItem);
             }
         }
-
+        calculateAndSetBasePrice(defaultKit);
         return defaultKitRepository.save(defaultKit);
     }
 
@@ -136,39 +141,48 @@ public class DefaultKitService {
             defaultKit.setDescription(request.getDescription().trim());
         }
 
-        if (request.getBasePrice() != null) {
-            if (request.getBasePrice() < 0) {
-                throw new IllegalArgumentException("El precio base del kit predeterminado no puede ser un valor negativo.");
-            }
-            defaultKit.setBasePrice(request.getBasePrice());
-        }
-
-        if (request.getArticleIds() != null) {
+        if (request.getItemsIds() != null) {
             defaultKit.getItems().clear(); 
             
-            for (Long articleId : request.getArticleIds()) {
-                Article article = articleRepository.findById(articleId)
-                        .orElseThrow(() -> new ResourceNotFoundException("No se puede actualizar. Artículo no encontrado con ID: " + articleId));
+            for (Long itemId : request.getItemsIds()) {
+                Item item = itemRepository.findById(itemId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Item no encontrado con ID: " + itemId));
                 
-                DefaultKitItem item = new DefaultKitItem(defaultKit, article);
-                defaultKit.getItems().add(item);
+                DefaultKitItem defaultKitItem = new DefaultKitItem(defaultKit, item);
+                defaultKit.getItems().add(defaultKitItem);
             }
         }
 
+        calculateAndSetBasePrice(defaultKit);
         return defaultKitRepository.save(defaultKit);
     }
 
     @Transactional
     public void deleteDefaultKit(Long id) {
         checkUserAdmin();
-
         DefaultKit defaultKit = getDefaultKitById(id);
         defaultKitRepository.delete(defaultKit);
     }
 
     @Transactional
-    public void removeArticleFromAllDefaultKits(Long articleId) {
-    defaultKitItemRepository.deleteByArticleId(articleId);
-}
+    public void removeItemFromAllDefaultKits(Long itemId) {
+        List<DefaultKitItem> itemsToRemove = defaultKitItemRepository.findByItemId(itemId);
+        
+        if (itemsToRemove.isEmpty()) {
+            return;
+        }
+
+        for (DefaultKitItem kitItem : itemsToRemove) {
+            DefaultKit defaultKit = kitItem.getDefaultKit();
+            
+            defaultKit.getItems().removeIf(i -> i.getItem().getId().equals(itemId));
+            
+            calculateAndSetBasePrice(defaultKit); 
+            
+            defaultKitRepository.save(defaultKit); 
+        }
+        
+        defaultKitItemRepository.deleteByItemId(itemId);
+    }
 
 }

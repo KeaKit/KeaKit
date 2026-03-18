@@ -5,18 +5,16 @@ import java.util.List;
 public class DefaultKitCreateRequest {
     private String name;
     private String description;
-    private Double basePrice;
-    private List<Long> articleIds;
+    private List<Long> itemIds;
 
     // Constructores
     public DefaultKitCreateRequest() {
     }
 
-    public DefaultKitCreateRequest(String name, String description, Double basePrice, List<Long> articleIds) {
+    public DefaultKitCreateRequest(String name, String description, List<Long> itemIds) {
         this.name = name;
         this.description = description;
-        this.basePrice = basePrice;
-        this.articleIds = articleIds;
+        this.itemIds = itemIds;
     }
 
     // Getters y Setters
@@ -36,19 +34,11 @@ public class DefaultKitCreateRequest {
         this.description = description;
     }
 
-    public Double getBasePrice() {
-        return basePrice;
+    public List<Long> getItemsIds() {
+        return itemIds;
     }
 
-    public void setBasePrice(Double basePrice) {
-        this.basePrice = basePrice;
-    }
-
-    public List<Long> getArticleIds() {
-        return articleIds;
-    }
-
-    public void setArticleIds(List<Long> articleIds) {
-        this.articleIds = articleIds;
+    public void setItemsIds(List<Long> itemIds) {
+        this.itemIds = itemIds;
     }
 }

@@ -118,7 +118,7 @@ public class ArticleService {
             throw new RuntimeException("Owner (with valid id) is required");
         userRepository.findById(owner.getId())
             .orElseThrow(() -> new RuntimeException("Owner not found"));
-
+        defaultKitService.removeItemFromAllDefaultKits(article.getId());
         return articleRepository.save(article);
     }
 
@@ -225,8 +225,6 @@ public class ArticleService {
             }
         }
 
-        defaultKitService.removeArticleFromAllDefaultKits(id);
-
         articleRepository.deleteById(id);
     }
 
@@ -245,7 +243,6 @@ public class ArticleService {
 
         if (status == ArticleStatus.AVAILABLE) {
             article.setStatus(ArticleStatus.RENTED);
-            defaultKitService.removeArticleFromAllDefaultKits(article.getId());
         } else if (status == ArticleStatus.RENTED) {
             article.setStatus(ArticleStatus.AVAILABLE);
         }
