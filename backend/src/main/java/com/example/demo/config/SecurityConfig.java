@@ -46,6 +46,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/services/active", "/api/services/{id}").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/services/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/kits/*/tracking").authenticated()
+                .requestMatchers(HttpMethod.PATCH, "/api/kits/*/tracking").hasAnyRole("COURIER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/kits/*/assign-courier/*").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
