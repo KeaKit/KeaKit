@@ -44,7 +44,6 @@
 |----------|-------------|-----------|-----------------|--------|-------------|
 | [#312](https://github.com/KeaKit/KeaKit/issues/312)  | Sprint Backlog | Mid |  2  | Done | Adrián Chabrera Rubio  |
 | [#313](https://github.com/KeaKit/KeaKit/issues/313)  | Continuar Refactorización Valoraciones  | Mid |  4  | Done |   Alejandro González Macías  |
-| [#143](https://github.com/KeaKit/KeaKit/issues/312)  |  HU-ARRENDATARIO-38: Confirmar recepción | High |  2  | In Progress |   Alejandro González Macías  |
 | [#144](https://github.com/KeaKit/KeaKit/issues/312)  |  HU-ARRENDATARIO-39: Indicar que el objeto no cumple con lo prometido |  Mid  | 3  | In Progress   | Alejandro González Macías 
 | [#145](https://github.com/KeaKit/KeaKit/issues/312)  | HU-ARRENDATARIO-41 - Recibir una notificación cuando se procese la devolución de mi depósito | Mid  |  2  | In Progress |   Adrián Chabrera Rubio  |
 | [#235](https://github.com/KeaKit/KeaKit/issues/312)  | CU-GENERAL-03 - Testing | Mid |  3  | In progress | Marta De la Calle González |
@@ -60,11 +59,11 @@ Apartado a rellenar tras el próximo reparto.
 | Responsable       | SP - Semana 1|  SP - Semana 2|  SP - Semana 3| **TOTAL** |
 |-------------------|------------------------|------------------------|------------------------|------------------------|
 | Adrián Chabrera Rubio | 5 SP | 4 SP |    |                                        
-| Alejandro González Macías | 2 SP |  9 SP |    |                  
+| Alejandro González Macías | 2 SP |  7 SP |    |                  
 | Guillermo Ciria González | 2 SP | 6 SP |    |                  
 | Marta De la Calle González | 6 SP | 3 SP |    |                  
 | Rafael Harana Mancilla | 0 SP | 6 SP |    |                  
-| **TOTAL EQUIPO**   | **15 SP**        |  **28 SP**  |    |     | 
+| **TOTAL EQUIPO**   | **15 SP**        |  **26 SP**  |    |     | 
 
 ## 6. Historial de versiones
 
