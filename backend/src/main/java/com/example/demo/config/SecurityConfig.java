@@ -45,10 +45,7 @@ public class SecurityConfig {
                 //Para asegurar que las url que comiencen por api/admin/ solo serán accesibles por usuarios con rol ADMIN
                 .requestMatchers(HttpMethod.GET, "/api/services/active", "/api/services/{id}").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/article/**").authenticated()
-                .requestMatchers("/api/services/**").authenticated()
-                .requestMatchers("/api/users/**").authenticated()
-                .requestMatchers("/api/ratings/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/services/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
