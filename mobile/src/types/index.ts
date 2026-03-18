@@ -312,6 +312,7 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
+  Commission: undefined;
 };
 
 export interface ProfileData {
