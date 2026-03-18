@@ -227,6 +227,26 @@ export interface Category {
   maxPrice: number;
 }
 
+export interface DefaultKitItem {
+  id: number;
+  article: Article;
+}
+
+export interface DefaultKit {
+  id: number;
+  name: string;
+  description: string;
+  basePrice: number;
+  items: DefaultKitItem[];
+}
+
+export interface DefaultKitCreateRequest {
+  name: string;
+  description: string;
+  basePrice: number;
+  articleIds?: number[];
+}
+
 export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
 export type IncidentStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
 

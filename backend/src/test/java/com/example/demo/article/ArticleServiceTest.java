@@ -10,6 +10,7 @@ import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.ArticleService;
 import com.example.demo.service.CloudinaryService;
+import com.example.demo.service.DefaultKitService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,7 @@ class ArticleServiceTest {
     @Mock private CategoryRepository categoryRepository;
     @Mock private KitRepository kitRepository;
     @Mock private CloudinaryService cloudinaryService;
+    @Mock private DefaultKitService defaultKitService;
 
     @InjectMocks
     private ArticleService articleService;
