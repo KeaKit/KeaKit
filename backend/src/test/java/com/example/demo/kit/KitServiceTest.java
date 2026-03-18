@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.model.Article;
+import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
@@ -153,6 +155,99 @@ public class KitServiceTest {
         assertEquals(KitStatus.ACTIVE, kit.getStatus());
     }
 
+    // ==========================================
+    // TESTS PARA ADD / REMOVE ITEM (KITS PREDETERMINADOS)
+    // ==========================================
+
+    @Test
+    void addItemToKit_success() {
+        User user = createTestUser(1L, "Admin");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setSnapshots(new ArrayList<>());
+        
+        Article article = createTestArticle(100L, "Taladro", 5, createTestUser(2L, "Owner"));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+        when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        KitResponse res = kitService.addItemToKit(kit.getId(), article.getId(), user.getId());
+
+        assertNotNull(res);
+        assertEquals(1, kit.getSnapshots().size());
+        assertEquals(article.getId(), kit.getSnapshots().get(0).getOriginalItemId());
+        assertEquals(kit, kit.getSnapshots().get(0).getKit()); // Validar que se enlazó el kit
+    }
+
+    @Test
+    void addItemToKit_itemAlreadyExists_throwsException() {
+        User user = createTestUser(1L, "Admin");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(100L))));
+        
+        Article article = createTestArticle(100L, "Taladro", 5, createTestUser(2L, "Owner"));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> 
+            kitService.addItemToKit(kit.getId(), article.getId(), user.getId()));
+        assertEquals("This item is already in the kit", ex.getMessage());
+    }
+
+    @Test
+    void removeItemFromKit_success() {
+        User user = createTestUser(1L, "Admin");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        // Metemos 2 items para que pase la validación de no dejar el kit vacío
+        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(100L), createTestSnapshot(101L))));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        KitResponse res = kitService.removeItemFromKit(kit.getId(), 100L, user.getId());
+
+        assertNotNull(res);
+        assertEquals(1, kit.getSnapshots().size());
+        assertEquals(101L, kit.getSnapshots().get(0).getOriginalItemId()); // Comprobamos que quedó el otro
+    }
+
+    @Test
+    void removeItemFromKit_kitWouldBeEmpty_throwsException() {
+        User user = createTestUser(1L, "Admin");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(100L)))); // Solo hay 1
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> 
+            kitService.removeItemFromKit(kit.getId(), 100L, user.getId()));
+        assertEquals("A kit cannot be empty. It must contain at least one item.", ex.getMessage());
+    }
+
+    @Test
+    void removeItemFromKit_itemNotInKit_throwsException() {
+        User user = createTestUser(1L, "Admin");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(101L), createTestSnapshot(102L))));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> 
+            kitService.removeItemFromKit(kit.getId(), 100L, user.getId())); // Intentamos borrar el 100
+        assertEquals("Item is not part of this kit", ex.getMessage());
+    }
+
     // --- MÉTODOS HELPER (Para limpiar los tests) ---
 
     private User createTestUser(Long id, String name) {
@@ -181,4 +276,12 @@ public class KitServiceTest {
             return k;
         });
     }
+
+    private ItemMemento createTestSnapshot(Long originalItemId) {
+        ItemMemento memento = new ItemMemento();
+        memento.setOriginalItemId(originalItemId);
+        return memento;
+    }
+
+    
 }
