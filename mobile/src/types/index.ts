@@ -302,6 +302,8 @@ export type RootStackParamList = {
   MyArticles: undefined;
   MyKits: undefined;
   KitDetail: { kitId: number };
+  DefaultKits: undefined;
+  EditDefaultKit: { kitId: number };
   UploadArticle: undefined;
   AdminUsers: undefined;
   AdminUserForm: { userId?: number };
