@@ -17,6 +17,8 @@ import MyArticlesScreen from '../screens/profile/MyArticlesScreen';
 import MyKitsScreen from '../screens/profile/MyKitsScreen';
 import UploadArticleScreen  from '../screens/profile/UploadArticleScreen';
 import CreateKitScreen from '../screens/kit/CreateKitScreen';
+import DefaultKitsScreen from '../screens/kit/DefaultKitsScreen';
+import EditDefaultKitScreen from '../screens/kit/EditDefaultKitScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
@@ -66,6 +68,8 @@ const AppNavigator: React.FC = () => {
               <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
               <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
               <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
+              <Stack.Screen name="DefaultKits" component={DefaultKitsScreen} />
+              <Stack.Screen name="EditDefaultKit" component={EditDefaultKitScreen} />
               <Stack.Screen name="AdminUsers"    component={AdminUsersScreen} />
               <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
               <Stack.Screen name="EditArticle" component={EditArticleScreen} />
