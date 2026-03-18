@@ -14,11 +14,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, RentedItemResponse, Article } from '../../types';
+import { RootStackParamList, RentedItemResponse, Article, DeliveryStatus, KitResponse } from '../../types';
 import { Colors } from '../../styles';
 import { getLoggedUserWallet, getRentedItems,getMyArticles } from '../../services';
 import { SkeletonPulse, FadeInItem } from '../../components';
 import ProfileMenuModal from './ProfileMenuModal';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
+import { getMyKits, getKitTracking } from "../../services/kitService";
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -29,6 +32,8 @@ const STATUS_CONFIG: Record<string, { label: string; dot: string }> = {
   RENTED:    { label: 'Rented',  dot: '#F59E0B' }, 
   DEFAULT:   { label: 'Inactive',   dot: '#9CA3AF' }, 
 };
+
+const LAST_UPDATES_KEY = "@tracking_last_updates";
 
 // Main Component
 const HomeScreen: React.FC = () => {
@@ -44,7 +49,56 @@ const HomeScreen: React.FC = () => {
   const [loadingArticles, setLoadingArticles] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  const { unreadCount, addNotification } = useTrackingNotifications();
+  const bellAnim = useRef(new Animated.Value(1)).current;
+
   const headerAnim = useRef(new Animated.Value(0)).current;
+
+  const statusLabel = (status?: DeliveryStatus | null) => {
+    switch (status) {
+      case "PICKED_UP": return "Kit recogido por repartidor";
+      case "IN_TRANSIT": return "En camino";
+      case "NEARBY": return "Cerca del domicilio";
+      case "DELIVERED": return "Entregado al arrendatario";
+      default: return "Actualizado";
+    }
+  };
+
+    
+  const checkTrackingUpdates = async () => {
+    if (!user?.id || !user?.token) return;
+    if (user.role !== "USER") return;
+
+    const stored = await AsyncStorage.getItem(LAST_UPDATES_KEY);
+    const lastUpdates: Record<string, string> = stored ? JSON.parse(stored) : {};
+
+    const kits = await getMyKits(user.id, user.token);
+
+    for (const kit of kits) {
+      try {
+        const tracking = await getKitTracking(kit.id, user.token);
+        const lastUpdate = tracking.lastUpdate ?? "";
+        const prevUpdate = lastUpdates[String(kit.id)] ?? "";
+
+        if (lastUpdate && lastUpdate !== prevUpdate && tracking.status) {
+          await addNotification({
+            id: `${kit.id}-${lastUpdate}`,
+            kitId: kit.id,
+            kitName: kit.name,
+            status: tracking.status,
+            message: `Tu kit "${kit.name}" está ${statusLabel(tracking.status)}.`,
+            createdAt: new Date().toISOString(),
+            read: false,
+          });
+          lastUpdates[String(kit.id)] = lastUpdate;
+        }
+      } catch {
+      }
+    }
+
+    await AsyncStorage.setItem(LAST_UPDATES_KEY, JSON.stringify(lastUpdates));
+  };
+
 
   const fetchData = async () => {
     if (!user?.id || !user?.token) return;
@@ -73,6 +127,7 @@ const HomeScreen: React.FC = () => {
     } finally {
       setLoadingArticles(false);
     }
+    await checkTrackingUpdates();
   };
 
   useEffect(() => {
@@ -80,6 +135,15 @@ const HomeScreen: React.FC = () => {
     fetchData()
   }, [user?.id, user?.token]);
   useFocusEffect(React.useCallback(() => { fetchData(); }, [user?.id, user?.token]));
+
+  useEffect(() => {
+    if (unreadCount > 0) {
+      Animated.sequence([
+        Animated.timing(bellAnim, { toValue: 1.15, duration: 200, useNativeDriver: true }),
+        Animated.timing(bellAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [unreadCount]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -103,16 +167,34 @@ const HomeScreen: React.FC = () => {
         ]}
       >
         <Text style={styles.headerGreeting}>Hola, {user ? user.name.split(' ')[0] : 'Invitado'}</Text>
-        {/* Profile icon */}
-        <TouchableOpacity
-          style={styles.avatarBtn}
-          onPress={() => setShowProfileMenu(true)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.avatarIconWrap}>
-            <Ionicons name="person" size={20} color={Colors.white} />
-          </View>
-        </TouchableOpacity>
+        
+        
+        {/* Campana + perfil */}
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.bellButton}
+            onPress={() => navigation.navigate("TrackingNotifications")}
+          >
+            <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
+              <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
+            </Animated.View>
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.avatarBtn}
+            onPress={() => setShowProfileMenu(true)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.avatarIconWrap}>
+              <Ionicons name="person" size={20} color={Colors.white} />
+            </View>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
 
       {/* Main scrollable container */}
@@ -356,6 +438,31 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.primaryHome, // Texto azul oscuro
     letterSpacing: -0.5,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  bellButton: {
+    position: "relative",
+    padding: 6,
+  },
+  badge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    backgroundColor: "#ff3b30",
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
   },
   avatarBtn: {
     justifyContent: 'center',

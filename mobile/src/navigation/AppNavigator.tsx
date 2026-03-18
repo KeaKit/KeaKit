@@ -32,6 +32,9 @@ import MyServicesScreen from '../screens/service/MyServicesScreen';
 import CreateServiceScreen from '../screens/service/CreateServiceScreen';
 import EditServiceScreen from '../screens/service/EditServiceScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
+import KitTrackingScreen from '../screens/kit/KitTrackingScreen';
+import { TrackingNotificationsProvider } from '../context/TrackingNotificationContext';
+import TrackingNotificationsScreen from '../screens/notifications/TrackingNotificationsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -48,48 +51,53 @@ const AppNavigator: React.FC = () => {
 
   return (
     <NotificationProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {user ? (
-            <>
-              {user.role === 'ADMIN' ? (
-                <Stack.Screen name="Home" component={AdminHomeScreen} />
-              ) : (
-                <Stack.Screen name="Home" component={HomeScreen} />
-              )}
-              <Stack.Screen name="Profile" component={ProfileScreen} />
-              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-              <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
-              <Stack.Screen name="MyKits"    component={MyKitsScreen} />
-              <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
-              <Stack.Screen name="Checkout" component={CheckoutScreen} />
-              <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
-              <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
-              <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
-              <Stack.Screen name="AdminUsers"    component={AdminUsersScreen} />
-              <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
-              <Stack.Screen name="EditArticle" component={EditArticleScreen} />
-              <Stack.Screen name="KitDetail" component={KitDetailScreen} />
-              <Stack.Screen name="Categories" component={CategoriesScreen} />
-              <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
-              <Stack.Screen name="MyIncidents" component={MyIncidentsScreen} />
-              <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
-              <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
-              <Stack.Screen name="MyServices"    component={MyServicesScreen} />
-              <Stack.Screen name="PromoteService"    component={CreateServiceScreen} />
-              <Stack.Screen name="EditService"    component={EditServiceScreen} />
-              <Stack.Screen name="Wallet" component={WalletScreen} />
-            </>
-          ) : (
-            <>
-              <Stack.Screen name="Login"    component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
+      <TrackingNotificationsProvider>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {user ? (
+              <>
+                {user.role === 'ADMIN' ? (
+                  <Stack.Screen name="Home" component={AdminHomeScreen} />
+                ) : (
+                  <Stack.Screen name="Home" component={HomeScreen} />
+                )}
+                <Stack.Screen name="Profile" component={ProfileScreen} />
+                <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
+                <Stack.Screen name="MyKits"    component={MyKitsScreen} />
+                <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
+                <Stack.Screen name="Checkout" component={CheckoutScreen} />
+                <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
+                <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
+                <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
+                <Stack.Screen name="AdminUsers"    component={AdminUsersScreen} />
+                <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
+                <Stack.Screen name="EditArticle" component={EditArticleScreen} />
+                <Stack.Screen name="KitDetail" component={KitDetailScreen} />
+                <Stack.Screen name="Categories" component={CategoriesScreen} />
+                <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
+                <Stack.Screen name="MyIncidents" component={MyIncidentsScreen} />
+                <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
+                <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
+                <Stack.Screen name="MyServices"    component={MyServicesScreen} />
+                <Stack.Screen name="PromoteService"    component={CreateServiceScreen} />
+                <Stack.Screen name="EditService"    component={EditServiceScreen} />
+                <Stack.Screen name="Wallet" component={WalletScreen} />
+                <Stack.Screen name="Tracking" component={KitTrackingScreen} />
+                <Stack.Screen name="TrackingNotifications" component={TrackingNotificationsScreen} />
+              </>
+            ) : (
+              <>
+                <Stack.Screen name="Login"    component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+              </>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </TrackingNotificationsProvider>
     </NotificationProvider>
   );
+
 };
 
 export default AppNavigator;

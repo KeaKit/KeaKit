@@ -4,6 +4,8 @@ import {
   KitResponse,
   UserArticle,
   KitPaymentDTO,
+  KitDeliveryResponse,
+  UpdateDeliveryRequest
 } from "../types";
 import { handleResponse, fetchWithTimeout, jsonHeaders } from "./utils";
 
@@ -62,4 +64,36 @@ export async function deleteKit(kitId: number, token: string): Promise<void> {
   });
 
   return handleResponse<void>(res);
+}
+
+export async function getMyKits(userId: number, token: string): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.MY_KITS(userId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+
+export async function getKitTracking(
+  kitId: number,
+  token: string,
+): Promise<KitDeliveryResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT_TRACKING(kitId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitDeliveryResponse>(res);
+}
+
+export async function updateKitTracking(
+  kitId: number,
+  payload: UpdateDeliveryRequest,
+  token: string,
+): Promise<KitDeliveryResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.UPDATE_KIT_TRACKING(kitId), {
+    method: "PATCH",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<KitDeliveryResponse>(res);
 }

@@ -6,6 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { Colors, componentStyles } from '../../styles';
+import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
+
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -17,6 +19,7 @@ interface ProfileMenuModalProps {
 const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose }) => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation<NavigationProp>();
+  const { unreadCount } = useTrackingNotifications();
 
   const handleLogout = async () => {
     onClose();
@@ -68,6 +71,20 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
                 <Ionicons name="person" size={24} color={Colors.primary} />
                 <Text style={componentStyles.menuItemText}>Ver Perfil</Text>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
+                onPress={() => navigateTo('TrackingNotifications')}
+              >
+                <Ionicons name="notifications" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Notificaciones</Text>
+                {unreadCount > 0 ? (
+                  <View style={componentStyles.menuBadge}>
+                    <Text style={componentStyles.menuBadgeText}>{unreadCount}</Text>
+                  </View>
+                ) : null}
+              </TouchableOpacity>
+
 
               <TouchableOpacity
                 style={componentStyles.menuItem}

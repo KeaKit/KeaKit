@@ -17,7 +17,7 @@ export interface UserResponse {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "COURIER";
   phone: string;
   address: string;
   city: string;
@@ -29,7 +29,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "COURIER";
   phone: string;
   address: string;
   city: string;
@@ -313,6 +313,8 @@ export type RootStackParamList = {
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
   Wallet: undefined;
+  Tracking: { kitId: number };
+  TrackingNotifications: undefined;
 };
 
 export interface ProfileData {
@@ -437,3 +439,35 @@ export const EUROPEAN_COUNTRIES = [
   { value: "United Kingdom", label: "Reino Unido" },
   { value: "Vatican City", label: "Ciudad del Vaticano" }
 ];
+
+export type DeliveryStatus =
+  | "PICKED_UP"
+  | "IN_TRANSIT"
+  | "NEARBY"
+  | "DELIVERED";
+
+export interface KitDeliveryResponse {
+  kitId: number;
+  status: DeliveryStatus | null;
+  estimatedArrivalAt: string | null;
+  lastLocation: string | null;
+  lastUpdate: string | null;
+  courierId: number | null;
+  courierName: string | null;
+}
+
+export interface UpdateDeliveryRequest {
+  status?: DeliveryStatus;
+  estimatedArrivalAt?: string;
+  lastLocation?: string;
+}
+
+export interface TrackingNotification {
+  id: string;
+  kitId: number;
+  kitName: string;
+  status: DeliveryStatus;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
