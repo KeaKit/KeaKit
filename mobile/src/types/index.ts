@@ -285,6 +285,20 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
+// Pantallas que pueden estar en el navbar
+export type NavbarScreen = 
+  | 'Home'
+  | 'Profile'
+  | 'MyArticles'
+  | 'MyKits'
+  | 'MyServices'
+  | 'MyIncidents'
+  | 'Wallet'
+  | 'MyKitsHistory'
+  | 'UserRatings'
+  | 'AdminUsers'
+  | 'Categories';
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -383,7 +397,6 @@ export enum TransactionType {
   GUARANTEE_REFUND = 'GUARANTEE_REFUND',
   REFUND = 'REFUND'
 }
-
 
 export const EUROPEAN_COUNTRIES = [
   { value: "Albania", label: "Albania" },
