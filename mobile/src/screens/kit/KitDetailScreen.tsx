@@ -10,6 +10,7 @@ import {
   Image,
   Alert,
   Modal,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -19,8 +20,14 @@ import { Colors, Spacing, commonStyles } from '../../styles';
 import { useAuth } from '../../context/AuthContext';
 import { API_ROUTES } from "../../config/api";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { createIncident } from '../../services/incidentService';
 
 type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
+
+type Article = {
+  id: number | null,
+  name: string,
+}
 
 const KitDetailScreen: React.FC = () => {
   const route = useRoute<KitDetailRouteProp>();
@@ -36,7 +43,9 @@ const KitDetailScreen: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [reportModalVisible, setReportModalVisible] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [reportText, setReportText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [actionModalTitle, setActionModalTitle] = useState('');
   const [actionModalMessage, setActionModalMessage] = useState('');
@@ -100,31 +109,45 @@ const handleConfirmKit = async () => {
   setActionModalVisible(true);
 };  
 
+const handleSubmitReport = async () => {
+  if (!selectedArticle || !user) return;
 
-  const handleReportProblem = () => {
-    setReportModalVisible(true);
-  };
+  if (!reportText.trim()) {
+    setError("El texto del reporte es obligatorio");
+    return;
+  }
 
-  const toggleItemSelection = (itemId: number) => {
-    setSelectedItems((prev) =>
-      prev.includes(itemId)
-        ? prev.filter((id) => id !== itemId)
-        : [...prev, itemId]
+  try {
+    setLoading(true);
+    setError(null);
+
+    await createIncident(
+      {
+        title: `El artículo ${selectedArticle.name} no cumple con lo prometido`,
+        description: reportText.trim(),
+        type: "DAMAGED_ITEM",
+        user: { id: user.id },
+        relatedItem: selectedArticle.id
+          ? { id: selectedArticle.id }
+          : null,
+      },
+      user.token,
     );
-  };
 
-  const handleSubmitReport = () => {
-    if (selectedItems.length === 0) {
-      console.log("Selecciona al menos un producto");
-      return;
-    }
-
-    console.log("Productos reportados:", selectedItems);
-
-    console.log("Reporte enviado correctamente");
     setReportModalVisible(false);
-    setSelectedItems([]);
-  };
+    setReportText("");
+    setError(null);
+
+    navigation.navigate('MyIncidents');
+
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Error al crear la incidencia"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading || confirming) {
     return (
@@ -154,14 +177,6 @@ const handleConfirmKit = async () => {
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle del Kit</Text>
-        {kit.status === KitStatus.PAID && (
-        <TouchableOpacity 
-          onPress={handleReportProblem} 
-          style={styles.reportButton}
-        >
-          <Ionicons name="flag-outline" size={22} color="#FF3B30" />
-        </TouchableOpacity>
-        )}
         {kit.status !== KitStatus.PAID && (
           <View style={{ width: 40 }} />
         )}
@@ -199,6 +214,17 @@ const handleConfirmKit = async () => {
                 <Text style={styles.itemName}>{item.name}</Text>
                 <Text style={styles.itemMeta}>{item.category} • {item.pricePerMonth}€/mes</Text>
               </View>
+              {kit.status === KitStatus.ACTIVE && (
+                <TouchableOpacity 
+                  onPress={() => {
+                    setSelectedArticle({ id: item.itemId, name: item.name || `Artículo con ID: ${item.itemId}` });
+                    setReportModalVisible(true);
+                  }}
+                  style={styles.reportButton}
+                >
+                  <Ionicons name="flag-outline" size={22} color="#FF3B30" />
+                </TouchableOpacity>
+              )}
               <Ionicons name="cube-outline" size={20} color="#DDD" />
             </View>
           ))}
@@ -362,60 +388,58 @@ const handleConfirmKit = async () => {
         </Modal>
       
       <Modal
-        visible={reportModalVisible}
-        transparent
-        animationType="slide"
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            
-            <Text style={styles.modalTitle}>Reportar Problema</Text>
-            <Text style={styles.modalSubtitle}>¿Qué productos no cumplen con la descripción?</Text>
+  visible={reportModalVisible}
+  transparent
+  animationType="slide"
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      
+      <Text style={styles.modalTitle}>Reportar Problema</Text>
+      <Text style={styles.modalSubtitle}>
+        ¿Por qué el artículo no cumple con lo prometido?
+      </Text>
 
-            <ScrollView style={{ maxHeight: 300 }}>
-              {kit.items?.map((item) => {
-                const isSelected = selectedItems.includes(item.itemId);
+      <TextInput
+        style={styles.textArea}
+        placeholder="Escribe aquí más detalles..."
+        placeholderTextColor="#999"
+        multiline
+        numberOfLines={4}
+        value={reportText}
+        onChangeText={(text) => {
+          setReportText(text);
+          if (error) setError(null);
+        }}
+      />
+      {error && (
+        <Text style={{ color: '#FF3B30', marginBottom: 10, textAlign: 'center' }}>
+          {error}
+        </Text>
+      )}
 
-                return (
-                  <TouchableOpacity
-                    key={item.itemId}
-                    style={[
-                      styles.modalItem,
-                      isSelected && styles.modalItemSelected
-                    ]}
-                    onPress={() => toggleItemSelection(item.itemId)}
-                  >
-                    <Text style={styles.modalItemText}>{item.name}</Text>
-                    {isSelected && (
-                      <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+      <View style={styles.modalButtons}>
+        <TouchableOpacity
+          style={styles.modalCancelButton}
+          onPress={() => {
+            setReportModalVisible(false);
+            setReportText("");
+          }}
+        >
+          <Text style={styles.modalCancelText}>Cancelar</Text>
+        </TouchableOpacity>
 
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => {
-                  setReportModalVisible(false);
-                  setSelectedItems([]);
-                }}
-              >
-                <Text style={styles.modalCancelText}>Cancelar</Text>
-              </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.modalSubmitButton}
+          onPress={handleSubmitReport}
+        >
+          <Text style={styles.modalSubmitText}>Enviar reporte</Text>
+        </TouchableOpacity>
+      </View>
 
-              <TouchableOpacity
-                style={styles.modalSubmitButton}
-                onPress={handleSubmitReport}
-              >
-                <Text style={styles.modalSubmitText}>Enviar reporte</Text>
-              </TouchableOpacity>
-            </View>
-
-          </View>
-        </View>
-      </Modal>
+    </View>
+  </View>
+</Modal>
     </SafeAreaView>
   );
 };
@@ -463,6 +487,7 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#666', fontWeight: '600', },
   modalSubmitButton: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: Colors.primary, alignItems: 'center' },
   modalSubmitText: { color: '#FFF', fontWeight: 'bold' },
+  textArea: { borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 10, marginTop: 15, marginBottom: 20, minHeight: 100, textAlignVertical: "top", color: "#000", },
 });
 
 export default KitDetailScreen;
