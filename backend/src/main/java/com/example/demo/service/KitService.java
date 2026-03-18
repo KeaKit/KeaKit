@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +48,9 @@ public class KitService {
 
     @Autowired
     private PlatformConfigService platformConfigService;
+
+    @Autowired
+    private AuthService authService;
 
     // TODO: Obtener la garantía de la configuración hecha por el admin
     private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2; 
@@ -245,6 +252,19 @@ public class KitService {
         return kits.stream()
                 .map(KitResponse::new)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    public Page<KitResponse> findHistoryForAuthenticatedTenant(int page, int size) {
+    Long tenantId = authService.getAuthenticatedUserId();
+
+    Pageable pageable = PageRequest.of(
+        Math.max(page, 0),
+        Math.max(size, 1),
+        Sort.by(Sort.Direction.DESC, "orderDate").and(Sort.by(Sort.Direction.DESC, "id"))
+    );
+
+    return kitRepository.findByTenantIdAndStatusNot(tenantId, KitStatus.DRAFT, pageable)
+        .map(KitResponse::new);
     }
 
     public KitResponse findTrackingKitById(Long kitId, Long tenantId) {
