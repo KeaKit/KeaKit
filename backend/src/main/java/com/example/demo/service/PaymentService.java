@@ -34,8 +34,8 @@ public class PaymentService {
     @Value("${ADMIN_EMAIL:admin@keakit.com}")
     private String KEAKIT_ADMIN_EMAIL;
 
-    // TODO: Ajustar comisión según la configuración del administrador
-    private static final Double PLATFORM_FEE_PERCENTAGE = 0.2;
+    @Autowired
+    private PlatformConfigService platformConfigService;
 
     @Autowired
     private WalletService walletService;
@@ -123,8 +123,9 @@ public class PaymentService {
 
                 if (!isPilotUser) {
                     // 4. Si el usuario no es piloto, aplicamos la comisión de la plataforma
-                    itemPrice = toMoney(item.getPricePerMonth() * item.getQuantity() * (1 - PLATFORM_FEE_PERCENTAGE));
-                    Double feeAmount = toMoney(item.getPricePerMonth() * item.getQuantity() * PLATFORM_FEE_PERCENTAGE);
+                    double commissionRate = platformConfigService.getCommissionRate();
+                    itemPrice = toMoney(item.getPricePerMonth() * item.getQuantity() * (1 - commissionRate));
+                    Double feeAmount = toMoney(item.getPricePerMonth() * item.getQuantity() * commissionRate);
                     Transaction feeTransaction = transferFee(feeAmount);
                     transactionRepository.save(feeTransaction);
                 }
@@ -143,6 +144,37 @@ public class PaymentService {
         } catch (Exception e) {
             throw new RuntimeException("Error processing payment: " + e.getMessage());
         }
+    }
+
+    @Transactional
+    public Double processGuaranteeReturn(Long kitId, Long ownerId, Long tenantId, String condition) throws Exception {
+        // 1. Obtenemos la cantidad exacta de la fianza para este Kit
+        KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId);
+        Double guaranteeAmount = toEuros(paymentInfo.guarantee());
+
+        // 2. Extraemos el dinero del monedero de KeaKit (que lo estaba custodiando)
+        Wallet keakitWallet = getKeaKitWallet();
+        Transaction keakitDeduct = new Transaction(-guaranteeAmount, keakitWallet, TransactionType.GUARANTEE_REFUND);
+        transactionRepository.save(keakitDeduct);
+
+        // 3. Destinamos el dinero al monedero correspondiente
+        if ("GOOD".equalsIgnoreCase(condition)) {
+            // Devolvemos la fianza al monedero del inquilino
+            Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
+            Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
+            transactionRepository.save(tenantReceive);
+
+        } else if ("DAMAGED".equalsIgnoreCase(condition)) {
+            // Compensamos al propietario enviando la fianza a su monedero
+            Wallet ownerWallet = walletService.getWalletByUserId(ownerId);
+            Transaction ownerReceive = new Transaction(guaranteeAmount, ownerWallet, TransactionType.PAYOUT);
+            transactionRepository.save(ownerReceive);
+
+        } else {
+            throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
+        }
+
+        return guaranteeAmount;
     }
 
     private Double toMoney(Double amount) {

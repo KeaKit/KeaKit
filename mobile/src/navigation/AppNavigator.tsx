@@ -23,12 +23,15 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import { RootStackParamList } from '../types';
 import EditArticleScreen from '../screens/profile/EditArticleScreen';
+import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
+
 import KitDetailScreen from '../screens/kit/KitDetailScreen';
 import CategoriesScreen from '../screens/category/CategoriesScreen';
 import CategoryFormScreen from '../screens/category/CategoryFormScreen';
 import MyServicesScreen from '../screens/service/MyServicesScreen';
 import CreateServiceScreen from '../screens/service/CreateServiceScreen';
 import EditServiceScreen from '../screens/service/EditServiceScreen';
+import WalletScreen from '../screens/wallet/WalletScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -44,12 +47,16 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <NotificationProvider> {/* 👈 Envolver toda la navegación */}
+    <NotificationProvider>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {user ? (
             <>
-              <Stack.Screen name="Home"          component={HomeScreen} />
+              {user.role === 'ADMIN' ? (
+                <Stack.Screen name="Home" component={AdminHomeScreen} />
+              ) : (
+                <Stack.Screen name="Home" component={HomeScreen} />
+              )}
               <Stack.Screen name="Profile" component={ProfileScreen} />
               <Stack.Screen name="EditProfile" component={EditProfileScreen} />
               <Stack.Screen name="MyArticles"    component={MyArticlesScreen} />
@@ -71,6 +78,7 @@ const AppNavigator: React.FC = () => {
               <Stack.Screen name="MyServices"    component={MyServicesScreen} />
               <Stack.Screen name="PromoteService"    component={CreateServiceScreen} />
               <Stack.Screen name="EditService"    component={EditServiceScreen} />
+              <Stack.Screen name="Wallet" component={WalletScreen} />
             </>
           ) : (
             <>
