@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -140,5 +141,39 @@ public class KitControllerTest {
         mockMvc.perform(patch("/api/kits/confirm/1"))
             .andExpect(status().isNotFound())
             .andExpect(content().string("Kit not found"));
+    }
+
+    // Para histórico de kits
+
+    @Test
+    void getMyHistory_success_returnsPageOfKits() throws Exception {
+        int page = 0;
+        int size = 10;
+        
+        Page<KitResponse> mockPage = Page.empty();
+        when(kitService.findHistoryForAuthenticatedTenant(page, size)).thenReturn(mockPage);
+
+        mockMvc.perform(get("/api/kits/my-history")
+                .param("page", String.valueOf(page))
+                .param("size", String.valueOf(size)))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void getMyHistory_withDefaultParams_usesDefaultValues() throws Exception {
+        Page<KitResponse> mockPage = Page.empty();
+        when(kitService.findHistoryForAuthenticatedTenant(0, 10)).thenReturn(mockPage);
+
+        mockMvc.perform(get("/api/kits/my-history"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void getMyHistory_whenServiceThrowsException_returnsBadRequest() throws Exception {
+        when(kitService.findHistoryForAuthenticatedTenant(0, 10))
+            .thenThrow(new RuntimeException("Error al obtener histórico"));
+
+        mockMvc.perform(get("/api/kits/my-history"))
+            .andExpect(status().isBadRequest());
     }
 }

@@ -4,9 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,20 +19,26 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import com.example.demo.dto.KitCreateRequest;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.model.Article;
+import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
-import com.example.demo.model.Wallet;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.TransactionRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.WalletRepository;
+import com.example.demo.service.AuthService;
 import com.example.demo.service.KitService;
 import com.example.demo.service.OrderConfirmationEmailService;
 import com.example.demo.service.PlatformConfigService;
@@ -44,6 +54,8 @@ public class KitServiceTest {
     @Mock private WalletRepository walletRepository;
     @Mock private TransactionRepository transactionRepository;
     @Mock private PlatformConfigService platformConfigService;
+    @Mock private AuthService authService;
+
 
     @InjectMocks
     private KitService kitService;
@@ -180,5 +192,224 @@ public class KitServiceTest {
             k.setId(1L);
             return k;
         });
+    }
+
+    // Para histórico de kits
+
+
+    @Test
+    void findHistoryForAuthenticatedTenant_withValidParams_returnsPageOfKits() {
+        
+        Long tenantId = 1L;
+        int page = 0;
+        int size = 10;
+        
+        User tenant = createTestUser(tenantId, "Tenant");
+        
+        Kit kit1 = new Kit();
+        kit1.setId(1L);
+        kit1.setName("Kit Histórico 1");
+        kit1.setStatus(KitStatus.FINISHED);
+        kit1.setTenant(tenant);
+        kit1.setOrderDate(LocalDate.now().minusDays(30));
+        
+        Kit kit2 = new Kit();
+        kit2.setId(2L);
+        kit2.setName("Kit Histórico 2");
+        kit2.setStatus(KitStatus.ACTIVE);
+        kit2.setTenant(tenant);
+        kit2.setOrderDate(LocalDate.now().minusDays(15));
+        
+        Page<Kit> kitPage = new PageImpl<>(List.of(kit1, kit2));
+        
+        when(authService.getAuthenticatedUserId()).thenReturn(tenantId);
+        when(kitRepository.findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), any(Pageable.class)))
+            .thenReturn(kitPage);
+
+        
+        Page<KitResponse> result = kitService.findHistoryForAuthenticatedTenant(page, size);
+
+        
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Kit Histórico 1", result.getContent().get(0).getName());
+        assertEquals(KitStatus.FINISHED, result.getContent().get(0).getStatus());
+        assertEquals("Kit Histórico 2", result.getContent().get(1).getName());
+        assertEquals(KitStatus.ACTIVE, result.getContent().get(1).getStatus());
+    }
+
+    @Test
+    void findHistoryForAuthenticatedTenant_withNegativePage_usesDefault() {
+        
+        Long tenantId = 1L;
+        int page = -5;
+        int size = 10;
+        
+        when(authService.getAuthenticatedUserId()).thenReturn(tenantId);
+        when(kitRepository.findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), any(Pageable.class)))
+            .thenReturn(Page.empty());
+
+        
+        Page<KitResponse> result = kitService.findHistoryForAuthenticatedTenant(page, size);
+
+        
+        assertNotNull(result);
+        verify(kitRepository).findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), 
+            argThat(pageable -> pageable.getPageNumber() == 0));
+    }
+
+    @Test
+    void findHistoryForAuthenticatedTenant_withZeroSize_usesDefault() {
+        
+        Long tenantId = 1L;
+        int page = 0;
+        int size = 0;
+        
+        when(authService.getAuthenticatedUserId()).thenReturn(tenantId);
+        when(kitRepository.findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), any(Pageable.class)))
+            .thenReturn(Page.empty());
+
+        
+        Page<KitResponse> result = kitService.findHistoryForAuthenticatedTenant(page, size);
+
+        
+        assertNotNull(result);
+        verify(kitRepository).findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), 
+            argThat(pageable -> pageable.getPageSize() == 1));
+    }
+
+    @Test
+    void findHistoryForAuthenticatedTenant_returnsSortedByOrderDateDesc() {
+        
+        Long tenantId = 1L;
+        int page = 0;
+        int size = 10;
+        
+        when(authService.getAuthenticatedUserId()).thenReturn(tenantId);
+        when(kitRepository.findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), any(Pageable.class)))
+            .thenReturn(Page.empty());
+
+        
+        kitService.findHistoryForAuthenticatedTenant(page, size);
+
+        
+        verify(kitRepository).findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), 
+            argThat(pageable -> {
+                Sort.Order orderDateOrder = pageable.getSort().getOrderFor("orderDate");
+                Sort.Order idOrder = pageable.getSort().getOrderFor("id");
+                return orderDateOrder != null && 
+                    orderDateOrder.getDirection() == Sort.Direction.DESC &&
+                    idOrder != null && 
+                    idOrder.getDirection() == Sort.Direction.DESC;
+            }));
+    }
+
+    @Test
+    void findHistoryForAuthenticatedTenant_excludesDraftKits() {
+        
+        Long tenantId = 1L;
+        int page = 0;
+        int size = 10;
+        
+        when(authService.getAuthenticatedUserId()).thenReturn(tenantId);
+        when(kitRepository.findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), any(Pageable.class)))
+            .thenReturn(Page.empty());
+
+        
+        kitService.findHistoryForAuthenticatedTenant(page, size);
+
+        verify(kitRepository).findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), any(Pageable.class));
+    }
+
+    @Test
+    void findHistoryForAuthenticatedTenant_whenUserNotAuthenticated_throwsException() {
+        
+        int page = 0;
+        int size = 10;
+        
+        when(authService.getAuthenticatedUserId()).thenThrow(new RuntimeException("Usuario no autenticado"));
+
+        assertThrows(RuntimeException.class, () -> {
+            kitService.findHistoryForAuthenticatedTenant(page, size);
+        });
+    }
+
+    @Test
+    void findHistoryForAuthenticatedTenant_withMultiplePages_returnsCorrectPagination() {
+        
+        Long tenantId = 1L;
+        int page = 2;
+        int size = 5;
+        
+        User tenant = createTestUser(tenantId, "Tenant");
+        List<Kit> kits = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            Kit kit = new Kit();
+            kit.setId((long) (i + 10));
+            kit.setName("Kit " + i);
+            kit.setStatus(KitStatus.FINISHED);
+            kit.setTenant(tenant);
+            kits.add(kit);
+        }
+        
+        Page<Kit> kitPage = new PageImpl<>(kits, PageRequest.of(page, size), 20L);
+        
+        when(authService.getAuthenticatedUserId()).thenReturn(tenantId);
+        when(kitRepository.findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), any(Pageable.class)))
+            .thenReturn(kitPage);
+
+        
+        Page<KitResponse> result = kitService.findHistoryForAuthenticatedTenant(page, size);
+
+        
+        assertNotNull(result);
+        assertEquals(page, result.getNumber());
+        assertEquals(size, result.getSize());
+        assertEquals(20L, result.getTotalElements());
+        assertEquals(4, result.getTotalPages());
+    }
+
+    @Test
+    void findHistoryForAuthenticatedTenant_returnsKitsWithCorrectData() {
+        
+        Long tenantId = 1L;
+        int page = 0;
+        int size = 10;
+        
+        User tenant = createTestUser(tenantId, "Tenant Histórico");
+        
+        Kit kit = new Kit();
+        kit.setId(100L);
+        kit.setName("Kit de Prueba Histórico");
+        kit.setCountry("España");
+        kit.setCity("Barcelona");
+        kit.setStartDate(LocalDate.now().minusMonths(2));
+        kit.setEndDate(LocalDate.now().minusMonths(1));
+        kit.setOrderDate(LocalDate.now().minusMonths(2));
+        kit.setStatus(KitStatus.FINISHED);
+        kit.setDeliveryMethod(DeliveryMethod.COURIER);
+        kit.setCourierPrice(9.99);
+        kit.setTenant(tenant);
+        
+        Page<Kit> kitPage = new PageImpl<>(List.of(kit));
+        
+        when(authService.getAuthenticatedUserId()).thenReturn(tenantId);
+        when(kitRepository.findByTenantIdAndStatusNot(eq(tenantId), eq(KitStatus.DRAFT), any(Pageable.class)))
+            .thenReturn(kitPage);
+
+        
+        Page<KitResponse> result = kitService.findHistoryForAuthenticatedTenant(page, size);
+
+        
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        
+        KitResponse response = result.getContent().get(0);
+        assertEquals(100L, response.getId());
+        assertEquals("Kit de Prueba Histórico", response.getName());
+        assertEquals("España", response.getCountry());
+        assertEquals("Barcelona", response.getCity());
+        assertEquals(KitStatus.FINISHED, response.getStatus());
+        assertEquals(tenantId, response.getTenantId());
     }
 }
