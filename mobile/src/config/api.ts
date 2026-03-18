@@ -50,6 +50,7 @@ export const API_ROUTES = {
   // Kits / Rented items
   MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
+  MY_KITS_HISTORY: (page: number = 0, size: number = 10) => `${BASE_URL}/api/kits/my-history?page=${page}&size=${size}`,
 
   // Payments
   CREATE_PAYMENT_INTENT:     `${BASE_URL}/api/payments/create`,

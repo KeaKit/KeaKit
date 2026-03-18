@@ -32,6 +32,7 @@ import MyServicesScreen from '../screens/service/MyServicesScreen';
 import CreateServiceScreen from '../screens/service/CreateServiceScreen';
 import EditServiceScreen from '../screens/service/EditServiceScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
+import MyKitsHistoryScreen from '../screens/kit/MyKitsHistoryScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -79,6 +80,7 @@ const AppNavigator: React.FC = () => {
               <Stack.Screen name="PromoteService"    component={CreateServiceScreen} />
               <Stack.Screen name="EditService"    component={EditServiceScreen} />
               <Stack.Screen name="Wallet" component={WalletScreen} />
+              <Stack.Screen name="MyKitsHistory" component={MyKitsHistoryScreen} />
             </>
           ) : (
             <>
