@@ -1,3 +1,5 @@
+import Ionicons from "@expo/vector-icons/build/Ionicons";
+
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -298,6 +300,30 @@ export type NavbarScreen =
   | 'UserRatings'
   | 'AdminUsers'
   | 'Categories';
+
+// src/types.ts - Actualizar NavbarHeaderScreen
+export type NavbarHeaderScreen = 
+  | 'Home'
+  | 'Profile'
+  | 'MyArticles'
+  | 'MyKits'
+  | 'MyServices'
+  | 'MyIncidents'
+  | 'Wallet'
+  | 'MyKitsHistory'
+  | 'UserRatings'
+  | 'AdminUsers'
+  | 'Categories'
+  | 'Login'
+  | 'Register';
+
+export interface NavbarHeaderItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen: NavbarHeaderScreen;
+  requiresAuth?: boolean;
+  requiresAdmin?: boolean;
+}
 
 export type RootStackParamList = {
   Login: undefined;

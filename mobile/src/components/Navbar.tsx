@@ -1,4 +1,3 @@
-// src/components/Navbar.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -76,12 +75,12 @@ const styles = StyleSheet.create({
   },
   navbar: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     backgroundColor: Platform.OS === 'web' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.95)',
     borderRadius: 30,
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -99,7 +98,8 @@ const styles = StyleSheet.create({
   navItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    flex: 1,
+    paddingHorizontal: 4,
     paddingVertical: 4,
   },
   navText: {
@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
     color: Colors.primaryHome,
     fontWeight: '500',
+    textAlign: 'center',
   },
 });
 
