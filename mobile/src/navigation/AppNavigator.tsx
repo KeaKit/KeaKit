@@ -105,6 +105,14 @@ const AppNavigator: React.FC = () => {
                 )}
               </Stack.Screen>
 
+              <Stack.Screen name="MyIncidents">
+                {() => (
+                  <MainLayout>
+                    <MyServicesScreen />
+                  </MainLayout>
+                )}
+              </Stack.Screen>
+
               <Stack.Screen name="MyKitsHistory">
                 {() => (
                   <MainLayout>
@@ -155,7 +163,6 @@ const AppNavigator: React.FC = () => {
               <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
               <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
               <Stack.Screen name="Wallet" component={WalletScreen} />
-              <Stack.Screen name="MyIncidents" component={MyIncidentsScreen} />
               
               {/* Detalles y checkout */}
               <Stack.Screen name="KitDetail" component={KitDetailScreen} />
