@@ -1,54 +1,18 @@
-import { API_ROUTES } from '../config/api';
-import { KitCreateRequest, KitResponse, UserArticle } from '../types';
-
-const jsonHeaders = { 'Content-Type': 'application/json' };
-const REQUEST_TIMEOUT_MS = 12000;
-
-async function fetchWithTimeout(
-  input: RequestInfo | URL,
-  init: RequestInit,
-): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Tiempo de espera agotado al conectar con el servidor.');
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function handleResponse<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const contentType = res.headers.get('content-type') ?? '';
-    let message = `HTTP ${res.status}`;
-
-    try {
-      if (contentType.includes('application/json')) {
-        const payload = await res.json();
-        message = payload.message || payload.error || JSON.stringify(payload);
-      } else {
-        message = await res.text();
-      }
-    } catch {}
-
-    throw new Error(message || `HTTP ${res.status}`);
-  }
-
-  return res.json() as Promise<T>;
-}
+import { API_ROUTES } from "../config/api";
+import {
+  KitCreateRequest,
+  KitResponse,
+  UserArticle,
+  KitPaymentDTO,
+} from "../types";
+import { handleResponse, fetchWithTimeout, jsonHeaders } from "./utils";
 
 export async function fetchMyArticles(
   userId: number,
   token: string,
 ): Promise<UserArticle[]> {
   const res = await fetchWithTimeout(API_ROUTES.MY_ARTICLES(userId), {
-    method: 'GET',
+    method: "GET",
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
 
@@ -60,10 +24,42 @@ export async function createKit(
   token: string,
 ): Promise<KitResponse> {
   const res = await fetchWithTimeout(API_ROUTES.CREATE_KIT, {
-    method: 'POST',
+    method: "POST",
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 
   return handleResponse<KitResponse>(res);
+}
+
+export async function getKitPayment(
+  kitId: number,
+  token: string,
+): Promise<KitPaymentDTO> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT_PAYMENT_BY_ID(kitId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<KitPaymentDTO>(res);
+}
+
+export async function getKit(kitId: number,
+  token: string,
+): Promise<KitResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT(kitId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<KitResponse>(res);
+}
+
+export async function deleteKit(kitId: number, token: string): Promise<void> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT(kitId), {
+    method: "DELETE",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<void>(res);
 }

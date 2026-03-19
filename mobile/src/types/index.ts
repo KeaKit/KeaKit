@@ -189,9 +189,9 @@ export interface KitItemResponse {
   itemId: number;
   quantity: number;
   pricePerMonth: number;
-  name?: string | null;
-  category?: string | null;
-  imageUrl?: string | null;
+  name: string;
+  category: string;
+  imageUrl: string;
 }
 
 export interface KitResponse {
@@ -199,23 +199,23 @@ export interface KitResponse {
   name: string;
   country: string;
   city: string;
-  orderDate?: string;
+  orderDate: string; // LocalDate -> ISO String
   startDate: string;
   endDate: string;
-  estimatedDeliveryDate?: string;
-  deliveryNotification?: string;
-  status?: KitStatus;
-  tenantId: number;
-  items?: KitItemResponse[];
-  itemIds?: number[];
-  subtotalPrice?: number;
-  guaranteePrice?: number;
-  platformFee?: number;
-  totalPrice?: number;
-  deliveryMethod?: "COURIER" | "MEETING_POINT";
-  meetingPoint?: string;
+  estimatedDeliveryDate: string;
+  deliveryNotification: string;
+  status: KitStatus;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint: string;
   courierPrice?: number;
-  totalSelectedItems?: number;
+  tenantId: number;
+  itemIds: number[];
+  items: KitItemResponse[];
+  totalSelectedItems: number;
+  subtotalPrice: number;
+  guaranteePrice: number;
+  platformFee: number;
+  totalPrice: number;
 }
 
 export interface Category {
@@ -313,6 +313,7 @@ export type RootStackParamList = {
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
   Commission: undefined;
+  Wallet: undefined;
 };
 
 export interface ProfileData {
@@ -360,6 +361,28 @@ export interface UserService {
   categoryName: string;
 }
 
+export interface Wallet {
+  id: number;
+  balance: number;
+  userId: number;
+  createdAt: string; // ISO String para emular LocalDateTime
+}
+
+export interface Transaction {
+  id: number;
+  amount: number;
+  type: TransactionType;
+  walletId: number;
+  createdAt: string;
+}
+
+export enum TransactionType {
+  PAYOUT = 'PAYOUT',
+  FEE = 'FEE',
+  GUARANTEE_DEPOSIT = 'GUARANTEE_DEPOSIT',
+  GUARANTEE_REFUND = 'GUARANTEE_REFUND',
+  REFUND = 'REFUND'
+}
 
 
 export const EUROPEAN_COUNTRIES = [
