@@ -62,6 +62,7 @@
 | [#304](https://github.com/KeaKit/KeaKit/issues/216)  | CU-ARRENDATARIO-11 - Historial de alquileres - Frontend  | High |  5 | Done |Cristina Fernández Chica|
 | [#305](https://github.com/KeaKit/KeaKit/issues/216)  | CU-ARRENDATARIO-11 - Historial de alquileres - Test  | Mid |  2 | Done |Cristina Fernández Chica|
 | [#306](https://github.com/KeaKit/KeaKit/issues/306)  | Actualizar Sprint Backlog Grupo 4   | Low |  1  | Done |Cristina Fernández Chica|
+| [#322](https://github.com/KeaKit/KeaKit/issues/322)  | Añadir navbar y header para navegación   | Mid |  4  | Done |Cristina Fernández Chica|
 
 ## 4. Sprint Backlog - Semana 3
 
@@ -73,11 +74,11 @@ Apartado a rellenar tras el próximo reparto.
 |-------------------|------------------------|------------------------|------------------------|------------------------|
 | Marta Aguilar Morcillo    |    14 SP   |  2 SP |    |  **16 SP**  |                                    
 | Ángel Amo Sánchez         | 12 SP   |  4 SP  |       |   **16 SP**  | 
-| Cristina Fernández Chica      | 11 SP  |  8  SP |    |   **19 SP**   | 
+| Cristina Fernández Chica      | 11 SP  |  12  SP |    |   **23 SP**   | 
 | Paula Rosa González Páez     | 11 SP    |  - SP*     |    |   **11 SP**   | 
 | Candela Jazmín Gutiérrez González   | 12 SP    |  5 SP   |    |  **17 SP**     | 
 | José Luis Moraza Vergara     | 17 SP    |  4 SP  |    |   **21 SP**   | 
-| **TOTAL EQUIPO**   | **77 SP**  | **23 SP** |    |     | 
+| **TOTAL EQUIPO**   | **77 SP**  | **27 SP** |    |     | 
 
 *Ausencia de puntos de historia justificada.
 
@@ -87,9 +88,10 @@ Apartado a rellenar tras el próximo reparto.
 |---------|-------------|--------------------------------|----------------------------|
 | 1.0.0   | 09/03/2026  |  Sprint Backlog Semana 1               | Cristina Fernández Chica |
 | 1.1.0   | 18/03/2026  |  Actualizado estado tareas semana 1 y añadidas las tareas de la semana 2 con su estado actualizado          | Cristina Fernández Chica |
+| 1.1.1   | 19/03/2026  |  Añadida nueva tarea          | Cristina Fernández Chica |
 
 
 ---
 **Redactado por:** Cristina Fernández Chica
-**Fecha de redacción:** 18/03/2026  
-**Versión:** 1.1.0
+**Fecha de redacción:** 19/03/2026  
+**Versión:** 1.1.1
