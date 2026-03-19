@@ -108,7 +108,8 @@ const ADMIN_SECTIONS: AdminSection[] = [
     label: 'Comisión de Plataforma',
     description: 'Configurar el % de comisión por alquiler',
     color: KC.lightBlue,
-    implemented: false,
+    implemented: true,
+    screen: 'Commission',
   },
   {
     id: 'stats',
