@@ -126,7 +126,7 @@ describe('defaultKitService', () => {
   // ── createDefaultKit ──────────────────────────────────────────────────
 
   it('createDefaultKit crea y devuelve el nuevo kit predeterminado', async () => {
-    const payload = { name: 'Kit Nuevo', description: 'Desc nueva', basePrice: 45.0, articleIds: [1, 2] };
+    const payload = { name: 'Kit Nuevo', description: 'Desc nueva', basePrice: 45.0, itemsIds: [1, 2] };
     const mockCreatedKit = { id: 3, name: 'Kit Nuevo', description: 'Desc nueva', basePrice: 45.0, items: [] };
 
     ((globalThis as any).fetch as jest.Mock).mockResolvedValueOnce({
@@ -156,7 +156,7 @@ describe('defaultKitService', () => {
     });
 
     await expect(
-      createDefaultKit({ name: 'Kit', description: 'Desc', basePrice: 10 }, fakeToken),
+      createDefaultKit({ name: 'Kit', description: 'Desc'}, fakeToken),
     ).rejects.toThrow('No tienes permiso');
   });
 
@@ -169,7 +169,7 @@ describe('defaultKitService', () => {
     });
 
     await expect(
-      createDefaultKit({ name: 'Kit', description: 'Desc', basePrice: 10, articleIds: [999] }, fakeToken),
+      createDefaultKit({ name: 'Kit', description: 'Desc', itemsIds: [999] }, fakeToken),
     ).rejects.toThrow('Artículo no encontrado');
   });
 
@@ -180,7 +180,7 @@ describe('defaultKitService', () => {
       json: async () => ({ id: 1, name: 'Kit', description: 'D', basePrice: 10, items: [] }),
     });
 
-    await createDefaultKit({ name: 'Kit', description: 'D', basePrice: 10 }, fakeToken);
+    await createDefaultKit({ name: 'Kit', description: 'D', itemsIds: [999] }, fakeToken);
 
     expect((globalThis as any).fetch).toHaveBeenCalledWith(
       expect.any(String),

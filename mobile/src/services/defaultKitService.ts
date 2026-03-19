@@ -40,22 +40,14 @@ async function handleResponse<T>(res: Response): Promise<T> {
     throw new Error(message || `HTTP ${res.status}`);
   }
 
-  if (res.status === 204) {
-    return "" as unknown as T;
-  }
-
-  const text = await res.text();
-  if (!text) {
-     return "" as unknown as T;
-  }
-
   const contentType = res.headers.get('content-type') ?? '';
   if (contentType.includes('text/plain')) {
-    return text as unknown as T;
+    return res.text() as unknown as Promise<T>;
   }
 
-  return JSON.parse(text) as T;
+  return res.json() as Promise<T>;
 }
+
 
 export async function fetchAllDefaultKits(token: string): Promise<DefaultKit[]> {
   const res = await fetchWithTimeout(API_ROUTES.DEFAULT_KITS, {
@@ -107,6 +99,10 @@ export async function deleteDefaultKit(id: number, token: string): Promise<strin
     method: 'DELETE',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
+
+  if (res.status === 204 || res.status === 200) {
+    return "Kit predeterminado eliminado";
+  }
 
   return handleResponse<string>(res);
 }
