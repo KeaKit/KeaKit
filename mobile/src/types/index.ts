@@ -287,7 +287,6 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
-// Pantallas que pueden estar en el navbar
 export type NavbarScreen = 
   | 'Home'
   | 'Profile'
@@ -301,7 +300,6 @@ export type NavbarScreen =
   | 'AdminUsers'
   | 'Categories';
 
-// src/types.ts - Actualizar NavbarHeaderScreen
 export type NavbarHeaderScreen = 
   | 'Home'
   | 'Profile'
@@ -323,6 +321,20 @@ export interface NavbarHeaderItem {
   screen: NavbarHeaderScreen;
   requiresAuth?: boolean;
   requiresAdmin?: boolean;
+}
+
+export interface HeaderMenuItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen?: keyof RootStackParamList;
+  onPress?: () => void;
+  danger?: boolean;
+  badge?: string;
+}
+
+export interface HeaderMenuSection {
+  title?: string;
+  items: HeaderMenuItem[];
 }
 
 export type RootStackParamList = {

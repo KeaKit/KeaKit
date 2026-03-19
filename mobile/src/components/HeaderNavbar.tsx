@@ -1,3 +1,4 @@
+// src/components/HeaderNavbar.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -24,6 +25,22 @@ interface HeaderNavbarProps {
   user: AuthUser | null;
 }
 
+interface HeaderMenuItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen?: keyof RootStackParamList;
+  params?: any;
+  onPress?: () => void;
+  danger?: boolean;
+  disabled?: boolean;
+  badge?: string;
+}
+
+interface HeaderMenuSection {
+  title?: string;
+  items: HeaderMenuItem[];
+}
+
 const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut } = useAuth();
@@ -33,40 +50,47 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   // Cerrar dropdown cuando se hace click fuera (solo web)
   useEffect(() => {
     if (Platform.OS === 'web') {
-      const handleClickOutside = () => {
-        setUserMenuVisible(false);
+      const handleClickOutside = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (!target.closest('.user-menu-trigger') && !target.closest('.user-dropdown')) {
+          setUserMenuVisible(false);
+        }
       };
       window.addEventListener('click', handleClickOutside);
       return () => window.removeEventListener('click', handleClickOutside);
     }
   }, []);
 
-  // Items principales del navbar
-  const mainNavItems: NavbarHeaderItem[] = [
-    { name: 'Inicio', icon: 'home-outline', screen: 'Home' },
+  // Items para usuarios normales
+  const userNavItems: NavbarHeaderItem[] = [
     { name: 'Artículos', icon: 'file-tray-full-outline', screen: 'MyArticles', requiresAuth: true },
     { name: 'Kits', icon: 'cube-outline', screen: 'MyKits', requiresAuth: true },
     { name: 'Servicios', icon: 'construct-outline', screen: 'MyServices', requiresAuth: true },
     { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents', requiresAuth: true },
-    { name: 'Wallet', icon: 'wallet-outline', screen: 'Wallet', requiresAuth: true },
   ];
 
-  // Items de administración
+  // Items para administradores
   const adminNavItems: NavbarHeaderItem[] = [
     { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers', requiresAdmin: true },
     { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories', requiresAdmin: true },
+    { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents', requiresAdmin: true },
   ];
 
   // Filtrar items según autenticación y rol
   const getVisibleItems = () => {
-    let items = [...mainNavItems];
+    if (!user) return [];
     
-    if (user?.role === 'ADMIN') {
-      items = [...items, ...adminNavItems];
+    if (user.role === 'ADMIN') {
+      return adminNavItems.filter(item => {
+        if (item.requiresAdmin && user.role !== 'ADMIN') return false;
+        if (item.requiresAuth && !user) return false;
+        return true;
+      });
     }
     
-    return items.filter(item => {
-      if (item.requiresAdmin && user?.role !== 'ADMIN') return false;
+    // Usuario normal
+    return userNavItems.filter(item => {
+      if (item.requiresAdmin) return false;
       if (item.requiresAuth && !user) return false;
       return true;
     });
@@ -81,19 +105,88 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const handleLogout = async () => {
     await signOut();
     setUserMenuVisible(false);
+    setMenuVisible(false);
   };
 
-  // Versión móvil
+  // Opciones del menú de usuario (desplegable del avatar) - SIN DUPLICAR LOS ITEMS DEL HEADER
+  const getUserMenuSections = (): HeaderMenuSection[] => {
+    if (!user) return [];
+
+    // Para usuarios normales (USER)
+    if (user.role === 'USER') {
+      return [
+        {
+          title: 'Mi cuenta',
+          items: [
+            { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
+            { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', 
+              params: { userId: user.id, userName: user.name } },
+          ]
+        },
+        {
+          items: [
+            { name: 'Cerrar Sesión', icon: 'log-out', danger: true, onPress: handleLogout }
+          ]
+        }
+      ];
+    }
+
+    // Para administradores (ADMIN) - SIN los items que ya están en el header
+    return [
+      {
+        title: 'Mi cuenta',
+        items: [
+          { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
+          { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', 
+            params: { userId: user.id, userName: user.name } },
+        ]
+      },
+      {
+        title: 'Próximamente',
+        items: [
+          { name: 'Tipos de Objetos', icon: 'cube', disabled: true, badge: 'Próximamente' },
+          { name: 'Rangos de Precios', icon: 'pricetags', disabled: true, badge: 'Próximamente' },
+          { name: 'Comisión de Plataforma', icon: 'cash', disabled: true, badge: 'Próximamente' },
+          { name: 'Estadísticas', icon: 'bar-chart', disabled: true, badge: 'Próximamente' },
+        ]
+      },
+      {
+        items: [
+          { name: 'Cerrar Sesión', icon: 'log-out', danger: true, onPress: handleLogout }
+        ]
+      }
+    ];
+  };
+
+  const handleMenuItemPress = (item: HeaderMenuItem) => {
+    if (item.disabled) return;
+    
+    if (item.onPress) {
+      item.onPress();
+    } else if (item.screen) {
+      if (item.params) {
+        navigation.navigate(item.screen as any, item.params as any);
+      } else {
+        navigation.navigate(item.screen as any);
+      }
+    }
+    setUserMenuVisible(false);
+    setMenuVisible(false);
+  };
+
+  // Versión móvil con menú recogido
   if (isMobile) {
     return (
       <View style={styles.mobileHeader}>
-        <TouchableOpacity onPress={() => navigateToScreen('Home')}>
-          <Image 
-            source={require('../../assets/logo.png')} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
+        <View style={styles.mobileLeft}>
+          <TouchableOpacity onPress={() => navigateToScreen('Home')}>
+            <Image 
+              source={require('../../assets/logo.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.mobileRight}>
           {user && (
@@ -134,26 +227,32 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
               </View>
 
               <ScrollView style={styles.modalScroll}>
-                {getVisibleItems().map((item) => (
-                  <TouchableOpacity
-                    key={item.screen}
-                    style={styles.modalItem}
-                    onPress={() => navigateToScreen(item.screen)}
-                  >
-                    <Ionicons name={item.icon} size={24} color={Colors.primaryHome} />
-                    <Text style={styles.modalItemText}>{item.name}</Text>
-                  </TouchableOpacity>
-                ))}
+                {/* MÓVIL: Items de navegación para TODOS los usuarios autenticados */}
+                {user && (
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalSectionTitle}>Navegación</Text>
+                    {getVisibleItems().map((item) => (
+                      <TouchableOpacity
+                        key={item.screen}
+                        style={styles.modalItem}
+                        onPress={() => navigateToScreen(item.screen)}
+                      >
+                        <Ionicons name={item.icon} size={24} color={Colors.primaryHome} />
+                        <Text style={styles.modalItemText}>{item.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
 
                 {!user ? (
-                  <>
-                    <View style={styles.modalDivider} />
+                  // Opciones para no autenticado
+                  <View style={styles.modalSection}>
                     <TouchableOpacity
                       style={styles.modalItem}
                       onPress={() => navigateToScreen('Login')}
                     >
                       <Ionicons name="log-in-outline" size={24} color={Colors.primaryHome} />
-                      <Text style={styles.modalItemText}>Iniciar sesión</Text>
+                      <Text style={styles.modalItemText}>Iniciar Sesión</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.modalItem}
@@ -162,32 +261,50 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
                       <Ionicons name="person-add-outline" size={24} color={Colors.primaryHome} />
                       <Text style={styles.modalItemText}>Registrarse</Text>
                     </TouchableOpacity>
-                  </>
+                  </View>
                 ) : (
-                  <>
-                    <View style={styles.modalDivider} />
-                    <TouchableOpacity
-                      style={styles.modalItem}
-                      onPress={() => navigateToScreen('Profile')}
-                    >
-                      <Ionicons name="person-outline" size={24} color={Colors.primaryHome} />
-                      <Text style={styles.modalItemText}>Mi perfil</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.modalItem}
-                      onPress={() => navigateToScreen('UserRatings')}
-                    >
-                      <Ionicons name="star-outline" size={24} color={Colors.primaryHome} />
-                      <Text style={styles.modalItemText}>Mis valoraciones</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.modalItem, styles.modalLogout]}
-                      onPress={handleLogout}
-                    >
-                      <Ionicons name="log-out-outline" size={24} color="#d9534f" />
-                      <Text style={[styles.modalItemText, styles.modalLogoutText]}>Cerrar sesión</Text>
-                    </TouchableOpacity>
-                  </>
+                  // Opciones de perfil y gestión (desplegable del avatar)
+                  getUserMenuSections().map((section, idx) => (
+                    <View key={idx} style={styles.modalSection}>
+                      {section.title && (
+                        <Text style={styles.modalSectionTitle}>{section.title}</Text>
+                      )}
+                      {section.items.map((item, itemIdx) => (
+                        <TouchableOpacity
+                          key={itemIdx}
+                          style={[
+                            styles.modalItem,
+                            item.danger && styles.modalItemDanger,
+                            item.disabled && styles.modalItemDisabled
+                          ]}
+                          onPress={() => handleMenuItemPress(item)}
+                          disabled={item.disabled}
+                        >
+                          <Ionicons 
+                            name={item.icon} 
+                            size={24} 
+                            color={
+                              item.danger ? '#d9534f' : 
+                              item.disabled ? Colors.textLight : 
+                              Colors.primaryHome
+                            } 
+                          />
+                          <Text style={[
+                            styles.modalItemText,
+                            item.danger && styles.modalItemTextDanger,
+                            item.disabled && styles.modalItemTextDisabled
+                          ]}>
+                            {item.name}
+                          </Text>
+                          {item.badge && (
+                            <View style={styles.modalBadge}>
+                              <Text style={styles.modalBadgeText}>{item.badge}</Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  ))
                 )}
               </ScrollView>
             </View>
@@ -200,13 +317,15 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   // Versión desktop
   return (
     <View style={styles.desktopHeader}>
-      <TouchableOpacity onPress={() => navigateToScreen('Home')}>
-        <Image 
-          source={require('../../assets/logo.png')} 
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
+      <View style={styles.leftSection}>
+        <TouchableOpacity onPress={() => navigateToScreen('Home')}>
+          <Image 
+            source={require('../../assets/logo.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.navItems}>
         {getVisibleItems().map((item) => (
@@ -244,31 +363,52 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
 
             {userMenuVisible && (
               <View style={styles.userDropdown}>
-                <TouchableOpacity 
-                  style={styles.dropdownItem}
-                  onPress={() => navigateToScreen('Profile')}
-                >
-                  <Ionicons name="person-outline" size={18} color={Colors.primaryHome} />
-                  <Text style={styles.dropdownText}>Mi perfil</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={styles.dropdownItem}
-                  onPress={() => navigateToScreen('UserRatings')}
-                >
-                  <Ionicons name="star-outline" size={18} color={Colors.primaryHome} />
-                  <Text style={styles.dropdownText}>Mis valoraciones</Text>
-                </TouchableOpacity>
-
-                <View style={styles.dropdownDivider} />
-
-                <TouchableOpacity 
-                  style={[styles.dropdownItem, styles.logoutItem]}
-                  onPress={handleLogout}
-                >
-                  <Ionicons name="log-out-outline" size={18} color="#d9534f" />
-                  <Text style={[styles.dropdownText, styles.logoutText]}>Cerrar sesión</Text>
-                </TouchableOpacity>
+                <ScrollView style={styles.dropdownScroll} nestedScrollEnabled={true}>
+                  {getUserMenuSections().map((section, idx) => (
+                    <View key={idx}>
+                      {section.title && (
+                        <Text style={styles.dropdownSectionTitle}>{section.title}</Text>
+                      )}
+                      {section.items.map((item, itemIdx) => (
+                        <TouchableOpacity
+                          key={itemIdx}
+                          style={[
+                            styles.dropdownItem,
+                            item.danger && styles.dropdownItemDanger,
+                            item.disabled && styles.dropdownItemDisabled
+                          ]}
+                          onPress={() => handleMenuItemPress(item)}
+                          disabled={item.disabled}
+                        >
+                          <Ionicons 
+                            name={item.icon} 
+                            size={18} 
+                            color={
+                              item.danger ? '#d9534f' : 
+                              item.disabled ? Colors.textLight : 
+                              Colors.primaryHome
+                            } 
+                          />
+                          <Text style={[
+                            styles.dropdownText,
+                            item.danger && styles.dropdownTextDanger,
+                            item.disabled && styles.dropdownTextDisabled
+                          ]}>
+                            {item.name}
+                          </Text>
+                          {item.badge && (
+                            <View style={styles.dropdownBadge}>
+                              <Text style={styles.dropdownBadgeText}>{item.badge}</Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                      {idx < getUserMenuSections().length - 1 && (
+                        <View style={styles.dropdownDivider} />
+                      )}
+                    </View>
+                  ))}
+                </ScrollView>
               </View>
             )}
           </>
@@ -278,7 +418,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
               style={styles.loginButton}
               onPress={() => navigateToScreen('Login')}
             >
-              <Text style={styles.loginText}>Iniciar sesión</Text>
+              <Text style={styles.loginText}>Iniciar Sesión</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.registerButton}
@@ -294,7 +434,6 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
 };
 
 const styles = StyleSheet.create({
-  // Desktop styles
   desktopHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -311,14 +450,20 @@ const styles = StyleSheet.create({
     elevation: 4,
     zIndex: 1000,
   },
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   logo: {
-    width: 120,
-    height: 40,
+    width: 100,
+    height: 35,
   },
   navItems: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 20,
+    flex: 1,
+    justifyContent: 'center',
   },
   navItem: {
     flexDirection: 'row',
@@ -343,9 +488,7 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
   },
-  userMenuTrigger: {
-    cursor: 'pointer',
-  },
+  userMenuTrigger: {},
   avatar: {
     width: 40,
     height: 40,
@@ -373,8 +516,22 @@ const styles = StyleSheet.create({
     elevation: 8,
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    minWidth: 200,
+    minWidth: 240,
+    maxHeight: 400,
     zIndex: 1001,
+  },
+  dropdownScroll: {
+    maxHeight: 380,
+  },
+  dropdownSectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primaryHome,
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
   dropdownItem: {
     flexDirection: 'row',
@@ -383,20 +540,38 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
   },
+  dropdownItemDanger: {
+    opacity: 0.8,
+  },
+  dropdownItemDisabled: {
+    opacity: 0.55,
+  },
   dropdownText: {
     fontSize: 14,
     color: Colors.primaryHome,
+    flex: 1,
+  },
+  dropdownTextDanger: {
+    color: '#d9534f',
+  },
+  dropdownTextDisabled: {
+    color: Colors.textSecondary,
+  },
+  dropdownBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    backgroundColor: '#eeeeee',
+  },
+  dropdownBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#999',
   },
   dropdownDivider: {
     height: 1,
     backgroundColor: '#e0e0e0',
     marginVertical: 8,
-  },
-  logoutItem: {
-    opacity: 0.8,
-  },
-  logoutText: {
-    color: '#d9534f',
   },
   authButtons: {
     flexDirection: 'row',
@@ -423,8 +598,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-
-  // Mobile styles
   mobileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -434,6 +607,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+  },
+  mobileLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   mobileRight: {
     flexDirection: 'row',
@@ -469,30 +646,55 @@ const styles = StyleSheet.create({
   modalScroll: {
     padding: 16,
   },
+  modalSection: {
+    marginBottom: 16,
+  },
+  modalSectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.primaryHome,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    marginLeft: 12,
+  },
   modalItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+  },
+  modalItemDanger: {
+    borderBottomWidth: 0,
+  },
+  modalItemDisabled: {
+    opacity: 0.55,
   },
   modalItemText: {
     fontSize: 16,
     color: Colors.primaryHome,
     fontWeight: '500',
+    flex: 1,
   },
-  modalDivider: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 12,
-  },
-  modalLogout: {
-    borderBottomWidth: 0,
-  },
-  modalLogoutText: {
+  modalItemTextDanger: {
     color: '#d9534f',
+  },
+  modalItemTextDisabled: {
+    color: Colors.textSecondary,
+  },
+  modalBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 16,
+    backgroundColor: '#eeeeee',
+  },
+  modalBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#999',
   },
 });
 

@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -19,8 +20,8 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ userRole }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  // Elementos comunes para todos los usuarios
-  const commonNavItems: NavItem[] = [
+  // Para usuarios normales (sin cambios)
+  const userNavItems: NavItem[] = [
     { name: 'Artículos', icon: 'file-tray-full-outline', screen: 'MyArticles' },
     { name: 'Servicios', icon: 'construct-outline', screen: 'MyServices' },
     { name: 'Inicio', icon: 'home-outline', screen: 'Home' },
@@ -28,18 +29,18 @@ const Navbar: React.FC<NavbarProps> = ({ userRole }) => {
     { name: 'Perfil', icon: 'person-outline', screen: 'Profile' },
   ];
 
-  // Elementos extra para administradores
+  // Para administradores - NUEVA DISTRIBUCIÓN
   const adminNavItems: NavItem[] = [
     { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers' },
     { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories' },
+    { name: 'Inicio', icon: 'home-outline', screen: 'Home' },
+    { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents' },
+    { name: 'Perfil', icon: 'person-outline', screen: 'Profile' },
   ];
 
-  // Combinar items según el rol
-  const navItems: NavItem[] = userRole === 'ADMIN' 
-    ? [...commonNavItems, ...adminNavItems] 
-    : commonNavItems;
+  // Seleccionar items según el rol
+  const navItems: NavItem[] = userRole === 'ADMIN' ? adminNavItems : userNavItems;
 
-  // Función auxiliar para navegar de forma tipada
   const navigateToScreen = (screen: NavbarScreen) => {
     navigation.navigate(screen as any);
   };

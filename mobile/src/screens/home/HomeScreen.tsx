@@ -1,3 +1,4 @@
+// src/screens/home/HomeScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -16,12 +17,10 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, RentedItemResponse, Article } from '../../types';
 import { Colors } from '../../styles';
-import { getLoggedUserWallet, getRentedItems,getMyArticles } from '../../services';
+import { getLoggedUserWallet, getRentedItems, getMyArticles } from '../../services';
 import { SkeletonPulse, FadeInItem } from '../../components';
-import ProfileMenuModal from './ProfileMenuModal';
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-
 
 // Status ENUM for item status
 const STATUS_CONFIG: Record<string, { label: string; dot: string }> = {
@@ -35,7 +34,6 @@ const HomeScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<HomeNav>();
 
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [rentedItems, setRentedItems] = useState<RentedItemResponse[]>([]);
@@ -79,6 +77,7 @@ const HomeScreen: React.FC = () => {
     Animated.timing(headerAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
     fetchData()
   }, [user?.id, user?.token]);
+  
   useFocusEffect(React.useCallback(() => { fetchData(); }, [user?.id, user?.token]));
 
   const onRefresh = async () => {
@@ -91,31 +90,6 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-      
-      {/* Header */}
-      <Animated.View
-        style={[
-          styles.header,
-          {
-            opacity: headerAnim,
-            transform: [{ translateY: headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] }) }],
-          },
-        ]}
-      >
-        <Text style={styles.headerGreeting}>Hola, {user ? user.name.split(' ')[0] : 'Invitado'}</Text>
-        {/* Profile icon */}
-        <TouchableOpacity
-          style={styles.avatarBtn}
-          onPress={() => setShowProfileMenu(true)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.avatarIconWrap}>
-            <Ionicons name="person" size={20} color={Colors.white} />
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
-
-      {/* Main scrollable container */}
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -123,7 +97,21 @@ const HomeScreen: React.FC = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryHome} />
         }
       >
-        { /* Wallet */}
+        {/* Header dentro del ScrollView */}
+        <Animated.View
+          style={[
+            styles.header,
+            {
+              opacity: headerAnim,
+              transform: [{ translateY: headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] }) }],
+            },
+          ]}
+        >
+          <Text style={styles.headerGreeting}>Hola, {user ? user.name.split(' ')[0] : 'Invitado'}</Text>
+          <View style={{ width: 40 }} />
+        </Animated.View>
+
+        {/* Wallet */}
         <FadeInItem delay={50}>
           <TouchableOpacity 
             activeOpacity={0.8} 
@@ -276,16 +264,12 @@ const HomeScreen: React.FC = () => {
             </View>
           </FadeInItem>
         )}
-
       </ScrollView>
-
-      <ProfileMenuModal visible={showProfileMenu} onClose={() => setShowProfileMenu(false)} />
     </SafeAreaView>
   );
 };
 
-// ─── Sub-components para las listas internas ──────────────────────────────────
-
+// ─── Sub-components y estilos (se mantienen igual) ──────────────────────────
 const CompactRow: React.FC<{
   title: string;
   subtitle: string;
@@ -322,7 +306,6 @@ const EmptyTrayMessage: React.FC<{ icon: any; message: string }> = ({ icon, mess
   </View>
 );
 
-// ─── Sombreado genérico (Shadows) ───────────────────────────────────────────────────────────
 const Shadows = {
   medium: {
     shadowColor: '#2d6e91',
@@ -333,20 +316,19 @@ const Shadows = {
   },
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  // Fondo principal BLANCO puro
   root: {
     flex: 1,
     backgroundColor: '#FFFFFF', 
   },
-
-  // Header
+  scroll: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 20,
     backgroundColor: '#FFFFFF',
@@ -354,60 +336,30 @@ const styles = StyleSheet.create({
   headerGreeting: {
     fontSize: 32,
     fontWeight: '800',
-    color: Colors.primaryHome, // Texto azul oscuro
+    color: Colors.primaryHome,
     letterSpacing: -0.5,
   },
-  avatarBtn: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primaryHome, // Círculo azul oscuro
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Scroll
-  scroll: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    gap: 16,
-  },
-
-  // Base Card
   card: {
     borderRadius: 16,
     padding: 20,
+    marginBottom: 16,
   },
-
-  // Tarjeta Blanca (Mis Artículos)
   cardWhite: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.02)', // Borde casi invisible para definición
+    borderColor: 'rgba(0,0,0,0.02)',
   },
-
-  // Tarjeta Primaria Oscura (Wallet)
-  cardPrimary: {
-    // Gradiente aplicado en el componente
-  },
-
-  // Layouts específicos para la tarjeta Wallet pulsable
+  cardPrimary: {},
   touchableCardLayout: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   walletContentWrapper: {
-    flex: 1, // Ocupa todo el espacio para empujar la flecha a la derecha
+    flex: 1,
   },
   walletChevron: {
-    marginLeft: 12, // Espacio entre el texto y la flecha
+    marginLeft: 12,
   },
-
-  // Contenidos de Cards OSCURAS (Wallet)
   cardHeaderFlex: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -417,7 +369,7 @@ const styles = StyleSheet.create({
   cardTitleLight: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#FFFFFF', // Texto blanco
+    color: '#FFFFFF',
     letterSpacing: -0.3,
   },
   iconRingLight: {
@@ -431,21 +383,19 @@ const styles = StyleSheet.create({
   hugeValueLight: {
     fontSize: 36,
     fontWeight: '800',
-    color: '#FFFFFF', // Texto blanco
+    color: '#FFFFFF',
     letterSpacing: -1,
     marginBottom: 2,
   },
   cardSubtitleLight: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.7)', // Texto blanco con opacidad
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '500',
   },
-
-  // Contenidos de Cards CLARAS (Alquileres / Grid / Lista)
   hugeValueDark: {
     fontSize: 36,
     fontWeight: '800',
-    color: Colors.primaryHome, // Texto azul oscuro
+    color: Colors.primaryHome,
     letterSpacing: -1,
     marginBottom: 2,
   },
@@ -457,11 +407,9 @@ const styles = StyleSheet.create({
   },
   cardSubtitleDark: {
     fontSize: 14,
-    color: Colors.textPrimaryHome, // Texto gris oscuro
+    color: Colors.textPrimaryHome,
     fontWeight: '500',
   },
-
-  // Contenidos de Card 2 (Alquileres Horizontal)
   cardHorizontal: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -478,11 +426,10 @@ const styles = StyleSheet.create({
   cardHorizontalText: {
     flex: 1,
   },
-
-  // Grid 50/50 (Acciones)
   gridRow: {
     flexDirection: 'row',
     gap: 16,
+    marginBottom: 16,
   },
   gridCard: {
     flex: 1,
@@ -518,17 +465,15 @@ const styles = StyleSheet.create({
   pillButtonPrimary: {
     width: '100%',
     paddingVertical: 10,
-    borderRadius: 999, // Botón pastilla relleno
-    backgroundColor: Colors.primaryHome, // Botón azul oscuro
+    borderRadius: 999,
+    backgroundColor: Colors.primaryHome,
     alignItems: 'center',
   },
   pillButtonTextLight: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF', // Texto blanco
+    color: '#FFFFFF',
   },
-
-  // Card 5 (Lista interna)
   listContainer: {
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
@@ -572,8 +517,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-
-  // Empty y More
   emptyTrayContent: {
     alignItems: 'center',
     paddingVertical: 30,
@@ -587,13 +530,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: Colors.primaryHome, // Botón azul oscuro ancho
+    backgroundColor: Colors.primaryHome,
     alignItems: 'center',
   },
   moreBtnTextLabelLight: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF', // Texto blanco
+    color: '#FFFFFF',
   },
 });
 

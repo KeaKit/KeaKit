@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+// src/components/MainLayout.tsx
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Dimensions, Platform } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import HeaderNavbar from './HeaderNavbar';
 import Navbar from './Navbar';
@@ -10,10 +11,28 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { user } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Función para verificar si es móvil/tablet
+    const checkIsMobile = () => {
+      const { width } = Dimensions.get('window');
+      // 768px es el punto de corte típico para móvil/tablet
+      setIsMobile(width < 768);
+    };
+
+    // Comprobar al montar
+    checkIsMobile();
+
+    // Suscribirse a cambios de dimensión (rotación, redimensionamiento en web)
+    const subscription = Dimensions.addEventListener('change', checkIsMobile);
+    
+    return () => subscription?.remove();
+  }, []);
 
   return (
     <View style={styles.container}>
-      {/* Header siempre visible */}
+      {/* Header siempre visible en todas las plataformas */}
       <HeaderNavbar user={user} />
       
       {/* Contenido principal */}
@@ -21,8 +40,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {children}
       </View>
       
-      {/* Navbar inferior flotante */}
-      {user && <Navbar userRole={user.role} />}
+      {/* Navbar inferior SOLO en móvil/tablet Y si hay usuario */}
+      {user && isMobile && <Navbar userRole={user.role} />}
     </View>
   );
 };
