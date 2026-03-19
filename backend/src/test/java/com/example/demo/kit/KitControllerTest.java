@@ -141,4 +141,102 @@ public class KitControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(content().string("Kit not found"));
     }
+
+    // ==========================================
+    // TESTS CU-ARRENDATARIO-07: Endpoints añadir/eliminar items de kit
+    // ==========================================
+
+    @Test
+    void addItemToKit_success_returnsOk() throws Exception {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.DRAFT);
+
+        when(kitService.addItemToKit(eq(10L), eq(100L), eq(1L)))
+            .thenReturn(new KitResponse(kit));
+
+        mockMvc.perform(post("/api/kits/10/items/100")
+                .param("userId", "1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("DRAFT"));
+    }
+
+    @Test
+    void addItemToKit_itemNotFound_returnsBadRequest() throws Exception {
+        when(kitService.addItemToKit(eq(10L), eq(999L), eq(1L)))
+            .thenThrow(new RuntimeException("Item not found"));
+
+        mockMvc.perform(post("/api/kits/10/items/999")
+                .param("userId", "1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Item not found"));
+    }
+
+    @Test
+    void addItemToKit_itemAlreadyExists_returnsBadRequest() throws Exception {
+        when(kitService.addItemToKit(eq(10L), eq(100L), eq(1L)))
+            .thenThrow(new RuntimeException("This item is already in the kit"));
+
+        mockMvc.perform(post("/api/kits/10/items/100")
+                .param("userId", "1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("This item is already in the kit"));
+    }
+
+    @Test
+    void addItemToKit_kitNotFound_returnsBadRequest() throws Exception {
+        when(kitService.addItemToKit(eq(999L), eq(100L), eq(1L)))
+            .thenThrow(new RuntimeException("Kit not found"));
+
+        mockMvc.perform(post("/api/kits/999/items/100")
+                .param("userId", "1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Kit not found"));
+    }
+
+    @Test
+    void removeItemFromKit_success_returnsOk() throws Exception {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.DRAFT);
+
+        when(kitService.removeItemFromKit(eq(10L), eq(100L), eq(1L)))
+            .thenReturn(new KitResponse(kit));
+
+        mockMvc.perform(delete("/api/kits/10/items/100")
+                .param("userId", "1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("DRAFT"));
+    }
+
+    @Test
+    void removeItemFromKit_itemNotInKit_returnsBadRequest() throws Exception {
+        when(kitService.removeItemFromKit(eq(10L), eq(999L), eq(1L)))
+            .thenThrow(new RuntimeException("Item is not part of this kit"));
+
+        mockMvc.perform(delete("/api/kits/10/items/999")
+                .param("userId", "1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Item is not part of this kit"));
+    }
+
+    @Test
+    void removeItemFromKit_kitWouldBeEmpty_returnsBadRequest() throws Exception {
+        when(kitService.removeItemFromKit(eq(10L), eq(100L), eq(1L)))
+            .thenThrow(new RuntimeException("A kit cannot be empty. It must contain at least one item."));
+
+        mockMvc.perform(delete("/api/kits/10/items/100")
+                .param("userId", "1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("A kit cannot be empty. It must contain at least one item."));
+    }
+
+    @Test
+    void removeItemFromKit_kitNotFound_returnsBadRequest() throws Exception {
+        when(kitService.removeItemFromKit(eq(999L), eq(100L), eq(1L)))
+            .thenThrow(new RuntimeException("Kit not found"));
+
+        mockMvc.perform(delete("/api/kits/999/items/100")
+                .param("userId", "1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Kit not found"));
+    }
 }

@@ -17,6 +17,8 @@ import MyArticlesScreen from '../screens/profile/MyArticlesScreen';
 import MyKitsScreen from '../screens/profile/MyKitsScreen';
 import UploadArticleScreen  from '../screens/profile/UploadArticleScreen';
 import CreateKitScreen from '../screens/kit/CreateKitScreen';
+import DefaultKitsScreen from '../screens/kit/DefaultKitsScreen';
+import EditDefaultKitScreen from '../screens/kit/EditDefaultKitScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
@@ -24,6 +26,7 @@ import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import { RootStackParamList } from '../types';
 import EditArticleScreen from '../screens/profile/EditArticleScreen';
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
+import CommissionScreen from '../screens/commission/CommissionScreen';
 
 import KitDetailScreen from '../screens/kit/KitDetailScreen';
 import CategoriesScreen from '../screens/category/CategoriesScreen';
@@ -31,6 +34,8 @@ import CategoryFormScreen from '../screens/category/CategoryFormScreen';
 import MyServicesScreen from '../screens/service/MyServicesScreen';
 import CreateServiceScreen from '../screens/service/CreateServiceScreen';
 import EditServiceScreen from '../screens/service/EditServiceScreen';
+import DefaultKitsScreen from '../screens/deafaultKit/DefaultKitsScreen';
+import DefaultKitFormScreen from '../screens/deafaultKit/DefaultKitFormScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -66,8 +71,11 @@ const AppNavigator: React.FC = () => {
               <Stack.Screen name="CreateRating"  component={CreateRatingScreen} />
               <Stack.Screen name="UserRatings"   component={UserRatingsScreen} />
               <Stack.Screen name="CreateKit"     component={CreateKitScreen} />
+              <Stack.Screen name="DefaultKits" component={DefaultKitsScreen} />
+              <Stack.Screen name="EditDefaultKit" component={EditDefaultKitScreen} />
               <Stack.Screen name="AdminUsers"    component={AdminUsersScreen} />
               <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
+              <Stack.Screen name="Commission" component={CommissionScreen} />
               <Stack.Screen name="EditArticle" component={EditArticleScreen} />
               <Stack.Screen name="KitDetail" component={KitDetailScreen} />
               <Stack.Screen name="Categories" component={CategoriesScreen} />
@@ -78,6 +86,9 @@ const AppNavigator: React.FC = () => {
               <Stack.Screen name="MyServices"    component={MyServicesScreen} />
               <Stack.Screen name="PromoteService"    component={CreateServiceScreen} />
               <Stack.Screen name="EditService"    component={EditServiceScreen} />
+              <Stack.Screen name="DefaultKits"    component={DefaultKitsScreen} />
+              <Stack.Screen name="DefaultKitForm"    component={DefaultKitFormScreen} />
+
               <Stack.Screen name="Wallet" component={WalletScreen} />
             </>
           ) : (
