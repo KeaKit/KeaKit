@@ -69,11 +69,8 @@ export const API_ROUTES = {
   RELEASE_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}/release`,
 
   // Default Kits (kits predeterminados)
-  GET_DEFAULT_KITS: `${BASE_URL}/api/default-kits`,
-  GET_DEFAULT_KIT: (id: number) => `${BASE_URL}/api/default-kits/${id}`,
-  CREATE_DEFAULT_KIT: `${BASE_URL}/api/default-kits`,
-  UPDATE_DEFAULT_KIT: (id: number) => `${BASE_URL}/api/default-kits/${id}`,
-  DELETE_DEFAULT_KIT: (id: number) => `${BASE_URL}/api/default-kits/${id}`,
+  DEFAULT_KITS: `${BASE_URL}/api/default-kits`,
+  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`
 
 } as const;
 

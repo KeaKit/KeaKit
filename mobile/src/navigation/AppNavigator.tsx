@@ -31,6 +31,8 @@ import CategoryFormScreen from '../screens/category/CategoryFormScreen';
 import MyServicesScreen from '../screens/service/MyServicesScreen';
 import CreateServiceScreen from '../screens/service/CreateServiceScreen';
 import EditServiceScreen from '../screens/service/EditServiceScreen';
+import DefaultKitsScreen from '../screens/deafaultKit/DefaultKitsScreen';
+import DefaultKitFormScreen from '../screens/deafaultKit/DefaultKitFormScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -77,6 +79,9 @@ const AppNavigator: React.FC = () => {
               <Stack.Screen name="MyServices"    component={MyServicesScreen} />
               <Stack.Screen name="PromoteService"    component={CreateServiceScreen} />
               <Stack.Screen name="EditService"    component={EditServiceScreen} />
+              <Stack.Screen name="DefaultKits"    component={DefaultKitsScreen} />
+              <Stack.Screen name="DefaultKitForm"    component={DefaultKitFormScreen} />
+
             </>
           ) : (
             <>

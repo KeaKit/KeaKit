@@ -229,7 +229,7 @@ export interface Category {
 
 export interface DefaultKitItem {
   id: number;
-  article: Article;
+  item: Article;
 }
 
 export interface DefaultKit {
@@ -243,8 +243,7 @@ export interface DefaultKit {
 export interface DefaultKitCreateRequest {
   name: string;
   description: string;
-  basePrice: number;
-  articleIds?: number[];
+  itemsIds?: number[];
 }
 
 export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
@@ -332,6 +331,8 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
+  DefaultKits: undefined;
+  DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
 };
 
 export interface ProfileData {

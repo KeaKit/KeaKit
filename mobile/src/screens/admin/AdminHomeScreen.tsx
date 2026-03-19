@@ -87,6 +87,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     screen: 'MyIncidents',
   },
   {
+    id: 'default-kits',
+    icon: 'cube',
+    label: 'Gestión de kits Predeterminados',
+    description: 'Crear, editar y eliminar kits predeterminados',
+    color: KC.blueDark,
+    implemented: true,
+    screen: 'DefaultKits',
+  },
+  {
     id: 'object-types',
     icon: 'cube',
     label: 'Tipos de Objetos',

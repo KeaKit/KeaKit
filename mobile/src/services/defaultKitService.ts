@@ -40,16 +40,25 @@ async function handleResponse<T>(res: Response): Promise<T> {
     throw new Error(message || `HTTP ${res.status}`);
   }
 
-  const contentType = res.headers.get('content-type') ?? '';
-  if (contentType.includes('text/plain')) {
-    return res.text() as unknown as Promise<T>;
+  if (res.status === 204) {
+    return "" as unknown as T;
   }
 
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  if (!text) {
+     return "" as unknown as T;
+  }
+
+  const contentType = res.headers.get('content-type') ?? '';
+  if (contentType.includes('text/plain')) {
+    return text as unknown as T;
+  }
+
+  return JSON.parse(text) as T;
 }
 
 export async function fetchAllDefaultKits(token: string): Promise<DefaultKit[]> {
-  const res = await fetchWithTimeout(API_ROUTES.GET_DEFAULT_KITS, {
+  const res = await fetchWithTimeout(API_ROUTES.DEFAULT_KITS, {
     method: 'GET',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
@@ -58,7 +67,7 @@ export async function fetchAllDefaultKits(token: string): Promise<DefaultKit[]> 
 }
 
 export async function fetchDefaultKitById(id: number, token: string): Promise<DefaultKit> {
-  const res = await fetchWithTimeout(API_ROUTES.GET_DEFAULT_KIT(id), {
+  const res = await fetchWithTimeout(API_ROUTES.DEFAULT_KIT_BY_ID(id), {
     method: 'GET',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
@@ -67,10 +76,10 @@ export async function fetchDefaultKitById(id: number, token: string): Promise<De
 }
 
 export async function createDefaultKit(
-  payload: DefaultKitCreateRequest,
+  payload: Partial<DefaultKitCreateRequest>,
   token: string,
 ): Promise<DefaultKit> {
-  const res = await fetchWithTimeout(API_ROUTES.CREATE_DEFAULT_KIT, {
+  const res = await fetchWithTimeout(API_ROUTES.DEFAULT_KITS, {
     method: 'POST',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
@@ -84,7 +93,7 @@ export async function updateDefaultKit(
   payload: Partial<DefaultKitCreateRequest>,
   token: string,
 ): Promise<DefaultKit> {
-  const res = await fetchWithTimeout(API_ROUTES.UPDATE_DEFAULT_KIT(id), {
+  const res = await fetchWithTimeout(API_ROUTES.DEFAULT_KIT_BY_ID(id), {
     method: 'PUT',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
@@ -94,7 +103,7 @@ export async function updateDefaultKit(
 }
 
 export async function deleteDefaultKit(id: number, token: string): Promise<string> {
-  const res = await fetchWithTimeout(API_ROUTES.DELETE_DEFAULT_KIT(id), {
+  const res = await fetchWithTimeout(API_ROUTES.DEFAULT_KIT_BY_ID(id), {
     method: 'DELETE',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
