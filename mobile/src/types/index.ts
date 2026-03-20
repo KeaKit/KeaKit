@@ -1,3 +1,5 @@
+import Ionicons from "@expo/vector-icons/build/Ionicons";
+
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -304,6 +306,58 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
+export type NavbarScreen = 
+  | 'Home'
+  | 'Profile'
+  | 'MyArticles'
+  | 'MyKits'
+  | 'MyServices'
+  | 'MyIncidents'
+  | 'Wallet'
+  | 'MyKitsHistory'
+  | 'UserRatings'
+  | 'AdminUsers'
+  | 'Categories';
+
+export type NavbarHeaderScreen = 
+  | 'Home'
+  | 'Profile'
+  | 'MyArticles'
+  | 'MyKits'
+  | 'MyServices'
+  | 'MyIncidents'
+  | 'Wallet'
+  | 'MyKitsHistory'
+  | 'UserRatings'
+  | 'AdminUsers'
+  | 'Categories'
+  | 'Commission'
+  | 'DefaultKits'
+  | 'Login'
+  | 'Register';
+
+export interface NavbarHeaderItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen: NavbarHeaderScreen;
+  requiresAuth?: boolean;
+  requiresAdmin?: boolean;
+}
+
+export interface HeaderMenuItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen?: keyof RootStackParamList;
+  onPress?: () => void;
+  danger?: boolean;
+  badge?: string;
+}
+
+export interface HeaderMenuSection {
+  title?: string;
+  items: HeaderMenuItem[];
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -320,6 +374,7 @@ export type RootStackParamList = {
   IncidentDetail: { incidentId: number; isReceived: boolean };
   MyArticles: undefined;
   MyKits: undefined;
+  MyKitsHistory: undefined;
   KitDetail: { kitId: number };
   DefaultKits: undefined;
   EditDefaultKit: { kitId: number };
@@ -333,7 +388,6 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
-  DefaultKits: undefined;
   DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
   Commission: undefined;
   Wallet: undefined;
@@ -406,7 +460,6 @@ export enum TransactionType {
   GUARANTEE_REFUND = 'GUARANTEE_REFUND',
   REFUND = 'REFUND'
 }
-
 
 export const EUROPEAN_COUNTRIES = [
   { value: "Albania", label: "Albania" },
