@@ -73,7 +73,9 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const adminNavItems: NavbarHeaderItem[] = [
     { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers', requiresAdmin: true },
     { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories', requiresAdmin: true },
+    { name: 'Comisión de Plataforma', icon: 'cash', screen: 'Commission', requiresAdmin: true },
     { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents', requiresAdmin: true },
+    { name: 'Kits Predeterminados', icon: 'cube-outline', screen: 'DefaultKits', requiresAdmin: true },
   ];
 
   // Filtrar items según autenticación y rol
@@ -146,7 +148,6 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         items: [
           { name: 'Tipos de Objetos', icon: 'cube', disabled: true, badge: 'Próximamente' },
           { name: 'Rangos de Precios', icon: 'pricetags', disabled: true, badge: 'Próximamente' },
-          { name: 'Comisión de Plataforma', icon: 'cash', disabled: true, badge: 'Próximamente' },
           { name: 'Estadísticas', icon: 'bar-chart', disabled: true, badge: 'Próximamente' },
         ]
       },

@@ -77,6 +77,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     screen: 'Categories',
   },
   {
+    id: 'commission',
+    icon: 'cash',
+    label: 'Comisión de Plataforma',
+    description: 'Configurar el % de comisión por alquiler',
+    color: KC.lightBlue,
+    implemented: true,
+    screen: 'Commission',
+  },
+  {
     id: 'incidents',
     icon: 'warning',
     label: 'Gestión de Incidencias',
@@ -109,15 +118,6 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: 'Establecer precios mínimos y máximos por tipo',
     color: KC.mint,
     implemented: false,
-  },
-  {
-    id: 'commission',
-    icon: 'cash',
-    label: 'Comisión de Plataforma',
-    description: 'Configurar el % de comisión por alquiler',
-    color: KC.lightBlue,
-    implemented: true,
-    screen: 'Commission',
   },
   {
     id: 'stats',

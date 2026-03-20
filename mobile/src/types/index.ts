@@ -331,6 +331,8 @@ export type NavbarHeaderScreen =
   | 'UserRatings'
   | 'AdminUsers'
   | 'Categories'
+  | 'Commission'
+  | 'DefaultKits'
   | 'Login'
   | 'Register';
 
@@ -386,7 +388,6 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
-  DefaultKits: undefined;
   DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
   Commission: undefined;
   Wallet: undefined;
