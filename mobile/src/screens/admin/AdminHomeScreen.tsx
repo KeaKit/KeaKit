@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,7 +14,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
-import AdminProfileMenuModal from './AdminProfileMenuModal';
 import { Colors } from '../../styles';
 
 type AdminHomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -78,6 +76,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     screen: 'Categories',
   },
   {
+    id: 'commission',
+    icon: 'cash',
+    label: 'Comisión de Plataforma',
+    description: 'Configurar el % de comisión por alquiler',
+    color: KC.lightBlue,
+    implemented: true,
+    screen: 'Commission',
+  },
+  {
     id: 'incidents',
     icon: 'warning',
     label: 'Gestión de Incidencias',
@@ -112,15 +119,6 @@ const ADMIN_SECTIONS: AdminSection[] = [
     implemented: false,
   },
   {
-    id: 'commission',
-    icon: 'cash',
-    label: 'Comisión de Plataforma',
-    description: 'Configurar el % de comisión por alquiler',
-    color: KC.lightBlue,
-    implemented: true,
-    screen: 'Commission',
-  },
-  {
     id: 'stats',
     icon: 'bar-chart',
     label: 'Estadísticas',
@@ -134,47 +132,29 @@ const ADMIN_SECTIONS: AdminSection[] = [
 const AdminHomeScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<AdminHomeNav>();
-  const [showMenu, setShowMenu] = useState(false);
-  const headerAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(headerAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-  }, []);
 
   const handleSectionPress = (section: AdminSection) => {
     if (section.implemented && section.screen) {
       navigation.navigate(section.screen as any);
     }
-    // Si no implementado, no hacer nada (el badge "Próximamente" ya lo indica)
   };
 
   const firstName = user?.name?.split(' ')[0] ?? 'Admin';
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <Animated.View
-        style={[
-          styles.header,
-          {
-            opacity: headerAnim,
-            transform: [{ translateY: headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-12, 0] }) }],
-          },
-        ]}
+      <ScrollView 
+        contentContainerStyle={styles.scroll} 
+        showsVerticalScrollIndicator={false}
       >
-        <View>
-          <Text style={styles.headerSuperTitle}>Panel de administración</Text>
-          <Text style={styles.headerTitle}>Hola, {firstName}</Text>
+        {/* ── Header dentro del ScrollView ───────────────────────────────── */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.headerSuperTitle}>Panel de administración</Text>
+            <Text style={styles.headerTitle}>Hola, {firstName}</Text>
+          </View>
+          <View style={{ width: 44 }} /> {/* Espaciador para mantener el diseño */}
         </View>
-        <TouchableOpacity style={styles.avatarBtn} onPress={() => setShowMenu(true)} activeOpacity={0.8}>
-          <LinearGradient colors={[KC.blue, KC.blueDark]} style={styles.avatarGradient}>
-            <Ionicons name="person-circle" size={70} color={Colors.primary} />
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
-
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── Banner superior ──────────────────────────────────────────── */}
         <FadeIn delay={60}>
@@ -208,10 +188,7 @@ const AdminHomeScreen: React.FC = () => {
             </FadeIn>
           ))}
         </View>
-
       </ScrollView>
-
-      <AdminProfileMenuModal visible={showMenu} onClose={() => setShowMenu(false)} />
     </SafeAreaView>
   );
 };
@@ -229,7 +206,6 @@ const AdminCard: React.FC<{ section: AdminSection; onPress: () => void }> = ({ s
 
   const iconColor = section.implemented ? KC.white : '#aaa';
   const labelColor = section.implemented ? (
-    // Lavender, mint, lightBlue, lightMint → texto oscuro
     [KC.lavender, KC.mint, KC.lightBlue, KC.lightMint].includes(section.color) ? KC.gray : KC.white
   ) : '#aaa';
 
@@ -269,13 +245,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: KC.cream,
   },
+  scroll: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 16,
+    paddingBottom: 20,
     backgroundColor: KC.cream,
   },
   headerSuperTitle: {
@@ -292,31 +271,13 @@ const styles = StyleSheet.create({
     color: KC.blue,
     letterSpacing: -0.5,
   },
-  avatarBtn: {
-    borderRadius: 22,
-    overflow: 'hidden',
-  },
-  avatarGradient: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  scroll: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    gap: 16,
-  },
-
-  // Banner
   banner: {
     borderRadius: 18,
     padding: 22,
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
+    marginBottom: 16,
   },
   bannerLeft: {
     flex: 1,
@@ -344,22 +305,17 @@ const styles = StyleSheet.create({
   bannerIconWrap: {
     marginLeft: 12,
   },
-
-  // Section title
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: KC.gray,
     letterSpacing: 0.2,
     paddingHorizontal: 2,
+    marginBottom: 16,
   },
-
-  // Grid
   grid: {
     gap: 12,
   },
-
-  // Card
   card: {
     borderRadius: 16,
     padding: 18,
