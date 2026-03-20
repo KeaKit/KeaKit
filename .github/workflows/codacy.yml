@@ -1,4 +1,4 @@
-name: SonarCloud Analysis
+name: Codacy Analysis
 
 on:
   push:
@@ -7,37 +7,15 @@ on:
       - develop
       - 'release/*'
   pull_request:
-    branches:
-      - main
-      - develop
-      - 'release/*'
 
 jobs:
-  sonarcloud:
+  codacy:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: testdb
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U test"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # ---------- BACKEND ----------
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -51,11 +29,10 @@ jobs:
         env:
           SPRING_PROFILES_ACTIVE: test
 
-      # ---------- FRONTEND ----------
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24.13.1'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: mobile/package-lock.json
 
@@ -67,10 +44,18 @@ jobs:
         working-directory: mobile
         run: npm test -- --coverage
 
-      # ---------- SONARCLOUD ----------
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Run Codacy Analysis
+        uses: codacy/codacy-analysis-cli-action@v4
         with:
-          projectBaseDir: .
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          verbose: true
+
+      - name: Upload backend coverage
+        run: |
+          bash <(curl -Ls https://coverage.codacy.com/get.sh) report \
+            -r backend/target/site/jacoco/jacoco.xml
+
+      - name: Upload frontend coverage
+        run: |
+          bash <(curl -Ls https://coverage.codacy.com/get.sh) report \
+            -r mobile/coverage/lcov.info
