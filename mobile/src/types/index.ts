@@ -320,6 +320,7 @@ export type RootStackParamList = {
   IncidentDetail: { incidentId: number; isReceived: boolean };
   MyArticles: undefined;
   MyKits: undefined;
+  MyKitsHistory: undefined;
   KitDetail: { kitId: number };
   DefaultKits: undefined;
   EditDefaultKit: { kitId: number };

@@ -36,6 +36,7 @@ import CreateServiceScreen from '../screens/service/CreateServiceScreen';
 import EditServiceScreen from '../screens/service/EditServiceScreen';
 import DefaultKitFormScreen from '../screens/deafaultKit/DefaultKitFormScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
+import MyKitsHistoryScreen from '../screens/kit/MyKitsHistoryScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -88,6 +89,7 @@ const AppNavigator: React.FC = () => {
               <Stack.Screen name="DefaultKitForm"    component={DefaultKitFormScreen} />
 
               <Stack.Screen name="Wallet" component={WalletScreen} />
+              <Stack.Screen name="MyKitsHistory" component={MyKitsHistoryScreen} />
             </>
           ) : (
             <>
