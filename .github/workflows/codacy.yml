@@ -40,4 +40,4 @@ jobs:
           CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
         run: |
           bash <(curl -Ls https://coverage.codacy.com/get.sh) report \
-            -r backend/target/site/jacoco/jacoco.xml
+            -r backend/target/jacoco-report/jacoco.xml
