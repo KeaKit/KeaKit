@@ -159,7 +159,6 @@ public class KitServiceTest {
         kit.setStatus(KitStatus.PAID);
 
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
-        when(kitRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         kitService.confirmKitStatus(1L);
 
