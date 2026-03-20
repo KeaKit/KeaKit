@@ -8,6 +8,7 @@ export * from "./KitItemComponent";
 export * from "./KitPaymentResumeComponent";
 export * from "./NotificationContext";
 export * from "./ProductSelectionModal";
+export * from "./PresetProductSelectionModal";
 export * from "./PushNotification";
 export * from "./SelectPicker";
 export * from "./SkeletonPulse";

@@ -24,6 +24,8 @@ import CategoriesScreen from '../screens/category/CategoriesScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import MyKitsHistoryScreen from '../screens/kit/MyKitsHistoryScreen';
 import UserRatingsScreen from '../screens/ratings/UserRatingsScreen';
+import CommissionScreen from '../screens/commission/CommissionScreen';
+import DefaultKitsScreen from '../screens/kit/DefaultKitsScreen';
 
 // Detail/Creation Screens (without Navbar)
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
@@ -31,13 +33,15 @@ import UploadArticleScreen from '../screens/profile/UploadArticleScreen';
 import CheckoutScreen from '../screens/kit/CheckoutScreen';
 import CreateRatingScreen from '../screens/ratings/CreateRatingScreen';
 import CreateKitScreen from '../screens/kit/CreateKitScreen';
+import EditDefaultKitScreen from '../screens/kit/EditDefaultKitScreen';
+import DefaultKitFormScreen from '../screens/deafaultKit/DefaultKitFormScreen';
 import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
 import EditArticleScreen from '../screens/profile/EditArticleScreen';
 import KitDetailScreen from '../screens/kit/KitDetailScreen';
 import CategoryFormScreen from '../screens/category/CategoryFormScreen';
 import CreateIncidentScreen from '../screens/incidents/CreateIncidentScreen';
 import IncidentDetailScreen from '../screens/incidents/IncidentDetailScreen';
-import CreateServiceScreen from '../screens/service/CreateServiceScreen'; 
+import CreateServiceScreen from '../screens/service/CreateServiceScreen';
 import EditServiceScreen from '../screens/service/EditServiceScreen';
 
 import { RootStackParamList } from '../types';
@@ -108,7 +112,7 @@ const AppNavigator: React.FC = () => {
               <Stack.Screen name="MyIncidents">
                 {() => (
                   <MainLayout>
-                    <MyServicesScreen />
+                    <MyIncidentsScreen />
                   </MainLayout>
                 )}
               </Stack.Screen>
@@ -125,6 +129,14 @@ const AppNavigator: React.FC = () => {
                 {() => (
                   <MainLayout>
                     <UserRatingsScreen />
+                  </MainLayout>
+                )}
+              </Stack.Screen>
+
+              <Stack.Screen name="Wallet">
+                {() => (
+                  <MainLayout>
+                    <WalletScreen />
                   </MainLayout>
                 )}
               </Stack.Screen>
@@ -147,28 +159,55 @@ const AppNavigator: React.FC = () => {
                       </MainLayout>
                     )}
                   </Stack.Screen>
+
+                  <Stack.Screen name="Commission">
+                    {() => (
+                      <MainLayout>
+                        <CommissionScreen />
+                      </MainLayout>
+                    )}
+                  </Stack.Screen>
+
+                  <Stack.Screen name="DefaultKits">
+                    {() => (
+                      <MainLayout>
+                        <DefaultKitsScreen />
+                      </MainLayout>
+                    )}
+                  </Stack.Screen>
                 </>
               )}
 
               {/* === PANTALLAS SECUNDARIAS (SIN NAVBAR) === */}
               
-              {/* Edición y formularios */}
+              {/* Edición de perfil */}
               <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+              
+              {/* Artículos */}
               <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
               <Stack.Screen name="EditArticle" component={EditArticleScreen} />
-              <Stack.Screen name="CreateKit" component={CreateKitScreen} />
+              
+              {/* Servicios */}
               <Stack.Screen name="PromoteService" component={CreateServiceScreen} />
               <Stack.Screen name="EditService" component={EditServiceScreen} />
+              
+              {/* Kits */}
+              <Stack.Screen name="CreateKit" component={CreateKitScreen} />
+              <Stack.Screen name="KitDetail" component={KitDetailScreen} />
+              <Stack.Screen name="Checkout" component={CheckoutScreen} />
+              <Stack.Screen name="EditDefaultKit" component={EditDefaultKitScreen} />
+              <Stack.Screen name="DefaultKitForm" component={DefaultKitFormScreen} />
+              
+              {/* Valoraciones */}
+              <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
+              
+              {/* Incidencias */}
               <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
+              <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
+              
+              {/* Administración */}
               <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
               <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
-              <Stack.Screen name="Wallet" component={WalletScreen} />
-              
-              {/* Detalles y checkout */}
-              <Stack.Screen name="KitDetail" component={KitDetailScreen} />
-              <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
-              <Stack.Screen name="Checkout" component={CheckoutScreen} />
-              <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
             </>
           ) : (
             /* === PANTALLAS PÚBLICAS === */

@@ -229,6 +229,25 @@ export interface Category {
   maxPrice: number;
 }
 
+export interface DefaultKitItem {
+  id: number;
+  item: Article;
+}
+
+export interface DefaultKit {
+  id: number;
+  name: string;
+  description: string;
+  basePrice: number;
+  items: DefaultKitItem[];
+}
+
+export interface DefaultKitCreateRequest {
+  name: string;
+  description: string;
+  itemsIds?: number[];
+}
+
 export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
 export type IncidentStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
 
@@ -355,6 +374,8 @@ export type RootStackParamList = {
   MyKits: undefined;
   MyKitsHistory: undefined;
   KitDetail: { kitId: number };
+  DefaultKits: undefined;
+  EditDefaultKit: { kitId: number };
   UploadArticle: undefined;
   AdminUsers: undefined;
   AdminUserForm: { userId?: number };
@@ -365,6 +386,9 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
+  DefaultKits: undefined;
+  DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
+  Commission: undefined;
   Wallet: undefined;
 };
 
