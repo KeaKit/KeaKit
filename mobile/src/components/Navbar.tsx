@@ -1,4 +1,3 @@
-// src/components/Navbar.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -20,7 +19,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ userRole }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  // Para usuarios normales (sin cambios)
+  // Para usuarios normales
   const userNavItems: NavItem[] = [
     { name: 'Artículos', icon: 'file-tray-full-outline', screen: 'MyArticles' },
     { name: 'Servicios', icon: 'construct-outline', screen: 'MyServices' },
@@ -29,7 +28,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole }) => {
     { name: 'Perfil', icon: 'person-outline', screen: 'Profile' },
   ];
 
-  // Para administradores - NUEVA DISTRIBUCIÓN
+  // Para administradores
   const adminNavItems: NavItem[] = [
     { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers' },
     { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories' },
@@ -38,7 +37,6 @@ const Navbar: React.FC<NavbarProps> = ({ userRole }) => {
     { name: 'Perfil', icon: 'person-outline', screen: 'Profile' },
   ];
 
-  // Seleccionar items según el rol
   const navItems: NavItem[] = userRole === 'ADMIN' ? adminNavItems : userNavItems;
 
   const navigateToScreen = (screen: NavbarScreen) => {

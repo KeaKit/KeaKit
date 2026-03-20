@@ -1,4 +1,3 @@
-// src/components/MainLayout.tsx
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Dimensions, Platform } from 'react-native';
 import { useAuth } from '../context/AuthContext';
@@ -17,14 +16,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // Función para verificar si es móvil/tablet
     const checkIsMobile = () => {
       const { width } = Dimensions.get('window');
-      // 768px es el punto de corte típico para móvil/tablet
       setIsMobile(width < 768);
     };
 
-    // Comprobar al montar
     checkIsMobile();
 
-    // Suscribirse a cambios de dimensión (rotación, redimensionamiento en web)
     const subscription = Dimensions.addEventListener('change', checkIsMobile);
     
     return () => subscription?.remove();

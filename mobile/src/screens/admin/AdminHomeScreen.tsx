@@ -1,4 +1,3 @@
-// src/screens/admin/AdminHomeScreen.tsx
 import React, { useRef, useEffect } from 'react';
 import {
   View,
