@@ -42,7 +42,7 @@ jobs:
 
       - name: Frontend tests + coverage
         working-directory: mobile
-        run: npm test -- --coverage
+        run: npm test -- --coverage --config={}
 
       - name: Run Codacy Analysis
         uses: codacy/codacy-analysis-cli-action@v4
