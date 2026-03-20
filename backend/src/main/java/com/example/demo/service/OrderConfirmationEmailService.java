@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 
 import org.slf4j.Logger;
@@ -14,8 +15,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
-import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.Kit;
+import com.example.demo.dto.KitResponse;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
@@ -39,22 +40,42 @@ public class OrderConfirmationEmailService {
     private String fromEmail;
 
     public void sendOrderConfirmation(Kit kit) {
-        // TODO: Utilizar KitResponse
-        if (kit == null || kit.getTenant() == null || kit.getTenant().getEmail() == null || kit.getTenant().getEmail().isBlank()) {
-            logger.warn("No se puede enviar confirmación: el kit o email del arrendatario es inválido");
+        if (kit == null) {
+            logger.warn("No se puede enviar confirmación: kit es nulo");
+            return;
+        }
+        KitResponse resp = new KitResponse(kit);
+        String recipientEmail = kit.getTenant() != null ? kit.getTenant().getEmail() : null;
+        if (recipientEmail == null || recipientEmail.isBlank()) {
+            logger.warn("No se puede enviar confirmación: email del arrendatario no encontrado en Kit id={}", kit.getId());
+            return;
+        }
+        sendOrderConfirmation(resp, recipientEmail, kit.getId());
+    }
+
+    public void sendOrderConfirmation(KitResponse kitResponse, String explicitRecipientEmail, Long originalKitId) {
+        if (kitResponse == null) {
+            logger.warn("No se puede enviar confirmación: kitResponse es nulo");
+            return;
+        }
+
+        String recipientEmail = explicitRecipientEmail;
+        if (recipientEmail == null || recipientEmail.isBlank()) {
+            logger.warn("No se puede enviar confirmación: email del arrendatario no proporcionado en KitResponse id={}", kitResponse.getId());
             return;
         }
 
         if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
-            logger.warn("SENDGRID_API_KEY no configurada. Se omite envío de correo de confirmación para kit {}", kit.getId());
+            logger.warn("SENDGRID_API_KEY no configurada. Se omite envío de correo de confirmación para kit {}", kitResponse.getId());
             return;
         }
 
-        String recipientEmail = kit.getTenant().getEmail();
-        String tenantName = kit.getTenant().getName() != null ? kit.getTenant().getName() : "usuario";
+        String tenantName = kitResponse.getTenantName() != null && !kitResponse.getTenantName().isBlank()
+            ? kitResponse.getTenantName()
+            : "usuario";
         String subject = "Confirmación de pedido - KeaKit";
 
-        String htmlContent = buildHtmlContent(kit, tenantName);
+        String htmlContent = buildHtmlContent(kitResponse, tenantName);
 
         Mail mail = new Mail(
             new Email(fromEmail),
@@ -75,18 +96,28 @@ public class OrderConfirmationEmailService {
             int statusCode = response.getStatusCode();
 
             if (statusCode >= 200 && statusCode < 300) {
-                logger.info("Correo de confirmación enviado para kit {} a {}", kit.getId(), recipientEmail);
+                logger.info("Correo de confirmación enviado");
+                try {
+                    if (response.getBody() != null && !response.getBody().isBlank()) {
+                        logger.debug("SendGrid response body: {}", response.getBody());
+                    }
+                    if (response.getHeaders() != null && !response.getHeaders().isEmpty()) {
+                        logger.debug("SendGrid response headers: {}", response.getHeaders());
+                    }
+                } catch (Exception e) {
+                    logger.debug("No se pudo leer body/headers de la respuesta de SendGrid", e);
+                }
                 return;
             }
 
             logger.error(
                 "Error al enviar correo de confirmación para kit {}. Código: {}, Body: {}",
-                kit.getId(),
+                kitResponse.getId(),
                 statusCode,
                 response.getBody()
             );
         } catch (Exception ex) {
-            logger.error("Excepción enviando correo de confirmación para kit {}", kit.getId(), ex);
+            logger.error("Excepción enviando correo de confirmación para kit {}", kitResponse.getId(), ex);
         }
     }
 
@@ -120,93 +151,47 @@ public class OrderConfirmationEmailService {
         return safeValue(currencyFormatter.format(amount));
     }
 
-    private String formatDeliveryMethod(Kit kit) {
-        if (kit.getDeliveryMethod() == null) {
-            return "Pendiente de definir";
-        }
-
-        return switch (kit.getDeliveryMethod()) {
-            case COURIER -> "Envío por mensajería";
-            case MEETING_POINT -> "Entrega en punto de encuentro";
-        };
-    }
-
-    private String formatMeetingPoint(Kit kit) {
-        if (kit.getDeliveryMethod() == DeliveryMethod.COURIER) {
-            return "No aplica";
-        }
-
-        if (kit.getMeetingPoint() == null || kit.getMeetingPoint().isBlank()) {
-            return "Pendiente de confirmar";
-        }
-
-        return safeValue(kit.getMeetingPoint());
-    }
-
-    private String formatCourierPrice(Kit kit) {
-        if (kit.getDeliveryMethod() != DeliveryMethod.COURIER) {
-            return "No aplica";
-        }
-
-        if (kit.getCourierPrice() == null || kit.getCourierPrice() <= 0) {
-            return "Incluido";
-        }
-
-        return formatCurrency(kit.getCourierPrice(), "Incluido");
-    }
-
-    private String formatTotalItems(Kit kit) {
-        if (kit.getSnapshots() == null || kit.getSnapshots().isEmpty()) {
-            return "0";
-        }
-
-        int totalItems = kit.getSnapshots().stream()
-            .mapToInt(snapshot -> snapshot.getSelectedUnits() != null ? snapshot.getSelectedUnits() : 0)
-            .sum();
-
-        return safeValue(totalItems);
-    }
-
-    private String buildHtmlContent(Kit kit, String tenantName) {
+    private String buildHtmlContent(KitResponse kit, String tenantName) {
         try {
             ClassPathResource templateResource = new ClassPathResource(TEMPLATE_PATH);
             String template = StreamUtils.copyToString(templateResource.getInputStream(), StandardCharsets.UTF_8);
 
             StringBuilder itemsHtml = new StringBuilder();
-            if (kit.getSnapshots() == null || kit.getSnapshots().isEmpty()) {
+            int rentalDays = 0;
+            if (kit.getStartDate() != null && kit.getEndDate() != null) {
+                rentalDays = (int) ChronoUnit.DAYS.between(kit.getStartDate(), kit.getEndDate());
+                if (rentalDays <= 0) rentalDays = 1;
+            }
+            double prorationFactor = (rentalDays > 0) ? ((double) rentalDays) / 30.0 : 0.0;
+
+            double subtotalProrated = 0.0;
+            if (kit.getItems() == null || kit.getItems().isEmpty()) {
                 itemsHtml.append("<tr><td style=\"padding:12px 0; font-size:14px; color:#7a7a7a;\">No hay artículos en este pedido.</td></tr>");
             } else {
-                for (var snapshot : kit.getSnapshots()) {
-                    String rawImg = snapshot.getImageUrlAtRental();
-                    String img;
-                    if (rawImg == null || rawImg.isBlank() || rawImg.equals("-")) {
-                        img = "https://via.placeholder.com/64?text=Img";
-                    } else {
-                        img = escapeHtml(rawImg);
-                    }
-                    String name = safeValue(snapshot.getNameAtRental());
-                    String qty = safeValue(snapshot.getSelectedUnits());
-                    Double priceAtRental = snapshot.getPriceAtRental();
-                    Double subtotal = null;
+                for (var item : kit.getItems()) {
+                    String name = safeValue(item.getName());
+                    String qty = safeValue(item.getQuantity());
+                    Double priceAtRental = item.getPricePerMonth();
+                    Double perUnitProrated = null;
+                    Double subtotal = 0.0;
                     if (priceAtRental != null) {
-                        int units = snapshot.getSelectedUnits() != null ? snapshot.getSelectedUnits() : 1;
-                        subtotal = priceAtRental * units;
+                        perUnitProrated = priceAtRental * prorationFactor;
+                        if (item.getQuantity() != null) {
+                            subtotal = perUnitProrated * item.getQuantity();
+                            subtotalProrated += subtotal;
+                        }
                     }
 
                     itemsHtml.append("<tr style=\"border-bottom:1px solid #e8ecf1;\">")
-                        .append("<td style=\"padding:12px 8px; width:80px; vertical-align:middle;\">")
-                        .append("<img src=\"")
-                        .append(img)
-                        .append("\" alt=\"")
-                        .append(name)
-                        .append("\" width=\"64\" height=\"64\" style=\"display:block; border-radius:8px; object-fit:cover;\" />")
-                        .append("</td>")
                         .append("<td style=\"padding:12px 8px; vertical-align:middle;\">")
                         .append("<p style=\"margin:0; font-weight:700; color:#2d6e91;\">")
                         .append(name)
                         .append("</p>")
-                        .append("<p style=\"margin:4px 0 0 0; font-size:13px; color:#7a7a7a;\">Cantidad: ")
+                        .append("<p style=\"margin:4px 0 0 0; font-size:13px; color:#7a7a7a;\">Unidades seleccionadas: ")
                         .append(qty)
+                        .append("</p>")
+                        .append("<p style=\"margin:4px 0 0 0; font-size:13px; color:#7a7a7a;\">Precio por unidad (prorr.): ")
+                        .append(formatCurrency(perUnitProrated, "-"))
                         .append("</p>")
                         .append("</td>")
                         .append("<td style=\"padding:12px 8px; vertical-align:middle; text-align:right; width:120px;\">")
@@ -218,23 +203,37 @@ public class OrderConfirmationEmailService {
                 }
             }
 
+            String orderDateStr = kit.getOrderDate() != null ? formatDate(kit.getOrderDate()) : formatDate(java.time.LocalDate.now());
+            String deliveryMethodStr = kit.getDeliveryMethod() != null ? (kit.getDeliveryMethod() == com.example.demo.model.DeliveryMethod.COURIER ? "Envío por mensajería" : "Entrega en punto de encuentro") : "Pendiente de definir";
+
+            double guaranteeRate = kit.getAppliedGuaranteeRate() != null ? kit.getAppliedGuaranteeRate() : 0.2;
+            double commissionRate = kit.getAppliedCommissionRate() != null ? kit.getAppliedCommissionRate() : 0.2;
+            double guaranteeAmount = subtotalProrated * guaranteeRate;
+            double commissionAmount = subtotalProrated * commissionRate;
+            double courier = kit.getCourierPrice() != null ? kit.getCourierPrice() : 0.0;
+            double totalEstimated = subtotalProrated + guaranteeAmount + commissionAmount + courier;
+
             return template
                 .replace("{{tenantName}}", safeValue(tenantName))
-                .replace("{{kitId}}", safeValue(kit.getId()))
                 .replace("{{kitName}}", safeValue(kit.getName()))
-                .replace("{{orderDate}}", formatDate(kit.getOrderDate()))
+                .replace("{{orderDate}}", safeValue(orderDateStr))
                 .replace("{{kitCity}}", safeValue(kit.getCity()))
                 .replace("{{kitCountry}}", safeValue(kit.getCountry()))
                 .replace("{{kitStartDate}}", formatDate(kit.getStartDate()))
                 .replace("{{kitEndDate}}", formatDate(kit.getEndDate()))
-                .replace("{{deliveryMethod}}", safeValue(formatDeliveryMethod(kit)))
-                .replace("{{meetingPoint}}", formatMeetingPoint(kit))
-                .replace("{{courierPrice}}", formatCourierPrice(kit))
-                .replace("{{totalItems}}", formatTotalItems(kit))
-                .replace("{{totalPrice}}", formatCurrency(kit.calculateTotal(), "-"))
-                .replace("{{itemsRows}}", itemsHtml.toString());
+                .replace("{{deliveryMethod}}", safeValue(deliveryMethodStr))
+                .replace("{{meetingPoint}}", safeValue(kit.getMeetingPoint()))
+                .replace("{{courierPrice}}", formatCurrency(courier, "Incluido"))
+                .replace("{{totalItems}}", safeValue(kit.getTotalSelectedItems()))
+                .replace("{{totalPrice}}", formatCurrency(totalEstimated, "-"))
+                .replace("{{itemsRows}}", itemsHtml.toString())
+                .replace("{{subtotalPrice}}", formatCurrency(subtotalProrated, "-"))
+                .replace("{{guaranteePrice}}", formatCurrency(guaranteeAmount, "-"))
+                .replace("{{platformFee}}", formatCurrency(commissionAmount, "-"))
+                .replace("{{comissionPercent}}", (int)(commissionRate * 100) + "%")
+                .replace("{{guaranteePercent}}", (int)(guaranteeRate * 100) + "%");
         } catch (IOException ex) {
-            logger.error("No se pudo cargar la plantilla HTML de confirmación", ex);
+            logger.error("No se pudo cargar la plantilla HTML de confirmación (KitResponse)", ex);
             return "<p>Tu pedido ha sido confirmado correctamente. ID: " + safeValue(kit.getId()) + "</p>";
         }
     }

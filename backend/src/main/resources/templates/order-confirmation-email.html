@@ -35,7 +35,9 @@
                   <td style="padding: 28px 28px 12px 28px;">
                     <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #2d6e91;">Resumen del pedido</p>
                     <h2 style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 800; color: #2d6e91;">{{kitName}}</h2>
-                    <p style="margin: 8px 0 0 0; font-size: 14px; color: #7a7a7a;">Pedido #{{kitId}} · Registrado el {{orderDate}}</p>
+miKIt
+
+                    <p style="margin: 8px 0 0 0; font-size: 14px; color: #7a7a7a;">Registrado el {{orderDate}}</p>
                   </td>
                 </tr>
 
@@ -98,8 +100,27 @@
                         <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; font-weight: 700; color: #2d6e91;">{{meetingPoint}}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 14px 0 0 0; font-size: 14px; color: #7a7a7a; width: 42%;">Coste de envío</td>
-                        <td style="padding: 14px 0 0 0; font-size: 14px; font-weight: 700; color: #2d6e91;">{{courierPrice}}</td>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; color: #7a7a7a; width: 42%;">Coste de envío</td>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; font-weight: 700; color: #2d6e91;">{{courierPrice}}</td>
+                      </tr>
+                    </table>
+                    <!-- Breakdown financiero -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:12px; border-collapse: collapse;">
+                      <tr>
+                        <td style="padding: 8px 0; font-size: 14px; color: #7a7a7a; width: 60%;">Subtotal productos</td>
+                        <td style="padding: 8px 0; font-size: 14px; font-weight:700; color:#2d6e91; text-align:right;">{{subtotalPrice}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; font-size: 14px; color: #7a7a7a;">Garantía ({{guaranteePercent}})</td>
+                        <td style="padding: 8px 0; font-size: 14px; font-weight:700; color:#2d6e91; text-align:right;">{{guaranteePrice}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; font-size: 14px; color: #7a7a7a;">Comisión ({{comissionPercent}})</td>
+                        <td style="padding: 8px 0; font-size: 14px; font-weight:700; color:#2d6e91; text-align:right;">{{platformFee}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; font-size: 14px; color: #7a7a7a;">Tarifa de mensajería</td>
+                        <td style="padding: 8px 0; font-size: 14px; font-weight:700; color:#2d6e91; text-align:right;">{{courierPrice}}</td>
                       </tr>
                     </table>
                   </td>

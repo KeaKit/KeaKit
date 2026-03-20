@@ -75,7 +75,9 @@ public class KitResponse {
     private DeliveryMethod deliveryMethod;
     private String meetingPoint;
     private Double courierPrice;
-    private Long tenantId; // TODO: Añadir más datos sobre tenant (email)
+    private Long tenantId;
+    private String tenantName;
+    private String tenantEmail;
     private List<Long> itemIds;
     private List<KitItemResponse> items;
     private Integer totalSelectedItems;
@@ -83,6 +85,8 @@ public class KitResponse {
     private Double guaranteePrice;
     private Double platformFee;
     private Double totalPrice;
+    private Double appliedCommissionRate;
+    private Double appliedGuaranteeRate;
 
     public KitResponse(Kit kit) {
         this.id = kit.getId();
@@ -99,6 +103,8 @@ public class KitResponse {
         this.meetingPoint = kit.getMeetingPoint();
         this.courierPrice = kit.getCourierPrice();
         this.tenantId = kit.getTenant() != null ? kit.getTenant().getId() : null;
+    this.tenantName = kit.getTenant() != null ? kit.getTenant().getName() : null;
+    this.tenantEmail = kit.getTenant() != null ? kit.getTenant().getEmail() : null;
 
         List<ItemMemento> snapshots = kit.getSnapshots() != null ? kit.getSnapshots() : List.of();
 
@@ -126,6 +132,8 @@ public class KitResponse {
         this.guaranteePrice = kit.calculateTotalGuarantee();
         this.platformFee = kit.calculatePlatformFee();
         this.totalPrice = kit.calculateTotal();
+        this.appliedCommissionRate = kit.getAppliedCommissionRate();
+        this.appliedGuaranteeRate = kit.getAppliedGuaranteeRate();
     }
 
     public Long getId() {
@@ -196,6 +204,14 @@ public class KitResponse {
         return tenantId;
     }
 
+    public String getTenantName() {
+        return tenantName;
+    }
+
+    public String getTenantEmail() {
+        return tenantEmail;
+    }
+
     public Double getSubtotalPrice() {
         return subtotalPrice;
     }
@@ -210,6 +226,14 @@ public class KitResponse {
 
     public Double getTotalPrice() {
         return totalPrice;
+    }
+
+    public Double getAppliedCommissionRate() {
+        return appliedCommissionRate;
+    }
+
+    public Double getAppliedGuaranteeRate() {
+        return appliedGuaranteeRate;
     }
 
     private LocalDate calculateEstimatedDeliveryDate(LocalDate orderDate, LocalDate startDate) {
