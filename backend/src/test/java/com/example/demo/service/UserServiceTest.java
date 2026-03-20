@@ -74,7 +74,6 @@ class UserServiceTest {
             saved.setId(10L);
             return saved;
         });
-        // CORREGIDO: Pasar 3 argumentos a generateToken (email, userId, role)
         when(jwtUtil.generateToken("new.user@test.com", 10L, UserRole.USER)).thenReturn("jwt-token");
 
         UserResponse response = userService.register(registerRequest);
@@ -95,7 +94,6 @@ class UserServiceTest {
         assertEquals(UserRole.USER, userToSave.getRole());
 
         verify(walletRepository).save(any());
-        // CORREGIDO: Verificar con 3 argumentos
         verify(jwtUtil).generateToken("new.user@test.com", 10L, UserRole.USER);
     }
 
@@ -107,14 +105,13 @@ class UserServiceTest {
 
         verify(userRepository, never()).save(any(User.class));
         verify(walletRepository, never()).save(any());
-        verify(jwtUtil, never()).generateToken(anyString(), anyLong(), any(UserRole.class));
+        verify(jwtUtil, never()).generateToken(any(), any(), any());
     }
 
     @Test
     void login_success_returnsUserResponseWithToken() {
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(loginRequest.getPassword(), existingUser.getPassword())).thenReturn(true);
-        // CORREGIDO: Pasar 3 argumentos a generateToken (email, userId, role)
         when(jwtUtil.generateToken(existingUser.getEmail(), existingUser.getId(), existingUser.getRole())).thenReturn("jwt-token");
 
         UserResponse response = userService.login(loginRequest);
@@ -124,7 +121,6 @@ class UserServiceTest {
         assertEquals(existingUser.getEmail(), response.getEmail());
         assertEquals("jwt-token", response.getToken());
 
-        // CORREGIDO: Verificar con 3 argumentos
         verify(jwtUtil).generateToken(eq(existingUser.getEmail()), eq(existingUser.getId()), eq(existingUser.getRole()));
     }
 
@@ -135,7 +131,7 @@ class UserServiceTest {
         assertThrows(UserNotFoundException.class, () -> userService.login(loginRequest));
 
         verify(passwordEncoder, never()).matches(any(), any());
-        verify(jwtUtil, never()).generateToken(anyString(), anyLong(), any(UserRole.class));
+        verify(jwtUtil, never()).generateToken(any(), any(), any());
     }
 
     @Test
@@ -145,7 +141,7 @@ class UserServiceTest {
 
         assertThrows(InvalidCredentialsException.class, () -> userService.login(loginRequest));
 
-        verify(jwtUtil, never()).generateToken(anyString(), anyLong(), any(UserRole.class));
+        verify(jwtUtil, never()).generateToken(any(), any(), any());
     }
 
     @Test

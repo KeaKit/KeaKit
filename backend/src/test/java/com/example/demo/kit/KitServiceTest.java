@@ -259,6 +259,249 @@ public class KitServiceTest {
         assertEquals("Item is not part of this kit", ex.getMessage());
     }
 
+    // ==========================================
+    // TESTS ADICIONALES PARA CU-ARRENDATARIO-07
+    // Modificar kits predeterminados (añadir/eliminar productos)
+    // Reglas de negocio: RN-KIT-11, RN-KIT-12, RN-KIT-13, RN-KIT-14
+    // ==========================================
+
+    // --- addItemToKit: validaciones de entidades ---
+
+    @Test
+    void addItemToKit_userNotFound_throwsException() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            kitService.addItemToKit(10L, 100L, 999L));
+        assertEquals("User not found", ex.getMessage());
+    }
+
+    @Test
+    void addItemToKit_kitNotFound_throwsException() {
+        User user = createTestUser(1L, "User");
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(999L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            kitService.addItemToKit(999L, 100L, user.getId()));
+        assertEquals("Kit not found", ex.getMessage());
+    }
+
+    @Test
+    void addItemToKit_itemNotFound_throwsException() {
+        // RN-KIT-12: Cada selección de ítem debe incluir un ID de ítem válido y existente
+        User user = createTestUser(1L, "User");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setSnapshots(new ArrayList<>());
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(itemRepository.findById(999L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            kitService.addItemToKit(kit.getId(), 999L, user.getId()));
+        assertEquals("Item not found", ex.getMessage());
+    }
+
+    @Test
+    void addItemToKit_snapshotCapturesCorrectData() {
+        // Verificar que el snapshot captura nombre, precio e ID original del artículo
+        User user = createTestUser(1L, "Tenant");
+        User owner = createTestUser(2L, "Owner");
+        Article article = createTestArticle(100L, "Bicicleta", 3, owner);
+        article.setPricePerMonth(25.0);
+
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setSnapshots(new ArrayList<>());
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+        when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        kitService.addItemToKit(kit.getId(), article.getId(), user.getId());
+
+        assertEquals(1, kit.getSnapshots().size());
+        ItemMemento snapshot = kit.getSnapshots().get(0);
+        assertEquals(100L, snapshot.getOriginalItemId());
+        assertEquals("Bicicleta", snapshot.getNameAtRental());
+        assertEquals(25.0, snapshot.getPriceAtRental());
+        assertEquals(1, snapshot.getSelectedUnits());
+        assertEquals(owner, snapshot.getOwnerAtRental());
+    }
+
+    @Test
+    void addItemToKit_multipleItems_allPresent() {
+        // RN-KIT-11: Un kit debe tener al menos un ítem seleccionado (se pueden añadir varios)
+        User user = createTestUser(1L, "Tenant");
+        User owner = createTestUser(2L, "Owner");
+        Article article1 = createTestArticle(100L, "Taladro", 5, owner);
+        Article article2 = createTestArticle(101L, "Sierra", 3, owner);
+
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setSnapshots(new ArrayList<>());
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article1));
+        when(itemRepository.findById(101L)).thenReturn(Optional.of(article2));
+        when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        kitService.addItemToKit(kit.getId(), 100L, user.getId());
+        kitService.addItemToKit(kit.getId(), 101L, user.getId());
+
+        assertEquals(2, kit.getSnapshots().size());
+        assertEquals(100L, kit.getSnapshots().get(0).getOriginalItemId());
+        assertEquals(101L, kit.getSnapshots().get(1).getOriginalItemId());
+    }
+
+    @Test
+    void addItemToKit_setsKitReferenceOnSnapshot() {
+        // Verificar relación bidireccional: el snapshot debe tener referencia al kit
+        User user = createTestUser(1L, "User");
+        Article article = createTestArticle(100L, "Martillo", 2, createTestUser(2L, "Owner"));
+
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setSnapshots(new ArrayList<>());
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+        when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        kitService.addItemToKit(kit.getId(), article.getId(), user.getId());
+
+        ItemMemento snapshot = kit.getSnapshots().get(0);
+        assertEquals(kit, snapshot.getKit());
+    }
+
+    // --- removeItemFromKit: validaciones de entidades ---
+
+    @Test
+    void removeItemFromKit_userNotFound_throwsException() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            kitService.removeItemFromKit(10L, 100L, 999L));
+        assertEquals("User not found", ex.getMessage());
+    }
+
+    @Test
+    void removeItemFromKit_kitNotFound_throwsException() {
+        User user = createTestUser(1L, "User");
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(999L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            kitService.removeItemFromKit(999L, 100L, user.getId()));
+        assertEquals("Kit not found", ex.getMessage());
+    }
+
+    @Test
+    void removeItemFromKit_emptySnapshots_throwsException() {
+        // Kit sin snapshots → "Kit is already empty"
+        User user = createTestUser(1L, "User");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setSnapshots(new ArrayList<>());
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            kitService.removeItemFromKit(kit.getId(), 100L, user.getId()));
+        assertEquals("Kit is already empty", ex.getMessage());
+    }
+
+    @Test
+    void removeItemFromKit_preservesRemainingItems() {
+        // RN-KIT-22: Modificar selección → verificar que el resto de ítems no se ve afectado
+        User user = createTestUser(1L, "User");
+        Kit kit = new Kit();
+        kit.setId(10L);
+
+        ItemMemento snap1 = createTestSnapshot(100L);
+        snap1.setNameAtRental("Taladro");
+        snap1.setPriceAtRental(30.0);
+        ItemMemento snap2 = createTestSnapshot(101L);
+        snap2.setNameAtRental("Sierra");
+        snap2.setPriceAtRental(40.0);
+        ItemMemento snap3 = createTestSnapshot(102L);
+        snap3.setNameAtRental("Martillo");
+        snap3.setPriceAtRental(15.0);
+
+        kit.setSnapshots(new ArrayList<>(List.of(snap1, snap2, snap3)));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        kitService.removeItemFromKit(kit.getId(), 101L, user.getId());
+
+        assertEquals(2, kit.getSnapshots().size());
+        assertEquals(100L, kit.getSnapshots().get(0).getOriginalItemId());
+        assertEquals("Taladro", kit.getSnapshots().get(0).getNameAtRental());
+        assertEquals(102L, kit.getSnapshots().get(1).getOriginalItemId());
+        assertEquals("Martillo", kit.getSnapshots().get(1).getNameAtRental());
+    }
+
+    @Test
+    void removeItemFromKit_unlinksMementoFromKit() {
+        // Verificar que al eliminar se desvincula el snapshot del kit
+        User user = createTestUser(1L, "User");
+        Kit kit = new Kit();
+        kit.setId(10L);
+
+        ItemMemento snap1 = createTestSnapshot(100L);
+        snap1.setKit(kit);
+        ItemMemento snap2 = createTestSnapshot(101L);
+        snap2.setKit(kit);
+
+        kit.setSnapshots(new ArrayList<>(List.of(snap1, snap2)));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        kitService.removeItemFromKit(kit.getId(), 100L, user.getId());
+
+        // El snapshot eliminado debe tener kit = null
+        assertEquals(null, snap1.getKit());
+        // El que queda sigue vinculado
+        assertEquals(kit, snap2.getKit());
+    }
+
+    @Test
+    void addThenRemoveItem_roundTrip() {
+        // CU-ARRENDATARIO-07 flujo completo: añadir y luego eliminar un producto
+        User user = createTestUser(1L, "Tenant");
+        User owner = createTestUser(2L, "Owner");
+        Article article = createTestArticle(200L, "Cámara", 1, owner);
+
+        Kit kit = new Kit();
+        kit.setId(10L);
+        ItemMemento existingSnap = createTestSnapshot(100L);
+        kit.setSnapshots(new ArrayList<>(List.of(existingSnap)));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        when(itemRepository.findById(200L)).thenReturn(Optional.of(article));
+        when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Añadir
+        kitService.addItemToKit(kit.getId(), 200L, user.getId());
+        assertEquals(2, kit.getSnapshots().size());
+
+        // Eliminar el que acabamos de añadir
+        kitService.removeItemFromKit(kit.getId(), 200L, user.getId());
+        assertEquals(1, kit.getSnapshots().size());
+        assertEquals(100L, kit.getSnapshots().get(0).getOriginalItemId());
+    }
+
     // --- MÉTODOS HELPER (Para limpiar los tests) ---
 
     private User createTestUser(Long id, String name) {

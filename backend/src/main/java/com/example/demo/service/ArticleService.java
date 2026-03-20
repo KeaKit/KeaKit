@@ -36,6 +36,7 @@ public class ArticleService {
     private final WalletRepository walletRepository;
     private final KitRepository kitRepository;
 
+    private final DefaultKitService defaultKitService;
     @Autowired
     private WalletService walletService;
     
@@ -44,12 +45,13 @@ public class ArticleService {
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
                           KitRepository kitRepository, CategoryRepository categoryRepository, PaymentService paymentService, WalletRepository walletRepository,
-                          CloudinaryService cloudinaryService) {
+                          CloudinaryService cloudinaryService, DefaultKitService defaultKitService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.kitRepository = kitRepository;
         this.categoryRepository = categoryRepository;
         this.cloudinaryService = cloudinaryService;
+        this.defaultKitService = defaultKitService;
         this.paymentService = paymentService;
         this.walletRepository = walletRepository;
     }
@@ -126,7 +128,7 @@ public class ArticleService {
             throw new RuntimeException("Owner (with valid id) is required");
         userRepository.findById(owner.getId())
             .orElseThrow(() -> new RuntimeException("Owner not found"));
-
+        defaultKitService.removeItemFromAllDefaultKits(article.getId());
         return articleRepository.save(article);
     }
 

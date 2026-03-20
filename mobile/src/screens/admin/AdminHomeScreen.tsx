@@ -87,6 +87,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     screen: 'MyIncidents',
   },
   {
+    id: 'default-kits',
+    icon: 'cube',
+    label: 'Gestión de kits Predeterminados',
+    description: 'Crear, editar y eliminar kits predeterminados',
+    color: KC.blueDark,
+    implemented: true,
+    screen: 'DefaultKits',
+  },
+  {
     id: 'object-types',
     icon: 'cube',
     label: 'Tipos de Objetos',
@@ -108,7 +117,8 @@ const ADMIN_SECTIONS: AdminSection[] = [
     label: 'Comisión de Plataforma',
     description: 'Configurar el % de comisión por alquiler',
     color: KC.lightBlue,
-    implemented: false,
+    implemented: true,
+    screen: 'Commission',
   },
   {
     id: 'stats',
