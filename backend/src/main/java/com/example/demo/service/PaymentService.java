@@ -246,9 +246,9 @@ public class PaymentService {
         }
 
         Long amountInCents = (long) (amount * 100);
-        // Sacar dinero de Stripe
+        // Sacar dinero de Stripe en centimos
         createPayout(amountInCents);
-        // Restar saldo de la wallet
+        // Restar saldo de la wallet del usuario
         walletService.updateWalletBalance(userId, amount);
     }
 
