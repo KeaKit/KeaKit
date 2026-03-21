@@ -19,10 +19,10 @@ const CourierDetailScreen = () => {
   const navigation = useNavigation<CourierDetailNav>();
   const route = useRoute<CourierDetailRoute>();
 
-  const courier = route.params.courier;
   const [modalVisible, setModalVisible] = useState(false);
   const [kits, setKits] = useState<KitResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const { courier, isBusy } = route.params;
 
   const openAssignModal = async () => {
     if (!user?.token) return;
@@ -57,10 +57,16 @@ const CourierDetailScreen = () => {
         <Text style={styles.country}>{courier.country}</Text>
       </View>
 
-      <TouchableOpacity style={styles.assignButton} onPress={openAssignModal}>
-        <Ionicons name="navigate-outline" size={18} color="#fff" />
-        <Text style={styles.assignButtonText}>Asignar kit</Text>
-      </TouchableOpacity>
+      {!isBusy && (
+        <TouchableOpacity style={styles.assignButton} onPress={openAssignModal}>
+          <Ionicons name="navigate-outline" size={18} color="#fff" />
+          <Text style={styles.assignButtonText}>Asignar kit</Text>
+        </TouchableOpacity>
+      )}
+
+      {isBusy && (
+        <Text style={styles.busyHint}>Este courier ya tiene un kit asignado.</Text>
+      )}
 
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -157,4 +163,11 @@ const styles = StyleSheet.create({
 
   modalCancel: { marginTop: 12, alignItems: "center" },
   modalCancelText: { color: "#666", fontWeight: "600" },
+
+  busyHint: {
+  textAlign: "center",
+  color: "#d9534f",
+  marginTop: 10,
+  fontWeight: "600",
+},
 });

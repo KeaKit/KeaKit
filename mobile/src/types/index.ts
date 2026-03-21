@@ -317,7 +317,7 @@ export type RootStackParamList = {
   TrackingNotifications: undefined;
   AssignedKits: undefined;
   Couriers: undefined;
-  CourierDetail: { courier: UserResponse };
+  CourierDetail: { courier: UserResponse, isBusy?: boolean };
 };
 
 export interface ProfileData {

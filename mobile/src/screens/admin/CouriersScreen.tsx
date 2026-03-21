@@ -119,7 +119,7 @@ const CouriersScreen = () => {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.userCard}
-              onPress={() => navigation.navigate("CourierDetail", { courier: item })}
+              onPress={() => navigation.navigate("CourierDetail", { courier: item, isBusy: busyIds.includes(item.id) })}
             >
               <View>
                 <Text style={styles.userName}>{item.name}</Text>
