@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/kits/*/tracking").authenticated()
                 .requestMatchers(HttpMethod.PATCH, "/api/kits/*/tracking").hasAnyRole("COURIER", "ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/kits/*/assign-courier/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/kits/courier/assigned").hasAnyRole("COURIER", "ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

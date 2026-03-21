@@ -2,11 +2,13 @@ package com.example.demo.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.KitDeliveryResponse;
+import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.UpdateDeliveryRequest;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitDelivery;
@@ -15,6 +17,9 @@ import com.example.demo.model.UserRole;
 import com.example.demo.repository.KitDeliveryRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
+
+import java.util.List;
+import java.util.Objects;
 
 @Service
 public class KitDeliveryService {
@@ -148,5 +153,22 @@ public class KitDeliveryService {
         }
         LocalDate estimated = kit.getStartDate().minusDays(1);
         return estimated.atStartOfDay();
+    }
+
+    public List<KitResponse> getAssignedKitsForCourier() {
+        UserRole role = authService.getAuthenticatedUserRole();
+
+        if (role != UserRole.COURIER && role != UserRole.ADMIN) {
+            throw new RuntimeException("Only COURIER or ADMIN can access assigned kits");
+        }
+
+        Long courierId = authService.getAuthenticatedUserId();
+        List<KitDelivery> deliveries = kitDeliveryRepository.findByAssignedCourierId(courierId);
+
+        return deliveries.stream()
+            .map(KitDelivery::getKit)
+            .filter(Objects::nonNull)
+            .map(KitResponse::new)
+            .collect(Collectors.toList());
     }
 }

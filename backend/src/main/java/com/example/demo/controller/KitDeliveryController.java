@@ -52,4 +52,14 @@ public class KitDeliveryController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+    @GetMapping("/courier/assigned")
+    public ResponseEntity<?> getAssignedKits() {
+        try {
+            return ResponseEntity.ok(kitDeliveryService.getAssignedKitsForCourier());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
 }

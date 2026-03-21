@@ -51,10 +51,13 @@ export const API_ROUTES = {
   MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
 
-  // Kits / Tracking
+  // Kits / Tracking-Assign 
 
   GET_KIT_TRACKING: (kitId: number) => `${BASE_URL}/api/kits/${kitId}/tracking`,
   UPDATE_KIT_TRACKING: (kitId: number) => `${BASE_URL}/api/kits/${kitId}/tracking`,
+  ASSIGNED_KITS: `${BASE_URL}/api/kits/courier/assigned`,
+  GET_ALL_KITS: `${BASE_URL}/api/kits`,
+  ASSIGN_COURIER: (kitId: number, courierId: number) => `${BASE_URL}/api/kits/${kitId}/assign-courier/${courierId}`,
 
 
   // Payments

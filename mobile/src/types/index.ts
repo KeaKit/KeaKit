@@ -315,6 +315,9 @@ export type RootStackParamList = {
   Wallet: undefined;
   Tracking: { kitId: number };
   TrackingNotifications: undefined;
+  AssignedKits: undefined;
+  Couriers: undefined;
+  CourierDetail: { courier: UserResponse };
 };
 
 export interface ProfileData {
@@ -449,7 +452,7 @@ export type DeliveryStatus =
 export interface KitDeliveryResponse {
   kitId: number;
   status: DeliveryStatus | null;
-  estimatedArrivalAt: string | null;
+  estimatedArrival: string | null;
   lastLocation: string | null;
   lastUpdate: string | null;
   courierId: number | null;
@@ -458,7 +461,7 @@ export interface KitDeliveryResponse {
 
 export interface UpdateDeliveryRequest {
   status?: DeliveryStatus;
-  estimatedArrivalAt?: string;
+  estimatedArrival?: string;
   lastLocation?: string;
 }
 

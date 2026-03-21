@@ -35,6 +35,9 @@ import WalletScreen from '../screens/wallet/WalletScreen';
 import KitTrackingScreen from '../screens/kit/KitTrackingScreen';
 import { TrackingNotificationsProvider } from '../context/TrackingNotificationContext';
 import TrackingNotificationsScreen from '../screens/notifications/TrackingNotificationsScreen';
+import AssignedKitsScreen from '../screens/kit/AssignedKitsScreen';
+import CouriersScreen from '../screens/admin/CouriersScreen';
+import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -85,6 +88,9 @@ const AppNavigator: React.FC = () => {
                 <Stack.Screen name="Wallet" component={WalletScreen} />
                 <Stack.Screen name="Tracking" component={KitTrackingScreen} />
                 <Stack.Screen name="TrackingNotifications" component={TrackingNotificationsScreen} />
+                <Stack.Screen name="AssignedKits" component={AssignedKitsScreen} />
+                <Stack.Screen name="Couriers" component={CouriersScreen} />
+                <Stack.Screen name="CourierDetail" component={CourierDetailScreen} />
               </>
             ) : (
               <>
