@@ -1,0 +1,46 @@
+name: CD - Deploy Frontend to Firebase
+
+on:
+  workflow_run:
+    workflows: ["Frontend CI"]
+    types:
+      - completed
+    branches:
+      - main
+      - 'release/*.*.*'
+
+jobs:
+  deploy-frontend:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js v24.13.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.13.1'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Construir la web con Expo
+        run: npx expo export --platform web
+
+      - name: Desplegar a Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: 'ID_DE_PROYECTO_FIREBASE'
+          channelId: 'live' 
+          # Esto le dice a Firebase que el comando se ejecuta desde la carpeta mobile
+          entryPoint: mobile
