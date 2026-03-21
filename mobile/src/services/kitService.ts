@@ -57,6 +57,40 @@ export async function getKit(kitId: number,
   return handleResponse<KitResponse>(res);
 }
 
+export async function addItemToKit(
+  kitId: number,
+  itemId: number,
+  userId: number,
+  token: string,
+): Promise<KitResponse> {
+  const res = await fetchWithTimeout(
+    API_ROUTES.ADD_ITEM_TO_KIT(kitId, itemId, userId),
+    {
+      method: "POST",
+      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    },
+  );
+
+  return handleResponse<KitResponse>(res);
+}
+
+export async function removeItemFromKit(
+  kitId: number,
+  itemId: number,
+  userId: number,
+  token: string,
+): Promise<KitResponse> {
+  const res = await fetchWithTimeout(
+    API_ROUTES.REMOVE_ITEM_FROM_KIT(kitId, itemId, userId),
+    {
+      method: "DELETE",
+      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    },
+  );
+
+  return handleResponse<KitResponse>(res);
+}
+
 export async function deleteKit(kitId: number, token: string): Promise<void> {
   const res = await fetchWithTimeout(API_ROUTES.GET_KIT(kitId), {
     method: "DELETE",

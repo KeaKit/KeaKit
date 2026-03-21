@@ -16,8 +16,13 @@ export const API_ROUTES = {
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
+  GET_KITS: `${BASE_URL}/api/kits`,
   GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,
   CONFIRM_KIT: (id: number) => `${BASE_URL}/api/kits/confirm/${id}`,
+  ADD_ITEM_TO_KIT: (kitId: number, itemId: number, userId: number) =>
+    `${BASE_URL}/api/kits/${kitId}/items/${itemId}?userId=${userId}`,
+  REMOVE_ITEM_FROM_KIT: (kitId: number, itemId: number, userId: number) =>
+    `${BASE_URL}/api/kits/${kitId}/items/${itemId}?userId=${userId}`,
   KIT_PAYMENT: `${BASE_URL}/api/kits/payment`,
   KIT_MARK_PAID: (id: number) => `${BASE_URL}/api/kits/${id}/pay`,
   KIT_CANCEL: (id: number) => `${BASE_URL}/api/kits/${id}/cancel`,
@@ -50,6 +55,7 @@ export const API_ROUTES = {
   // Kits / Rented items
   MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
+  MY_KITS_HISTORY: (page: number = 0, size: number = 10) => `${BASE_URL}/api/kits/my-history?page=${page}&size=${size}`,
 
   // Kits / Tracking-Assign 
 
@@ -93,6 +99,10 @@ export const API_ROUTES = {
   DELETE_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}`,
   REQUEST_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}/request`,
   RELEASE_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}/release`,
+
+  // Default Kits (kits predeterminados)
+  DEFAULT_KITS: `${BASE_URL}/api/default-kits`,
+  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`
 
 } as const;
 

@@ -146,6 +146,16 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
               
               <TouchableOpacity
                 style={componentStyles.menuItem}
+                onPress={() => navigateTo('DefaultKits')}
+              >
+                <Ionicons name="layers" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>
+                  Kits predeterminados
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
                 onPress={() => navigateTo('MyServices')}
               >
                 <Ionicons name="construct-outline" size={24} color={Colors.primary} />

@@ -1,3 +1,5 @@
+import Ionicons from "@expo/vector-icons/build/Ionicons";
+
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -227,6 +229,25 @@ export interface Category {
   maxPrice: number;
 }
 
+export interface DefaultKitItem {
+  id: number;
+  item: Article;
+}
+
+export interface DefaultKit {
+  id: number;
+  name: string;
+  description: string;
+  basePrice: number;
+  items: DefaultKitItem[];
+}
+
+export interface DefaultKitCreateRequest {
+  name: string;
+  description: string;
+  itemsIds?: number[];
+}
+
 export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
 export type IncidentStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
 
@@ -285,6 +306,59 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
+export type NavbarScreen = 
+  | 'Home'
+  | 'Profile'
+  | 'MyArticles'
+  | 'MyKits'
+  | 'MyServices'
+  | 'MyIncidents'
+  | 'Wallet'
+  | 'MyKitsHistory'
+  | 'UserRatings'
+  | 'AdminUsers'
+  | 'Categories';
+
+export type NavbarHeaderScreen = 
+  | 'Home'
+  | 'Profile'
+  | 'MyArticles'
+  | 'MyKits'
+  | 'MyServices'
+  | 'MyIncidents'
+  | 'Wallet'
+  | 'MyKitsHistory'
+  | 'UserRatings'
+  | 'AdminUsers'
+  | 'Categories'
+  | 'Commission'
+  | 'DefaultKits'
+  | 'Login'
+  | 'Register'
+  | 'TrackingNotifications';;
+
+export interface NavbarHeaderItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen: NavbarHeaderScreen;
+  requiresAuth?: boolean;
+  requiresAdmin?: boolean;
+}
+
+export interface HeaderMenuItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen?: keyof RootStackParamList;
+  onPress?: () => void;
+  danger?: boolean;
+  badge?: string;
+}
+
+export interface HeaderMenuSection {
+  title?: string;
+  items: HeaderMenuItem[];
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -301,7 +375,10 @@ export type RootStackParamList = {
   IncidentDetail: { incidentId: number; isReceived: boolean };
   MyArticles: undefined;
   MyKits: undefined;
+  MyKitsHistory: undefined;
   KitDetail: { kitId: number };
+  DefaultKits: undefined;
+  EditDefaultKit: { kitId: number };
   UploadArticle: undefined;
   AdminUsers: undefined;
   AdminUserForm: { userId?: number };
@@ -312,6 +389,8 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
+  DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
+  Commission: undefined;
   Wallet: undefined;
   Tracking: { kitId: number };
   TrackingNotifications: undefined;
@@ -387,7 +466,6 @@ export enum TransactionType {
   GUARANTEE_REFUND = 'GUARANTEE_REFUND',
   REFUND = 'REFUND'
 }
-
 
 export const EUROPEAN_COUNTRIES = [
   { value: "Albania", label: "Albania" },
