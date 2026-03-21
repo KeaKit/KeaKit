@@ -21,7 +21,10 @@ import {
 import { Colors, commonStyles } from "../../styles";
 import { RootStackParamList } from "../../types";
 
-type WithdrawNav = NativeStackNavigationProp<RootStackParamList, "WithdrawMoney">;
+type WithdrawNav = NativeStackNavigationProp<
+  RootStackParamList,
+  "WithdrawMoney"
+>;
 
 type FormErrors = {
   bankAccount?: string;
@@ -125,12 +128,19 @@ export default function WithdrawMoneyScreen() {
 
   return (
     <SafeAreaView style={commonStyles.container}>
-      <Header title="Retirar dinero" showBack={true} onBack={navigation.goBack} />
+      <Header
+        title="Retirar dinero"
+        showBack={true}
+        onBack={navigation.goBack}
+      />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.formCard}>
             <Text style={commonStyles.subtitle}>Formulario de retirada</Text>
             <Text style={commonStyles.caption}>
@@ -140,42 +150,64 @@ export default function WithdrawMoneyScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Cuenta bancaria (IBAN)</Text>
               <TextInput
-                style={[commonStyles.input, errors.bankAccount ? commonStyles.inputError : null]}
+                style={[
+                  commonStyles.input,
+                  errors.bankAccount ? commonStyles.inputError : null,
+                ]}
                 placeholder="ES12..."
                 autoCapitalize="characters"
                 value={bankAccount}
                 onChangeText={(text) => {
                   setBankAccount(text);
-                  setErrors((prev) => ({ ...prev, bankAccount: undefined, general: undefined }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    bankAccount: undefined,
+                    general: undefined,
+                  }));
                 }}
               />
-              {errors.bankAccount ? <Text style={commonStyles.errorText}>{errors.bankAccount}</Text> : null}
+              {errors.bankAccount ? (
+                <Text style={commonStyles.errorText}>{errors.bankAccount}</Text>
+              ) : null}
             </View>
 
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Cantidad (EUR)</Text>
               <TextInput
-                style={[commonStyles.input, errors.amount ? commonStyles.inputError : null]}
+                style={[
+                  commonStyles.input,
+                  errors.amount ? commonStyles.inputError : null,
+                ]}
                 placeholder="0.00"
                 keyboardType="decimal-pad"
                 value={amount}
                 onChangeText={(text) => {
                   setAmount(text);
-                  setErrors((prev) => ({ ...prev, amount: undefined, general: undefined }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    amount: undefined,
+                    general: undefined,
+                  }));
                 }}
               />
               {availableBalance !== null ? (
                 <Text style={styles.balanceText}>
-                  Saldo disponible: {availableBalance.toLocaleString("es-ES", {
+                  Saldo disponible:{" "}
+                  {availableBalance.toLocaleString("es-ES", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
-                  })} EUR
+                  })}{" "}
+                  EUR
                 </Text>
               ) : null}
-              {errors.amount ? <Text style={commonStyles.errorText}>{errors.amount}</Text> : null}
+              {errors.amount ? (
+                <Text style={commonStyles.errorText}>{errors.amount}</Text>
+              ) : null}
             </View>
 
-            {errors.general ? <Text style={commonStyles.errorText}>{errors.general}</Text> : null}
+            {errors.general ? (
+              <Text style={commonStyles.errorText}>{errors.general}</Text>
+            ) : null}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

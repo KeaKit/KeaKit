@@ -28,7 +28,9 @@ export const getLoggedUserWallet = async (token: string): Promise<Wallet> => {
   return handleResponse<Wallet>(res);
 };
 
-export const getLoggedUserTransactions = async (token: string): Promise<Transaction[]> => {
+export const getLoggedUserTransactions = async (
+  token: string,
+): Promise<Transaction[]> => {
   const res = await fetchWithTimeout(API_ROUTES.GET_MY_TRANSACTIONS, {
     method: "GET",
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },

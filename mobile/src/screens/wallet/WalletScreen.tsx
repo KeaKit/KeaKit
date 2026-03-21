@@ -139,7 +139,9 @@ export default function WalletScreen() {
               style={{ marginTop: 20, justifyContent: "center", flex: 1 }}
             />
           ) : transactions.length === 0 ? (
-            <Text style={commonStyles.caption}>No tienes transacciones aún.</Text>
+            <Text style={commonStyles.caption}>
+              No tienes transacciones aún.
+            </Text>
           ) : (
             <FlatList
               data={transactions}
