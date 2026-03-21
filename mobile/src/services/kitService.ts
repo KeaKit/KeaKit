@@ -97,3 +97,31 @@ export async function updateKitTracking(
   });
   return handleResponse<KitDeliveryResponse>(res);
 }
+
+export async function getAssignedKits(token: string): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.ASSIGNED_KITS, {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+
+export async function getAllKits(token: string): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_ALL_KITS, {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+
+export async function assignCourier(
+  kitId: number,
+  courierId: number,
+  token: string
+): Promise<void> {
+  const res = await fetchWithTimeout(API_ROUTES.ASSIGN_COURIER(kitId, courierId), {
+    method: "PATCH",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  await handleResponse<void>(res);
+}

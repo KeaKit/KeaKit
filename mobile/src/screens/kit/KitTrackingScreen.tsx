@@ -3,10 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
@@ -29,6 +30,9 @@ const KitTrackingScreen: React.FC = () => {
   const [tracking, setTracking] = useState<KitDeliveryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const isActive = (s: DeliveryStatus) => tracking?.status === s;
+  const [location, setLocation] = useState("");
+
 
   const statusLabel = (status?: DeliveryStatus | null) => {
     switch (status) {
@@ -73,8 +77,8 @@ const KitTrackingScreen: React.FC = () => {
     if (!user?.token || !kitId) return;
     try {
       setUpdating(true);
-      const updated = await updateKitTracking(kitId, { status }, user.token);
-      setTracking(updated);
+      await updateKitTracking(kitId, { status, lastLocation: location }, user.token);
+      await loadTracking(); // fuerza actualizar el estado
     } finally {
       setUpdating(false);
     }
@@ -104,7 +108,7 @@ const KitTrackingScreen: React.FC = () => {
             Estado: <Text style={styles.value}>{statusLabel(tracking.status)}</Text>
           </Text>
           <Text style={styles.line}>
-            Estimado: <Text style={styles.value}>{formatDateTime(tracking.estimatedArrivalAt)}</Text>
+            Estimado: <Text style={styles.value}>{formatDateTime(tracking.estimatedArrival)}</Text>
           </Text>
           <Text style={styles.line}>
             Ubicación: <Text style={styles.value}>{tracking.lastLocation ?? "-"}</Text>
@@ -114,37 +118,57 @@ const KitTrackingScreen: React.FC = () => {
           </Text>
 
           {user?.role === "COURIER" && (
+            <View style={styles.locationBox}>
+              <Ionicons name="location-outline" size={18} color="#999" />
+              <TextInput
+                style={styles.locationInput}
+                placeholder="Ubicación actual (ej: Madrid Centro)"
+                value={location}
+                onChangeText={setLocation}
+              />
+            </View>
+          )}
+
+          {user?.role === "COURIER" && (
             <View style={styles.actions}>
               <TouchableOpacity
-                style={styles.actionBtn}
+                style={[styles.actionBtn, isActive("PICKED_UP") && styles.actionDone]}
                 onPress={() => updateStatus("PICKED_UP")}
                 disabled={updating}
               >
-                <Text style={styles.actionText}>Recogido</Text>
+                <Text style={[styles.actionText, isActive("PICKED_UP") && styles.actionTextDone]}>
+                  Recogido
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionBtn}
+                style={[styles.actionBtn, isActive("IN_TRANSIT") && styles.actionDone]}
                 onPress={() => updateStatus("IN_TRANSIT")}
                 disabled={updating}
               >
-                <Text style={styles.actionText}>En camino</Text>
+                <Text style={[styles.actionText, isActive("IN_TRANSIT") && styles.actionTextDone]}>
+                  En camino
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionBtn}
+                style={[styles.actionBtn, isActive("NEARBY") && styles.actionDone]}
                 onPress={() => updateStatus("NEARBY")}
                 disabled={updating}
               >
-                <Text style={styles.actionText}>Cerca</Text>
+                <Text style={[styles.actionText, isActive("NEARBY") && styles.actionTextDone]}>
+                  Cerca
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.actionBtn, styles.actionDone]}
+                style={[styles.actionBtn, isActive("DELIVERED") && styles.actionDone]}
                 onPress={() => updateStatus("DELIVERED")}
                 disabled={updating}
               >
-                <Text style={styles.actionTextDone}>Entregado</Text>
+                <Text style={[styles.actionText, isActive("DELIVERED") && styles.actionTextDone]}>
+                  Entregado
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -181,6 +205,25 @@ const styles = StyleSheet.create({
   actionText: { color: Colors.primary, fontWeight: "600", fontSize: 12 },
   actionDone: { borderColor: "#04ac20" },
   actionTextDone: { color: "#04ac20", fontWeight: "700", fontSize: 12 },
+
+  locationBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 12,
+    backgroundColor: "#fff",
+  },
+  locationInput: {
+    flex: 1,
+    fontSize: 14,
+    color: "#333",
+  },
+
 });
 
 export default KitTrackingScreen;

@@ -134,6 +134,16 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
                 <Text style={componentStyles.menuItemText}>Mis Kits</Text>
               </TouchableOpacity>
 
+              {user?.role === 'COURIER' && (
+                <TouchableOpacity
+                  style={componentStyles.menuItem}
+                  onPress={() => navigateTo('AssignedKits')}
+                >
+                  <Ionicons name="briefcase-sharp" size={24} color={Colors.primary} />
+                  <Text style={componentStyles.menuItemText}>Kits asignados</Text>
+                </TouchableOpacity>
+              )}
+              
               <TouchableOpacity
                 style={componentStyles.menuItem}
                 onPress={() => navigateTo('MyServices')}

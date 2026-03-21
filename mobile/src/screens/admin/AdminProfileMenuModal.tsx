@@ -102,6 +102,14 @@ const AdminProfileMenuModal: React.FC<AdminProfileMenuModalProps> = ({ visible, 
 
               <TouchableOpacity
                 style={componentStyles.menuItem}
+                onPress={() => navigateTo('Couriers')}
+              >
+                <Ionicons name="navigate" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Gestión de Repartidores</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
                 onPress={() => navigateTo('Categories')}
               >
                 <Ionicons name="folder-open" size={24} color={Colors.primary} />
