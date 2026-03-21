@@ -12,6 +12,7 @@ import { RootStackParamList, UserResponse, EUROPEAN_COUNTRIES } from "../../type
 import { Colors, Spacing, commonStyles } from "../../styles";
 import { SelectPicker } from "../../components/SelectPicker";
 import { useLocationPicker } from "../../hooks/useLocationPicker";
+import { getBusyCouriers } from "../../services/kitService";
 
 
 type CouriersNav = NativeStackNavigationProp<RootStackParamList, "Couriers">;
@@ -24,6 +25,7 @@ const CouriersScreen = () => {
   const [loading, setLoading] = useState(true);
   const { selectedCountry, cities, loadingCities, onCountryChange } = useLocationPicker("", "");
   const [city, setCity] = useState("");
+  const [busyIds, setBusyIds] = useState<number[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -33,6 +35,10 @@ const CouriersScreen = () => {
         const data = await getAllUsers(user.token);
         const onlyCouriers = data.filter((u) => u.role === "COURIER");
         setCouriers(onlyCouriers);
+
+        const busy = await getBusyCouriers(user.token, selectedCountry, city);
+        setBusyIds(busy);
+
         setLoading(false);
       };
       load();
@@ -104,7 +110,7 @@ const CouriersScreen = () => {
       {filtered.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="people-outline" size={80} color="#ccc" />
-          <Text style={styles.emptyText}>No hay couriers para este país</Text>
+          <Text style={styles.emptyText}>No hay repartidores disponibles</Text>
         </View>
       ) : (
         <FlatList
@@ -119,6 +125,12 @@ const CouriersScreen = () => {
                 <Text style={styles.userName}>{item.name}</Text>
                 <Text style={styles.userEmail}>{item.email}</Text>
                 <Text style={styles.userCountry}>{item.country}</Text>
+
+                {busyIds.includes(item.id) && (
+                  <View style={styles.busyBadge}>
+                    <Text style={styles.busyBadgeText}>OCUPADO</Text>
+                  </View>
+                )}
               </View>
               <Ionicons name="chevron-forward" size={20} color="#999" />
             </TouchableOpacity>
@@ -181,4 +193,18 @@ const styles = StyleSheet.create({
   userCountry: { fontSize: 12, color: Colors.primary, marginTop: 4 },
   emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
   emptyText: { fontSize: 16, color: "#666", marginTop: Spacing.md, textAlign: "center" },
+
+  busyBadge: {
+    marginTop: 6,
+    alignSelf: "flex-start",
+    backgroundColor: "#ffe8e8",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  busyBadgeText: {
+    color: "#d9534f",
+    fontSize: 10,
+    fontWeight: "700",
+  },
 });

@@ -58,6 +58,18 @@ export const API_ROUTES = {
   ASSIGNED_KITS: `${BASE_URL}/api/kits/courier/assigned`,
   GET_ALL_KITS: `${BASE_URL}/api/kits`,
   ASSIGN_COURIER: (kitId: number, courierId: number) => `${BASE_URL}/api/kits/${kitId}/assign-courier/${courierId}`,
+  BUSY_COURIERS: (country?: string, city?: string) => {
+    const params = new URLSearchParams();
+    if (country) params.append("country", country);
+    if (city) params.append("city", city);
+    return `${BASE_URL}/api/kits/busy-couriers?${params.toString()}`;
+  },
+  UNASSIGNED_KITS: (country?: string, city?: string) => {
+    const params = new URLSearchParams();
+    if (country) params.append("country", country);
+    if (city) params.append("city", city);
+    return `${BASE_URL}/api/kits/unassigned?${params.toString()}`;
+  },
 
 
   // Payments

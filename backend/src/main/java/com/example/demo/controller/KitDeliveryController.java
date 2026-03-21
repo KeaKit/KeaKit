@@ -62,4 +62,27 @@ public class KitDeliveryController {
         }
     }
 
+    @GetMapping("/busy-couriers")
+    public ResponseEntity<?> getBusyCouriers(
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String city
+    ) {
+        try {
+            return ResponseEntity.ok(kitDeliveryService.getBusyCourierIds(country, city));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/unassigned")
+    public ResponseEntity<?> getUnassignedKits(
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String city
+    ) {
+        try {
+            return ResponseEntity.ok(kitDeliveryService.getUnassignedPaidKits(country, city));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 }

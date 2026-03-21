@@ -51,16 +51,26 @@ const HomeScreen: React.FC = () => {
 
   const { unreadCount, addNotification } = useTrackingNotifications();
   const bellAnim = useRef(new Animated.Value(1)).current;
+  const [showBadge, setShowBadge] = useState(false);
+
+  useEffect(() => {
+    if (unreadCount > 0) {
+      setShowBadge(true);
+      const t = setTimeout(() => setShowBadge(false), 4000); // deaparece tras 4 segundos
+      return () => clearTimeout(t);
+    }
+  }, [unreadCount]);
+
 
   const headerAnim = useRef(new Animated.Value(0)).current;
 
   const statusLabel = (status?: DeliveryStatus | null) => {
     switch (status) {
-      case "PICKED_UP": return "Kit recogido por repartidor";
-      case "IN_TRANSIT": return "En camino";
-      case "NEARBY": return "Cerca del domicilio";
-      case "DELIVERED": return "Entregado al arrendatario";
-      default: return "Actualizado";
+      case "PICKED_UP": return "ha sido recogido por repartidor";
+      case "IN_TRANSIT": return "está en camino";
+      case "NEARBY": return "está cerca del domicilio";
+      case "DELIVERED": return "ha sido entregado";
+      default: return "actualizado";
     }
   };
 
@@ -86,7 +96,7 @@ const HomeScreen: React.FC = () => {
             kitId: kit.id,
             kitName: kit.name,
             status: tracking.status,
-            message: `Tu kit "${kit.name}" está ${statusLabel(tracking.status)}.`,
+            message: `Tu kit "${kit.name}" ${statusLabel(tracking.status)}.`,
             createdAt: new Date().toISOString(),
             read: false,
           });
@@ -171,19 +181,21 @@ const HomeScreen: React.FC = () => {
         
         {/* Campana + perfil */}
         <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.bellButton}
-            onPress={() => navigation.navigate("TrackingNotifications")}
-          >
-            <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
-              <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
-            </Animated.View>
-            {unreadCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          {showBadge && (
+            <TouchableOpacity
+              style={styles.bellButton}
+              onPress={() => navigation.navigate("TrackingNotifications")}
+            >
+              <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
+                <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
+              </Animated.View>
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.avatarBtn}

@@ -13,4 +13,6 @@ public interface KitDeliveryRepository extends JpaRepository<KitDelivery, Long> 
 
     List<KitDelivery> findByAssignedCourierId(Long courierId);
 
+    List<KitDelivery> findByAssignedCourierIsNull();
+
 }

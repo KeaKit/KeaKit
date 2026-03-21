@@ -1,12 +1,12 @@
 import React, { useCallback } from "react";
 import {
   FlatList,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -40,7 +40,7 @@ const formatDateTime = (value: string): string => {
 
 const TrackingNotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NotificationsNav>();
-  const { notifications, markAllRead } = useTrackingNotifications();
+  const { notifications, markAllRead, clearAll, removeNotification } = useTrackingNotifications();
 
   useFocusEffect(
     useCallback(() => {
@@ -59,9 +59,14 @@ const TrackingNotificationsScreen: React.FC = () => {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{item.title}</Text>
-        {item.dateLabel ? (
-          <Text style={styles.cardDate}>{item.dateLabel}</Text>
-        ) : null}
+        <View style={styles.cardHeaderRight}>
+          {item.dateLabel ? (
+            <Text style={styles.cardDate}>{item.dateLabel}</Text>
+          ) : null}
+          <TouchableOpacity onPress={() => removeNotification(item.id)}>
+            <Ionicons name="trash-outline" size={16} color="#d9534f" />
+          </TouchableOpacity>
+        </View>
       </View>
       <Text style={styles.cardMessage}>{item.message}</Text>
     </View>
@@ -81,6 +86,15 @@ const TrackingNotificationsScreen: React.FC = () => {
 
         <View style={componentStyles.iconButton} />
       </View>
+
+      {data.length > 0 && (
+        <View style={styles.actionsRow}>
+          <TouchableOpacity style={styles.clearButton} onPress={clearAll}>
+            <Ionicons name="trash-outline" size={18} color="#d9534f" />
+            <Text style={styles.clearButtonText}>Borrar todas las notificaciones</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {data.length === 0 ? (
         <View style={styles.centerContent}>
@@ -155,6 +169,27 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     color: Colors.textSecondary,
   },
+  actionsRow: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.sm,
+  },
+  clearButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  clearButtonText: {
+    color: "#d9534f",
+    fontWeight: "600",
+    fontSize: FontSizes.sm,
+  },
+  cardHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
 });
 
 export default TrackingNotificationsScreen;

@@ -8,7 +8,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList, KitResponse, KitStatus } from "../../types";
 import { useAuth } from "../../context/AuthContext";
-import { getAllKits, assignCourier } from "../../services/kitService";
+import { getAllKits, assignCourier, getUnassignedKits} from "../../services/kitService";
 import { Colors, Spacing, commonStyles } from "../../styles";
 
 type CourierDetailRoute = RouteProp<RootStackParamList, "CourierDetail">;
@@ -27,14 +27,8 @@ const CourierDetailScreen = () => {
   const openAssignModal = async () => {
     if (!user?.token) return;
     setLoading(true);
-    const all = await getAllKits(user.token);
-    const filtered = all.filter(
-      (k) =>
-        k.status === KitStatus.PAID &&
-        k.country === courier.country &&
-        k.deliveryMethod === "COURIER"
-    );
-    setKits(filtered);
+    const data = await getUnassignedKits(user.token, courier.country); // solo país, para ciudad también pondríamos courier.city también
+    setKits(data);
     setLoading(false);
     setModalVisible(true);
   };
@@ -53,7 +47,7 @@ const CourierDetailScreen = () => {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Courier</Text>
+        <Text style={styles.headerTitle}>Repartidores</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -76,7 +70,7 @@ const CourierDetailScreen = () => {
             {loading ? (
               <ActivityIndicator color={Colors.primary} />
             ) : kits.length === 0 ? (
-              <Text style={styles.emptyModalText}>No hay kits PAID para este país</Text>
+              <Text style={styles.emptyModalText}>No hay kits disponibles para asignar en este país</Text>
             ) : (
               <FlatList
                 data={kits}

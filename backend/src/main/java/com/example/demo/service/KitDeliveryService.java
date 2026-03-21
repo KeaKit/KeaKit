@@ -10,8 +10,11 @@ import org.springframework.stereotype.Service;
 import com.example.demo.dto.KitDeliveryResponse;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.UpdateDeliveryRequest;
+import com.example.demo.model.DeliveryMethod;
+import com.example.demo.model.DeliveryStatus;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitDelivery;
+import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.KitDeliveryRepository;
@@ -166,8 +169,54 @@ public class KitDeliveryService {
         List<KitDelivery> deliveries = kitDeliveryRepository.findByAssignedCourierId(courierId);
 
         return deliveries.stream()
+            .filter(d -> d.getAssignedCourier() != null)
+            .filter(d -> {
+                // Quitar si ya está entregado y el kit está ACTIVE (confirmada recepción)
+                boolean completed = d.getStatus() == DeliveryStatus.DELIVERED
+                        && d.getKit() != null
+                        && d.getKit().getStatus() == KitStatus.ACTIVE;
+                return !completed;
+            })
             .map(KitDelivery::getKit)
             .filter(Objects::nonNull)
+            .map(KitResponse::new)
+            .collect(Collectors.toList());
+    }
+
+    public List<Long> getBusyCourierIds(String country, String city) {
+    if (!authService.isAdmin()) {
+        throw new RuntimeException("Only ADMIN can view busy couriers");
+    }
+
+    return kitDeliveryRepository.findAll().stream()
+        .filter(d -> d.getAssignedCourier() != null)
+        .filter(d -> {
+            boolean completed = d.getStatus() == DeliveryStatus.DELIVERED
+                    && d.getKit() != null
+                    && d.getKit().getStatus() == KitStatus.ACTIVE;
+            return !completed;
+        })
+        .filter(d -> d.getAssignedCourier().getCountry() != null)
+        .filter(d -> country == null || country.isBlank() || country.equalsIgnoreCase(d.getAssignedCourier().getCountry()))
+        .filter(d -> city == null || city.isBlank() || city.equalsIgnoreCase(d.getAssignedCourier().getCity()))
+        .map(d -> d.getAssignedCourier().getId())
+        .distinct()
+        .collect(Collectors.toList());
+    }
+
+    public List<KitResponse> getUnassignedPaidKits(String country, String city) {
+        if (!authService.isAdmin()) {
+            throw new RuntimeException("Only ADMIN can view unassigned kits");
+        }
+
+        return kitRepository.findAll().stream()
+            .filter(k -> k.getStatus() == KitStatus.PAID)
+            .filter(k -> k.getDeliveryMethod() == DeliveryMethod.COURIER)
+            .filter(k -> kitDeliveryRepository.findByKitId(k.getId())
+                .map(d -> d.getAssignedCourier() == null)
+                .orElse(true))
+            .filter(k -> country == null || country.isBlank() || country.equalsIgnoreCase(k.getCountry()))
+            .filter(k -> city == null || city.isBlank() || city.equalsIgnoreCase(k.getCity()))
             .map(KitResponse::new)
             .collect(Collectors.toList());
     }

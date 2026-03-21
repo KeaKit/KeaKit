@@ -125,3 +125,28 @@ export async function assignCourier(
   });
   await handleResponse<void>(res);
 }
+
+export async function getBusyCouriers(
+  token: string,
+  country?: string,
+  city?: string
+): Promise<number[]> {
+  const res = await fetchWithTimeout(API_ROUTES.BUSY_COURIERS(country, city), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<number[]>(res);
+}
+
+export async function getUnassignedKits(
+  token: string,
+  country?: string,
+  city?: string
+): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.UNASSIGNED_KITS(country, city), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+

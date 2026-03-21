@@ -8,6 +8,7 @@ type TrackingNotificationsContextType = {
   addNotification: (n: TrackingNotification) => Promise<void>;
   markAllRead: () => Promise<void>;
   clearAll: () => Promise<void>;
+  removeNotification: (id: string) => Promise<void>;
 };
 
 const STORAGE_KEY = "@tracking_notifications";
@@ -41,6 +42,11 @@ export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode
     await persist(next);
   };
 
+  const removeNotification = async (id: string) => {
+    const next = notifications.filter((n) => n.id !== id);
+    await persist(next);
+  };
+
   const clearAll = async () => {
     await persist([]);
   };
@@ -52,7 +58,7 @@ export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode
 
   return (
     <TrackingNotificationsContext.Provider
-      value={{ notifications, unreadCount, addNotification, markAllRead, clearAll }}
+      value={{ notifications, unreadCount, addNotification, markAllRead, clearAll, removeNotification }}
     >
       {children}
     </TrackingNotificationsContext.Provider>

@@ -264,7 +264,7 @@ const handleConfirmKit = async () => {
         )}
 
 
-        {kit.status === KitStatus.PAID && (
+        {kit.status === KitStatus.PAID && user?.role === "USER" &&(
           <TouchableOpacity
             style={styles.confirmButton}
             onPress={() => openActionModal(
