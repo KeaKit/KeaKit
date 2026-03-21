@@ -391,6 +391,7 @@ export type RootStackParamList = {
   DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
   Commission: undefined;
   Wallet: undefined;
+  WithdrawMoney: undefined;
 };
 
 export interface ProfileData {
@@ -455,6 +456,7 @@ export interface Transaction {
 
 export enum TransactionType {
   PAYOUT = 'PAYOUT',
+  WITHDRAWAL = 'WITHDRAWAL',
   FEE = 'FEE',
   GUARANTEE_DEPOSIT = 'GUARANTEE_DEPOSIT',
   GUARANTEE_REFUND = 'GUARANTEE_REFUND',

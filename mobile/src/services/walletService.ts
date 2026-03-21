@@ -2,6 +2,11 @@ import { API_ROUTES } from "../config/api";
 import { Wallet, Transaction } from "../types";
 import { handleResponse, fetchWithTimeout, jsonHeaders } from "./utils";
 
+export interface WithdrawalPayload {
+  bankAccount: string;
+  amount: number;
+}
+
 export const getWalletByUserId = async (
   userId: number,
   token: string,
@@ -30,4 +35,17 @@ export const getLoggedUserTransactions = async (token: string): Promise<Transact
   });
 
   return handleResponse<Transaction[]>(res);
-}
+};
+
+export const withdrawFromLoggedUserWallet = async (
+  token: string,
+  payload: WithdrawalPayload,
+): Promise<Transaction> => {
+  const res = await fetchWithTimeout(API_ROUTES.WITHDRAW_FROM_MY_WALLET, {
+    method: "POST",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<Transaction>(res);
+};

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState } from "react";
 import { StyleSheet, View, Text, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -9,7 +9,7 @@ import {
   KeakitButton,
 } from "../../components";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { RootStackParamList, Wallet, Transaction } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -70,106 +70,99 @@ export default function WalletScreen() {
   const [error, setError] = useState<string | null>(null);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
 
-  useEffect(() => {
-    const fetchWallet = async () => {
-      try {
-        setLoadingWallet(true);
-        const walletData = await getLoggedUserWallet(user?.token ?? "");
-        setWallet(walletData);
-      } catch (error) {
-        console.error("Error al obtener la wallet:", error);
-        setError("No se pudo cargar tu wallet. " + (error as Error).message);
-        setErrorModalVisible(true);
-      } finally {
-        setLoadingWallet(false);
-      }
-    };
-    const fetchTransactions = async () => {
-      try {
-        setLoadingTransactions(true);
-        const transactionsData = await getLoggedUserTransactions(
-          user?.token ?? "",
-        );
-        setTransactions(transactionsData);
-      } catch (error) {
-        console.error("Error al obtener las transacciones:", error);
-        setError(
-          "No se pudo cargar el historial de transacciones. " +
-            (error as Error).message,
-        );
-        setErrorModalVisible(true);
-      } finally {
-        setLoadingTransactions(false);
-      }
-    };
+  const loadWalletData = useCallback(async () => {
+    if (!user?.token) {
+      return;
+    }
 
-    if (user?.token) {
-      fetchWallet();
-      fetchTransactions();
+    try {
+      setLoadingWallet(true);
+      setLoadingTransactions(true);
+
+      const [walletData, transactionsData] = await Promise.all([
+        getLoggedUserWallet(user.token),
+        getLoggedUserTransactions(user.token),
+      ]);
+
+      setWallet(walletData);
+      setTransactions(transactionsData);
+    } catch (loadError) {
+      console.error("Error al cargar datos de wallet:", loadError);
+      setError(
+        "No se pudieron cargar los datos de wallet. " +
+          (loadError as Error).message,
+      );
+      setErrorModalVisible(true);
+    } finally {
+      setLoadingWallet(false);
+      setLoadingTransactions(false);
     }
   }, [user?.token]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadWalletData();
+    }, [loadWalletData]),
+  );
 
   return (
     <SafeAreaView style={commonStyles.container}>
       <Header title="Mi Wallet" showBack={true} onBack={navigation.goBack} />
-        <View style={styles.content} >
-      {/* Tarjeta de Balance */}
-      <FadeInItem delay={50}>
-        <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Balance Total</Text>
-          {loadingWallet ? (
-            <SkeletonPulse width={120} height={48} radius={8} dark />
+      <View style={styles.content}>
+        <FadeInItem delay={50}>
+          <View style={styles.balanceCard}>
+            <Text style={styles.balanceLabel}>Balance Total</Text>
+            {loadingWallet ? (
+              <SkeletonPulse width={120} height={48} radius={8} dark />
+            ) : (
+              <Text style={styles.balanceValue}>
+                {wallet
+                  ? wallet.balance.toLocaleString("es-ES", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  : "0,00"}{" "}
+                €
+              </Text>
+            )}
+          </View>
+        </FadeInItem>
+
+        <View style={commonStyles.divider} />
+
+        <View style={styles.historyContainer}>
+          <Text style={commonStyles.subtitle}>Historial de Transacciones</Text>
+          {loadingTransactions ? (
+            <ActivityIndicator
+              size="large"
+              color={Colors.primaryHome}
+              style={{ marginTop: 20, justifyContent: "center", flex: 1 }}
+            />
+          ) : transactions.length === 0 ? (
+            <Text style={commonStyles.caption}>No tienes transacciones aún.</Text>
           ) : (
-            <Text style={styles.balanceValue}>
-              {wallet
-                ? wallet.balance.toLocaleString("es-ES", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                : "0,00"}{" "}
-              €
-            </Text>
+            <FlatList
+              data={transactions}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item, index }) => (
+                <TransactionItem item={item} index={index} />
+              )}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={false}
+            />
           )}
         </View>
-      </FadeInItem>
-
-      <View style={commonStyles.divider} />
-
-      {/* Historial */}
-      <View style={styles.historyContainer}>
-        <Text style={commonStyles.subtitle}>Historial de Transacciones</Text>
-        {loadingTransactions ? (
-          <ActivityIndicator
-            size="large"
-            color={Colors.primaryHome}
-            style={{ marginTop: 20, justifyContent: "center", flex: 1 }}
-          />
-        ) : transactions.length === 0 ? (
-          <Text style={commonStyles.caption}>No tienes transacciones aún.</Text>
-        ) : (
-          <FlatList
-            data={transactions}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item, index }) => (
-              <TransactionItem item={item} index={index} /> // <--- Pasamos el index
-            )}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-
       </View>
 
-      </View>
-      
-        <View style={commonStyles.footerContainer} >
-            <FadeInItem delay={50}>
-            <KeakitButton
+      <View style={commonStyles.footerContainer}>
+        <FadeInItem delay={50}>
+          <KeakitButton
             title="Retirar dinero"
-            onPress={() => console.log("Navegar a formulario de retiro")}
-        /></FadeInItem>
-        </View>
-        
+            onPress={() => navigation.navigate("WithdrawMoney")}
+          />
+        </FadeInItem>
+      </View>
+
       <KeakitModal
         visible={errorModalVisible}
         onDismiss={() => setErrorModalVisible(false)}
@@ -185,12 +178,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundGray,
     justifyContent: "space-between",
-    padding:20
+    padding: 20,
   },
   balanceCard: {
     ...commonStyles.card,
     backgroundColor: Colors.primaryHome,
-    
+
     minHeight: 150,
     justifyContent: "space-between",
   },

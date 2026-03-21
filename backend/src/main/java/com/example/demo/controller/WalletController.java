@@ -4,6 +4,7 @@ import com.example.demo.model.Wallet;
 import com.example.demo.model.Transaction;
 import com.example.demo.dto.TransactionDTO;
 import com.example.demo.dto.WalletDTO;
+import com.example.demo.dto.WithdrawalRequest;
 import com.example.demo.service.WalletService;
 import com.example.demo.service.AuthService;
 
@@ -12,10 +13,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.demo.exception.AccessForbiddenException;
+import com.example.demo.exception.NotEnoughBalanceException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.UnauthorizedException;
 
 import java.util.List;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/wallet")
@@ -83,6 +87,18 @@ public class WalletController {
                 .toList();
 
         return ResponseEntity.ok(transactionDTOs);
+    }
+
+    @PostMapping("/my-wallet/withdraw")
+    public ResponseEntity<TransactionDTO> withdrawFromLoggedUserWallet(@Valid @RequestBody WithdrawalRequest request)
+            throws ResourceNotFoundException, UnauthorizedException, NotEnoughBalanceException {
+        Long userId = authService.getAuthenticatedUserId();
+        if (userId == null) {
+            throw new UnauthorizedException("Usuario no autenticado");
+        }
+
+        Transaction withdrawal = walletService.withdrawFromWallet(userId, request);
+        return ResponseEntity.ok(toDTO(withdrawal));
     }
 
     private TransactionDTO toDTO(Transaction tx) {

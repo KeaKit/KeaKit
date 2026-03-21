@@ -20,6 +20,7 @@ import MyKitsScreen from '../screens/profile/MyKitsScreen';
 import MyServicesScreen from '../screens/service/MyServicesScreen';
 import MyIncidentsScreen from '../screens/incidents/MyIncidentsScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
+import WithdrawMoneyScreen from '../screens/wallet/WithdrawMoneyScreen';
 import CategoriesScreen from '../screens/category/CategoriesScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import MyKitsHistoryScreen from '../screens/kit/MyKitsHistoryScreen';
@@ -137,6 +138,14 @@ const AppNavigator: React.FC = () => {
                 {() => (
                   <MainLayout>
                     <WalletScreen />
+                  </MainLayout>
+                )}
+              </Stack.Screen>
+
+              <Stack.Screen name="WithdrawMoney">
+                {() => (
+                  <MainLayout>
+                    <WithdrawMoneyScreen />
                   </MainLayout>
                 )}
               </Stack.Screen>

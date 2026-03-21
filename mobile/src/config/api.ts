@@ -68,6 +68,7 @@ export const API_ROUTES = {
   GET_WALLET_BY_USER_ID:     (userId: number) => `${BASE_URL}/api/wallet/user/${userId}`,
   GET_MY_WALLET:             `${BASE_URL}/api/wallet/my-wallet`,
   GET_MY_TRANSACTIONS:       `${BASE_URL}/api/wallet/my-wallet/transactions`,
+  WITHDRAW_FROM_MY_WALLET:   `${BASE_URL}/api/wallet/my-wallet/withdraw`,
 
   // Services
   ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,
