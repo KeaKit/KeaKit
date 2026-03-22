@@ -15,11 +15,14 @@ import com.example.demo.service.WalletService;
 import com.example.demo.model.Wallet;
 import com.example.demo.model.User;
 import com.example.demo.model.Transaction;
+import com.example.demo.model.TransactionType;
 
 import com.example.demo.BaseControllerTest;
 import com.example.demo.exception.AccessForbiddenException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.UnauthorizedException;
+
+import com.example.demo.TestDataFactory;
 
 @WebMvcTest(WalletController.class)
 public class WalletControllerTest extends BaseControllerTest {
@@ -35,18 +38,19 @@ public class WalletControllerTest extends BaseControllerTest {
     private final String ADMIN_WALLET_TRANSACTIONS_URL = ADMIN_WALLET_URL + "/transactions";
 
     // Datos de prueba
-    private final Long USER_ID = 1L;
+    
     private final Long WALLET_ID = 1L;
     private final Long TRANSACTION_ID = 1L;
-    private final User user = createMockUser(USER_ID);
-    private final Wallet wallet = createMockWallet(WALLET_ID, user);
-    private final Transaction transaction = createMockTransaction(TRANSACTION_ID, wallet);
+    private final User USER = TestDataFactory.createMockTenantUser();
+    private final Long USER_ID = USER.getId();
+    private final Wallet WALLET = TestDataFactory.createMockWallet(WALLET_ID, USER, null);
+    private final Transaction TRANSACTION = TestDataFactory.createMockTransaction(TRANSACTION_ID, WALLET, 100.0, TransactionType.PAYOUT);
 
     // =============== Tests para getLogedUserWallet ===============
     @Test
     void getLogedUserWallet_ShouldReturnWallet_WhenUserIsAuthenticated() throws Exception {
         when(authService.getAuthenticatedUserId()).thenReturn(USER_ID);
-        when(walletService.getWalletByUserId(USER_ID)).thenReturn(wallet);
+        when(walletService.getWalletByUserId(USER_ID)).thenReturn(WALLET);
 
         mockMvc.perform(get(MY_WALLET_URL))
                 .andExpect(status().isOk())
@@ -76,7 +80,7 @@ public class WalletControllerTest extends BaseControllerTest {
     @Test
     void getLogedUserWalletTransactions_ShouldReturnTransactions_WhenUserIsAuthenticated() throws Exception {
         when(authService.getAuthenticatedUserId()).thenReturn(USER_ID);
-        when(walletService.getTransactionsForUser(USER_ID)).thenReturn(List.of(transaction));
+        when(walletService.getTransactionsForUser(USER_ID)).thenReturn(List.of(TRANSACTION));
 
         mockMvc.perform(get(MY_WALLET_TRANSACTIONS_URL))
                 .andExpect(status().isOk())
@@ -105,7 +109,7 @@ public class WalletControllerTest extends BaseControllerTest {
 
     @Test
     void getWalletByUserId_ShouldReturnWallet_WhenUserIsAdmin() throws Exception {
-        when(walletService.getWalletByUserId(USER_ID)).thenReturn(wallet);
+        when(walletService.getWalletByUserId(USER_ID)).thenReturn(WALLET);
 
         mockMvc.perform(get(ADMIN_WALLET_URL, USER_ID))
                 .andExpect(status().isOk())
@@ -143,7 +147,7 @@ public class WalletControllerTest extends BaseControllerTest {
 
     @Test
     void getWalletTransactions_ShouldReturnTransactions_WhenUserIsAdmin() throws Exception {
-        when(walletService.getTransactionsForUser(USER_ID)).thenReturn(List.of(transaction));
+        when(walletService.getTransactionsForUser(USER_ID)).thenReturn(List.of(TRANSACTION));
 
         mockMvc.perform(get(ADMIN_WALLET_TRANSACTIONS_URL, USER_ID))
                 .andExpect(status().isOk())
