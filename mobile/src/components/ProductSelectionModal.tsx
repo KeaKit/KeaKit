@@ -64,6 +64,7 @@ type ProductSelectionModalProps = {
   onToggleExpandedSearch: () => void;
   loadingNearby: boolean;
   targetCityCoords?: { lat: number; lng: number } | null;
+  mapProducts?: { id: number; title: string; city?: string | null; pricePerMonth: number; ownerName?: string | null; distanceKm?: number; cityLat?: number; cityLng?: number }[];
 };
 
 export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
@@ -90,6 +91,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   onToggleExpandedSearch,
   loadingNearby,
   targetCityCoords,
+  mapProducts = [],
 }) => {
   const navigation = useNavigation<ProductSelectionNav>();
   const [mapView, setMapView] = React.useState(false);
@@ -170,105 +172,46 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
         <View style={createKitStyles.modalCard}>
           <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
           <View style={{ gap: 8, marginBottom: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <View style={{ flex: 1 }}>
-                <PaperTextInput
-                  mode="outlined"
-                  label="Busca un artículo o servicio"
-                  value={searchText}
-                  onChangeText={onSearchChange}
-                  left={<PaperTextInput.Icon icon="magnify" />}
-                  style={{ backgroundColor: Colors.backgroundWhite }}
-                  outlineColor={Colors.border}
-                  activeOutlineColor={Colors.primary}
-                />
-              </View>
+            <PaperTextInput
+              mode="outlined"
+              label="Busca un artículo o servicio"
+              value={searchText}
+              onChangeText={onSearchChange}
+              left={<PaperTextInput.Icon icon="magnify" />}
+              style={{ backgroundColor: Colors.backgroundWhite }}
+              outlineColor={Colors.border}
+              activeOutlineColor={Colors.primary}
+            />
+
+            <View style={{ flexDirection: "row", gap: 8 }}>
               <TouchableOpacity
-                onPress={onToggleExpandedSearch}
+                onPress={() => setMapView(false)}
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: expandedSearch ? Colors.primary : Colors.border,
-                  backgroundColor: expandedSearch ? "#E3F2FD" : Colors.backgroundWhite,
-                  alignItems: "center",
-                  justifyContent: "center",
+                  flex: 1, flexDirection: "row", alignItems: "center",
+                  justifyContent: "center", gap: 6, paddingVertical: 8,
+                  borderRadius: 8, borderWidth: 1,
+                  borderColor: !mapView ? Colors.primary : Colors.border,
+                  backgroundColor: !mapView ? "#E3F2FD" : Colors.backgroundWhite,
                 }}
-                accessibilityLabel="Búsqueda geográfica ampliada"
               >
-                {loadingNearby ? (
-                  <ActivityIndicator size="small" color={Colors.primary} />
-                ) : (
-                  <Ionicons
-                    name="globe-outline"
-                    size={24}
-                    color={expandedSearch ? Colors.primary : Colors.textSecondary}
-                  />
-                )}
+                <Ionicons name="list-outline" size={18} color={!mapView ? Colors.primary : Colors.textSecondary} />
+                <Text style={{ color: !mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Lista</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setMapView(true)}
+                style={{
+                  flex: 1, flexDirection: "row", alignItems: "center",
+                  justifyContent: "center", gap: 6, paddingVertical: 8,
+                  borderRadius: 8, borderWidth: 1,
+                  borderColor: mapView ? Colors.primary : Colors.border,
+                  backgroundColor: mapView ? "#E3F2FD" : Colors.backgroundWhite,
+                }}
+              >
+                <Ionicons name="map-outline" size={18} color={mapView ? Colors.primary : Colors.textSecondary} />
+                <Text style={{ color: mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Mapa</Text>
               </TouchableOpacity>
             </View>
 
-            {expandedSearch && (
-              <View style={{ gap: 8 }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                    backgroundColor: "#FFF8E1",
-                    borderWidth: 1,
-                    borderColor: "#FFD54F",
-                    borderRadius: 8,
-                    paddingHorizontal: 12,
-                    paddingVertical: 10,
-                  }}
-                >
-                  <Ionicons name="warning-outline" size={18} color="#F57F17" />
-                  <Text style={{ flex: 1, fontSize: 12, color: "#5D4037" }}>
-                    Mostrando artículos de ciudades cercanas. Pueden generarse costes de transporte adicionales.
-                  </Text>
-                </View>
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <TouchableOpacity
-                    onPress={() => setMapView(false)}
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                      paddingVertical: 8,
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: !mapView ? Colors.primary : Colors.border,
-                      backgroundColor: !mapView ? "#E3F2FD" : Colors.backgroundWhite,
-                    }}
-                  >
-                    <Ionicons name="list-outline" size={18} color={!mapView ? Colors.primary : Colors.textSecondary} />
-                    <Text style={{ color: !mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Lista</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setMapView(true)}
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                      paddingVertical: 8,
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: mapView ? Colors.primary : Colors.border,
-                      backgroundColor: mapView ? "#E3F2FD" : Colors.backgroundWhite,
-                    }}
-                  >
-                    <Ionicons name="map-outline" size={18} color={mapView ? Colors.primary : Colors.textSecondary} />
-                    <Text style={{ color: mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Mapa</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
 
             {userCity && (
               <TouchableOpacity
@@ -356,15 +299,21 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             </ScrollView>
           </View>
 
-          {expandedSearch && mapView ? (
+          {mapView ? (
             <ArticleMapView
-              articles={filteredProducts}
+              articles={(
+                showOnlyMyCity && userCity
+                  ? mapProducts.filter((a) => a.city?.toLowerCase() === userCity.toLowerCase())
+                  : mapProducts
+              ).map((a) => ({ ...a, city: a.city ?? undefined, ownerName: a.ownerName ?? undefined }))}
               targetCityCoords={targetCityCoords ?? null}
               userCity={userCity}
+              selectedIds={Object.keys(tempSelectedQuantities).map(Number)}
+              onAddArticle={onToggleSelection}
             />
           ) : null}
 
-          <ScrollView style={[createKitStyles.modalList, expandedSearch && mapView ? { height: 0 } : {}]}>
+          <ScrollView style={[createKitStyles.modalList, mapView ? { height: 0 } : {}]}>
             {productsWithAvailability.length === 0 ? (
               <Text
                 style={[

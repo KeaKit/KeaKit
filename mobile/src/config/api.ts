@@ -108,7 +108,12 @@ export const API_ROUTES = {
 
   // Geographic search (CU-ARRENDATARIO-10)
   ARTICLE_NEARBY: (city: string, country: string, radiusKm = 150) =>
-    `${BASE_URL}/api/article/nearby?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&radiusKm=${radiusKm}`
+    `${BASE_URL}/api/article/nearby?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&radiusKm=${radiusKm}`,
+
+  ARTICLE_MAP: (country?: string) =>
+    country
+      ? `${BASE_URL}/api/article/map?country=${encodeURIComponent(country)}`
+      : `${BASE_URL}/api/article/map`,
 
 } as const;
 

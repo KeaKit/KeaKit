@@ -414,6 +414,40 @@ public class ArticleService {
         }).collect(Collectors.toList());
     }
 
+    public List<ArticleNearbyDTO> findAllWithCoords(String country) {
+        List<Article> articles = articleRepository.findByStatus(ArticleStatus.AVAILABLE);
+        return articles.stream().map(article -> {
+            String resolvedCountry = article.getCountry() != null ? article.getCountry() : country;
+            CityCoordinatesDTO coords = resolvedCountry != null
+                ? cityService.getCityCoordinates(article.getCity(), resolvedCountry)
+                : null;
+            double lat = coords != null ? coords.lat() : 0.0;
+            double lng = coords != null ? coords.lng() : 0.0;
+            String categoryName = article.getCategory() != null ? article.getCategory().getName() : null;
+            String ownerName = article.getOwner() != null ? article.getOwner().getName() : null;
+            Long ownerId = article.getOwner() != null ? article.getOwner().getId() : null;
+            return new ArticleNearbyDTO(
+                article.getId(),
+                "ARTICLE",
+                article.getTitle(),
+                article.getDescription(),
+                article.getCity(),
+                article.getPricePerMonth(),
+                article.getAvailableFrom(),
+                article.getAvailableUntil(),
+                categoryName,
+                article.getTotalUnits(),
+                ownerId,
+                ownerName,
+                article.getStatus() != null ? article.getStatus().name() : null,
+                article.getImageUrl(),
+                lat,
+                lng,
+                0.0
+            );
+        }).collect(Collectors.toList());
+    }
+
     private double haversineKm(double lat1, double lon1, double lat2, double lon2) {
         final double R = 6371.0;
         double dLat = Math.toRadians(lat2 - lat1);

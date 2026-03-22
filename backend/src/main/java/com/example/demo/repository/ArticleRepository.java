@@ -23,4 +23,6 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     List<String> findDistinctCitiesByStatus(@Param("status") ArticleStatus status);
 
     List<Article> findByStatusAndCityIn(ArticleStatus status, List<String> cities);
+
+    List<Article> findByStatus(ArticleStatus status);
 }

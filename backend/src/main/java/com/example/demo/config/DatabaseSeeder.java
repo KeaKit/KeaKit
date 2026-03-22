@@ -91,6 +91,7 @@ public class DatabaseSeeder {
             laptop.setDescription("16 pulgadas, M2");
             laptop.setCategory(catTech);
             laptop.setCity("Sevilla");
+            laptop.setCountry("Spain");
             laptop.setOwner(owner);
             laptop.setPricePerMonth(150.0);
             laptop.setTotalUnits(1);
@@ -108,6 +109,7 @@ public class DatabaseSeeder {
             camara.setDescription("Full frame, 24MP, ideal para fotografía profesional");
             camara.setCategory(catTech);
             camara.setCity("Huelva");
+            camara.setCountry("Spain");
             camara.setOwner(owner);
             camara.setPricePerMonth(80.0);
             camara.setTotalUnits(2);
@@ -123,6 +125,7 @@ public class DatabaseSeeder {
             dron.setDescription("Dron con cámara 4K y 34 min de autonomía");
             dron.setCategory(catTech);
             dron.setCity("Cadiz");
+            dron.setCountry("Spain");
             dron.setOwner(owner);
             dron.setPricePerMonth(120.0);
             dron.setTotalUnits(1);
@@ -138,6 +141,7 @@ public class DatabaseSeeder {
             proyector.setDescription("3000 lúmenes, ideal para presentaciones y cine en casa");
             proyector.setCategory(catTech);
             proyector.setCity("Cordoba");
+            proyector.setCountry("Spain");
             proyector.setOwner(owner);
             proyector.setPricePerMonth(60.0);
             proyector.setTotalUnits(3);
@@ -153,6 +157,7 @@ public class DatabaseSeeder {
             impresora.setDescription("Impresora FDM de alta velocidad con multi-color");
             impresora.setCategory(catTech);
             impresora.setCity("Jerez de la Frontera");
+            impresora.setCountry("Spain");
             impresora.setOwner(owner);
             impresora.setPricePerMonth(45.0);
             impresora.setTotalUnits(1);

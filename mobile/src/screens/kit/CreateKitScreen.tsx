@@ -28,7 +28,7 @@ registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
-import { getNearbyArticles } from "../../services/articleService";
+import { getNearbyArticles, getArticlesForMap } from "../../services/articleService";
 import { getCityCoordinates } from "../../services/cityService";
 import { API_ROUTES } from "../../config/api";
 import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus, ArticleNearby } from "../../types";
@@ -170,6 +170,7 @@ const CreateKitScreen: React.FC = () => {
   const [nearbyProducts, setNearbyProducts] = useState<ArticleNearby[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
   const [targetCityCoords, setTargetCityCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
 
   useEffect(() => {
     if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
@@ -390,6 +391,12 @@ const CreateKitScreen: React.FC = () => {
     setCategoryFilter("ALL");
     setShowOnlyMyCity(city.trim().length > 0);
     setShowOnlyAvailable(true);
+
+    if (user?.token) {
+      getArticlesForMap(user.token, country.trim() || undefined)
+        .then(setMapProducts)
+        .catch(() => setMapProducts([]));
+    }
 
     setCatalogModalVisible(true);
   };
@@ -1045,6 +1052,7 @@ const CreateKitScreen: React.FC = () => {
           onToggleExpandedSearch={() => setExpandedSearch((v) => !v)}
           loadingNearby={loadingNearby}
           targetCityCoords={targetCityCoords}
+          mapProducts={mapProducts}
         />
 
         <Modal

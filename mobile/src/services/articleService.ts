@@ -156,3 +156,14 @@ export async function getNearbyArticles(
   });
   return handleResponse<ArticleNearby[]>(res);
 }
+
+export async function getArticlesForMap(
+  token: string,
+  country?: string,
+): Promise<ArticleNearby[]> {
+  const res = await fetch(API_ROUTES.ARTICLE_MAP(country), {
+    method: 'GET',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<ArticleNearby[]>(res);
+}

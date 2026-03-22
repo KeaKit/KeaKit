@@ -157,4 +157,15 @@ public class ArticleController {
         }
     }
 
+    @GetMapping("/map")
+    public ResponseEntity<List<ArticleNearbyDTO>> getArticlesForMap(
+            @RequestParam(required = false) String country) {
+        try {
+            List<ArticleNearbyDTO> articles = articleService.findAllWithCoords(country);
+            return ResponseEntity.ok(articles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 }
