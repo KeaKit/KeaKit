@@ -1,6 +1,4 @@
 import React, { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
-import WebView from "react-native-webview";
 import { Colors } from "../styles";
 
 type MapArticle = {
@@ -99,8 +97,12 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
 
     markers.forEach(function(m) {
       var color = m.isTarget ? '${primaryColor}' : '#F57F17';
-      var markerHtml = '<div style="width:14px;height:14px;border-radius:50%;background:' + color + ';border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>';
-      var icon = L.divIcon({ html: markerHtml, className: '', iconSize: [14, 14], iconAnchor: [7, 7] });
+      var icon = L.divIcon({
+        html: '<div style="width:14px;height:14px;border-radius:50%;background:' + color + ';border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>',
+        className: '',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      });
       var popup = '<div class="popup-title">' + m.title + '</div>';
       if (m.sub) popup += '<div class="popup-sub">' + m.sub + '</div>';
       if (m.price) popup += '<div class="popup-price">' + m.price + '</div>';
@@ -112,25 +114,19 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
 </html>`;
 
   return (
-    <View style={styles.container}>
-      <WebView
-        source={{ html }}
-        style={styles.map}
-        originWhitelist={["*"]}
-        javaScriptEnabled
+    <div
+      style={{
+        height: 300,
+        borderRadius: 8,
+        marginBottom: 8,
+        overflow: "hidden",
+      }}
+    >
+      <iframe
+        srcDoc={html}
+        style={{ width: "100%", height: "100%", border: "none" }}
+        title="Mapa de artículos"
       />
-    </View>
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    height: 300,
-    borderRadius: 8,
-    marginBottom: 8,
-    overflow: "hidden",
-  },
-  map: {
-    flex: 1,
-  },
-});
