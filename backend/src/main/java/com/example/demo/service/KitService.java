@@ -62,9 +62,9 @@ public class KitService {
         return kitRepository.findAll();
     }
 
-    public KitResponse findById(Long id) {
+    public KitResponse findById(Long id) throws ResourceNotFoundException {
         Kit kit = kitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
         return new KitResponse(kit);
     }
 

@@ -88,65 +88,70 @@ public class PaymentService {
     }
 
     @Transactional
-    public void processPayment(Long kitId, Boolean payWithWallet) throws RuntimeException, ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
-        try {
-            // 1. Cobrar al arrendatario
-            KitResponse kit = kitService.findById(kitId);
-            System.out.println("Procesando pago para kitId: " + kitId + ", tenantId: " + kit.getTenantId() + ", payWithWallet: " + payWithWallet);
-            Long tenantId = kit.getTenantId();
-            KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId);
-            Double amount = toEuros(paymentInfo.totalPrice());
-            if (payWithWallet) {
-                // 1.1. Cobramos de su cartera si paga con wallet
-                Transaction givePayment = payWithWallet(tenantId, amount);
-                transactionRepository.save(givePayment);
-            }
-            // 1.2. Si no paga con wallet, se asume que el pago se ha procesado
-            // correctamente a través de Stripe (ya que esta función se llama desde el
-            // webhook de Stripe una vez confirmado el pago)
-            // 2. Transferimos la fianza (guarantee) a la cartera de KeaKit
-            Double guaranteeAmount = toEuros(paymentInfo.guarantee());
-            Transaction guaranteeTransaction = sendGuaranteeToKeaKit(guaranteeAmount);
-            System.out.println("Transferencia de garantía a KeaKit: " + guaranteeAmount + " euros");
-            transactionRepository.save(guaranteeTransaction);
-            System.out.println("Garantía transferida a KeaKit. Procesando pagos a propietarios de items...");
+    public void processPayment(Long kitId, Boolean payWithWallet) throws ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
+        // 1. Obtención de datos
+        
+        KitResponse kit = kitService.findById(kitId);
+        KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId);
 
-
-            for (KitItemResponse item : kit.getItems()) {
-                System.out.println("Procesando pago para itemId: " + item.getItemId() + ", quantity: " + item.getQuantity() + ", pricePerMonth: " + item.getPricePerMonth());
-                // 3. Pagamos al propietario de cada item
-                Item itemDetails = itemService.findById(item.getItemId());
-                Long ownerId = itemDetails.getOwner().getId();
-                System.out.println("Propietario del itemId " + item.getItemId() + ": userId " + ownerId);
-
-                // TODO: Reemplazar por lógica real para determinar si el usuario es piloto o no
-                Boolean isPilotUser = true;
-                Double itemPrice = toMoney(item.getPricePerMonth() * item.getQuantity());
-                // itemPrice está redondeado a 2 decimales
-
-                if (!isPilotUser) {
-                    // 4. Si el usuario no es piloto, aplicamos la comisión de la plataforma
-                    double commissionRate = platformConfigService.getCommissionRate();
-                    itemPrice = toMoney(item.getPricePerMonth() * item.getQuantity() * (1 - commissionRate));
-                    Double feeAmount = toMoney(item.getPricePerMonth() * item.getQuantity() * commissionRate);
-                    Transaction feeTransaction = transferFee(feeAmount);
-                    transactionRepository.save(feeTransaction);
-                }
-                System.out.println("Creando transacciones para los owners...");
-
-                Transaction payOwnerTransaction = payItemToOwner(ownerId, itemPrice);
-                transactionRepository.save(payOwnerTransaction);
-            }
-            // 5. Marcamos el kit como pagado
-            kitService.markAsPaid(kitId);
-            // 6. Enviamos email de confirmación al arrendatario
-            // TODO: Utilizar KitResponse
-            Kit kitEntity = kitRepository.findById(kitId).orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
-            emailService.sendOrderConfirmation(kitEntity);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error processing payment: " + e.getMessage());
+        // 2. Gestión del pago principal (Tenant)
+        if (payWithWallet) {
+            processTenantPayment(kit.getTenantId(), paymentInfo);
         }
+
+        // 3. Gestión de la garantía
+        processGuarantee(paymentInfo.guarantee());
+
+        // 4. Pago a propietarios
+        kit.getItems().forEach(this::processItemPaymentToOwner);
+
+        // 5. Finalización del proceso
+        completeOrder(kitId);
+    }
+
+    private void processTenantPayment(Long tenantId, KitPaymentDTO paymentInfo) {
+        Double amount = toEuros(paymentInfo.totalPrice());
+        Transaction payment = payWithWallet(tenantId, amount);
+        transactionRepository.save(payment);
+    }
+
+    private void processGuarantee(Integer guaranteeRaw) throws ResourceNotFoundException, UserNotFoundException {
+        Double guaranteeAmount = toEuros(guaranteeRaw);
+        Transaction guaranteeTransaction = sendGuaranteeToKeaKit(guaranteeAmount);
+        transactionRepository.save(guaranteeTransaction);
+    }
+
+    private void processItemPaymentToOwner(KitItemResponse item) throws ResourceNotFoundException {
+        // El itemService debe lanzar sus propias excepciones si no encuentra el item
+        Item itemDetails = itemService.findById(item.getItemId());
+        Long ownerId = itemDetails.getOwner().getId();
+
+        double basePrice = item.getPricePerMonth() * item.getQuantity();
+        Double finalPrice = calculateFinalOwnerPrice(basePrice);
+
+        Transaction payOwnerTransaction = payItemToOwner(ownerId, finalPrice);
+        transactionRepository.save(payOwnerTransaction);
+    }
+
+    private Double calculateFinalOwnerPrice(double basePrice) {
+        // TODO: Añadir lógica real para determinar si el usuario es piloto o no, y obtener la tasa de comisión real desde la configuración
+        boolean isPilotUser = true;
+        if (isPilotUser) {
+            return toMoney(basePrice);
+        }
+
+        double rate = platformConfigService.getCommissionRate();
+        Double feeAmount = toMoney(basePrice * rate);
+
+        transactionRepository.save(transferFee(feeAmount));
+        return toMoney(basePrice * (1 - rate));
+    }
+
+    private void completeOrder(Long kitId) throws ResourceNotFoundException {
+        kitService.markAsPaid(kitId);
+        Kit kitEntity = kitRepository.findById(kitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found for email confirmation"));
+        emailService.sendOrderConfirmation(kitEntity);
     }
 
     @Transactional
@@ -164,7 +169,8 @@ public class PaymentService {
         if ("GOOD".equalsIgnoreCase(condition)) {
             // Devolvemos la fianza al monedero del inquilino
             Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
-            Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
+            Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet,
+                    TransactionType.GUARANTEE_REFUND);
             transactionRepository.save(tenantReceive);
 
         } else if ("DAMAGED".equalsIgnoreCase(condition)) {
@@ -184,16 +190,19 @@ public class PaymentService {
         return Math.round(amount * 100.0) / 100.0;
     }
 
-    private Transaction payWithWallet(Long tenantId, Double amount) throws ResourceNotFoundException, NotEnoughBalanceException {
+    private Transaction payWithWallet(Long tenantId, Double amount)
+            throws ResourceNotFoundException, NotEnoughBalanceException {
         Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
         if (tenantWallet.getBalance() < amount) {
-            throw new NotEnoughBalanceException("Not enough balance in wallet. Required: " + amount + ", Available: " + tenantWallet.getBalance());
+            throw new NotEnoughBalanceException(
+                    "Not enough balance in wallet. Required: " + amount + ", Available: " + tenantWallet.getBalance());
         }
         Transaction givePayment = new Transaction(-amount, tenantWallet, TransactionType.PAYOUT);
         return givePayment;
     }
 
-    private Transaction sendGuaranteeToKeaKit(Double guarantee) throws ResourceNotFoundException, UserNotFoundException {
+    private Transaction sendGuaranteeToKeaKit(Double guarantee)
+            throws ResourceNotFoundException, UserNotFoundException {
         Wallet keakitWallet = getKeaKitWallet();
         Transaction guaranteeTransaction = new Transaction(guarantee, keakitWallet, TransactionType.GUARANTEE_DEPOSIT);
         return guaranteeTransaction;
@@ -221,7 +230,6 @@ public class PaymentService {
         return keakitWallet;
     }
 
-
     public Payout createPayout(Long amountInCents) throws StripeException {
         Stripe.apiKey = stripeApiKey;
 
@@ -234,15 +242,15 @@ public class PaymentService {
         return payout;
     }
 
-
     @Transactional
-    public void withdrawToBank(Long userId, Double amount) 
+    public void withdrawToBank(Long userId, Double amount)
             throws ResourceNotFoundException, NotEnoughBalanceException, StripeException {
 
         Wallet wallet = walletService.getWalletByUserId(userId);
 
         if (wallet.getBalance() < amount) {
-            throw new NotEnoughBalanceException("Not enough balance" + " Required: " + amount + ", Available: " + wallet.getBalance());
+            throw new NotEnoughBalanceException(
+                    "Not enough balance" + " Required: " + amount + ", Available: " + wallet.getBalance());
         }
 
         Long amountInCents = (long) (amount * 100);
