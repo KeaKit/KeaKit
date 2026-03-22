@@ -19,6 +19,7 @@ import { Colors, Spacing, commonStyles } from '../../styles';
 import { useAuth } from '../../context/AuthContext';
 import { API_ROUTES } from "../../config/api";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { deleteKit } from '../../services/kitService';
 
 type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
 
@@ -281,6 +282,15 @@ const handleConfirmKit = async () => {
           <Text style={styles.totalValue}>{kit.totalPrice?.toLocaleString('es-ES')} €</Text>
         </View>
 
+        <TouchableOpacity
+          style={styles.trackingButton}
+          onPress={() => navigation.navigate("Tracking", { kitId: kit.id })}
+        >
+          <Ionicons name="navigate-outline" size={18} color={Colors.primary} />
+          <Text style={styles.trackingButtonText}>Ver seguimiento</Text>
+        </TouchableOpacity>
+
+
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
             style={styles.confirmButton}
@@ -298,20 +308,10 @@ const handleConfirmKit = async () => {
               async () => {
                 try {
                   setDeleting(true);
-                  const response = await fetch(API_ROUTES.GET_KIT(kitId), {
-                    method: 'DELETE',
-                    headers: user?.token
-                      ? {
-                          Authorization: `Bearer ${user.token}`,
-                          "Content-Type": "application/json",
-                        }
-                      : undefined,
-                  });
-                  if (!response.ok) throw new Error('No se pudo eliminar');
-                  console.log('Éxito', 'El kit ha sido eliminado correctamente.');
-                  navigation.goBack();
+                  await deleteKit(kitId, user?.token ?? "");
+                  navigation.navigate("MyKits");
                 } catch (error) {
-                  console.error('Error', 'No se pudo eliminar el kit.');
+                  console.error('Error', 'No se pudo eliminar el kit.', error);
                 } finally {
                   setDeleting(false);
                   setActionModalVisible(false);
@@ -324,7 +324,7 @@ const handleConfirmKit = async () => {
         )}
 
 
-        {kit.status === KitStatus.PAID && (
+        {kit.status === KitStatus.PAID && user?.role === "USER" &&(
           <TouchableOpacity
             style={styles.confirmButton}
             onPress={() => openActionModal(
@@ -339,58 +339,6 @@ const handleConfirmKit = async () => {
         )}
 
       </ScrollView>
-
-      <Modal
-        visible={cancelModalVisible}
-        transparent
-        animationType="fade"
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>eliminar Kit</Text>
-            <Text style={styles.modalSubtitle}>
-              ¿Estás seguro de que deseas eliminar este kit? Esta acción no se puede deshacer.
-            </Text>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => setCancelModalVisible(false)}
-              >
-                <Text style={styles.modalCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalSubmitButton}
-                onPress={async () => {
-                  try {
-                    setDeleting(true);
-                    const response = await fetch(API_ROUTES.GET_KIT(kitId), {
-                      method: 'DELETE',
-                      headers: user?.token
-                        ? {
-                            Authorization: `Bearer ${user.token}`,
-                            "Content-Type": "application/json",
-                          }
-                        : undefined,
-                    });
-                    if (!response.ok) throw new Error('No se pudo eliminar');
-                    console.log('Éxito', 'El kit ha sido eliminado correctamente.');
-                    navigation.goBack();
-                  } catch (error) {
-                    console.error('Error', 'No se pudo eliminar el kit.');
-                  } finally {
-                    setDeleting(false);
-                    setCancelModalVisible(false);
-                  }
-                }}
-              >
-                <Text style={styles.modalSubmitText}>Eliminar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <Modal
           visible={actionModalVisible}
@@ -523,6 +471,24 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#666', fontWeight: '600', },
   modalSubmitButton: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: Colors.primary, alignItems: 'center' },
   modalSubmitText: { color: '#FFF', fontWeight: 'bold' },
+    trackingButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    backgroundColor: "#FFF",
+    gap: 8,
+  },
+  trackingButtonText: {
+    color: Colors.primary,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+
   itemButton: { marginLeft: 20, flexDirection: "column", alignItems: "center", padding: 6 },
   itemButtonText: { fontSize: 12, color: "#666", fontWeight: "600" },
 });

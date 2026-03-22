@@ -1,54 +1,20 @@
-import { API_ROUTES } from '../config/api';
-import { KitCreateRequest, KitResponse, UserArticle } from '../types';
-
-const jsonHeaders = { 'Content-Type': 'application/json' };
-const REQUEST_TIMEOUT_MS = 12000;
-
-async function fetchWithTimeout(
-  input: RequestInfo | URL,
-  init: RequestInit,
-): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Tiempo de espera agotado al conectar con el servidor.');
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function handleResponse<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const contentType = res.headers.get('content-type') ?? '';
-    let message = `HTTP ${res.status}`;
-
-    try {
-      if (contentType.includes('application/json')) {
-        const payload = await res.json();
-        message = payload.message || payload.error || JSON.stringify(payload);
-      } else {
-        message = await res.text();
-      }
-    } catch {}
-
-    throw new Error(message || `HTTP ${res.status}`);
-  }
-
-  return res.json() as Promise<T>;
-}
+import { API_ROUTES } from "../config/api";
+import {
+  KitCreateRequest,
+  KitResponse,
+  UserArticle,
+  KitPaymentDTO,
+  KitDeliveryResponse,
+  UpdateDeliveryRequest
+} from "../types";
+import { handleResponse, fetchWithTimeout, jsonHeaders } from "./utils";
 
 export async function fetchMyArticles(
   userId: number,
   token: string,
 ): Promise<UserArticle[]> {
   const res = await fetchWithTimeout(API_ROUTES.MY_ARTICLES(userId), {
-    method: 'GET',
+    method: "GET",
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
 
@@ -60,10 +26,161 @@ export async function createKit(
   token: string,
 ): Promise<KitResponse> {
   const res = await fetchWithTimeout(API_ROUTES.CREATE_KIT, {
-    method: 'POST',
+    method: "POST",
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 
   return handleResponse<KitResponse>(res);
 }
+
+export async function getKitPayment(
+  kitId: number,
+  token: string,
+): Promise<KitPaymentDTO> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT_PAYMENT_BY_ID(kitId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<KitPaymentDTO>(res);
+}
+
+export async function getKit(kitId: number,
+  token: string,
+): Promise<KitResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT(kitId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<KitResponse>(res);
+}
+
+export async function addItemToKit(
+  kitId: number,
+  itemId: number,
+  userId: number,
+  token: string,
+): Promise<KitResponse> {
+  const res = await fetchWithTimeout(
+    API_ROUTES.ADD_ITEM_TO_KIT(kitId, itemId, userId),
+    {
+      method: "POST",
+      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    },
+  );
+
+  return handleResponse<KitResponse>(res);
+}
+
+export async function removeItemFromKit(
+  kitId: number,
+  itemId: number,
+  userId: number,
+  token: string,
+): Promise<KitResponse> {
+  const res = await fetchWithTimeout(
+    API_ROUTES.REMOVE_ITEM_FROM_KIT(kitId, itemId, userId),
+    {
+      method: "DELETE",
+      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    },
+  );
+
+  return handleResponse<KitResponse>(res);
+}
+
+export async function deleteKit(kitId: number, token: string): Promise<void> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT(kitId), {
+    method: "DELETE",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<void>(res);
+}
+
+export async function getMyKits(userId: number, token: string): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.MY_KITS(userId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+
+export async function getKitTracking(
+  kitId: number,
+  token: string,
+): Promise<KitDeliveryResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_KIT_TRACKING(kitId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitDeliveryResponse>(res);
+}
+
+export async function updateKitTracking(
+  kitId: number,
+  payload: UpdateDeliveryRequest,
+  token: string,
+): Promise<KitDeliveryResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.UPDATE_KIT_TRACKING(kitId), {
+    method: "PATCH",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<KitDeliveryResponse>(res);
+}
+
+export async function getAssignedKits(token: string): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.ASSIGNED_KITS, {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+
+export async function getAllKits(token: string): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.GET_ALL_KITS, {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+
+export async function assignCourier(
+  kitId: number,
+  courierId: number,
+  token: string
+): Promise<void> {
+  const res = await fetchWithTimeout(API_ROUTES.ASSIGN_COURIER(kitId, courierId), {
+    method: "PATCH",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  await handleResponse<void>(res);
+}
+
+export async function getBusyCouriers(
+  token: string,
+  country?: string,
+  city?: string
+): Promise<number[]> {
+  const res = await fetchWithTimeout(API_ROUTES.BUSY_COURIERS(country, city), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<number[]>(res);
+}
+
+export async function getUnassignedKits(
+  token: string,
+  country?: string,
+  city?: string
+): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.UNASSIGNED_KITS(country, city), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+

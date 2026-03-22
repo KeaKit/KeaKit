@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.service.AuthService;
 import com.example.demo.service.PaymentService;
 
 import com.stripe.model.PaymentIntent;
@@ -12,8 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -21,6 +20,9 @@ public class PaymentController {
 
     @Autowired
     private PaymentService paymentService;
+
+    @Autowired
+    private AuthService authService;
 
     @Value("${stripe.api.key}")
     private String endpointSecret;
@@ -60,6 +62,22 @@ public class PaymentController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al procesar el pago con billetera: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<String> withdraw(@RequestBody Double amount) {
+
+        try {
+            Long userId = authService.getAuthenticatedUserId();
+
+            paymentService.withdrawToBank(userId, amount);
+
+            return ResponseEntity.ok("Retirada realizada correctamente");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error en retirada: " + e.getMessage());
         }
     }
 

@@ -8,7 +8,6 @@ export const commonStyles = StyleSheet.create({
   // Contenedores
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 
   containerWhite: {
@@ -18,6 +17,22 @@ export const commonStyles = StyleSheet.create({
 
   screenPadding: {
     paddingHorizontal: Spacing.lg,
+  },
+
+  footerContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.md,
+    backgroundColor: Colors.backgroundWhite,
+    padding: 50,
+    paddingTop: 30,
+    paddingBottom: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
 
   // Headers
@@ -141,13 +156,14 @@ export const commonStyles = StyleSheet.create({
   title: {
     fontSize: FontSizes.xxxl,
     fontWeight: FontWeights.bold,
-    color: Colors.textPrimary,
+    color: Colors.primaryHome,
   },
 
   subtitle: {
     fontSize: FontSizes.xl,
-    fontWeight: FontWeights.semibold,
-    color: Colors.textPrimary,
+    fontWeight: FontWeights.bold,
+    color: Colors.primaryHome,
+    marginBottom: 15
   },
 
   body: {

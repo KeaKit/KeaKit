@@ -4,6 +4,7 @@ import java.util.stream.Collectors;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -13,8 +14,10 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.KitCreateRequest;
@@ -140,6 +143,18 @@ public class KitController {
         }
     }
 
+    @GetMapping("/my-history")
+    public ResponseEntity<?> getMyHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Page<KitResponse> response = kitService.findHistoryForAuthenticatedTenant(page, size);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     @PatchMapping("confirm/{id}")
     public ResponseEntity<?> confirmKitStatus(@PathVariable Long id) {
         try {
@@ -168,6 +183,32 @@ public class KitController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{kitId}/items/{itemId}")
+    public ResponseEntity<?> addItemToKit(
+            @PathVariable Long kitId, 
+            @PathVariable Long itemId, 
+            @RequestParam Long userId) {
+        try {
+            KitResponse updatedKit = kitService.addItemToKit(kitId, itemId, userId);
+            return ResponseEntity.ok(updatedKit);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{kitId}/items/{itemId}")
+    public ResponseEntity<?> removeItemFromKit(
+            @PathVariable Long kitId, 
+            @PathVariable Long itemId, 
+            @RequestParam Long userId) {
+        try {
+            KitResponse updatedKit = kitService.removeItemFromKit(kitId, itemId, userId);
+            return ResponseEntity.ok(updatedKit);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

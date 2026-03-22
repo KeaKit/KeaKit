@@ -43,7 +43,7 @@ const ProfileScreen: React.FC = () => {
         setLoadingBalance(true);
         try {
           const wallet = await getWalletByUserId(user.id, user.token);
-          setAvailableBalance(wallet.availableBalance);
+          setAvailableBalance(wallet.balance);
         } catch (error) {
           setAvailableBalance(null);
         } finally {
