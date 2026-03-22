@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ArticleNearbyDTO;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
@@ -138,6 +139,19 @@ public class ArticleController {
         try {
             List<UserArticle> latestArticles = articleService.findLatestArticlesByCategory(categoryId);
             return ResponseEntity.ok(latestArticles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/nearby")
+    public ResponseEntity<List<ArticleNearbyDTO>> getNearbyArticles(
+            @RequestParam String city,
+            @RequestParam String country,
+            @RequestParam(defaultValue = "150") double radiusKm) {
+        try {
+            List<ArticleNearbyDTO> articles = articleService.findNearbyArticles(city, country, radiusKm);
+            return ResponseEntity.ok(articles);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
