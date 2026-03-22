@@ -80,6 +80,25 @@ public class KitControllerTest {
     }
 
     @Test
+    void createKit_invalidRequest_returnsBadRequest() throws Exception {
+        // Falta name y tenantId (ambos NotBlank/NotNull)
+        String invalidJson = """
+            {
+            "country": "ES",
+            "city": "MAD",
+            "startDate": "2026-06-01",
+            "endDate": "2026-06-10",
+            "deliveryMethod": "COURIER"
+            }
+            """;
+
+        mockMvc.perform(post("/api/kits/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void getKit_success_returnsStatus() throws Exception {
         Kit kit = new Kit();
         kit.setStatus(KitStatus.FINISHED);
