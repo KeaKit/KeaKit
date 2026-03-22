@@ -16,6 +16,7 @@ import { createKitStyles } from "../styles/createKitStyles";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types";
 import { useNavigation } from "@react-navigation/native";
+import { ArticleMapView } from "./ArticleMapView";
 
 type ProductSelectionNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -35,6 +36,8 @@ type CatalogProduct = {
   isAvailable?: boolean;
   availabilityMessage?: string;
   distanceKm?: number;
+  cityLat?: number;
+  cityLng?: number;
 };
 
 type ProductSelectionModalProps = {
@@ -60,6 +63,7 @@ type ProductSelectionModalProps = {
   expandedSearch: boolean;
   onToggleExpandedSearch: () => void;
   loadingNearby: boolean;
+  targetCityCoords?: { lat: number; lng: number } | null;
 };
 
 export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
@@ -85,8 +89,10 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   expandedSearch,
   onToggleExpandedSearch,
   loadingNearby,
+  targetCityCoords,
 }) => {
   const navigation = useNavigation<ProductSelectionNav>();
+  const [mapView, setMapView] = React.useState(false);
 
   // Calcular disponibilidad de productos basado en fechas
   const productsWithAvailability = React.useMemo(() => {
@@ -204,23 +210,63 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             </View>
 
             {expandedSearch && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 8,
-                  backgroundColor: "#FFF8E1",
-                  borderWidth: 1,
-                  borderColor: "#FFD54F",
-                  borderRadius: 8,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                }}
-              >
-                <Ionicons name="warning-outline" size={18} color="#F57F17" />
-                <Text style={{ flex: 1, fontSize: 12, color: "#5D4037" }}>
-                  Mostrando artículos de ciudades cercanas. Pueden generarse costes de transporte adicionales.
-                </Text>
+              <View style={{ gap: 8 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    backgroundColor: "#FFF8E1",
+                    borderWidth: 1,
+                    borderColor: "#FFD54F",
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                  }}
+                >
+                  <Ionicons name="warning-outline" size={18} color="#F57F17" />
+                  <Text style={{ flex: 1, fontSize: 12, color: "#5D4037" }}>
+                    Mostrando artículos de ciudades cercanas. Pueden generarse costes de transporte adicionales.
+                  </Text>
+                </View>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <TouchableOpacity
+                    onPress={() => setMapView(false)}
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: !mapView ? Colors.primary : Colors.border,
+                      backgroundColor: !mapView ? "#E3F2FD" : Colors.backgroundWhite,
+                    }}
+                  >
+                    <Ionicons name="list-outline" size={18} color={!mapView ? Colors.primary : Colors.textSecondary} />
+                    <Text style={{ color: !mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Lista</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setMapView(true)}
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: mapView ? Colors.primary : Colors.border,
+                      backgroundColor: mapView ? "#E3F2FD" : Colors.backgroundWhite,
+                    }}
+                  >
+                    <Ionicons name="map-outline" size={18} color={mapView ? Colors.primary : Colors.textSecondary} />
+                    <Text style={{ color: mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Mapa</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
@@ -310,7 +356,15 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             </ScrollView>
           </View>
 
-          <ScrollView style={createKitStyles.modalList}>
+          {expandedSearch && mapView ? (
+            <ArticleMapView
+              articles={filteredProducts}
+              targetCityCoords={targetCityCoords ?? null}
+              userCity={userCity}
+            />
+          ) : null}
+
+          <ScrollView style={[createKitStyles.modalList, expandedSearch && mapView ? { height: 0 } : {}]}>
             {productsWithAvailability.length === 0 ? (
               <Text
                 style={[

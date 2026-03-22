@@ -6,6 +6,8 @@ export const API_ROUTES = {
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_CITIES: `${BASE_URL}/api/cities`,
+  CITY_COORDINATES: (city: string, country: string) =>
+    `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   DELETE_USER: (id: number) => `${BASE_URL}/api/admin/users/${id}`,
   CREATE_USER: `${BASE_URL}/api/admin/users`,       // POST

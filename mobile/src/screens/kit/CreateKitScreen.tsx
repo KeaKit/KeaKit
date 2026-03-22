@@ -29,6 +29,7 @@ registerTranslation("es", es);
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
 import { getNearbyArticles } from "../../services/articleService";
+import { getCityCoordinates } from "../../services/cityService";
 import { API_ROUTES } from "../../config/api";
 import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus, ArticleNearby } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
@@ -78,6 +79,8 @@ type CatalogProduct = {
   isAvailable?: boolean;
   availabilityMessage?: string;
   distanceKm?: number;
+  cityLat?: number;
+  cityLng?: number;
 };
 
 const toIsoDate = (raw: string): string | null => {
@@ -166,16 +169,24 @@ const CreateKitScreen: React.FC = () => {
   const [expandedSearch, setExpandedSearch] = useState(false);
   const [nearbyProducts, setNearbyProducts] = useState<ArticleNearby[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
+  const [targetCityCoords, setTargetCityCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
       setNearbyProducts([]);
+      setTargetCityCoords(null);
       return;
     }
     let cancelled = false;
     setLoadingNearby(true);
-    getNearbyArticles(city.trim(), country.trim(), user.token).then((results) => {
-      if (!cancelled) setNearbyProducts(results);
+    Promise.all([
+      getNearbyArticles(city.trim(), country.trim(), user.token),
+      getCityCoordinates(city.trim(), country.trim()),
+    ]).then(([results, coords]) => {
+      if (!cancelled) {
+        setNearbyProducts(results);
+        setTargetCityCoords(coords);
+      }
     }).catch(() => {
       if (!cancelled) setNearbyProducts([]);
     }).finally(() => {
@@ -364,6 +375,8 @@ const CreateKitScreen: React.FC = () => {
         availableFrom: p.availableFrom ?? undefined,
         availableUntil: p.availableUntil ?? undefined,
         distanceKm: p.distanceKm,
+        cityLat: p.cityLat,
+        cityLng: p.cityLng,
       }));
 
     return [...local, ...nearby];
@@ -1031,6 +1044,7 @@ const CreateKitScreen: React.FC = () => {
           expandedSearch={expandedSearch}
           onToggleExpandedSearch={() => setExpandedSearch((v) => !v)}
           loadingNearby={loadingNearby}
+          targetCityCoords={targetCityCoords}
         />
 
         <Modal
