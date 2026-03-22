@@ -12,6 +12,7 @@ import com.example.demo.security.CustomUserDetailsService;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.security.TokenBlacklistService;
 import com.example.demo.service.AuthService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest // No se especifica aquí excludeAutoConfiguration porque la herencia no lo
             // permite
@@ -35,5 +36,8 @@ public abstract class BaseControllerTest {
 
     @MockitoBean
     protected JwtUtil jwtUtil;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
 
 }
