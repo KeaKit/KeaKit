@@ -28,8 +28,9 @@ registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
+import { getNearbyArticles } from "../../services/articleService";
 import { API_ROUTES } from "../../config/api";
-import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus } from "../../types";
+import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus, ArticleNearby } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
@@ -76,6 +77,7 @@ type CatalogProduct = {
   availableUntil?: string;
   isAvailable?: boolean;
   availabilityMessage?: string;
+  distanceKm?: number;
 };
 
 const toIsoDate = (raw: string): string | null => {
@@ -161,6 +163,26 @@ const CreateKitScreen: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [payment, setPayment] = useState<KitPaymentDTO | null>(null);
+  const [expandedSearch, setExpandedSearch] = useState(false);
+  const [nearbyProducts, setNearbyProducts] = useState<ArticleNearby[]>([]);
+  const [loadingNearby, setLoadingNearby] = useState(false);
+
+  useEffect(() => {
+    if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
+      setNearbyProducts([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingNearby(true);
+    getNearbyArticles(city.trim(), country.trim(), user.token).then((results) => {
+      if (!cancelled) setNearbyProducts(results);
+    }).catch(() => {
+      if (!cancelled) setNearbyProducts([]);
+    }).finally(() => {
+      if (!cancelled) setLoadingNearby(false);
+    });
+    return () => { cancelled = true; };
+  }, [expandedSearch, city, country, user?.token]);
 
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
@@ -296,7 +318,7 @@ const CreateKitScreen: React.FC = () => {
   const filteredProducts = useMemo(() => {
     const q = searchText.trim().toLowerCase();
 
-    return availableProducts.filter((p) => {
+    const local = availableProducts.filter((p) => {
       const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
       const byCategory =
         categoryFilter === "ALL" || p.category === categoryFilter;
@@ -312,7 +334,40 @@ const CreateKitScreen: React.FC = () => {
 
       return notInactive && byCategory && byCity && bySearch;
     });
-  }, [availableProducts, searchText, categoryFilter, showOnlyMyCity, city]);
+
+    if (!expandedSearch || nearbyProducts.length === 0) return local;
+
+    const localIds = new Set(local.map((p) => p.id));
+    const nearby: CatalogProduct[] = nearbyProducts
+      .filter((p) => {
+        if (localIds.has(p.id)) return false;
+        const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
+        const bySearch =
+          q.length === 0 ||
+          p.title.toLowerCase().includes(q) ||
+          (p.city ?? "").toLowerCase().includes(q) ||
+          (p.category ?? "").toLowerCase().includes(q);
+        return byCategory && bySearch;
+      })
+      .map((p) => ({
+        id: p.id,
+        itemType: p.itemType,
+        title: p.title,
+        pricePerMonth: p.pricePerMonth,
+        status: p.status ?? "AVAILABLE",
+        category: p.category ?? undefined,
+        city: p.city,
+        ownerId: p.ownerId ?? 0,
+        ownerName: p.ownerName ?? undefined,
+        imageUrl: p.imageUrl,
+        totalUnits: p.totalUnits ?? 1,
+        availableFrom: p.availableFrom ?? undefined,
+        availableUntil: p.availableUntil ?? undefined,
+        distanceKm: p.distanceKm,
+      }));
+
+    return [...local, ...nearby];
+  }, [availableProducts, nearbyProducts, searchText, categoryFilter, showOnlyMyCity, city, expandedSearch]);
 
   const openAddProductModal = async () => {
     await loadCatalog();
@@ -973,6 +1028,9 @@ const CreateKitScreen: React.FC = () => {
           onToggleAvailable={setShowOnlyAvailable}
           startDate={startDate}
           endDate={endDate}
+          expandedSearch={expandedSearch}
+          onToggleExpandedSearch={() => setExpandedSearch((v) => !v)}
+          loadingNearby={loadingNearby}
         />
 
         <Modal

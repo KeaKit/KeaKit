@@ -412,6 +412,9 @@ const DefaultKitFormScreen: React.FC = () => {
           onToggleMyCity={setShowOnlyMyCity}
           showOnlyAvailable={showOnlyAvailable}
           onToggleAvailable={setShowOnlyAvailable}
+          expandedSearch={false}
+          onToggleExpandedSearch={() => {}}
+          loadingNearby={false}
         />
       </View>
 

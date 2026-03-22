@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
@@ -33,6 +34,7 @@ type CatalogProduct = {
   availableUntil?: string;
   isAvailable?: boolean;
   availabilityMessage?: string;
+  distanceKm?: number;
 };
 
 type ProductSelectionModalProps = {
@@ -55,6 +57,9 @@ type ProductSelectionModalProps = {
   onToggleAvailable: (show: boolean) => void;
   startDate?: Date | null;
   endDate?: Date | null;
+  expandedSearch: boolean;
+  onToggleExpandedSearch: () => void;
+  loadingNearby: boolean;
 };
 
 export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
@@ -77,7 +82,9 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   onToggleAvailable,
   startDate,
   endDate,
-  
+  expandedSearch,
+  onToggleExpandedSearch,
+  loadingNearby,
 }) => {
   const navigation = useNavigation<ProductSelectionNav>();
 
@@ -157,16 +164,65 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
         <View style={createKitStyles.modalCard}>
           <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
           <View style={{ gap: 8, marginBottom: 12 }}>
-            <PaperTextInput
-              mode="outlined"
-              label="Busca un artículo o servicio"
-              value={searchText}
-              onChangeText={onSearchChange}
-              left={<PaperTextInput.Icon icon="magnify" />}
-              style={{ backgroundColor: Colors.backgroundWhite }}
-              outlineColor={Colors.border}
-              activeOutlineColor={Colors.primary}
-            />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <PaperTextInput
+                  mode="outlined"
+                  label="Busca un artículo o servicio"
+                  value={searchText}
+                  onChangeText={onSearchChange}
+                  left={<PaperTextInput.Icon icon="magnify" />}
+                  style={{ backgroundColor: Colors.backgroundWhite }}
+                  outlineColor={Colors.border}
+                  activeOutlineColor={Colors.primary}
+                />
+              </View>
+              <TouchableOpacity
+                onPress={onToggleExpandedSearch}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: expandedSearch ? Colors.primary : Colors.border,
+                  backgroundColor: expandedSearch ? "#E3F2FD" : Colors.backgroundWhite,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                accessibilityLabel="Búsqueda geográfica ampliada"
+              >
+                {loadingNearby ? (
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                ) : (
+                  <Ionicons
+                    name="globe-outline"
+                    size={24}
+                    color={expandedSearch ? Colors.primary : Colors.textSecondary}
+                  />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {expandedSearch && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                  backgroundColor: "#FFF8E1",
+                  borderWidth: 1,
+                  borderColor: "#FFD54F",
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                }}
+              >
+                <Ionicons name="warning-outline" size={18} color="#F57F17" />
+                <Text style={{ flex: 1, fontSize: 12, color: "#5D4037" }}>
+                  Mostrando artículos de ciudades cercanas. Pueden generarse costes de transporte adicionales.
+                </Text>
+              </View>
+            )}
 
             {userCity && (
               <TouchableOpacity
@@ -323,14 +379,17 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       <Text style={commonStyles.caption}>
                           {p.ownerName ? (
                             <Text
-                              style={{ color: "#007AFF" }} 
+                              style={{ color: "#007AFF" }}
                               onPress={() => navigateToUserReviews(p.ownerId, p.ownerName || "")}
                             >
                               {`${p.ownerName} · `}
                             </Text>
                           ) : ""}
-                        {p.city ? `${p.city} · ` : ""}
-                        {p.category ? `${p.category}` : ""}
+                        {p.city ? `${p.city}` : ""}
+                        {p.distanceKm !== undefined ? (
+                          <Text style={{ color: "#F57F17" }}>{` · ~${p.distanceKm} km`}</Text>
+                        ) : null}
+                        {p.category ? ` · ${p.category}` : ""}
                       </Text>
                       <Text style={commonStyles.caption}>
                         Unidades disponibles: {p.totalUnits}
