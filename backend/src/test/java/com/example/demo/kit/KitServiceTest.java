@@ -117,6 +117,21 @@ public class KitServiceTest {
     }
 
     @Test
+    void createKit_missingTenantId_throwsException() {
+        KitCreateRequest req = new KitCreateRequest(
+            "Kit Test", "ES", "MAD",
+            LocalDate.now(), LocalDate.now().plusDays(7),
+            KitStatus.DRAFT, DeliveryMethod.COURIER, null,
+            null, List.of()
+        );
+
+        when(platformConfigService.getCommissionRate()).thenReturn(0.2);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.create(req));
+        assertEquals("Tenant ID is required", ex.getMessage());
+    }
+
+    @Test
     void createKit_itemQuantityExceedsTotalUnits_throwsException() {
         User owner = createTestUser(2L, "Owner");
         Article article = createTestArticle(5L, "Tienda", 2, owner);
@@ -154,6 +169,33 @@ public class KitServiceTest {
         assertNotNull(res);
         assertEquals(1, res.getSnapshots().size());
         assertEquals(2, res.getSnapshots().get(0).getSelectedUnits());
+    }
+
+    @Test
+    void createKit_setsCourierPrice_basedOnDeliveryMethod() {
+        User tenant = createTestUser(1L, "Tenant");
+        when(platformConfigService.getCommissionRate()).thenReturn(0.2);
+        mockUserAndKitSave(tenant);
+
+        KitCreateRequest courierReq = new KitCreateRequest(
+            "Kit Courier", "ES", "MAD",
+            LocalDate.now(), LocalDate.now().plusDays(7),
+            KitStatus.DRAFT, DeliveryMethod.COURIER, null,
+            tenant.getId(), List.of()
+        );
+
+        KitCreateRequest meetingReq = new KitCreateRequest(
+            "Kit Meeting", "ES", "MAD",
+            LocalDate.now(), LocalDate.now().plusDays(7),
+            KitStatus.DRAFT, DeliveryMethod.MEETING_POINT, "Plaza",
+            tenant.getId(), List.of()
+        );
+
+        Kit courierKit = kitService.create(courierReq);
+        Kit meetingKit = kitService.create(meetingReq);
+
+        assertEquals(9.99, courierKit.getCourierPrice());
+        assertEquals(null, meetingKit.getCourierPrice());
     }
 
     @Test
