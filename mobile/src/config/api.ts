@@ -102,7 +102,11 @@ export const API_ROUTES = {
 
   // Default Kits (kits predeterminados)
   DEFAULT_KITS: `${BASE_URL}/api/default-kits`,
-  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`
+  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`,
+
+  // Geographic search (CU-ARRENDATARIO-10)
+  ARTICLE_NEARBY: (city: string, country: string, radiusKm = 150) =>
+    `${BASE_URL}/api/article/nearby?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&radiusKm=${radiusKm}`
 
 } as const;
 

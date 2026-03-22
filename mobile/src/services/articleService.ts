@@ -1,5 +1,5 @@
 import { API_ROUTES } from '../config/api';
-import { Article, ArticlePayload } from '../types';
+import { Article, ArticleNearby, ArticlePayload } from '../types';
 import { Platform } from 'react-native';
 
 const normalizeErrorMessage = (raw: string): string => {
@@ -142,4 +142,17 @@ export async function toggleRent(
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
   return handleResponse<Article>(res);
+}
+
+export async function getNearbyArticles(
+  city: string,
+  country: string,
+  token: string,
+  radiusKm = 150,
+): Promise<ArticleNearby[]> {
+  const res = await fetch(API_ROUTES.ARTICLE_NEARBY(city, country, radiusKm), {
+    method: 'GET',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<ArticleNearby[]>(res);
 }
