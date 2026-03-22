@@ -19,7 +19,7 @@ export interface UserResponse {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "COURIER";
   phone: string;
   address: string;
   city: string;
@@ -31,7 +31,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "COURIER";
   phone: string;
   address: string;
   city: string;
@@ -334,7 +334,8 @@ export type NavbarHeaderScreen =
   | 'Commission'
   | 'DefaultKits'
   | 'Login'
-  | 'Register';
+  | 'Register'
+  | 'TrackingNotifications';;
 
 export interface NavbarHeaderItem {
   name: string;
@@ -391,6 +392,11 @@ export type RootStackParamList = {
   DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
   Commission: undefined;
   Wallet: undefined;
+  Tracking: { kitId: number };
+  TrackingNotifications: undefined;
+  AssignedKits: undefined;
+  Couriers: undefined;
+  CourierDetail: { courier: UserResponse, isBusy?: boolean };
 };
 
 export interface ProfileData {
@@ -514,3 +520,35 @@ export const EUROPEAN_COUNTRIES = [
   { value: "United Kingdom", label: "Reino Unido" },
   { value: "Vatican City", label: "Ciudad del Vaticano" }
 ];
+
+export type DeliveryStatus =
+  | "PICKED_UP"
+  | "IN_TRANSIT"
+  | "NEARBY"
+  | "DELIVERED";
+
+export interface KitDeliveryResponse {
+  kitId: number;
+  status: DeliveryStatus | null;
+  estimatedArrival: string | null;
+  lastLocation: string | null;
+  lastUpdate: string | null;
+  courierId: number | null;
+  courierName: string | null;
+}
+
+export interface UpdateDeliveryRequest {
+  status?: DeliveryStatus;
+  estimatedArrival?: string;
+  lastLocation?: string;
+}
+
+export interface TrackingNotification {
+  id: string;
+  kitId: number;
+  kitName: string;
+  status: DeliveryStatus;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}

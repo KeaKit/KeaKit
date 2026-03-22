@@ -22,6 +22,9 @@ import com.stripe.Stripe;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.exception.StripeException;
+import java.util.HashMap;
+import java.util.Map;
+import com.stripe.model.Payout;
 
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.exception.NotEnoughBalanceException;
@@ -216,6 +219,37 @@ public class PaymentService {
         UserResponse keakitAdmin = userService.getUserByEmail(KEAKIT_ADMIN_EMAIL);
         Wallet keakitWallet = walletService.getWalletByUserId(keakitAdmin.getId());
         return keakitWallet;
+    }
+
+
+    public Payout createPayout(Long amountInCents) throws StripeException {
+        Stripe.apiKey = stripeApiKey;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("amount", amountInCents);
+        params.put("currency", "eur");
+        params.put("destination", "btok_fr");
+        Payout payout = Payout.create(params);
+
+        return payout;
+    }
+
+
+    @Transactional
+    public void withdrawToBank(Long userId, Double amount) 
+            throws ResourceNotFoundException, NotEnoughBalanceException, StripeException {
+
+        Wallet wallet = walletService.getWalletByUserId(userId);
+
+        if (wallet.getBalance() < amount) {
+            throw new NotEnoughBalanceException("Not enough balance" + " Required: " + amount + ", Available: " + wallet.getBalance());
+        }
+
+        Long amountInCents = (long) (amount * 100);
+        // Sacar dinero de Stripe en centimos
+        createPayout(amountInCents);
+        // Restar saldo de la wallet del usuario
+        walletService.updateWalletBalance(userId, amount);
     }
 
 }

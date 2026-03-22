@@ -222,6 +222,15 @@ const handleConfirmKit = async () => {
           <Text style={styles.totalValue}>{kit.totalPrice?.toLocaleString('es-ES')} €</Text>
         </View>
 
+        <TouchableOpacity
+          style={styles.trackingButton}
+          onPress={() => navigation.navigate("Tracking", { kitId: kit.id })}
+        >
+          <Ionicons name="navigate-outline" size={18} color={Colors.primary} />
+          <Text style={styles.trackingButtonText}>Ver seguimiento</Text>
+        </TouchableOpacity>
+
+
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
             style={styles.confirmButton}
@@ -255,7 +264,7 @@ const handleConfirmKit = async () => {
         )}
 
 
-        {kit.status === KitStatus.PAID && (
+        {kit.status === KitStatus.PAID && user?.role === "USER" &&(
           <TouchableOpacity
             style={styles.confirmButton}
             onPress={() => openActionModal(
@@ -402,6 +411,24 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#666', fontWeight: '600', },
   modalSubmitButton: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: Colors.primary, alignItems: 'center' },
   modalSubmitText: { color: '#FFF', fontWeight: 'bold' },
+    trackingButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    backgroundColor: "#FFF",
+    gap: 8,
+  },
+  trackingButtonText: {
+    color: Colors.primary,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+
 });
 
 export default KitDetailScreen;

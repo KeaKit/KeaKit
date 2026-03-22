@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Modal,
   ScrollView,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../styles/theme';
 import { RootStackParamList, NavbarHeaderScreen, AuthUser, NavbarHeaderItem } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useTrackingNotifications } from '../context/TrackingNotificationContext';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
@@ -43,8 +45,12 @@ interface HeaderMenuSection {
 const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut } = useAuth();
+  const { unreadCount } = useTrackingNotifications();
+
   const [menuVisible, setMenuVisible] = useState(false);
   const [userMenuVisible, setUserMenuVisible] = useState(false);
+  const [showBadge, setShowBadge] = useState(false);
+  const bellAnim = useRef(new Animated.Value(1)).current;
 
   // Cerrar dropdown cuando se hace click fuera (solo web)
   useEffect(() => {
@@ -59,6 +65,25 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
       return () => window.removeEventListener('click', handleClickOutside);
     }
   }, []);
+
+  // Campana temporal (4s)
+  useEffect(() => {
+    if (unreadCount > 0) {
+      setShowBadge(true);
+      const t = setTimeout(() => setShowBadge(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [unreadCount]);
+
+  // Animación campana
+  useEffect(() => {
+    if (unreadCount > 0) {
+      Animated.sequence([
+        Animated.timing(bellAnim, { toValue: 1.15, duration: 200, useNativeDriver: true }),
+        Animated.timing(bellAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [unreadCount]);
 
   // Items para usuarios normales
   const userNavItems: NavbarHeaderItem[] = [
@@ -80,7 +105,6 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   // Filtrar items según autenticación y rol
   const getVisibleItems = () => {
     if (!user) return [];
-    
     if (user.role === 'ADMIN') {
       return adminNavItems.filter(item => {
         if (item.requiresAdmin && user.role !== 'ADMIN') return false;
@@ -88,8 +112,6 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         return true;
       });
     }
-    
-    // Usuario normal
     return userNavItems.filter(item => {
       if (item.requiresAdmin) return false;
       if (item.requiresAuth && !user) return false;
@@ -109,19 +131,18 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     setMenuVisible(false);
   };
 
-  // Opciones del menú de usuario (desplegable del avatar) - SIN DUPLICAR LOS ITEMS DEL HEADER
+  // Menú de usuario (avatar)
   const getUserMenuSections = (): HeaderMenuSection[] => {
     if (!user) return [];
 
-    // Para usuarios normales (USER)
     if (user.role === 'USER') {
       return [
         {
           title: 'Mi cuenta',
           items: [
             { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
-            { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', 
-              params: { userId: user.id, userName: user.name } },
+            { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
+            { name: 'Notificaciones', icon: 'notifications', screen: 'TrackingNotifications' },
           ]
         },
         {
@@ -132,14 +153,32 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
       ];
     }
 
-    // Para administradores (ADMIN) - SIN los items que ya están en el header
+    if (user.role === 'COURIER') {
+      return [
+        {
+          title: 'Mi cuenta',
+          items: [
+            { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
+            { name: 'Kits asignados', icon: 'cube-outline', screen: 'AssignedKits' },
+            { name: 'Notificaciones', icon: 'notifications', screen: 'TrackingNotifications' },
+          ]
+        },
+        {
+          items: [
+            { name: 'Cerrar Sesión', icon: 'log-out', danger: true, onPress: handleLogout }
+          ]
+        }
+      ];
+    }
+
+
     return [
       {
         title: 'Mi cuenta',
         items: [
           { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
-          { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', 
-            params: { userId: user.id, userName: user.name } },
+          { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
+          { name: 'Notificaciones', icon: 'notifications', screen: 'TrackingNotifications' },
         ]
       },
       {
@@ -160,7 +199,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
 
   const handleMenuItemPress = (item: HeaderMenuItem) => {
     if (item.disabled) return;
-    
+
     if (item.onPress) {
       item.onPress();
     } else if (item.screen) {
@@ -189,6 +228,22 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         </View>
 
         <View style={styles.mobileRight}>
+          {showBadge && (
+            <TouchableOpacity
+              style={styles.bellButton}
+              onPress={() => navigateToScreen('TrackingNotifications')}
+            >
+              <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
+                <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
+              </Animated.View>
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+
           {user && (
             <TouchableOpacity 
               style={styles.iconButton}
@@ -227,7 +282,6 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
               </View>
 
               <ScrollView style={styles.modalScroll}>
-                {/* MÓVIL: Items de navegación para TODOS los usuarios autenticados */}
                 {user && (
                   <View style={styles.modalSection}>
                     <Text style={styles.modalSectionTitle}>Navegación</Text>
@@ -244,68 +298,22 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
                   </View>
                 )}
 
-                {!user ? (
-                  // Opciones para no autenticado
-                  <View style={styles.modalSection}>
-                    <TouchableOpacity
-                      style={styles.modalItem}
-                      onPress={() => navigateToScreen('Login')}
-                    >
-                      <Ionicons name="log-in-outline" size={24} color={Colors.primaryHome} />
-                      <Text style={styles.modalItemText}>Iniciar Sesión</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.modalItem}
-                      onPress={() => navigateToScreen('Register')}
-                    >
-                      <Ionicons name="person-add-outline" size={24} color={Colors.primaryHome} />
-                      <Text style={styles.modalItemText}>Registrarse</Text>
-                    </TouchableOpacity>
+                {getUserMenuSections().map((section, index) => (
+                  <View key={index} style={styles.modalSection}>
+                    {section.title && <Text style={styles.modalSectionTitle}>{section.title}</Text>}
+                    {section.items.map((item, idx) => (
+                      <TouchableOpacity
+                        key={`${item.name}-${idx}`}
+                        style={[styles.modalItem, item.disabled && styles.modalItemDisabled]}
+                        onPress={() => handleMenuItemPress(item)}
+                      >
+                        <Ionicons name={item.icon} size={24} color={item.danger ? '#d9534f' : Colors.primaryHome} />
+                        <Text style={[styles.modalItemText, item.danger && styles.dangerText]}>{item.name}</Text>
+                        {item.badge && <Text style={styles.badgeChip}>{item.badge}</Text>}
+                      </TouchableOpacity>
+                    ))}
                   </View>
-                ) : (
-                  // Opciones de perfil y gestión (desplegable del avatar)
-                  getUserMenuSections().map((section, idx) => (
-                    <View key={idx} style={styles.modalSection}>
-                      {section.title && (
-                        <Text style={styles.modalSectionTitle}>{section.title}</Text>
-                      )}
-                      {section.items.map((item, itemIdx) => (
-                        <TouchableOpacity
-                          key={itemIdx}
-                          style={[
-                            styles.modalItem,
-                            item.danger && styles.modalItemDanger,
-                            item.disabled && styles.modalItemDisabled
-                          ]}
-                          onPress={() => handleMenuItemPress(item)}
-                          disabled={item.disabled}
-                        >
-                          <Ionicons 
-                            name={item.icon} 
-                            size={24} 
-                            color={
-                              item.danger ? '#d9534f' : 
-                              item.disabled ? Colors.textLight : 
-                              Colors.primaryHome
-                            } 
-                          />
-                          <Text style={[
-                            styles.modalItemText,
-                            item.danger && styles.modalItemTextDanger,
-                            item.disabled && styles.modalItemTextDisabled
-                          ]}>
-                            {item.name}
-                          </Text>
-                          {item.badge && (
-                            <View style={styles.modalBadge}>
-                              <Text style={styles.modalBadgeText}>{item.badge}</Text>
-                            </View>
-                          )}
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  ))
-                )}
+                ))}
               </ScrollView>
             </View>
           </TouchableOpacity>
@@ -314,18 +322,12 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     );
   }
 
-  // Versión desktop
+  // Versión desktop/tablet
   return (
-    <View style={styles.desktopHeader}>
-      <View style={styles.leftSection}>
-        <TouchableOpacity onPress={() => navigateToScreen('Home')}>
-          <Image 
-            source={require('../../assets/logo.png')} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => navigateToScreen('Home')} style={styles.logoContainer}>
+        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+      </TouchableOpacity>
 
       <View style={styles.navItems}>
         {getVisibleItems().map((item) => (
@@ -340,92 +342,57 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         ))}
       </View>
 
-      <View style={styles.userSection}>
-        {user ? (
-          <>
-            <TouchableOpacity 
-              style={styles.iconButton}
-              onPress={() => navigateToScreen('Wallet')}
-            >
-              <Ionicons name="wallet-outline" size={22} color={Colors.primaryHome} />
-            </TouchableOpacity>
+      <View style={styles.rightActions}>
+        {user && (
+          <Text style={styles.greetingText}>
+            Hola, {user.name.split(' ')[0]}
+          </Text>
+        )}
 
-            <TouchableOpacity 
-              style={styles.userMenuTrigger}
-              onPress={() => setUserMenuVisible(!userMenuVisible)}
-            >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {user.name.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            {userMenuVisible && (
-              <View style={styles.userDropdown}>
-                <ScrollView style={styles.dropdownScroll} nestedScrollEnabled={true}>
-                  {getUserMenuSections().map((section, idx) => (
-                    <View key={idx}>
-                      {section.title && (
-                        <Text style={styles.dropdownSectionTitle}>{section.title}</Text>
-                      )}
-                      {section.items.map((item, itemIdx) => (
-                        <TouchableOpacity
-                          key={itemIdx}
-                          style={[
-                            styles.dropdownItem,
-                            item.danger && styles.dropdownItemDanger,
-                            item.disabled && styles.dropdownItemDisabled
-                          ]}
-                          onPress={() => handleMenuItemPress(item)}
-                          disabled={item.disabled}
-                        >
-                          <Ionicons 
-                            name={item.icon} 
-                            size={18} 
-                            color={
-                              item.danger ? '#d9534f' : 
-                              item.disabled ? Colors.textLight : 
-                              Colors.primaryHome
-                            } 
-                          />
-                          <Text style={[
-                            styles.dropdownText,
-                            item.danger && styles.dropdownTextDanger,
-                            item.disabled && styles.dropdownTextDisabled
-                          ]}>
-                            {item.name}
-                          </Text>
-                          {item.badge && (
-                            <View style={styles.dropdownBadge}>
-                              <Text style={styles.dropdownBadgeText}>{item.badge}</Text>
-                            </View>
-                          )}
-                        </TouchableOpacity>
-                      ))}
-                      {idx < getUserMenuSections().length - 1 && (
-                        <View style={styles.dropdownDivider} />
-                      )}
-                    </View>
-                  ))}
-                </ScrollView>
+        {showBadge && (
+          <TouchableOpacity
+            style={styles.bellButton}
+            onPress={() => navigateToScreen('TrackingNotifications')}
+          >
+            <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
+              <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
+            </Animated.View>
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
               </View>
             )}
-          </>
-        ) : (
-          <View style={styles.authButtons}>
-            <TouchableOpacity
-              style={styles.loginButton}
-              onPress={() => navigateToScreen('Login')}
-            >
-              <Text style={styles.loginText}>Iniciar Sesión</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.registerButton}
-              onPress={() => navigateToScreen('Register')}
-            >
-              <Text style={styles.registerText}>Registrarse</Text>
-            </TouchableOpacity>
+          </TouchableOpacity>
+        )}
+
+        {user && (
+          <TouchableOpacity
+            style={[styles.userMenuTrigger, { backgroundColor: Colors.primaryHome }]}
+            onPress={() => setUserMenuVisible(!userMenuVisible)}
+          >
+            <Text style={styles.userInitial}>{user.name.charAt(0).toUpperCase()}</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Dropdown usuario */}
+        {userMenuVisible && (
+          <View style={styles.userDropdown}>
+            {getUserMenuSections().map((section, index) => (
+              <View key={index} style={styles.dropdownSection}>
+                {section.title && <Text style={styles.dropdownTitle}>{section.title}</Text>}
+                {section.items.map((item, idx) => (
+                  <TouchableOpacity
+                    key={`${item.name}-${idx}`}
+                    style={[styles.dropdownItem, item.disabled && styles.dropdownItemDisabled]}
+                    onPress={() => handleMenuItemPress(item)}
+                  >
+                    <Ionicons name={item.icon} size={18} color={item.danger ? '#d9534f' : Colors.primaryHome} />
+                    <Text style={[styles.dropdownItemText, item.danger && styles.dangerText]}>{item.name}</Text>
+                    {item.badge && <Text style={styles.badgeChip}>{item.badge}</Text>}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
           </View>
         )}
       </View>
@@ -434,179 +401,140 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
 };
 
 const styles = StyleSheet.create({
-  desktopHeader: {
+  header: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 1000,
+    borderBottomColor: '#eee',
+    zIndex: 10,
   },
-  leftSection: {
+  logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   logo: {
-    width: 100,
-    height: 35,
+    width: 120,
+    height: 36,
   },
   navItems: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
-    flex: 1,
-    justifyContent: 'center',
+    gap: 18,
   },
   navItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
   },
   navItemText: {
     fontSize: 14,
-    fontWeight: '500',
     color: Colors.primaryHome,
+    fontWeight: '600',
   },
-  userSection: {
+  rightActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-    position: 'relative',
   },
-  iconButton: {
-    padding: 8,
-    borderRadius: 8,
+  greetingText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.primaryHome,
   },
-  userMenuTrigger: {},
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primaryHome,
-    justifyContent: 'center',
+  bellButton: {
+    position: "relative",
+    padding: 6,
+  },
+  badge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    backgroundColor: "#ff3b30",
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  userMenuTrigger: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  avatarText: {
+  userInitial: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '800',
+    fontSize: 16,
   },
   userDropdown: {
     position: 'absolute',
-    top: 50,
+    top: 54,
     right: 0,
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 8,
+    padding: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    minWidth: 240,
-    maxHeight: 400,
-    zIndex: 1001,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 5,
+    minWidth: 220,
+    zIndex: 50,
   },
-  dropdownScroll: {
-    maxHeight: 380,
+  dropdownSection: {
+    marginBottom: 8,
   },
-  dropdownSectionTitle: {
+  dropdownTitle: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.primaryHome,
-    letterSpacing: 1.1,
+    color: '#888',
+    marginBottom: 6,
     textTransform: 'uppercase',
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 4,
   },
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderRadius: 8,
+    gap: 8,
+    paddingVertical: 6,
   },
-  dropdownItemDanger: {
-    opacity: 0.8,
-  },
-  dropdownItemDisabled: {
-    opacity: 0.55,
-  },
-  dropdownText: {
+  dropdownItemText: {
     fontSize: 14,
     color: Colors.primaryHome,
-    flex: 1,
   },
-  dropdownTextDanger: {
+  dropdownItemDisabled: {
+    opacity: 0.5,
+  },
+  dangerText: {
     color: '#d9534f',
   },
-  dropdownTextDisabled: {
-    color: Colors.textSecondary,
-  },
-  dropdownBadge: {
+  badgeChip: {
+    marginLeft: 'auto',
+    backgroundColor: '#eee',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
-    backgroundColor: '#eeeeee',
-  },
-  dropdownBadgeText: {
     fontSize: 10,
-    fontWeight: '600',
-    color: '#999',
+    color: '#777',
   },
-  dropdownDivider: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 8,
-  },
-  authButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  loginButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.primaryHome,
-  },
-  loginText: {
-    color: Colors.primaryHome,
-    fontWeight: '600',
-  },
-  registerButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: Colors.primaryHome,
-  },
-  registerText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
+
+  // Mobile
   mobileHeader: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   mobileLeft: {
     flexDirection: 'row',
@@ -615,86 +543,64 @@ const styles = StyleSheet.create({
   mobileRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   menuButton: {
-    padding: 8,
+    padding: 4,
   },
+  iconButton: {
+    padding: 4,
+  },
+
+  // Modal móvil
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    padding: 20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    marginBottom: 16,
   },
   modalLogo: {
-    width: 100,
-    height: 35,
+    width: 120,
+    height: 36,
   },
   modalScroll: {
-    padding: 16,
+    marginBottom: 12,
   },
   modalSection: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   modalSectionTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.primaryHome,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    color: '#888',
     marginBottom: 8,
-    marginLeft: 12,
+    textTransform: 'uppercase',
   },
   modalItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  modalItemDanger: {
-    borderBottomWidth: 0,
-  },
-  modalItemDisabled: {
-    opacity: 0.55,
+    gap: 10,
+    paddingVertical: 8,
   },
   modalItemText: {
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.primaryHome,
-    fontWeight: '500',
-    flex: 1,
-  },
-  modalItemTextDanger: {
-    color: '#d9534f',
-  },
-  modalItemTextDisabled: {
-    color: Colors.textSecondary,
-  },
-  modalBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 16,
-    backgroundColor: '#eeeeee',
-  },
-  modalBadgeText: {
-    fontSize: 11,
     fontWeight: '600',
-    color: '#999',
+  },
+  modalItemDisabled: {
+    opacity: 0.5,
   },
 });
 

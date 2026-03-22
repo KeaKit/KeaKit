@@ -14,9 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @Transactional
 @ActiveProfiles("test")
+@TestPropertySource(properties = "jwt.secret=TestSecretKeyForJWTTesting123456789012345678901234567890")
 class KitIntegrationTest {
 
     @Autowired
@@ -52,7 +54,7 @@ class KitIntegrationTest {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @MockBean
+    @MockitoBean
     private AuthService authService; 
 
     private User tenant;
@@ -170,6 +172,148 @@ class KitIntegrationTest {
                 .content(json))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("End date cannot be before start date"));
+    }
+
+    @Test
+    void testCreateKit_meetingPointRequired_whenMeetingPointDelivery() throws Exception {
+        String json = """
+            {
+            "name": "Kit MP Sin Punto",
+            "country": "España",
+            "city": "Madrid",
+            "startDate": "2026-06-15",
+            "endDate": "2026-06-20",
+            "status": "DRAFT",
+            "deliveryMethod": "MEETING_POINT",
+            "meetingPoint": "   ",
+            "tenantId": %d,
+            "itemSelections": []
+            }
+            """.formatted(tenant.getId());
+
+        mockMvc.perform(post("/api/kits/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Meeting point is required when delivery method is MEETING_POINT"));
+    }
+
+    @Test
+    void testCreateKit_tenantCannotSelectOwnItems() throws Exception {
+        Article ownArticle = createTestArticle("Mi propio item", tenant);
+
+        String json = """
+            {
+            "name": "Kit Con Item Propio",
+            "country": "España",
+            "city": "Madrid",
+            "startDate": "2026-06-15",
+            "endDate": "2026-06-20",
+            "status": "ACTIVE",
+            "deliveryMethod": "COURIER",
+            "tenantId": %d,
+            "itemSelections": [
+                { "itemId": %d, "quantity": 1, "pricePerMonth": 25.0 }
+            ]
+            }
+            """.formatted(tenant.getId(), ownArticle.getId());
+
+        mockMvc.perform(post("/api/kits/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Tenant cannot select their own items"));
+    }
+
+    @Test
+    void testCreateKit_itemNotFound_returnsBadRequest() throws Exception {
+        String json = """
+            {
+            "name": "Kit Con Item Inexistente",
+            "country": "España",
+            "city": "Madrid",
+            "startDate": "2026-06-15",
+            "endDate": "2026-06-20",
+            "status": "ACTIVE",
+            "deliveryMethod": "COURIER",
+            "tenantId": %d,
+            "itemSelections": [
+                { "itemId": 999999, "quantity": 1, "pricePerMonth": 25.0 }
+            ]
+            }
+            """.formatted(tenant.getId());
+
+        mockMvc.perform(post("/api/kits/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Item not found: 999999"));
+    }
+
+    @Test
+    void testCreateKit_quantityExceedsAvailableUnits_returnsBadRequest() throws Exception {
+        User owner = new User();
+        owner.setName("Owner");
+        owner.setEmail("owner-qty@test.com");
+        owner.setPassword("123456");
+        owner.setRole(UserRole.USER);
+        owner.setCountry("España");
+        owner.setCity("Sevilla");
+        owner.setAddress("Calle Z");
+        owner.setPhone("600000010");
+        owner = userRepository.save(owner);
+
+        Article article = createTestArticle("Item Unidades 1", owner);
+        article.setTotalUnits(1);
+        itemRepository.save(article);
+
+        String json = """
+            {
+            "name": "Kit Cantidad Excesiva",
+            "country": "España",
+            "city": "Madrid",
+            "startDate": "2026-06-15",
+            "endDate": "2026-06-20",
+            "status": "ACTIVE",
+            "deliveryMethod": "COURIER",
+            "tenantId": %d,
+            "itemSelections": [
+                { "itemId": %d, "quantity": 2, "pricePerMonth": 25.0 }
+            ]
+            }
+            """.formatted(tenant.getId(), article.getId());
+
+        mockMvc.perform(post("/api/kits/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Selected quantity exceeds available units"));
+    }
+
+    @Test
+    void testCreateKit_quantityBelowMin_returnsBadRequest() throws Exception {
+        Article article = createTestArticle("Item Min", tenant);
+
+        String json = """
+            {
+            "name": "Kit Cantidad 0",
+            "country": "España",
+            "city": "Madrid",
+            "startDate": "2026-06-15",
+            "endDate": "2026-06-20",
+            "status": "DRAFT",
+            "deliveryMethod": "COURIER",
+            "tenantId": %d,
+            "itemSelections": [
+                { "itemId": %d, "quantity": 0, "pricePerMonth": 25.0 }
+            ]
+            }
+            """.formatted(tenant.getId(), article.getId());
+
+        mockMvc.perform(post("/api/kits/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+            .andExpect(status().isBadRequest());
     }
 
     // ------------------ GET ------------------

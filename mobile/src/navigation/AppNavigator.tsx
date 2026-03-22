@@ -43,6 +43,12 @@ import CreateIncidentScreen from '../screens/incidents/CreateIncidentScreen';
 import IncidentDetailScreen from '../screens/incidents/IncidentDetailScreen';
 import CreateServiceScreen from '../screens/service/CreateServiceScreen';
 import EditServiceScreen from '../screens/service/EditServiceScreen';
+import KitTrackingScreen from '../screens/kit/KitTrackingScreen';
+import { TrackingNotificationsProvider } from '../context/TrackingNotificationContext';
+import TrackingNotificationsScreen from '../screens/notifications/TrackingNotificationsScreen';
+import AssignedKitsScreen from '../screens/kit/AssignedKitsScreen';
+import CouriersScreen from '../screens/admin/CouriersScreen';
+import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
 
 import { RootStackParamList } from '../types';
 
@@ -61,165 +67,184 @@ const AppNavigator: React.FC = () => {
 
   return (
     <NotificationProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {user ? (
-            <>
-              {/* === PANTALLAS PRINCIPALES (CON NAVBAR) === */}
-              
-              {/* Home - Admin o User según rol */}
-              <Stack.Screen name="Home">
-                {() => (
-                  <MainLayout>
-                    {user.role === 'ADMIN' ? <AdminHomeScreen /> : <HomeScreen />}
-                  </MainLayout>
+      <TrackingNotificationsProvider>
+
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {user ? (
+              <>
+                {/* === PANTALLAS PRINCIPALES (CON NAVBAR) === */}
+                
+                {/* Home - Admin o User según rol */}
+                <Stack.Screen name="Home">
+                  {() => (
+                    <MainLayout>
+                      {user.role === 'ADMIN' ? <AdminHomeScreen /> : <HomeScreen />}
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                {/* Perfil y listados principales */}
+                <Stack.Screen name="Profile">
+                  {() => (
+                    <MainLayout>
+                      <ProfileScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="MyArticles">
+                  {() => (
+                    <MainLayout>
+                      <MyArticlesScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="MyKits">
+                  {() => (
+                    <MainLayout>
+                      <MyKitsScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="MyServices">
+                  {() => (
+                    <MainLayout>
+                      <MyServicesScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="MyIncidents">
+                  {() => (
+                    <MainLayout>
+                      <MyIncidentsScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="MyKitsHistory">
+                  {() => (
+                    <MainLayout>
+                      <MyKitsHistoryScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="UserRatings">
+                  {() => (
+                    <MainLayout>
+                      <UserRatingsScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="Wallet">
+                  {() => (
+                    <MainLayout>
+                      <WalletScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                {/* Pantallas de administración */}
+                {user.role === 'ADMIN' && (
+                  <>
+                    <Stack.Screen name="AdminUsers">
+                      {() => (
+                        <MainLayout>
+                          <AdminUsersScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+
+                    <Stack.Screen name="Categories">
+                      {() => (
+                        <MainLayout>
+                          <CategoriesScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+
+                    <Stack.Screen name="Commission">
+                      {() => (
+                        <MainLayout>
+                          <CommissionScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+
+                    <Stack.Screen name="DefaultKits">
+                      {() => (
+                        <MainLayout>
+                          <DefaultKitsScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+
+                    <Stack.Screen name="Couriers">
+                      {() => (
+                        <MainLayout>
+                          <CouriersScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+                  </>
                 )}
-              </Stack.Screen>
 
-              {/* Perfil y listados principales */}
-              <Stack.Screen name="Profile">
-                {() => (
-                  <MainLayout>
-                    <ProfileScreen />
-                  </MainLayout>
-                )}
-              </Stack.Screen>
+                {/* === PANTALLAS SECUNDARIAS (SIN NAVBAR) === */}
+                
+                {/* Edición de perfil */}
+                <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                
+                {/* Artículos */}
+                <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
+                <Stack.Screen name="EditArticle" component={EditArticleScreen} />
+                
+                {/* Servicios */}
+                <Stack.Screen name="PromoteService" component={CreateServiceScreen} />
+                <Stack.Screen name="EditService" component={EditServiceScreen} />
+                
+                {/* Kits */}
+                <Stack.Screen name="CreateKit" component={CreateKitScreen} />
+                <Stack.Screen name="KitDetail" component={KitDetailScreen} />
+                <Stack.Screen name="Checkout" component={CheckoutScreen} />
+                <Stack.Screen name="EditDefaultKit" component={EditDefaultKitScreen} />
+                <Stack.Screen name="DefaultKitForm" component={DefaultKitFormScreen} />
+                
+                {/* Valoraciones */}
+                <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
+                
+                {/* Incidencias */}
+                <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
+                <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
+                
+                {/* Administración */}
+                <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
+                <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
 
-              <Stack.Screen name="MyArticles">
-                {() => (
-                  <MainLayout>
-                    <MyArticlesScreen />
-                  </MainLayout>
-                )}
-              </Stack.Screen>
+                {/*Tracking - Delivery*/ }
 
-              <Stack.Screen name="MyKits">
-                {() => (
-                  <MainLayout>
-                    <MyKitsScreen />
-                  </MainLayout>
-                )}
-              </Stack.Screen>
-
-              <Stack.Screen name="MyServices">
-                {() => (
-                  <MainLayout>
-                    <MyServicesScreen />
-                  </MainLayout>
-                )}
-              </Stack.Screen>
-
-              <Stack.Screen name="MyIncidents">
-                {() => (
-                  <MainLayout>
-                    <MyIncidentsScreen />
-                  </MainLayout>
-                )}
-              </Stack.Screen>
-
-              <Stack.Screen name="MyKitsHistory">
-                {() => (
-                  <MainLayout>
-                    <MyKitsHistoryScreen />
-                  </MainLayout>
-                )}
-              </Stack.Screen>
-
-              <Stack.Screen name="UserRatings">
-                {() => (
-                  <MainLayout>
-                    <UserRatingsScreen />
-                  </MainLayout>
-                )}
-              </Stack.Screen>
-
-              <Stack.Screen name="Wallet">
-                {() => (
-                  <MainLayout>
-                    <WalletScreen />
-                  </MainLayout>
-                )}
-              </Stack.Screen>
-
-              {/* Pantallas de administración */}
-              {user.role === 'ADMIN' && (
-                <>
-                  <Stack.Screen name="AdminUsers">
-                    {() => (
-                      <MainLayout>
-                        <AdminUsersScreen />
-                      </MainLayout>
-                    )}
-                  </Stack.Screen>
-
-                  <Stack.Screen name="Categories">
-                    {() => (
-                      <MainLayout>
-                        <CategoriesScreen />
-                      </MainLayout>
-                    )}
-                  </Stack.Screen>
-
-                  <Stack.Screen name="Commission">
-                    {() => (
-                      <MainLayout>
-                        <CommissionScreen />
-                      </MainLayout>
-                    )}
-                  </Stack.Screen>
-
-                  <Stack.Screen name="DefaultKits">
-                    {() => (
-                      <MainLayout>
-                        <DefaultKitsScreen />
-                      </MainLayout>
-                    )}
-                  </Stack.Screen>
-                </>
-              )}
-
-              {/* === PANTALLAS SECUNDARIAS (SIN NAVBAR) === */}
-              
-              {/* Edición de perfil */}
-              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-              
-              {/* Artículos */}
-              <Stack.Screen name="UploadArticle" component={UploadArticleScreen} />
-              <Stack.Screen name="EditArticle" component={EditArticleScreen} />
-              
-              {/* Servicios */}
-              <Stack.Screen name="PromoteService" component={CreateServiceScreen} />
-              <Stack.Screen name="EditService" component={EditServiceScreen} />
-              
-              {/* Kits */}
-              <Stack.Screen name="CreateKit" component={CreateKitScreen} />
-              <Stack.Screen name="KitDetail" component={KitDetailScreen} />
-              <Stack.Screen name="Checkout" component={CheckoutScreen} />
-              <Stack.Screen name="EditDefaultKit" component={EditDefaultKitScreen} />
-              <Stack.Screen name="DefaultKitForm" component={DefaultKitFormScreen} />
-              
-              {/* Valoraciones */}
-              <Stack.Screen name="CreateRating" component={CreateRatingScreen} />
-              
-              {/* Incidencias */}
-              <Stack.Screen name="CreateIncident" component={CreateIncidentScreen} />
-              <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
-              
-              {/* Administración */}
-              <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
-              <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
-            </>
-          ) : (
-            /* === PANTALLAS PÚBLICAS === */
-            <>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
+                <Stack.Screen name="Tracking" component={KitTrackingScreen} />
+                <Stack.Screen name="TrackingNotifications" component={TrackingNotificationsScreen} />
+                <Stack.Screen name="AssignedKits" component={AssignedKitsScreen} />
+                <Stack.Screen name="CourierDetail" component={CourierDetailScreen} />
+              </>
+            ) : (
+              /* === PANTALLAS PÚBLICAS === */
+              <>
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+              </>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </TrackingNotificationsProvider>
     </NotificationProvider>
   );
+
 };
 
 export default AppNavigator;
