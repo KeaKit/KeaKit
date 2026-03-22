@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import com.example.demo.dto.CityCoordinatesDTO;
 import com.example.demo.service.CityService;
 import java.util.List;
 
@@ -19,10 +20,21 @@ public class CityController {
     @GetMapping("")
     public ResponseEntity<List<String>> getCities(@RequestParam String country) {
         List<String> cities = cityService.getCitiesByCountry(country.toLowerCase());
-        
+
         if (cities == null || cities.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(cities);
+    }
+
+    @GetMapping("/coordinates")
+    public ResponseEntity<CityCoordinatesDTO> getCityCoordinates(
+            @RequestParam String city,
+            @RequestParam String country) {
+        CityCoordinatesDTO coords = cityService.getCityCoordinates(city, country);
+        if (coords == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(coords);
     }
 }
