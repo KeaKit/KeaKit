@@ -67,6 +67,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     screen: 'AdminUsers',
   },
   {
+    id: 'couriers',
+    icon: 'navigate',
+    label: 'Gestión de repartidores',
+    description: 'Asignar kits a repartidores',
+    color: KC.mint,
+    implemented: true,
+    screen: 'Couriers',
+  },
+  {
     id: 'categories',
     icon: 'folder-open',
     label: 'Categorías',

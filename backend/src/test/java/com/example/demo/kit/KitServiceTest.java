@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +32,7 @@ import com.example.demo.model.Article;
 import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
+import com.example.demo.model.KitDelivery;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
 import com.example.demo.repository.ItemRepository;
@@ -40,6 +42,7 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.WalletRepository;
 import com.example.demo.service.AuthService;
+import com.example.demo.service.KitDeliveryService;
 import com.example.demo.service.KitService;
 import com.example.demo.service.OrderConfirmationEmailService;
 import com.example.demo.service.PlatformConfigService;
@@ -56,6 +59,7 @@ public class KitServiceTest {
     @Mock private TransactionRepository transactionRepository;
     @Mock private PlatformConfigService platformConfigService;
     @Mock private AuthService authService;
+    @Mock private KitDeliveryService kitDeliveryService;
 
 
     @InjectMocks
@@ -524,6 +528,7 @@ public class KitServiceTest {
 
     private void mockUserAndKitSave(User tenant) {
         when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
+        lenient().when(kitDeliveryService.ensureDeliveryExists(any(Kit.class))).thenReturn(new KitDelivery());
         when(kitRepository.save(any(Kit.class))).thenAnswer(inv -> {
             Kit k = inv.getArgument(0);
             k.setId(1L);

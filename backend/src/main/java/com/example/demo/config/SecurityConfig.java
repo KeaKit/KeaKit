@@ -44,6 +44,12 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                 //Para asegurar que las url que comiencen por api/admin/ solo serán accesibles por usuarios con rol ADMIN
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/kits/*/tracking").authenticated()
+                .requestMatchers(HttpMethod.PATCH, "/api/kits/*/tracking").hasAnyRole("COURIER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/kits/*/assign-courier/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/kits/courier/assigned").hasAnyRole("COURIER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/kits/busy-couriers").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/kits/unassigned").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/services/active", "/api/services/{id}").permitAll()
                 .requestMatchers("/api/article/**").authenticated()
                 .requestMatchers("/api/services/**").authenticated()

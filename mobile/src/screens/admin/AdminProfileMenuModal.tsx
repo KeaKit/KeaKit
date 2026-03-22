@@ -47,7 +47,7 @@ const AdminProfileMenuModal: React.FC<AdminProfileMenuModalProps> = ({ visible, 
       onRequestClose={onClose}
     >
       <Pressable style={componentStyles.modalOverlay} onPress={onClose}>
-        <View style={componentStyles.profileMenu}>
+        <View style={[componentStyles.profileMenu, { maxHeight: "85%" }]}> {/* para que se vea mejor las pestañas de la derecha, si lo quitas el "cerrar sesion" esta muy abajo*/ }
           {user ? (
             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
 
@@ -98,6 +98,14 @@ const AdminProfileMenuModal: React.FC<AdminProfileMenuModalProps> = ({ visible, 
               >
                 <Ionicons name="people" size={24} color={Colors.primary} />
                 <Text style={componentStyles.menuItemText}>Gestión de Usuarios</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
+                onPress={() => navigateTo('Couriers')}
+              >
+                <Ionicons name="navigate" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Gestión de Repartidores</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

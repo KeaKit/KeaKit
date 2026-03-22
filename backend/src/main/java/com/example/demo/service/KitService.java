@@ -50,6 +50,9 @@ public class KitService {
     private PlatformConfigService platformConfigService;
 
     @Autowired
+    private KitDeliveryService kitDeliveryService;
+
+    @Autowired
     private AuthService authService;
 
     // TODO: Obtener la garantía de la configuración hecha por el admin
@@ -135,6 +138,10 @@ public class KitService {
         validateDates(kit.getStartDate(), kit.getEndDate());
 
         Kit savedKit = kitRepository.save(kit);
+
+        if (savedKit.getStatus() != KitStatus.DRAFT) {
+            kitDeliveryService.ensureDeliveryExists(savedKit);
+        }
 
         return savedKit;
     }
@@ -323,6 +330,9 @@ public class KitService {
 
         kit.setStatus(KitStatus.PAID);
         Kit saved = kitRepository.save(kit);
+
+        kitDeliveryService.ensureDeliveryExists(saved);
+        
         return new KitResponse(saved);
     }
 
