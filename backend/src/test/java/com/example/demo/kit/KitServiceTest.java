@@ -243,7 +243,7 @@ public class KitServiceTest {
         User user = createTestUser(1L, "Admin");
         Kit kit = new Kit();
         kit.setId(10L);
-        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(100L))));
+        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(100L, user))));
         
         Article article = createTestArticle(100L, "Taladro", 5, createTestUser(2L, "Owner"));
 
@@ -262,7 +262,7 @@ public class KitServiceTest {
         Kit kit = new Kit();
         kit.setId(10L);
         // Metemos 2 items para que pase la validación de no dejar el kit vacío
-        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(100L), createTestSnapshot(101L))));
+        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(100L, user), createTestSnapshot(101L, user))));
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
@@ -280,7 +280,7 @@ public class KitServiceTest {
         User user = createTestUser(1L, "Admin");
         Kit kit = new Kit();
         kit.setId(10L);
-        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(100L)))); // Solo hay 1
+        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(100L, user)))); // Solo hay 1
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
@@ -295,7 +295,7 @@ public class KitServiceTest {
         User user = createTestUser(1L, "Admin");
         Kit kit = new Kit();
         kit.setId(10L);
-        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(101L), createTestSnapshot(102L))));
+        kit.setSnapshots(new ArrayList<>(List.of(createTestSnapshot(101L, user), createTestSnapshot(102L, user))));
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
@@ -470,13 +470,13 @@ public class KitServiceTest {
         Kit kit = new Kit();
         kit.setId(10L);
 
-        ItemMemento snap1 = createTestSnapshot(100L);
+        ItemMemento snap1 = createTestSnapshot(100L, user);
         snap1.setNameAtRental("Taladro");
         snap1.setPriceAtRental(30.0);
-        ItemMemento snap2 = createTestSnapshot(101L);
+        ItemMemento snap2 = createTestSnapshot(101L, user);
         snap2.setNameAtRental("Sierra");
         snap2.setPriceAtRental(40.0);
-        ItemMemento snap3 = createTestSnapshot(102L);
+        ItemMemento snap3 = createTestSnapshot(102L, user);
         snap3.setNameAtRental("Martillo");
         snap3.setPriceAtRental(15.0);
 
@@ -502,9 +502,9 @@ public class KitServiceTest {
         Kit kit = new Kit();
         kit.setId(10L);
 
-        ItemMemento snap1 = createTestSnapshot(100L);
+        ItemMemento snap1 = createTestSnapshot(100L, user);
         snap1.setKit(kit);
-        ItemMemento snap2 = createTestSnapshot(101L);
+        ItemMemento snap2 = createTestSnapshot(101L, user);
         snap2.setKit(kit);
 
         kit.setSnapshots(new ArrayList<>(List.of(snap1, snap2)));
@@ -530,7 +530,7 @@ public class KitServiceTest {
 
         Kit kit = new Kit();
         kit.setId(10L);
-        ItemMemento existingSnap = createTestSnapshot(100L);
+        ItemMemento existingSnap = createTestSnapshot(100L, user);
         kit.setSnapshots(new ArrayList<>(List.of(existingSnap)));
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
@@ -578,9 +578,11 @@ public class KitServiceTest {
         });
     }
 
-    private ItemMemento createTestSnapshot(Long originalItemId) {
+    private ItemMemento createTestSnapshot(Long originalItemId, User user) {
         ItemMemento memento = new ItemMemento();
         memento.setOriginalItemId(originalItemId);
+        memento.setOwnerAtRental(user);
+
         return memento;
     }
 

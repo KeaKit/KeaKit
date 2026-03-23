@@ -74,6 +74,7 @@ class RatingServiceTest {
         kit = new Kit("Test Kit", "Spain", "Madrid", LocalDate.now(), LocalDate.now().plusDays(7), tenant, KitStatus.ACTIVE);
         kit.setId(1L);
         kit.setSnapshots(snapshots);
+        kit.setStatus(KitStatus.FINISHED);
 
     }
 

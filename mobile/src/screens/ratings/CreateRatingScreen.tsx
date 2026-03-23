@@ -37,7 +37,7 @@ const CreateRatingScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (score === 0) {
-      setError('Por favor selecciona una puntuación');
+      setError('Por favor, selecciona una puntuación');
       return;
     }
 
@@ -56,9 +56,7 @@ const CreateRatingScreen: React.FC = () => {
         },
         user.token,
       );
-      Alert.alert('Valoración enviada', 'Tu valoración se ha registrado correctamente', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      navigation.navigate("KitDetail", { kitId: kitId })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al enviar la valoración');
     } finally {

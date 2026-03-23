@@ -332,10 +332,11 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                               style={{ color: "#007AFF" }} 
                               onPress={() => navigateToUserReviews(p.ownerId, p.ownerName || "")}
                             >
-                              {`${p.ownerName} · `}
+                              {`${p.ownerName}`}
                             </Text>
                           ) : ""}
-                        {p.city ? `${p.city} · ` : ""}
+                        {" • "}
+                        {p.city ? `${p.city} • ` : ""}
                         {p.category ? `${p.category}` : ""}
                       </Text>
                       <Text style={commonStyles.caption}>
