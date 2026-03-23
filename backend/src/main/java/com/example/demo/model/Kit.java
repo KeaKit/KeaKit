@@ -4,13 +4,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "kits")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Kit {
 
     @Id
@@ -44,7 +41,6 @@ public class Kit {
     @JoinColumn(name = "tenant_id")
     private User tenant;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "kit", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemMemento> snapshots = new ArrayList<>();
 

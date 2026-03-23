@@ -4,7 +4,7 @@ import {
   TextInput, ScrollView, Alert, ActivityIndicator,
   FlatList, Image, Platform
 } from 'react-native';
-import { ArrowLeft, Image as ImageIcon, Pencil } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Category, UserArticle, RootStackParamList } from '../../types';
@@ -117,6 +117,7 @@ const CategoryFormScreen: React.FC = () => {
     setStatus(prev => prev === 'ACTIVE' ? 'DRAFT' : 'ACTIVE');
   };
 
+  // NUEVO: Renderizado adaptado a los datos reales de 'UserArticle'
   const renderArticle = ({ item }: { item: UserArticle }) => (
     <View style={articleCard}>
       {item.imageUrl ? (
@@ -143,7 +144,7 @@ const CategoryFormScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.containerWhite}>
       <View style={commonStyles.header}>
         <TouchableOpacity style={{ padding: Spacing.sm }} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={28} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={28} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>{getHeaderTitle()}</Text>
         <View style={{ width: 40 }} />

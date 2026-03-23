@@ -9,35 +9,21 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
-import { 
-  ChevronLeft, 
-  AlertCircle, 
-  Clock, 
-  CheckCircle, 
-  Wrench, 
-  Info, 
-  Package, 
-  User, 
-  ChevronRight, 
-  Send, 
-  Mail, 
-  Plus,
-  MessageSquare
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, IncidentResponse, IncidentStatus } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { getIncidentsByUser, getReceivedIncidents } from '../../services/incidentService';
-import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } from '../../styles';
+import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles, componentStyles } from '../../styles';
 
 type MyIncidentsNav = NativeStackNavigationProp<RootStackParamList, 'MyIncidents'>;
 type TabType = 'sent' | 'received';
 
-const STATUS_CONFIG: Record<IncidentStatus, { label: string; color: string; icon: any }> = {
-  OPEN: { label: 'Abierta', color: Colors.warning, icon: AlertCircle },
-  IN_PROGRESS: { label: 'En progreso', color: Colors.info, icon: Clock },
-  RESOLVED: { label: 'Resuelta', color: Colors.success, icon: CheckCircle },
+const STATUS_CONFIG: Record<IncidentStatus, { label: string; color: string; icon: string }> = {
+  OPEN: { label: 'Abierta', color: Colors.warning, icon: 'alert-circle' },
+  IN_PROGRESS: { label: 'En progreso', color: Colors.info, icon: 'time' },
+  RESOLVED: { label: 'Resuelta', color: Colors.success, icon: 'checkmark-circle' },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -90,7 +76,7 @@ const MyIncidentsScreen: React.FC = () => {
     const config = STATUS_CONFIG[status];
     return (
       <View style={[styles.statusBadge, { backgroundColor: config.color + '20' }]}>
-        <config.icon size={14} color={config.color} />
+        <Ionicons name={config.icon as any} size={14} color={config.color} />
         <Text style={[styles.statusText, { color: config.color }]}>{config.label}</Text>
       </View>
     );
@@ -121,29 +107,29 @@ const MyIncidentsScreen: React.FC = () => {
       </Text>
 
       <View style={styles.cardFooter}>
-        <div style={styles.tagRow}>
+        <View style={styles.tagRow}>
           <View style={styles.typeBadge}>
-            {item.type === 'DAMAGED_ITEM' ? (
-              <Wrench size={14} color={Colors.primaryLight} />
-            ) : (
-              <Info size={14} color={Colors.primaryLight} />
-            )}
+            <Ionicons
+              name={item.type === 'DAMAGED_ITEM' ? 'construct' : 'information-circle'}
+              size={14}
+              color={Colors.primaryLight}
+            />
             <Text style={styles.typeText}>{TYPE_LABELS[item.type] || item.type}</Text>
           </View>
 
           {item.relatedItem && (
             <View style={styles.itemBadge}>
-              <Package size={14} color={Colors.textSecondary} />
+              <Ionicons name="cube-outline" size={14} color={Colors.textSecondary} />
               <Text style={styles.itemText} numberOfLines={1}>
                 {item.relatedItem.title}
               </Text>
             </View>
           )}
-        </div>
+        </View>
 
         {activeTab === 'received' && item.user && (
           <View style={styles.senderRow}>
-            <User size={12} color={Colors.textSecondary} />
+            <Ionicons name="person-outline" size={12} color={Colors.textSecondary} />
             <Text style={styles.senderText}>
               Enviada por: {item.user.name}
             </Text>
@@ -152,7 +138,7 @@ const MyIncidentsScreen: React.FC = () => {
       </View>
 
       <View style={styles.chevronRow}>
-        <ChevronRight size={18} color={Colors.textLight} />
+        <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
       </View>
     </TouchableOpacity>
   );
@@ -162,7 +148,7 @@ const MyIncidentsScreen: React.FC = () => {
       {/* Cabecera */}
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ChevronLeft size={24} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Mis Incidencias</Text>
         <View style={{ width: 24 }} />
@@ -175,7 +161,8 @@ const MyIncidentsScreen: React.FC = () => {
           onPress={() => setActiveTab('sent')}
           activeOpacity={0.7}
         >
-          <Send
+          <Ionicons
+            name="paper-plane"
             size={16}
             color={activeTab === 'sent' ? Colors.primary : Colors.textSecondary}
           />
@@ -196,7 +183,8 @@ const MyIncidentsScreen: React.FC = () => {
           onPress={() => setActiveTab('received')}
           activeOpacity={0.7}
         >
-          <Mail
+          <Ionicons
+            name="mail"
             size={16}
             color={activeTab === 'received' ? Colors.primary : Colors.textSecondary}
           />
@@ -220,7 +208,7 @@ const MyIncidentsScreen: React.FC = () => {
       ) : error ? (
         <View style={commonStyles.centerContent}>
           <View style={commonStyles.errorContainer}>
-            <AlertCircle size={16} color={Colors.error} />
+            <Ionicons name="alert-circle" size={16} color={Colors.error} />
             <Text style={commonStyles.errorText}>{error}</Text>
           </View>
           <TouchableOpacity
@@ -276,7 +264,8 @@ const MyIncidentsScreen: React.FC = () => {
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <MessageSquare
+                <Ionicons
+                  name={activeTab === 'sent' ? 'paper-plane-outline' : 'mail-outline'}
                   size={64}
                   color={Colors.textLight}
                 />
@@ -301,7 +290,7 @@ const MyIncidentsScreen: React.FC = () => {
               onPress={() => navigation.navigate('CreateIncident')}
               activeOpacity={0.8}
             >
-              <Plus size={24} color={Colors.textWhite} />
+              <Ionicons name="add" size={28} color={Colors.textWhite} />
               <Text style={styles.fabText}>Crear Incidencia</Text>
             </TouchableOpacity>
           )}

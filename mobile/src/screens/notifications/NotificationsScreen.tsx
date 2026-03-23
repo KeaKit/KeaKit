@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ArrowLeft, MailOpen } from "lucide-react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -158,7 +158,7 @@ const NotificationsScreen: React.FC = () => {
           style={componentStyles.iconButton}
           onPress={() => navigation.goBack()}
         >
-          <ArrowLeft size={22} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={22} color={Colors.primary} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Notificaciones</Text>
@@ -176,7 +176,8 @@ const NotificationsScreen: React.FC = () => {
         </View>
       ) : notifications.length === 0 ? (
         <View style={styles.centerContent}>
-          <MailOpen
+          <Ionicons
+            name="mail-open-outline"
             size={48}
             color={Colors.textSecondary}
           />

@@ -24,22 +24,18 @@ Partiendo de una comisión de **48 € por kit alquilado**, se puede estimar la 
 
 La siguiente tabla muestra una estimación de crecimiento durante los primeros seis meses tras el lanzamiento de la aplicación.
 
-| Mes tras lanzamiento | Kits alquilados | Ingresos brutos | Gasto Plataformas (Fijo) | Ingresos netos |
+| Mes tras lanzamiento | Kits alquilados | Ingresos brutos | Coste mensual Google Sites | Ingresos netos |
 |---|---|---|---|---|
-| Mes 1 | 40 | 1.920 € | 37,46 €* | 1.882,54 € |
-| Mes 2 | 70 | 3.360 € | 14,46 € | 3.345,54 € |
-| Mes 3 | 120 | 5.760 € | 14,46 € | 5.745,54 € |
-| Mes 4 | 180 | 8.640 € | 14,46 € | 8.625,54 € |
-| Mes 5 | 250 | 12.000 € | 14,46 € | 11.985,54 € |
-| Mes 6 | 350 | 16.800 € | 14,46 € | 16.785,54 € |
+| Mes 1 | 40 | 1.920 € | 6,8 € | 1.913,20 € |
+| Mes 2 | 70 | 3.360 € | 6,8 € | 3.353,20 € |
+| Mes 3 | 120 | 5.760 € | 6,8 € | 5.753,20 € |
+| Mes 4 | 180 | 8.640 € | 6,8 € | 8.633,20 € |
+| Mes 5 | 250 | 12.000 € | 6,8 € | 11.993,20 € |
+| Mes 6 | 350 | 16.800 € | 6,8 € | 16.793,20 € |
 
-* El gasto de 37,46 € en el Mes 1 se desglosa de la siguiente manera:
-  - 14,46 €: Gastos fijos mensuales de mantenimiento (Google Workspace + prorrateo de Apple App Store).
-  - 23,00 €: Pago único de alta en la Google Play Console (tasa obligatoria para publicar en Android).
-  
 Teniendo en cuenta los ingresos netos estimados, el total acumulado durante los seis primeros meses sería aproximadamente:
 
-**48.370,24 €**
+**48.439,20 €**
 
 ---
 
@@ -47,7 +43,7 @@ Teniendo en cuenta los ingresos netos estimados, el total acumulado durante los 
 
 El coste total estimado para el desarrollo del proyecto asciende a **86.909,20 €**. Considerando que la plataforma obtiene **48 € de ingresos por cada kit alquilado**, se puede calcular el número de alquileres necesarios para recuperar completamente la inversión inicial.
 
-86.909,20 ÷ 48  
+86.909 ÷ 48  
 
 **≈ 1.811 kits alquilados**
 
@@ -61,9 +57,9 @@ Si se mantiene el ritmo de crecimiento estimado en el número de alquileres, es 
 
 | Mes | Ingresos acumulados |
 |---|---|
-| 6 meses | 48.370,24 € |
-| 8 meses | 77.500 € aprox. |
-| 9 meses | 91.500 € aprox. |
+| 6 meses | 48.439,20 € |
+| 8 meses | 77.800 € aprox. |
+| 9 meses | 91.900 € aprox. |
 
 Según esta estimación, el proyecto alcanzaría su **punto de equilibrio aproximadamente entre el mes 8 y el mes 9 tras el lanzamiento de la aplicación al mercado**.
 

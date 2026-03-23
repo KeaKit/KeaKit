@@ -3,14 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, TextInput, ActivityIndicator,
 } from 'react-native';
-import { 
-  ArrowLeft, 
-  AlertCircle, 
-  ChevronUp, 
-  ChevronDown, 
-  Check, 
-  Save 
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
@@ -63,7 +56,7 @@ const Field: React.FC<FieldProps> = ({
     />
     {!!error && (
       <View style={commonStyles.errorContainer}>
-        <AlertCircle size={14} color={Colors.error} />
+        <Ionicons name="alert-circle" size={14} color={Colors.error} />
         <Text style={commonStyles.errorText}>{error}</Text>
       </View>
     )}

@@ -102,11 +102,7 @@ const AdminUserFormScreen: React.FC = () => {
           onChangeText={(v) => { setPassword(v); clearErrors(); }}
         />
         <TouchableOpacity onPress={() => setShowPassword(p => !p)} style={styles.eyeIcon}>
-          {showPassword ? (
-            <EyeOff size={24} color="#999" />
-          ) : (
-            <Eye size={24} color="#999" />
-          )}
+          <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
         </TouchableOpacity>
       </View>
 

@@ -14,20 +14,7 @@ import {
   FlatList,
   Animated,
 } from 'react-native';
-import { 
-  ChevronLeft, 
-  Info, 
-  Hammer, 
-  Package, 
-  User, 
-  Calendar, 
-  AlertCircle, 
-  Search, 
-  X, 
-  XCircle, 
-  AlertTriangle, 
-  Send 
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, IncidentType, RentedItemResponse } from '../../types';
@@ -45,17 +32,17 @@ type FieldErrors = {
   general?: string;
 };
 
-const INCIDENT_TYPES: { value: IncidentType; label: string; icon: any; description: string }[] = [
+const INCIDENT_TYPES: { value: IncidentType; label: string; icon: string; description: string }[] = [
   {
     value: 'GENERAL',
     label: 'General',
-    icon: Info,
+    icon: 'information-circle',
     description: 'Incidencia general sobre el servicio',
   },
   {
     value: 'DAMAGED_ITEM',
     label: 'Objeto dañado',
-    icon: Hammer,
+    icon: 'construct',
     description: 'El objeto alquilado está dañado',
   },
 ];
@@ -187,20 +174,20 @@ const CreateIncidentScreen: React.FC = () => {
       activeOpacity={0.7}
     >
       <View style={styles.dropdownItemHeader}>
-        <Package size={18} color={Colors.primary} />
+        <Ionicons name="cube" size={18} color={Colors.primary} />
         <Text style={styles.dropdownItemTitle} numberOfLines={1}>
           {item.itemTitle}
         </Text>
       </View>
       <View style={styles.dropdownItemDetails}>
         <View style={styles.dropdownDetailRow}>
-          <User size={12} color={Colors.textSecondary} />
+          <Ionicons name="person-outline" size={12} color={Colors.textSecondary} />
           <Text style={styles.dropdownDetailText}>
             Propietario: {item.ownerName}
           </Text>
         </View>
         <View style={styles.dropdownDetailRow}>
-          <Calendar size={12} color={Colors.textSecondary} />
+          <Ionicons name="calendar-outline" size={12} color={Colors.textSecondary} />
           <Text style={styles.dropdownDetailText}>
             {formatDate(item.startDate)} — {formatDate(item.endDate)}
           </Text>
@@ -211,9 +198,10 @@ const CreateIncidentScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      {/* Cabecera */}
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ChevronLeft size={24} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Nueva Incidencia</Text>
         <View style={{ width: 24 }} />
@@ -244,7 +232,7 @@ const CreateIncidentScreen: React.FC = () => {
             />
             {errors.title && (
               <View style={styles.errorRow}>
-                <AlertCircle size={14} color={Colors.error} />
+                <Ionicons name="alert-circle-outline" size={14} color={Colors.error} />
                 <Text style={styles.errorText}>{errors.title}</Text>
               </View>
             )}
@@ -268,7 +256,8 @@ const CreateIncidentScreen: React.FC = () => {
                   activeOpacity={0.7}
                 >
                   <View style={styles.typeIconRow}>
-                    <t.icon
+                    <Ionicons
+                      name={t.icon as any}
                       size={24}
                       color={type === t.value ? Colors.textWhite : Colors.primary}
                     />
@@ -294,12 +283,13 @@ const CreateIncidentScreen: React.FC = () => {
             </View>
             {errors.type && (
               <View style={styles.errorRow}>
-                <AlertCircle size={14} color={Colors.error} />
+                <Ionicons name="alert-circle-outline" size={14} color={Colors.error} />
                 <Text style={styles.errorText}>{errors.type}</Text>
               </View>
             )}
           </View>
 
+          {/* Objeto relacionado - solo visible para DAMAGED_ITEM */}
           {type === 'DAMAGED_ITEM' && (
             <Animated.View
               style={[
@@ -316,101 +306,101 @@ const CreateIncidentScreen: React.FC = () => {
               ]}
             >
               <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Objeto dañado *</Text>
+              <Text style={styles.label}>Objeto dañado *</Text>
 
-                {selectedItem ? (
-                  <View style={styles.selectedItemCard}>
-                    <View style={styles.selectedItemInfo}>
-                      <View style={styles.selectedItemHeader}>
-                        <Package size={18} color={Colors.primary} />
-                        <Text style={styles.selectedItemTitle} numberOfLines={1}>
-                          {selectedItem.itemTitle}
-                        </Text>
-                      </View>
-                      <Text style={styles.selectedItemDetail}>
-                        Propietario: {selectedItem.ownerName}
-                      </Text>
-                      <Text style={styles.selectedItemDetail}>
-                        {formatDate(selectedItem.startDate)} — {formatDate(selectedItem.endDate)}
+              {selectedItem ? (
+                <View style={styles.selectedItemCard}>
+                  <View style={styles.selectedItemInfo}>
+                    <View style={styles.selectedItemHeader}>
+                      <Ionicons name="cube" size={18} color={Colors.primary} />
+                      <Text style={styles.selectedItemTitle} numberOfLines={1}>
+                        {selectedItem.itemTitle}
                       </Text>
                     </View>
-                    <TouchableOpacity
-                      style={styles.clearItemButton}
-                      onPress={handleClearItem}
-                    >
-                      <XCircle size={24} color={Colors.textLight} />
-                    </TouchableOpacity>
+                    <Text style={styles.selectedItemDetail}>
+                      Propietario: {selectedItem.ownerName}
+                    </Text>
+                    <Text style={styles.selectedItemDetail}>
+                      {formatDate(selectedItem.startDate)} — {formatDate(selectedItem.endDate)}
+                    </Text>
                   </View>
-                ) : (
-                  <View>
-                    <View style={styles.searchInputContainer}>
-                      <Search size={18} color={Colors.textLight} style={styles.searchIcon} />
-                      <TextInput
-                        style={[
-                          commonStyles.input,
-                          styles.searchInput,
-                          errors.relatedItem && commonStyles.inputError,
-                        ]}
-                        placeholder="Buscar objeto alquilado..."
-                        placeholderTextColor={Colors.textLight}
-                        value={searchText}
-                        onChangeText={(v) => {
-                          setSearchText(v);
+                  <TouchableOpacity
+                    style={styles.clearItemButton}
+                    onPress={handleClearItem}
+                  >
+                    <Ionicons name="close-circle" size={24} color={Colors.textLight} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View>
+                  <View style={styles.searchInputContainer}>
+                    <Ionicons name="search" size={18} color={Colors.textLight} style={styles.searchIcon} />
+                    <TextInput
+                      style={[
+                        commonStyles.input,
+                        styles.searchInput,
+                        errors.relatedItem && commonStyles.inputError,
+                      ]}
+                      placeholder="Buscar objeto alquilado..."
+                      placeholderTextColor={Colors.textLight}
+                      value={searchText}
+                      onChangeText={(v) => {
+                        setSearchText(v);
+                        setDropdownOpen(true);
+                        clearErrors();
+                      }}
+                      onFocus={() => setDropdownOpen(true)}
+                    />
+                    {searchText.length > 0 && (
+                      <TouchableOpacity
+                        style={styles.clearSearchButton}
+                        onPress={() => {
+                          setSearchText('');
                           setDropdownOpen(true);
-                          clearErrors();
                         }}
-                        onFocus={() => setDropdownOpen(true)}
-                      />
-                      {searchText.length > 0 && (
-                        <TouchableOpacity
-                          style={styles.clearSearchButton}
-                          onPress={() => {
-                            setSearchText('');
-                            setDropdownOpen(true);
-                          }}
-                        >
-                          <X size={18} color={Colors.textLight} />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-
-                    {dropdownOpen && (
-                      <View style={styles.dropdownContainer}>
-                        {loadingItems ? (
-                          <View style={styles.dropdownLoading}>
-                            <ActivityIndicator size="small" color={Colors.primary} />
-                            <Text style={styles.dropdownLoadingText}>Cargando objetos...</Text>
-                          </View>
-                        ) : filteredItems.length === 0 ? (
-                          <View style={styles.dropdownEmpty}>
-                            <Package size={24} color={Colors.textLight} />
-                            <Text style={styles.dropdownEmptyText}>
-                              {searchText.trim()
-                                ? 'No se encontraron objetos'
-                                : 'No tienes objetos alquilados actualmente'}
-                            </Text>
-                          </View>
-                        ) : (
-                          <FlatList
-                            data={filteredItems}
-                            renderItem={renderDropdownItem}
-                            keyExtractor={(item) => `${item.kitId}-${item.itemId}`}
-                            style={styles.dropdownList}
-                            nestedScrollEnabled
-                            keyboardShouldPersistTaps="handled"
-                          />
-                        )}
-                      </View>
+                      >
+                        <Ionicons name="close" size={18} color={Colors.textLight} />
+                      </TouchableOpacity>
                     )}
                   </View>
-                )}
 
-                {errors.relatedItem && (
-                  <View style={styles.errorRow}>
-                    <AlertCircle size={14} color={Colors.error} />
-                    <Text style={styles.errorText}>{errors.relatedItem}</Text>
-                  </View>
-                )}
+                  {dropdownOpen && (
+                    <View style={styles.dropdownContainer}>
+                      {loadingItems ? (
+                        <View style={styles.dropdownLoading}>
+                          <ActivityIndicator size="small" color={Colors.primary} />
+                          <Text style={styles.dropdownLoadingText}>Cargando objetos...</Text>
+                        </View>
+                      ) : filteredItems.length === 0 ? (
+                        <View style={styles.dropdownEmpty}>
+                          <Ionicons name="cube-outline" size={24} color={Colors.textLight} />
+                          <Text style={styles.dropdownEmptyText}>
+                            {searchText.trim()
+                              ? 'No se encontraron objetos'
+                              : 'No tienes objetos alquilados actualmente'}
+                          </Text>
+                        </View>
+                      ) : (
+                        <FlatList
+                          data={filteredItems}
+                          renderItem={renderDropdownItem}
+                          keyExtractor={(item) => `${item.kitId}-${item.itemId}`}
+                          style={styles.dropdownList}
+                          nestedScrollEnabled
+                          keyboardShouldPersistTaps="handled"
+                        />
+                      )}
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {errors.relatedItem && (
+                <View style={styles.errorRow}>
+                  <Ionicons name="alert-circle-outline" size={14} color={Colors.error} />
+                  <Text style={styles.errorText}>{errors.relatedItem}</Text>
+                </View>
+              )}
 
               {!selectedItem && !dropdownOpen && (
                 <Text style={styles.helperText}>
@@ -446,7 +436,7 @@ const CreateIncidentScreen: React.FC = () => {
             </Text>
             {errors.description && (
               <View style={styles.errorRow}>
-                <AlertCircle size={14} color={Colors.error} />
+                <Ionicons name="alert-circle-outline" size={14} color={Colors.error} />
                 <Text style={styles.errorText}>{errors.description}</Text>
               </View>
             )}
@@ -455,7 +445,7 @@ const CreateIncidentScreen: React.FC = () => {
           {/* Error general */}
           {errors.general && (
             <View style={styles.generalError}>
-              <AlertTriangle size={16} color={Colors.error} />
+              <Ionicons name="warning-outline" size={16} color={Colors.error} />
               <Text style={styles.generalErrorText}>{errors.general}</Text>
             </View>
           )}
@@ -471,7 +461,7 @@ const CreateIncidentScreen: React.FC = () => {
               <ActivityIndicator color={Colors.textWhite} />
             ) : (
               <View style={styles.submitContent}>
-                <Send size={20} color={Colors.textWhite} />
+                <Ionicons name="send" size={20} color={Colors.textWhite} />
                 <Text style={commonStyles.primaryButtonText}>Enviar Incidencia</Text>
               </View>
             )}

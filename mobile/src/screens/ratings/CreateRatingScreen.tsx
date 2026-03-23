@@ -9,11 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { 
-  ArrowLeft, 
-  Star, 
-  AlertCircle 
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
@@ -68,7 +64,7 @@ const CreateRatingScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.container}>
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Valorar</Text>
         <View style={{ width: 24 }} />
@@ -81,10 +77,10 @@ const CreateRatingScreen: React.FC = () => {
         <View style={styles.starsContainer}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity key={star} onPress={() => setScore(star)}>
-              <Star
+              <Ionicons
+                name={star <= score ? 'star' : 'star-outline'}
                 size={40}
                 color={Colors.warning}
-                fill={star <= score ? Colors.warning : 'transparent'}
               />
             </TouchableOpacity>
           ))}
@@ -103,7 +99,7 @@ const CreateRatingScreen: React.FC = () => {
 
         {error ? (
           <View style={commonStyles.errorContainer}>
-            <AlertCircle size={16} color={Colors.error} />
+            <Ionicons name="alert-circle" size={16} color={Colors.error} />
             <Text style={commonStyles.errorText}>{error}</Text>
           </View>
         ) : null}

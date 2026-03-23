@@ -1,8 +1,6 @@
 package com.example.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,15 +9,11 @@ import java.util.List;
 import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentComment;
 import com.example.demo.model.IncidentStatus;
-import com.example.demo.model.IncidentType;
 import com.example.demo.model.Item;
-import com.example.demo.model.Kit;
 import com.example.demo.model.User;
-import com.example.demo.model.UserRole;
 import com.example.demo.repository.IncidentCommentRepository;
 import com.example.demo.repository.IncidentRepository;
 import com.example.demo.repository.ItemRepository;
-import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
 
 @Service
@@ -37,69 +31,21 @@ public class IncidentService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private KitRepository kitRepository;
-
     public List<Incident> getAllIncidents() {
-        if (!checkUserAdmin()) {
-            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para listar las incidencias.");
-        }
         return incidentRepository.findAll();
-    }
-    
-    private boolean checkUserAuthor(Incident incident) {
-        String currentUserEmail = getCurrentUserEmail();
-        return incident.getUser().getEmail().equals(currentUserEmail);
-    } 
-
-    private boolean checkUserAdmin() {
-        String currentUserEmail = getCurrentUserEmail();
-        User currentUser = userRepository.findByEmail(currentUserEmail)
-            .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
-
-        return currentUser.getRole() == UserRole.ADMIN;
-    }
-
-    private boolean checkUserOwner(Incident incident) {
-        String currentUserEmail = getCurrentUserEmail();
-        boolean isOwner = false;
-
-        if (incident.getType() == IncidentType.DAMAGED_ITEM && incident.getRelatedItem() != null) {
-            isOwner = incident.getRelatedItem().getOwner().getEmail().equals(currentUserEmail);
-        }
-        
-        return isOwner;
     }
 
     public Incident getIncidentById(Long id) {
-        Incident incident = incidentRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Incident not found"));
-
-        if (!(checkUserAdmin() || checkUserAuthor(incident) || checkUserOwner(incident))) {
-            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para ver esta incidencia.");
-        }
-
-        return incident;
+        return incidentRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Incident not found"));
     }
 
     public List<Incident> getIncidentsByUserId(Long userId) {
-        List<Incident> incidents = incidentRepository.findByUserId(userId);
-        if (incidents.isEmpty()) return incidents; // Protección anti-errores
-
-        if (!(checkUserAdmin() || checkUserAuthor(incidents.get(0)))) {
-            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para listar las incidencias");
-        }
-        return incidents;
+        return incidentRepository.findByUserId(userId);
     }
 
     public List<Incident> getReceivedIncidentsByOwnerId(Long ownerId) {
-        List<Incident> incidents = incidentRepository.findReceivedByOwnerId(ownerId);
-        if (incidents.isEmpty()) return incidents; // Protección anti-errores
-
-        if (!(checkUserAdmin() || checkUserOwner(incidents.get(0)))) {
-            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para listar las incidencias");
-        }
-        return incidents;
+        return incidentRepository.findReceivedByOwnerId(ownerId);
     }
 
     public Incident createIncident(Incident incident) {
@@ -113,44 +59,27 @@ public class IncidentService {
                 .orElseThrow(() -> new RuntimeException("Objeto relacionado no encontrado"));
             incident.setRelatedItem(relatedItem);
         }
-        if (incident.getRelatedKit() != null && incident.getRelatedKit().getId() != null) {
-            Kit relatedKit = kitRepository.findById(incident.getRelatedKit().getId())
-                .orElseThrow(() -> new RuntimeException("Kit de alquiler no encontrado"));
-            incident.setRelatedKit(relatedKit);
-        }
-        validateIncident(incident);
         return incidentRepository.save(incident);
     }
 
     public Incident updateIncident(Long id, Incident updateData) {
         Incident incident = getIncidentById(id);
 
-        if (!(checkUserAdmin() || checkUserAuthor(incident))) {
-            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para modificar esta incidencia.");
-        }
-
-        if (updateData.getTitle() != null ) {
+        if (updateData.getTitle() != null && !updateData.getTitle().trim().isEmpty()) {
             incident.setTitle(updateData.getTitle());
         }
-        if (updateData.getDescription() != null) {
+        if (updateData.getDescription() != null && !updateData.getDescription().trim().isEmpty()) {
             incident.setDescription(updateData.getDescription());
         }
         if (updateData.getStatus() != null) {
             incident.setStatus(updateData.getStatus());
         }
 
-        validateIncident(incident);
-
         return incidentRepository.save(incident);
     }
 
     public Incident resolveIncident(Long id) {
         Incident incident = getIncidentById(id);
-        
-        if (!(checkUserAdmin() || checkUserAuthor(incident))) {
-            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para modificar esta incidencia.");
-        }
-        
         incident.setStatus(IncidentStatus.RESOLVED);
         return incidentRepository.save(incident);
     }
@@ -158,11 +87,6 @@ public class IncidentService {
     @Transactional
     public void deleteIncident(Long id) {
         Incident incident = getIncidentById(id);
-        
-        if (!(checkUserAdmin() || checkUserAuthor(incident))) {
-            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para modificar esta incidencia.");
-        }
-        
         if (incident.getStatus() == IncidentStatus.RESOLVED) {
             throw new RuntimeException("No se puede eliminar una incidencia resuelta");
         }
@@ -170,21 +94,13 @@ public class IncidentService {
         incidentRepository.delete(incident);
     }
 
+    // Métodos de comentarios
     public List<IncidentComment> getCommentsByIncidentId(Long incidentId) {
-        Incident incident = getIncidentById(incidentId);
-        
-        if (!(checkUserAdmin() || checkUserAuthor(incident) || checkUserOwner(incident))) {
-            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para ver esta incidencia.");
-        }
         return incidentCommentRepository.findByIncidentIdOrderByCreatedAtAsc(incidentId);
     }
 
     public IncidentComment addComment(Long incidentId, IncidentComment comment) {
         Incident incident = getIncidentById(incidentId);
-        
-        if (!(checkUserAdmin() || checkUserAuthor(incident) || checkUserOwner(incident))) {
-            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para modificar esta incidencia.");
-        }
         if (incident.getStatus() == IncidentStatus.RESOLVED) {
             throw new RuntimeException("No se pueden añadir comentarios a una incidencia resuelta");
         }
@@ -195,37 +111,5 @@ public class IncidentService {
             comment.setAuthor(author);
         }
         return incidentCommentRepository.save(comment);
-    }
-
-    public void validateIncident(Incident incident) {
-        if (incident.getTitle() == null || incident.getTitle().isBlank()) {
-            throw new IllegalArgumentException("El título de la incidencia es obligatorio.");
-        }
-        if (incident.getDescription() == null || incident.getDescription().isBlank()) {
-            throw new IllegalArgumentException("La descripción de la incidencia es obligatoria.");
-        }
-
-        if (incident.getType() == IncidentType.DAMAGED_ITEM) {
-            if (incident.getRelatedItem() == null) {
-                throw new IllegalArgumentException("Para incidencias de tipo objeto dañado, el ítem es obligatorio.");
-            }
-            if (incident.getRelatedKit() == null) {
-                throw new IllegalArgumentException("Para incidencias de tipo objeto dañado, el kit de alquiler es obligatorio.");
-            }
-        }
-
-        if (incident.getType() == IncidentType.GENERAL) {
-            incident.setRelatedItem(null);
-            incident.setRelatedKit(null);
-        }
-    }
-
-    private String getCurrentUserEmail() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
-        } else {
-            return principal.toString();
-        }
     }
 }

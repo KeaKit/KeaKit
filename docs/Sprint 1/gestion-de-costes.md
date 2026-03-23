@@ -91,14 +91,6 @@ Tomando como referencia un precio medio de **900 € por portátil**, el coste t
 
 Este gasto se considera una inversión amortizable, ya que los equipos pueden seguir utilizándose en proyectos futuros.
 
-#### Tabla de amortización detallada de equipos
-
-| Elemento | Cantidad | Coste Unitario | Inversión Total (costes de capital) | Vida Útil | % Amortización Anual | Amortización Mensual (Total) | Amortización Acumulada (4 meses) | Valor Contable Final |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Portátiles | 21 | 900 € | 18.900 € | 4 años | 25 % | 393,75 € | 1.575 € | 17.325 € |
-
-* **Amortización Acumulada:** Representa el gasto contable real por el uso de los equipos durante los 4 meses de la fase de desarrollo.
-* **Valor Contable Final:** Es el valor residual de los activos tras el periodo de desarrollo, que permanecen como patrimonio de la empresa para su uso en la fase de explotación o futuros proyectos.
 ---
 
 ### Coste operativo
@@ -138,26 +130,6 @@ Por tanto, el coste total en licencias durante el desarrollo del proyecto es:
 27,20 € + 504 €  
 
 **= 531,20 €**
-
----
-
-#### Licencias de publicación en tiendas (App Store y Play Store)
-
-Para que la aplicación esté a disposición del público para su descarga, es necesario realizar el alta en las plataformas oficiales. Estos gastos se clasifican como **costes operativos**, ya que no son activos amortizables sino costes de mantenimiento y acceso al servicio de distribución.
-
-* **Google Play Store:** Requiere un pago único de **23 €** para la cuenta de desarrollador.
-* **Apple App Store:** Requiere una suscripción anual de **92 €**.
-
-#### Previsión de costes recurrentes post-lanzamiento
-
-Es fundamental aclarar que estos gastos, junto con la licencia de Google Workspace, **no se incluyen en el presupuesto de los 4 meses de desarrollo**, ya que son costes que aparecen una vez el producto se lanza al mercado. A partir del quinto mes, para calcular el beneficio neto real, se deberán restar mensualmente estos tres conceptos de los ingresos obtenidos:
-
-| Concepto | Coste mensual equivalente | Observaciones |
-| :--- | :--- | :--- |
-| Google Cloud / Workspace | 6,80 € | Mantenimiento de la app desplegada. |
-| Apple App Store | 7,66 € | Parte proporcional mensual de la cuota anual (92€/12). |
-| Google Play Store | 0,00 € | Pago único inicial ya realizado (23 €). |
-| **Total Gastos Fijos costes operativos** | **14,46 €** | **Mantenimiento mensual de la plataforma.** |
 
 ---
 

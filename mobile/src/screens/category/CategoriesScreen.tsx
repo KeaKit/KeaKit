@@ -4,14 +4,7 @@ import {
   FlatList, TextInput, Alert, ActivityIndicator,
   Platform
 } from 'react-native';
-import { 
-  ArrowLeft, 
-  Pencil, 
-  Trash2, 
-  Menu, 
-  Search, 
-  Plus 
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -141,12 +134,12 @@ const CategoriesScreen: React.FC = () => {
             style={componentStyles.iconButton} 
             onPress={() => handleEditCategory(item)} 
           >
-            <Pencil size={20} color={Colors.textPrimary} />
+            <Ionicons name="pencil" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
 
           {(item.articleCount === 0) && (
             <TouchableOpacity style={componentStyles.iconButton} onPress={() => handleDeleteCategory(item.id, item.name)}>
-              <Trash2 size={20} color={Colors.textPrimary} />
+              <Ionicons name="trash" size={20} color={Colors.textPrimary} />
             </TouchableOpacity>
           )}
         </View>
@@ -160,7 +153,7 @@ const CategoriesScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.containerWhite}>
       <View style={commonStyles.header}>
         <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={28} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={28} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Gestión de categorías</Text>
         <View style={{ width: 40 }} />
@@ -176,7 +169,7 @@ const CategoriesScreen: React.FC = () => {
             onChangeText={setSearchQuery}
             placeholderTextColor={Colors.textSecondary}
           />
-          <Search size={24} color={Colors.textSecondary} />
+          <Ionicons name="search" size={24} color={Colors.textSecondary} />
         </View>
 
         {isLoading ? (

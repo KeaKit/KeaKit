@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, View, Text } from "react-native";
-import { Package, MinusCircle, PlusCircle, Trash2 } from "lucide-react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors, commonStyles, componentStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
 
@@ -44,7 +44,7 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
       ]}
     >
       <View style={createKitStyles.productThumb}>
-        <Package size={24} color={Colors.primary} />
+        <Ionicons name="cube-outline" size={24} color={Colors.primary} />
       </View>
 
       <View style={createKitStyles.productInfo}>
@@ -73,7 +73,8 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
             accessibilityRole="button"
             accessibilityLabel={`Reducir unidades de ${item.title}`}
           >
-            <MinusCircle
+            <Ionicons
+              name="remove-circle-outline"
               size={22}
               color={Colors.primary}
             />
@@ -86,7 +87,8 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
             accessibilityRole="button"
             accessibilityLabel={`Aumentar unidades de ${item.title}`}
           >
-            <PlusCircle
+            <Ionicons
+              name="add-circle-outline"
               size={22}
               color={reachedMax ? Colors.border : Colors.primary}
             />
@@ -99,7 +101,7 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
           accessibilityRole="button"
           accessibilityLabel={`Eliminar ${item.title} del kit`}
         >
-          <Trash2 size={20} color={Colors.error} />
+          <Ionicons name="trash-outline" size={20} color={Colors.error} />
         </TouchableOpacity>
       </View>
     </View>
