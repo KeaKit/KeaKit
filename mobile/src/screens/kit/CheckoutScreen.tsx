@@ -1,216 +1,399 @@
-import React, { useMemo, useState } from "react";
-import { Alert, ScrollView, Text, View, TouchableOpacity } from "react-native";
-import { Button, TextInput } from "react-native-paper";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { RootStackParamList } from "../../types";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { 
-  ChevronLeft, 
-  CreditCard, 
-  Lock, 
-  Calendar 
-} from "lucide-react-native";
-import { createKit } from "../../services/kitService";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
+import { Text } from "react-native-paper";
+import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import { useNavigation } from "@react-navigation/native";
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from "@react-navigation/native-stack";
+import { KitPaymentDTO, KitResponse, RootStackParamList } from "../../types";
 import { useAuth } from "../../context/AuthContext";
-import { Colors, commonStyles } from "../../styles";
+import {
+  getLoggedUserWallet,
+  getKitPayment,
+  getKit,
+  processPaymentWithWallet,
+  createPaymentIntent,
+  confirmStripePayment,
+  processPaymentWithStripe,
+  deleteKit,
+} from "../../services";
+
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  Colors,
+  commonStyles,
+  FontSizes,
+  Shadows,
+  Spacing,
+} from "../../styles";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  Header,
+  ItemPaymentComponent,
+  KitPaymentResumeComponent,
+  KeakitButton,
+  KeakitModal,
+  FadeInItem,
+} from "../../components";
 
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
+type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
-type CheckoutRouteParams = {
-  kitData: {
-    name: string;
-    country: string;
-    city: string;
-    startDate: string;
-    endDate: string;
-    deliveryMethod: "COURIER" | "MEETING_POINT";
-    meetingPoint?: string;
-    courierAddress?: string;
-    items: { id: number; quantity: number; pricePerMonth: number; ownerId: number }[];
-  };
-};
-
-const CheckoutScreen: React.FC = () => {
+export default function CheckoutScreen({ route }: Props) {
+  const { kitId } = route.params;
   const navigation = useNavigation<CheckoutNav>();
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+  const [cardComplete, setCardComplete] = useState(false);
   const { user } = useAuth();
-  const route = useRoute<any>();
-  const { kitData } = route.params as CheckoutRouteParams;
+  const [balance, setBalance] = useState(0);
+  const [enoughBalance, setEnoughBalance] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [kitDetails, setKitDetails] = useState<KitResponse>();
+  const [kitPrices, setKitPrices] = useState<KitPaymentDTO | null>(null);
 
-  const [cardNumber, setCardNumber] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [expiry, setExpiry] = useState("");
+  const isStripePayDisabled =
+    !stripe ||
+    loading ||
+    !cardComplete ||
+    !elements ||
+    elements?.getElement(CardElement) === null;
+  const isWalletPayDisabled = loading || !enoughBalance;
 
-  const totalPrice = useMemo(() => {
-    return kitData.items.reduce(
-      (sum, item) => sum + item.pricePerMonth * item.quantity,
-      0
-    );
-  }, [kitData.items]);
-
-  // 🔒 handlers con límite de longitud
-  const handleCardChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, "").slice(0, 16);
-    setCardNumber(cleaned);
+  const showErrorModal = (message: string) => {
+    setError(message);
+    setErrorModalVisible(true);
   };
 
-  const handleCvvChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, "").slice(0, 3);
-    setCvv(cleaned);
-  };
-
-  const handleExpiryChange = (value: string) => {
-    let cleaned = value.replace(/\D/g, "").slice(0, 4);
-    if (cleaned.length >= 3) {
-      cleaned = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+  async function fetchBalance() {
+    if (user?.id && user?.token) {
+      try {
+        const wallet = await getLoggedUserWallet(user.token);
+        setBalance(wallet.balance);
+      } catch (error) {
+        console.error("Error al cargar el saldo:", error);
+        setBalance(0);
+        setEnoughBalance(false);
+        showErrorModal("No se pudo cargar el saldo de tu wallet.");
+      }
     }
-    setExpiry(cleaned);
-  };
+  }
 
-  const handlePay = async () => {
-    if (!user?.token) {
-      Alert.alert("Error", "Necesitas iniciar sesión.");
-      return;
+  async function fetchKitPrice() {
+    try {
+      const kitPaymentResponse: KitPaymentDTO = await getKitPayment(
+        kitId,
+        user?.token ?? "",
+      );
+      setKitPrices(kitPaymentResponse);
+      console.log("Respuesta al obtener el monto del kit:", kitPaymentResponse);
+    } catch (error) {
+      console.error("Error al obtener el monto del kit:", error);
+      showErrorModal(
+        "Ha ocurrido un error al obtener el importe del kit.\n" +
+          (error as Error).message,
+      );
+      throw error;
     }
-    console.log("💳 Datos tarjeta:", { cardNumber, cvv, expiry });
-    if (!cardNumber || !cvv || !expiry) {
-      Alert.alert("Error", "Completa los datos de la tarjeta.");
-      return;
-    }
+  }
 
-    if (cardNumber.length !== 16 || cvv.length !== 3 || expiry.length !== 5) {
-      Alert.alert("Error", "Datos de tarjeta incorrectos.");
+  async function calculateEnoughBalance() {
+    await fetchBalance();
+    await fetchKitPrice();
+    if (kitPrices?.totalPrice !== null && kitPrices?.totalPrice !== undefined) {
+      if (kitPrices.totalPrice > 0 && balance * 100 >= kitPrices.totalPrice) {
+        setEnoughBalance(true);
+      } else {
+        setEnoughBalance(false);
+        console.log(
+          "Saldo insuficiente para pagar con KeaKit. Balance: " +
+            balance +
+            "€ Monto del kit: " +
+            kitPrices?.totalPrice / 100 +
+            "€",
+        );
+      }
+    }
+  }
+
+  async function fetchKitDetails() {
+    try {
+      const kitDetailsRes = await getKit(kitId, user?.token ?? "");
+      setKitDetails(kitDetailsRes);
+      console.log("Detalles del kit:", kitDetailsRes);
+    } catch (error) {
+      console.error("Error al obtener los detalles del kit:", error);
+    }
+  }
+
+  // Use effects
+
+  useEffect(() => {
+    fetchBalance();
+  }, [user?.id, user?.token]);
+
+  useEffect(() => {
+    calculateEnoughBalance();
+    fetchKitPrice();
+    fetchKitDetails();
+  }, [kitId]);
+
+  const executeStripePayment = async (kitTotalPrice: number) => {
+    console.log("Procesando pago con Stripe...");
+    setLoading(true);
+
+    const cardElement = elements?.getElement(CardElement);
+
+    if (!stripe || !cardComplete || !elements || !cardElement) {
+      console.error("Stripe o CardElement no están disponibles");
+      showErrorModal("Stripe no está disponible en este momento.");
       return;
     }
 
     try {
-      const payload = {
-        name: kitData.name,
-        country: kitData.country,
-        city: kitData.city,
-        startDate: kitData.startDate,
-        endDate: kitData.endDate,
-        deliveryMethod: kitData.deliveryMethod,
-        meetingPoint: kitData.meetingPoint,
-        courierAddress: kitData.courierAddress,
-        tenantId: user.id,
-        itemSelections: kitData.items.map((i) => ({
-          itemId: i.id,
-          quantity: i.quantity,
-        })),
-      };
+      const createPaymentIntentResponse = await createPaymentIntent(
+        kitTotalPrice,
+        user?.token ?? "",
+      );
 
-      console.log("📦 Payload que se envía al backend:", payload);
+      const clientSecret = createPaymentIntentResponse.clientSecret;
 
-      const response = await createKit(payload, user.token);
+      const confirmCardPayment = await confirmStripePayment(
+        clientSecret,
+        cardElement,
+        stripe,
+      );
 
-      console.log("✅ Respuesta del backend:", response);
+      if (confirmCardPayment.error) return;
 
-       console.log("➡️ Navegando a Home...");
+      console.log(
+        "✅ Dinero recibido en Stripe. 🔗 Ver en: https://dashboard.stripe.com/test/payments/" +
+          confirmCardPayment.paymentIntent.id,
+      );
 
-      // 👇 Navegación directa a Home
-      navigation.navigate("MyKits");
+      await processPaymentWithStripe(
+        kitId,
+        user?.token ?? "",
+        confirmCardPayment.paymentIntent.status,
+      );
 
-      console.log("🏁 Navegación ejecutada");
+      console.log("✅ Pago con Stripe procesado exitosamente en el backend.");
+      setLoading(false);
     } catch (error) {
-      console.log("🔥 ERROR en createKit:", error);
-      const message =
-        error instanceof Error ? error.message : "Error al crear kit.";
-      Alert.alert("Error", message);
+      setLoading(false);
+      console.error("Error durante el proceso de pago con Stripe:", error);
+      showErrorModal(
+        "Ha ocurrido un error durante el pago con Stripe.\n" +
+          (error as Error).message,
+      );
+      throw error;
     }
   };
 
+  const handlePayment = async (wallet: boolean) => {
+    setLoading(true);
+    console.log("Iniciando proceso de pago para kitId:", kitId);
+
+    try {
+      await fetchKitPrice();
+      if (kitPrices === null || kitPrices.totalPrice === null) {
+        throw new Error("No se pudo obtener el monto total del kit.");
+      }
+
+      if (wallet) {
+        await processPaymentWithWallet(
+          kitId,
+          user?.token ?? "",
+          kitPrices.totalPrice,
+        );
+        console.log("✅ Pago con wallet procesado exitosamente.");
+      } else {
+        await executeStripePayment(kitPrices.totalPrice);
+      }
+      navigation.navigate("MyKits");
+    } catch (error) {
+      console.error("❌ Error:", error);
+      let errorMessage =
+        "Ha ocurrido un error durante el proceso de pago.\n" +
+        (error as Error).message;
+      if ((error as Error).message.includes("payment_intent")) {
+        errorMessage +=
+          "\n\n¿Eres desarrollador? Este error es conocido.\nRevisa el foro de incidencias de Teams.";
+      }
+      showErrorModal(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKitDelete = async () => {
+    try {
+      await deleteKit(kitId, user?.token ?? "");
+    } catch (error) {
+      console.error('Error', 'No se pudo eliminar el kit.');
+    }
+  }
+
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
-      {/* HEADER CON FLECHA */}
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-          <ChevronLeft size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={{ fontSize: 18, fontWeight: "bold" }}>Pago</Text>
-      </View>
-
-      {/* RESUMEN */}
-      <Text style={[commonStyles.subtitle, { marginBottom: 12 }]}>
-        Resumen de precios
-      </Text>
-
-      {kitData.items.map((item) => (
-        <View
-          key={item.id}
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 6,
-          }}
-        >
-          <Text>{`Item ${item.id} x${item.quantity}`}</Text>
-          <Text>{(item.pricePerMonth * item.quantity).toFixed(2)}€</Text>
-        </View>
-      ))}
-
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginTop: 10,
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <Header
+        title="Pagar el kit"
+        showBack={true}
+        onBack={() => {
+          handleKitDelete();
+          navigation.goBack()
         }}
-      >
-        <Text style={{ fontWeight: "bold" }}>Total:</Text>
-        <Text style={{ fontWeight: "bold", color: Colors.primary }}>
-          {totalPrice.toFixed(2)}€
-        </Text>
-      </View>
-
-      {/* TARJETA */}
-      <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 16, color: Colors.textPrimary }}>
-        Datos de la tarjeta
-      </Text>
-
-      <TextInput
-        mode="outlined"
-        label="Número de tarjeta"
-        value={cardNumber}
-        onChangeText={handleCardChange}
-        keyboardType="numeric"
-        left={<TextInput.Icon icon={() => <CreditCard size={20} color={Colors.textSecondary} />} />}
-        style={{ marginBottom: 12 }}
-        placeholder="1234 5678 9012 3456"
       />
-
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <TextInput
-          mode="outlined"
-          label="CVV"
-          value={cvv}
-          onChangeText={handleCvvChange}
-          keyboardType="numeric"
-          left={<TextInput.Icon icon={() => <Lock size={20} color={Colors.textSecondary} />} />}
-          style={{ flex: 1 }}
-          placeholder="123"
+      {/* Items */}
+      <View style={styles.content}>
+        <LinearGradient
+          colors={[Colors.backgroundGray, Colors.transparent]}
+          style={[styles.gradient, styles.gradientTop]}
+          pointerEvents="none"
         />
-
-        <TextInput
-          mode="outlined"
-          label="Expiración"
-          value={expiry}
-          onChangeText={handleExpiryChange}
-          left={<TextInput.Icon icon={() => <Calendar size={20} color={Colors.textSecondary} />} />}
-          style={{ flex: 1 }}
-          placeholder="MM/YY"
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={{ paddingTop: 20 }}
+        >
+          {kitDetails?.items.length === 0 ? (
+            <Text>No hay artículos en este kit</Text>
+          ) : (
+            kitDetails?.items.map((item, index) => {
+              const BASE_DELAY = 150;
+              const STAGGER = 300;
+              const calculatedDelay = BASE_DELAY + index * STAGGER;
+              return (
+                <FadeInItem key={item.itemId} delay={calculatedDelay}>
+                  <ItemPaymentComponent
+                    key={item.itemId}
+                    item={item}
+                    startDate={kitDetails.startDate}
+                    endDate={kitDetails.endDate}
+                  />
+                </FadeInItem>
+              );
+            })
+          )}
+        </ScrollView>
+        <LinearGradient
+          colors={[Colors.transparent, Colors.backgroundGray]}
+          style={[styles.gradient, styles.gradientBottom]}
+          pointerEvents="none"
         />
       </View>
+      {/* Footer */}
+      <View style={commonStyles.footerContainer}>
+        {kitPrices !== null && (
+          <FadeInItem delay={50}>
+            <KitPaymentResumeComponent kitPrices={kitPrices} />
+          </FadeInItem>
+        )}
+        <FadeInItem delay={50}>
+          <View style={styles.cardContainer}>
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: "16px",
+                    color: "#424770",
+                    "::placeholder": {
+                      color: "#aab7c4",
+                    },
+                  },
+                  invalid: {
+                    color: "#9e2146",
+                  },
+                },
+              }}
+              onChange={(event: { complete: boolean }) => {
+                setCardComplete(event.complete);
+              }}
+            />
+          </View>
+        </FadeInItem>
+        <FadeInItem delay={50}>
+          <KeakitButton
+            title="Pagar con Stripe"
+            onPress={() => handlePayment(false)}
+            disabled={isStripePayDisabled}
+            variant="blue"
+            loading={loading}
+          />
+        </FadeInItem>
+        <FadeInItem delay={50}>
+          <KeakitButton
+            title="Pagar con mi saldo de KeaKit"
+            onPress={() => handlePayment(true)}
+            disabled={isWalletPayDisabled}
+            variant="green"
+            loading={loading}
+          />
+        </FadeInItem>
+        <FadeInItem delay={50}>
+          <KeakitButton
+            title="Cancelar"
+            onPress={() => navigation.navigate("KitDetail", { kitId })}
+            disabled={loading}
+            variant="violet"
+          />
+        </FadeInItem>
 
-      {/* BOTÓN */}
-      <Button
-        mode="contained"
-        onPress={handlePay}
-        style={{ marginTop: 24, borderRadius: 8 }}
-        contentStyle={{ paddingVertical: 8 }}
-      >
-        Pagar y Crear Kit
-      </Button>
-    </ScrollView>
+        <Text style={[commonStyles.caption, styles.testCard]}>
+          Tarjeta de prueba: 4242 4242 4242 4242 | Exp: 12/34 | CVV: 123
+        </Text>
+
+        <KeakitModal
+          visible={errorModalVisible}
+          onDismiss={() => setErrorModalVisible(false)}
+          message={error ?? "Ha ocurrido un error."}
+          variant="error"
+        />
+      </View>
+    </SafeAreaView>
   );
-};
+}
 
-export default CheckoutScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.backgroundGray,
+    justifyContent: "space-between",
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  gradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 20,
+    zIndex: 1,
+  },
+  gradientTop: {
+    marginTop: 20,
+  },
+  gradientBottom: {
+    marginBottom: 20,
+  },
+  cardContainer: {
+    ...Shadows.small,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 20,
+    backgroundColor: Colors.white,
+    width: "100%",
+  },
+  testCard: {
+    marginTop: Spacing.sm,
+    fontSize: FontSizes.xs,
+  },
+});

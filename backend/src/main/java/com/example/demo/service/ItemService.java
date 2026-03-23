@@ -10,13 +10,21 @@ import java.util.List;
 public class ItemService {
 
     private final ItemRepository itemRepository;
+    private final DefaultKitService defaultKitService;
 
-    public ItemService(ItemRepository itemRepository) {
+    public ItemService(ItemRepository itemRepository, DefaultKitService defaultKitService) {
         this.itemRepository = itemRepository;
+        this.defaultKitService = defaultKitService;
     }
 
     public List<Item> findAll() {
         return itemRepository.findAll();
+    }
+
+    public List<Item> findItemsForRent(Long ownerId) {
+        List<Item> allItemsForRent = itemRepository.findAll()
+            .stream().filter(x-> x.getOwner().getId() != ownerId).toList();
+        return allItemsForRent;
     }
 
     public Item findById(Long id) {
@@ -54,6 +62,7 @@ public class ItemService {
         if (!itemRepository.existsById(id)) {
             throw new RuntimeException("Item not found");
         }
+        defaultKitService.removeItemFromAllDefaultKits(id);
         itemRepository.deleteById(id);
     }
 }

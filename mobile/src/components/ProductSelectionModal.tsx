@@ -85,6 +85,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   onToggleAvailable,
   startDate,
   endDate,
+  
 }) => {
   const navigation = useNavigation<ProductSelectionNav>();
 
@@ -162,7 +163,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       <View style={createKitStyles.modalOverlay}>
         <View style={createKitStyles.modalCard}>
           <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
-
           <View style={{ gap: 8, marginBottom: 12 }}>
             <PaperTextInput
               mode="outlined"
@@ -284,7 +284,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                     key={p.id}
                     style={[
                       createKitStyles.modalRow,
-                      checked && createKitStyles.modalRowChecked,
                       isDisabled && {
                         opacity: 0.7,
                         backgroundColor: "#fafafa",

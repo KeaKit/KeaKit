@@ -1,3 +1,5 @@
+import Ionicons from "@expo/vector-icons/build/Ionicons";
+
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -17,7 +19,7 @@ export interface UserResponse {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "COURIER";
   phone: string;
   address: string;
   city: string;
@@ -29,7 +31,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "COURIER";
   phone: string;
   address: string;
   city: string;
@@ -71,6 +73,13 @@ export interface UserArticle {
 export interface KitItemSelection {
   itemId: number;
   quantity: number;
+  pricePerMonth: number;
+}
+
+export interface ItemSelectionRequest {
+  itemId: number;
+  quantity: number;
+  pricePerMonth: number;
 }
 
 export interface KitCreateRequest {
@@ -79,12 +88,19 @@ export interface KitCreateRequest {
   city: string;
   startDate: string;
   endDate: string;
+  status?: KitStatus;
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
-  courierAddress?: string;
   tenantId: number;
-  itemIds?: number[];
-  itemSelections?: KitItemSelection[];
+  itemSelections: ItemSelectionRequest[]; 
+}
+
+export interface KitPaymentDTO {
+  totalPrice: number;
+  subtotalPrice: number;
+  guarantee: number;
+  platformfee: number;
+  courierPrice: number;
 }
 
 export type ArticleCondition = 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN';
@@ -127,15 +143,57 @@ export interface Item {
   description: string;
   pricePerMonth: number;
   category: string;
+  quantity?: number;
 }
 
 export enum KitStatus {
-  PENDING = "PENDING",
+  DRAFT = "DRAFT",
   PAID = "PAID",
-  PENDING_VALIDATION = "PENDING VALIDATION",
   ACTIVE = "ACTIVE",
-  COMPLETED = "COMPLETED",
   CANCELLED = "CANCELLED",
+  FINISHED = "FINISHED",
+}
+
+export interface Kit {
+  id: number;
+  name: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  orderDate?: string;
+  status: KitStatus;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint?: string;
+  courierPrice?: number;
+  tenant: {
+    id: number;
+    email: string;
+    password: string;
+    name: string;
+    role: "ADMIN" | "USER";
+    phone: string;
+    address: string;
+    city: string;
+    country: string;
+  };
+  kitItems: {
+    id: number;
+    item: Item;
+    quantity: number;
+    pricePerMonth: number;
+  }[];
+  items?: Item[];
+  totalPrice?: number;
+}
+
+export interface KitItemResponse {
+  itemId: number;
+  quantity: number;
+  pricePerMonth: number;
+  name: string;
+  category: string;
+  imageUrl: string;
 }
 
 export interface KitResponse {
@@ -143,21 +201,23 @@ export interface KitResponse {
   name: string;
   country: string;
   city: string;
-  orderDate?: string;
+  orderDate: string; // LocalDate -> ISO String
   startDate: string;
   endDate: string;
-  estimatedDeliveryDate?: string;
-  deliveryNotification?: string;
-  status?: KitStatus;
-  tenantId: number;
-  items?: Item[];
-  itemIds?: number[];
-  totalPrice?: number;
-  deliveryMethod?: "COURIER" | "MEETING_POINT";
-  meetingPoint?: string;
+  estimatedDeliveryDate: string;
+  deliveryNotification: string;
+  status: KitStatus;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint: string;
   courierPrice?: number;
-  itemSelections?: KitItemSelection[];
-  totalSelectedItems?: number;
+  tenantId: number;
+  itemIds: number[];
+  items: KitItemResponse[];
+  totalSelectedItems: number;
+  subtotalPrice: number;
+  guaranteePrice: number;
+  platformFee: number;
+  totalPrice: number;
 }
 
 export interface Category {
@@ -167,6 +227,25 @@ export interface Category {
   status: "ACTIVE" | "DRAFT";
   minPrice: number;
   maxPrice: number;
+}
+
+export interface DefaultKitItem {
+  id: number;
+  item: Article;
+}
+
+export interface DefaultKit {
+  id: number;
+  name: string;
+  description: string;
+  basePrice: number;
+  items: DefaultKitItem[];
+}
+
+export interface DefaultKitCreateRequest {
+  name: string;
+  description: string;
+  itemsIds?: number[];
 }
 
 export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
@@ -227,6 +306,59 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
+export type NavbarScreen = 
+  | 'Home'
+  | 'Profile'
+  | 'MyArticles'
+  | 'MyKits'
+  | 'MyServices'
+  | 'MyIncidents'
+  | 'Wallet'
+  | 'MyKitsHistory'
+  | 'UserRatings'
+  | 'AdminUsers'
+  | 'Categories';
+
+export type NavbarHeaderScreen = 
+  | 'Home'
+  | 'Profile'
+  | 'MyArticles'
+  | 'MyKits'
+  | 'MyServices'
+  | 'MyIncidents'
+  | 'Wallet'
+  | 'MyKitsHistory'
+  | 'UserRatings'
+  | 'AdminUsers'
+  | 'Categories'
+  | 'Commission'
+  | 'DefaultKits'
+  | 'Login'
+  | 'Register'
+  | 'TrackingNotifications';;
+
+export interface NavbarHeaderItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen: NavbarHeaderScreen;
+  requiresAuth?: boolean;
+  requiresAdmin?: boolean;
+}
+
+export interface HeaderMenuItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen?: keyof RootStackParamList;
+  onPress?: () => void;
+  danger?: boolean;
+  badge?: string;
+}
+
+export interface HeaderMenuSection {
+  title?: string;
+  items: HeaderMenuItem[];
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -234,24 +366,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Notifications: undefined;
   CreateKit: undefined;
-  Checkout: {
-    kitData: {
-      name: string;
-      country: string;
-      city: string;
-      startDate: string;
-      endDate: string;
-      deliveryMethod: "COURIER" | "MEETING_POINT";
-      meetingPoint?: string;
-      courierAddress?: string;
-      items: {
-        id: number;
-        quantity: number;
-        pricePerMonth: number;
-        ownerId: number;
-      }[];
-    };
-  };
+  Checkout: {kitId: number};
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
@@ -260,13 +375,28 @@ export type RootStackParamList = {
   IncidentDetail: { incidentId: number; isReceived: boolean };
   MyArticles: undefined;
   MyKits: undefined;
+  MyKitsHistory: undefined;
   KitDetail: { kitId: number };
+  DefaultKits: undefined;
+  EditDefaultKit: { kitId: number };
   UploadArticle: undefined;
   AdminUsers: undefined;
   AdminUserForm: { userId?: number };
   EditArticle: { article: Article };
   Categories: undefined;
   CategoryForm: { category?: Category; mode: "view" | "edit" | "create" };
+  MyServices: undefined;
+  PromoteService: undefined;
+  EditService: { service: Service };
+  ServiceDetail: { serviceId: number };
+  DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
+  Commission: undefined;
+  Wallet: undefined;
+  Tracking: { kitId: number };
+  TrackingNotifications: undefined;
+  AssignedKits: undefined;
+  Couriers: undefined;
+  CourierDetail: { courier: UserResponse, isBusy?: boolean };
 };
 
 export interface ProfileData {
@@ -275,6 +405,66 @@ export interface ProfileData {
   address: string;
   city: string;
   country: string;
+}
+
+export type ServiceStatus = 'DRAFT' | 'ACTIVE' | 'UNAVAILABLE';
+
+export interface Service {
+  id: number;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: Category;
+  status: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface ServicePayload {
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: { id: number };
+  status?: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface UserService {
+  id: number;
+  title: string;
+  pricePerMonth: number;
+  status: ServiceStatus;
+  rentedUntil: string | null;
+  city: string;
+  categoryName: string;
+}
+
+export interface Wallet {
+  id: number;
+  balance: number;
+  userId: number;
+  createdAt: string; // ISO String para emular LocalDateTime
+}
+
+export interface Transaction {
+  id: number;
+  amount: number;
+  type: TransactionType;
+  walletId: number;
+  createdAt: string;
+}
+
+export enum TransactionType {
+  PAYOUT = 'PAYOUT',
+  FEE = 'FEE',
+  GUARANTEE_DEPOSIT = 'GUARANTEE_DEPOSIT',
+  GUARANTEE_REFUND = 'GUARANTEE_REFUND',
+  REFUND = 'REFUND'
 }
 
 export const EUROPEAN_COUNTRIES = [
@@ -330,3 +520,35 @@ export const EUROPEAN_COUNTRIES = [
   { value: "United Kingdom", label: "Reino Unido" },
   { value: "Vatican City", label: "Ciudad del Vaticano" }
 ];
+
+export type DeliveryStatus =
+  | "PICKED_UP"
+  | "IN_TRANSIT"
+  | "NEARBY"
+  | "DELIVERED";
+
+export interface KitDeliveryResponse {
+  kitId: number;
+  status: DeliveryStatus | null;
+  estimatedArrival: string | null;
+  lastLocation: string | null;
+  lastUpdate: string | null;
+  courierId: number | null;
+  courierName: string | null;
+}
+
+export interface UpdateDeliveryRequest {
+  status?: DeliveryStatus;
+  estimatedArrival?: string;
+  lastLocation?: string;
+}
+
+export interface TrackingNotification {
+  id: string;
+  kitId: number;
+  kitName: string;
+  status: DeliveryStatus;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}

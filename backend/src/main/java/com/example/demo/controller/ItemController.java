@@ -30,6 +30,15 @@ public class ItemController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/for-rent/{ownerId}")
+    public ResponseEntity<List<ItemCatalogResponse>> getAllItemsForRent(@PathVariable Long ownerId) {
+        List<ItemCatalogResponse> response = itemService.findItemsForRent(ownerId)
+            .stream()
+            .map(this::toCatalogResponse)
+            .toList();
+        return ResponseEntity.ok(response);
+    }
+
     private ItemCatalogResponse toCatalogResponse(Item item) {
         ItemCatalogResponse dto = new ItemCatalogResponse();
         dto.setId(item.getId());

@@ -44,10 +44,9 @@ cloudinary:
   api_secret: ${CLOUDINARY_API_SECRET}
 
 sendgrid:
-  api-key: ${SENDGRID_API_KEY}
-  from-email: ${SENDGRID_FROM_EMAIL:no-reply@keakit.app}
+  api-key: ${SENDGRID_API_KEY:}
+  from-email: ${SENDGRID_FROM_EMAIL:}
 
-server:
-  port: ${PORT:8080}
-  error:
-    include-message: always
+stripe:
+  api:
+    key: ${STRIPE_SECRET_KEY:sk_test_default_key} # Reemplaza con clave real para que funcione

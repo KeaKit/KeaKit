@@ -1,22 +1,54 @@
 package com.example.demo.service;
 
+import com.example.demo.exception.NotEnoughBalanceException;
+import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.model.Transaction;
+import com.example.demo.model.TransactionType;
 import com.example.demo.model.Wallet;
+import com.example.demo.repository.TransactionRepository;
 import com.example.demo.repository.WalletRepository;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @Service
 public class WalletService {
 
     @Autowired
     private WalletRepository walletRepository;
-    public Wallet getWalletByUserId(Long userId) {
-        Wallet wallet = walletRepository.findByUserId(userId);
-        if (wallet == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet not found for user with id: " + userId);
-        }
-        return wallet;
+
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    public Wallet getWalletByUserId(Long userId) throws ResourceNotFoundException {
+        return walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user: " + userId));
     }
+
+    public List<Transaction> getTransactionsForUser(Long userId) throws ResourceNotFoundException {
+        Wallet wallet = getWalletByUserId(userId);
+        return transactionRepository.findByDestinationWalletIdOrderByTimestampDesc(wallet.getId());
+    }
+
+    @Transactional
+    public void updateWalletBalance(Long userId, Double amount) throws ResourceNotFoundException {
+        Wallet wallet = getWalletByUserId(userId);
+        if (wallet.getBalance() < amount){
+            throw new NotEnoughBalanceException("Insufficient balance in wallet");
+        }
+        if(amount <= 0.0){
+            throw new NotEnoughBalanceException("the amount need to be positive");
+        }
+        Transaction transaction = new Transaction();
+        transaction.setAmount(- amount);
+        transaction.setDestinationWallet(wallet);
+        transaction.setType(TransactionType.PAYOUT);
+        transactionRepository.save(transaction);
+    }
+
 }

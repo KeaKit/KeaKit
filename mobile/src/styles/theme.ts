@@ -8,7 +8,8 @@ export const Colors = {
   primaryLight: '#2C5F7C',     
   primaryDark: '#0F2534',  
 
-  primaryHome: '#2d6e91',           
+  primaryHome: '#2d6e91',
+  primaryHomeOpacity: 'rgba(45, 110, 145, 0.15)',      
   backgroundHome: '#fcfff5',        
   textPrimaryHome: '#595959', 
 
@@ -19,10 +20,13 @@ export const Colors = {
   secondaryLavender: '#d6d0f8',
   secondaryBlue: '#8ec2db',
   secondaryMint: '#c3f1d1',
+  secondaryCoral: '#FFD6C0',
 
-  backgroundWhite: '#FFFFFF',   
+  backgroundWhite: '#FFFFFF',
+  backgroundGray: '#f0f4ff',   
   backgroundCard: '#FFFFFF',    
 
+  textPrimary: '#1A1A1A',
   textSecondary: '#7A7A7A',
   textLight: '#9CA3AF', 
   textWhite: '#FFFFFF', 
@@ -32,13 +36,15 @@ export const Colors = {
   borderLight: '#F3F4F6',
   borderPrimary: 'rgba(45, 110, 145, 0.15)',
 
+  white: '#FFFFFF',
   success: '#10B981',     
   error: '#EF4444',           
   warning: '#F59E0B',       
   info: '#3B82F6',  
 
   overlay: 'rgba(45, 110, 145, 0.4)',
-  shadowColor: '#2d6e91',  
+  shadowColor: '#2d6e91',
+  transparent: 'rgba(0, 0, 0, 0)',  
 } as const;
 
 export const Spacing = {

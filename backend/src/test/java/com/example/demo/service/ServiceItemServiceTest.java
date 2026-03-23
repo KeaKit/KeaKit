@@ -1,0 +1,714 @@
+package com.example.demo.service;
+
+import com.example.demo.model.*;
+import com.example.demo.repository.CategoryRepository;
+import com.example.demo.repository.ServiceRepository;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.service.ServiceItemService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class ServiceItemServiceTest {
+
+    @Mock private ServiceRepository serviceRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private CategoryRepository categoryRepository;
+
+    @InjectMocks
+    private ServiceItemService serviceItemService;
+
+    private User owner;
+    private Category category;
+    private ServiceItem service;
+
+    private static final LocalDate FROM  = LocalDate.now().plusDays(1);
+    private static final LocalDate UNTIL = LocalDate.now().plusDays(30);
+
+    @BeforeEach
+    void setUp() {
+        owner = new User();
+        owner.setId(1L);
+        owner.setName("Owner");
+        owner.setEmail("owner@example.com");
+        owner.setPassword("password123");
+        owner.setRole(UserRole.USER);
+        owner.setPhone("123456789");
+        owner.setAddress("Calle 1");
+        owner.setCity("Madrid");
+        owner.setCountry("España");
+
+        category = new Category("Mantenimiento", "Servicios de mantenimiento", 5.0, 500.0);
+        category.setId(1L);
+        category.setStatus(CategoryStatus.ACTIVE);
+
+        service = new ServiceItem();
+        service.setId(1L);
+        service.setTitle("Servicio de Limpieza");
+        service.setDescription("Limpieza profesional del hogar");
+        service.setCity("Madrid");
+        service.setPricePerMonth(100.0);
+        service.setStatus(ServiceStatus.ACTIVE);
+        service.setAvailableFrom(FROM);
+        service.setAvailableUntil(UNTIL);
+        service.setOwner(owner);
+        service.setCategory(category);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+    }
+
+    // Helper para crear un ServiceItem simple
+    private ServiceItem makeService(Long id, ServiceStatus status) {
+        ServiceItem s = new ServiceItem();
+        s.setId(id);
+        s.setTitle("Servicio Test");
+        s.setDescription("Descripción");
+        s.setCity("Madrid");
+        s.setPricePerMonth(100.0);
+        s.setAvailableFrom(FROM);
+        s.setAvailableUntil(UNTIL);
+        s.setStatus(status);
+        s.setOwner(owner);
+        s.setCategory(category);
+        return s;
+    }
+
+
+    @Test
+    void findAll_returnsAllServices() {
+        List<ServiceItem> list = List.of(
+            makeService(1L, ServiceStatus.ACTIVE),
+            makeService(2L, ServiceStatus.DRAFT)
+        );
+        when(serviceRepository.findAll()).thenReturn(list);
+
+        List<ServiceItem> result = serviceItemService.findAll();
+
+        assertThat(result).hasSize(2);
+        verify(serviceRepository).findAll();
+    }
+
+
+    @Test
+    void findAllActive_returnsOnlyActiveServices() {
+        List<ServiceItem> actives = List.of(makeService(1L, ServiceStatus.ACTIVE));
+        when(serviceRepository.findByStatus(ServiceStatus.ACTIVE)).thenReturn(actives);
+
+        List<ServiceItem> result = serviceItemService.findAllActive();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(ServiceStatus.ACTIVE);
+        verify(serviceRepository).findByStatus(ServiceStatus.ACTIVE);
+    }
+
+    @Test
+    void findAllActive_emptyList_returnsEmpty() {
+        when(serviceRepository.findByStatus(ServiceStatus.ACTIVE)).thenReturn(List.of());
+
+        List<ServiceItem> result = serviceItemService.findAllActive();
+
+        assertThat(result).isEmpty();
+    }
+
+
+    @Test
+    void findById_found_returnsService() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+
+        ServiceItem result = serviceItemService.findById(1L);
+
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getTitle()).isEqualTo("Servicio de Limpieza");
+    }
+
+    @Test
+    void findById_notFound_throws() {
+        when(serviceRepository.findById(99L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> serviceItemService.findById(99L));
+        assertThat(ex.getMessage()).contains("Service not found");
+    }
+
+
+    @Test
+    void findByOwner_returnsServicesByOwner() {
+        List<ServiceItem> ownerServices = List.of(service);
+        when(serviceRepository.findByOwnerId(1L)).thenReturn(ownerServices);
+
+        List<ServiceItem> result = serviceItemService.findByOwner(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getOwner().getId()).isEqualTo(1L);
+        verify(serviceRepository).findByOwnerId(1L);
+    }
+
+    @Test
+    void findByOwner_noServices_returnsEmpty() {
+        when(serviceRepository.findByOwnerId(99L)).thenReturn(List.of());
+
+        List<ServiceItem> result = serviceItemService.findByOwner(99L);
+
+        assertThat(result).isEmpty();
+    }
+
+
+    @Test
+    void createAndPromote_success_returnsActiveService() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem newService = new ServiceItem();
+        newService.setTitle("Fontanería");
+        newService.setDescription("Servicio de fontanería profesional");
+        newService.setCity("Barcelona");
+        newService.setPricePerMonth(150.0);
+        newService.setAvailableFrom(FROM);
+        newService.setAvailableUntil(UNTIL);
+
+        ServiceItem result = serviceItemService.createAndPromote(newService, 1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(ServiceStatus.ACTIVE);
+        assertThat(result.getOwner()).isEqualTo(owner);
+        assertThat(result.getCategory()).isEqualTo(category);
+        verify(serviceRepository).save(any());
+    }
+
+    @Test
+    void createAndPromote_userNotFound_throws() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        ServiceItem newService = makeService(null, null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 99L, 1L));
+        assertThat(ex.getMessage()).contains("User not found");
+    }
+
+    @Test
+    void createAndPromote_categoryNotFound_throws() {
+        when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
+
+        ServiceItem newService = makeService(null, null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 99L));
+        assertThat(ex.getMessage()).contains("Category not found");
+    }
+
+    @Test
+    void createAndPromote_missingTitle_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setTitle(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("Title is required");
+    }
+
+    @Test
+    void createAndPromote_emptyTitle_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setTitle("");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("Title is required");
+    }
+
+    @Test
+    void createAndPromote_missingCity_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setCity(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("City is required");
+    }
+
+    @Test
+    void createAndPromote_emptyCity_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setCity("");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("City is required");
+    }
+
+    @Test
+    void createAndPromote_nullPrice_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setPricePerMonth(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("Monthly price must be positive");
+    }
+
+    @Test
+    void createAndPromote_negativePrice_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setPricePerMonth(-10.0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("Monthly price must be positive");
+    }
+
+    @Test
+    void createAndPromote_zeroPricePerMonth_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setPricePerMonth(0.0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("Monthly price must be positive");
+    }
+
+    @Test
+    void createAndPromote_nullDates_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setAvailableFrom(null);
+        newService.setAvailableUntil(null);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("You must specify the date range");
+    }
+
+    @Test
+    void createAndPromote_availableFromInPast_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setAvailableFrom(LocalDate.now().minusDays(1));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("Start date cannot be in the past");
+    }
+
+    @Test
+    void createAndPromote_availableUntilBeforeFrom_throws() {
+        ServiceItem newService = makeService(null, null);
+        newService.setAvailableFrom(LocalDate.now().plusDays(10));
+        newService.setAvailableUntil(LocalDate.now().plusDays(5));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.createAndPromote(newService, 1L, 1L));
+        assertThat(ex.getMessage()).contains("End date must be after the start date");
+    }
+
+    @Test
+    void createAndPromote_untilInPast_setsStatusDraft() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem newService = makeService(null, null);
+        newService.setAvailableFrom(LocalDate.now());
+        newService.setAvailableUntil(LocalDate.now().minusDays(1));
+        assertThatThrownBy(() -> serviceItemService.createAndPromote(newService, 1L, 1L))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("End date must be after the start date");
+    }
+
+
+    @Test
+    void update_success_updatesAllFields() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setTitle("Nuevo Título");
+        updateData.setDescription("Nueva descripción");
+        updateData.setCity("Barcelona");
+        updateData.setPricePerMonth(200.0);
+        updateData.setAvailableFrom(LocalDate.now().plusDays(2));
+        updateData.setAvailableUntil(LocalDate.now().plusDays(60));
+
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+
+        assertThat(result.getTitle()).isEqualTo("Nuevo Título");
+        assertThat(result.getDescription()).isEqualTo("Nueva descripción");
+        assertThat(result.getCity()).isEqualTo("Barcelona");
+        assertThat(result.getPricePerMonth()).isEqualTo(200.0);
+    }
+
+    @Test
+    void update_onlyTitle_updatesOnlyTitle() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setTitle("Solo Título");
+
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+
+        assertThat(result.getTitle()).isEqualTo("Solo Título");
+        assertThat(result.getCity()).isEqualTo("Madrid"); // no cambiado
+    }
+
+    @Test
+    void update_serviceNotFound_throws() {
+        when(serviceRepository.findById(99L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.update(99L, 1L, new ServiceItem()));
+        assertThat(ex.getMessage()).contains("Service not found");
+    }
+
+    @Test
+    void update_notOwner_throws() {
+        ServiceItem s = makeService(2L, ServiceStatus.ACTIVE);
+        User otherOwner = new User();
+        otherOwner.setId(99L);
+        s.setOwner(otherOwner);
+        when(serviceRepository.findById(2L)).thenReturn(Optional.of(s));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.update(2L, 1L, new ServiceItem()));
+        assertThat(ex.getMessage()).contains("Only the owner can modify this service");
+    }
+
+    @Test
+    void update_serviceUnavailable_throws() {
+        ServiceItem s = makeService(3L, ServiceStatus.UNAVAILABLE);
+        when(serviceRepository.findById(3L)).thenReturn(Optional.of(s));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.update(3L, 1L, new ServiceItem()));
+        assertThat(ex.getMessage()).contains("currently rented and cannot be modified");
+    }
+
+    @Test
+    void update_statusSetToActive_succeeds() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setStatus(ServiceStatus.ACTIVE);
+
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+
+        assertThat(result.getStatus()).isEqualTo(ServiceStatus.ACTIVE);
+    }
+
+    @Test
+    void update_statusSetToDraft_succeeds() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setStatus(ServiceStatus.DRAFT);
+
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+
+        assertThat(result.getStatus()).isEqualTo(ServiceStatus.DRAFT);
+    }
+
+    @Test
+    void update_statusSetToUnavailable_throws() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setStatus(ServiceStatus.UNAVAILABLE);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.update(1L, 1L, updateData));
+        assertThat(ex.getMessage()).contains("Service status can only be ACTIVE or DRAFT");
+    }
+
+    @Test
+    void update_availableFromChanged_triggersDateValidation() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        LocalDate newFrom = LocalDate.now().plusDays(5);
+        ServiceItem updateData = new ServiceItem();
+        updateData.setAvailableFrom(newFrom);
+
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+
+        assertThat(result.getAvailableFrom()).isEqualTo(newFrom);
+    }
+
+    @Test
+    void update_availableFromInPast_throws() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setAvailableFrom(LocalDate.now().minusDays(1));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.update(1L, 1L, updateData));
+        assertThat(ex.getMessage()).contains("Start date cannot be in the past");
+    }
+
+    @Test
+    void update_availableUntilBeforeFrom_throws() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setAvailableFrom(LocalDate.now().plusDays(20));
+        updateData.setAvailableUntil(LocalDate.now().plusDays(5));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.update(1L, 1L, updateData));
+        assertThat(ex.getMessage()).contains("End date must be after the start date");
+    }
+
+    @Test
+    void update_onlyUntilChanged_doesNotCheckFromFuture() {
+        // availableFrom no cambia  ->  checkFromFuture = false   ->   no valida que from sea futuro
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setAvailableUntil(UNTIL.plusDays(10));
+
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+
+        assertThat(result.getAvailableUntil()).isEqualTo(UNTIL.plusDays(10));
+    }
+
+    @Test
+    void update_expiredUntil_setsStatusToDraft() {
+        // until < today pero from no cambia  ->  checkFromFuture = false
+        service.setAvailableFrom(LocalDate.now().minusDays(5)); // from en el pasado (ya guardado)
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setAvailableUntil(LocalDate.now().minusDays(1));
+
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+
+        assertThat(result.getStatus()).isEqualTo(ServiceStatus.DRAFT);
+    }
+
+
+    @Test
+    void requestService_activeService_setsUnavailable() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem result = serviceItemService.requestService(1L);
+
+        assertThat(result.getStatus()).isEqualTo(ServiceStatus.UNAVAILABLE);
+        verify(serviceRepository).save(service);
+    }
+
+    @Test
+    void requestService_serviceNotFound_throws() {
+        when(serviceRepository.findById(99L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.requestService(99L));
+        assertThat(ex.getMessage()).contains("Service not found");
+    }
+
+    @Test
+    void requestService_draftService_throws() {
+        ServiceItem draft = makeService(2L, ServiceStatus.DRAFT);
+        when(serviceRepository.findById(2L)).thenReturn(Optional.of(draft));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.requestService(2L));
+        assertThat(ex.getMessage()).contains("The service is not active and cannot be requested");
+    }
+
+    @Test
+    void requestService_unavailableService_throws() {
+        ServiceItem unavail = makeService(3L, ServiceStatus.UNAVAILABLE);
+        when(serviceRepository.findById(3L)).thenReturn(Optional.of(unavail));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.requestService(3L));
+        assertThat(ex.getMessage()).contains("The service is not active and cannot be requested");
+    }
+
+
+    @Test
+    void releaseService_validUntilInFuture_setsActive() {
+        ServiceItem s = makeService(1L, ServiceStatus.UNAVAILABLE);
+        s.setAvailableUntil(LocalDate.now().plusDays(10));
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(s));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem result = serviceItemService.releaseService(1L);
+
+        assertThat(result.getStatus()).isEqualTo(ServiceStatus.ACTIVE);
+        assertThat(result.getAvailableFrom()).isEqualTo(LocalDate.now());
+    }
+
+    @Test
+    void releaseService_validUntilInPast_setsDraft() {
+        ServiceItem s = makeService(1L, ServiceStatus.UNAVAILABLE);
+        s.setAvailableUntil(LocalDate.now().minusDays(1));
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(s));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem result = serviceItemService.releaseService(1L);
+
+        assertThat(result.getStatus()).isEqualTo(ServiceStatus.DRAFT);
+        assertThat(result.getAvailableFrom()).isEqualTo(LocalDate.now());
+    }
+
+    @Test
+    void releaseService_serviceNotFound_throws() {
+        when(serviceRepository.findById(99L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.releaseService(99L));
+        assertThat(ex.getMessage()).contains("Service not found");
+    }
+
+    @Test
+    void releaseService_savesUpdatedService() {
+        ServiceItem s = makeService(5L, ServiceStatus.UNAVAILABLE);
+        s.setAvailableUntil(LocalDate.now().plusDays(5));
+        when(serviceRepository.findById(5L)).thenReturn(Optional.of(s));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        serviceItemService.releaseService(5L);
+
+        verify(serviceRepository).save(s);
+    }
+
+
+    @Test
+    void delete_success_deletesService() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        doNothing().when(serviceRepository).delete(service);
+
+        serviceItemService.delete(1L, 1L);
+
+        verify(serviceRepository).delete(service);
+    }
+
+    @Test
+    void delete_serviceNotFound_throws() {
+        when(serviceRepository.findById(99L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.delete(99L, 1L));
+        assertThat(ex.getMessage()).contains("Service not found");
+    }
+
+    @Test
+    void delete_notOwner_throws() {
+        ServiceItem s = makeService(2L, ServiceStatus.ACTIVE);
+        User other = new User();
+        other.setId(99L);
+        s.setOwner(other);
+        when(serviceRepository.findById(2L)).thenReturn(Optional.of(s));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.delete(2L, 1L));
+        assertThat(ex.getMessage()).contains("You do not have permission to delete this service");
+    }
+
+    @Test
+    void delete_serviceUnavailable_throws() {
+        ServiceItem s = makeService(3L, ServiceStatus.UNAVAILABLE);
+        when(serviceRepository.findById(3L)).thenReturn(Optional.of(s));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.delete(3L, 1L));
+        assertThat(ex.getMessage()).contains("The service is currently rented and cannot be deleted");
+    }
+
+    @Test
+    void delete_draftService_deletesSuccessfully() {
+        ServiceItem draft = makeService(4L, ServiceStatus.DRAFT);
+        when(serviceRepository.findById(4L)).thenReturn(Optional.of(draft));
+        doNothing().when(serviceRepository).delete(draft);
+
+        serviceItemService.delete(4L, 1L);
+
+        verify(serviceRepository).delete(draft);
+    }
+
+
+    @Test
+    void autoExpireServices_expiredActiveService_setsDraft() {
+        ServiceItem expired = makeService(1L, ServiceStatus.ACTIVE);
+        expired.setAvailableUntil(LocalDate.now().minusDays(1));
+
+        when(serviceRepository.findByStatus(ServiceStatus.ACTIVE)).thenReturn(List.of(expired));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        serviceItemService.autoExpireServices();
+
+        assertThat(expired.getStatus()).isEqualTo(ServiceStatus.DRAFT);
+        verify(serviceRepository).save(expired);
+    }
+
+    @Test
+    void autoExpireServices_nonExpiredActiveService_remainsActive() {
+        ServiceItem nonExpired = makeService(2L, ServiceStatus.ACTIVE);
+        nonExpired.setAvailableUntil(LocalDate.now().plusDays(5));
+
+        when(serviceRepository.findByStatus(ServiceStatus.ACTIVE)).thenReturn(List.of(nonExpired));
+
+        serviceItemService.autoExpireServices();
+
+        assertThat(nonExpired.getStatus()).isEqualTo(ServiceStatus.ACTIVE);
+        verify(serviceRepository, never()).save(any());
+    }
+
+    @Test
+    void autoExpireServices_mixedServices_onlyExpiredSetToDraft() {
+        ServiceItem expired = makeService(1L, ServiceStatus.ACTIVE);
+        expired.setAvailableUntil(LocalDate.now().minusDays(1));
+
+        ServiceItem valid = makeService(2L, ServiceStatus.ACTIVE);
+        valid.setAvailableUntil(LocalDate.now().plusDays(5));
+
+        when(serviceRepository.findByStatus(ServiceStatus.ACTIVE)).thenReturn(List.of(expired, valid));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        serviceItemService.autoExpireServices();
+
+        assertThat(expired.getStatus()).isEqualTo(ServiceStatus.DRAFT);
+        assertThat(valid.getStatus()).isEqualTo(ServiceStatus.ACTIVE);
+        verify(serviceRepository, times(1)).save(expired);
+        verify(serviceRepository, never()).save(valid);
+    }
+
+    @Test
+    void autoExpireServices_noActiveServices_doesNothing() {
+        when(serviceRepository.findByStatus(ServiceStatus.ACTIVE)).thenReturn(List.of());
+
+        serviceItemService.autoExpireServices();
+
+        verify(serviceRepository, never()).save(any());
+    }
+
+    @Test
+    void autoExpireServices_expiresExactlyToday_doesNotExpire() {
+        // until = today -> isBefore(today) es false -> NO expira
+        ServiceItem expiresExactlyToday = makeService(3L, ServiceStatus.ACTIVE);
+        expiresExactlyToday.setAvailableUntil(LocalDate.now());
+
+        when(serviceRepository.findByStatus(ServiceStatus.ACTIVE)).thenReturn(List.of(expiresExactlyToday));
+
+        serviceItemService.autoExpireServices();
+
+        assertThat(expiresExactlyToday.getStatus()).isEqualTo(ServiceStatus.ACTIVE);
+        verify(serviceRepository, never()).save(any());
+    }
+}

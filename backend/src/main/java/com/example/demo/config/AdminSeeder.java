@@ -2,7 +2,9 @@ package com.example.demo.config;
 
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
+import com.example.demo.model.Wallet;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.WalletRepository;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class AdminSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
+    private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
 
     // Mapeamos la ruta del YAML
@@ -25,9 +28,10 @@ public class AdminSeeder implements CommandLineRunner {
     @Value("${app.setup.admin.name}")
     private String adminName;
 
-    public AdminSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AdminSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder, WalletRepository walletRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.walletRepository = walletRepository;
     }
 
     @Override
@@ -47,6 +51,11 @@ public class AdminSeeder implements CommandLineRunner {
             );
 
             userRepository.save(admin);
+            
+            // Creamos una wallet para el admin
+            Wallet adminWallet = new Wallet(admin);
+            walletRepository.save(adminWallet);
+
             System.out.println(">> Seeder: Admin '" + adminName + "' creado con éxito.");
         }
     }

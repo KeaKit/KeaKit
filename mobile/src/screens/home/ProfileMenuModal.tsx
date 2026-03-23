@@ -6,6 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { Colors, componentStyles } from '../../styles';
+import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
+
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -17,6 +19,7 @@ interface ProfileMenuModalProps {
 const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose }) => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation<NavigationProp>();
+  const { unreadCount } = useTrackingNotifications();
 
   const handleLogout = async () => {
     onClose();
@@ -71,6 +74,20 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
 
               <TouchableOpacity
                 style={componentStyles.menuItem}
+                onPress={() => navigateTo('TrackingNotifications')}
+              >
+                <Ionicons name="notifications" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Notificaciones</Text>
+                {unreadCount > 0 ? (
+                  <View style={componentStyles.menuBadge}>
+                    <Text style={componentStyles.menuBadgeText}>{unreadCount}</Text>
+                  </View>
+                ) : null}
+              </TouchableOpacity>
+
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
                 onPress={() => navigateTo('UserRatings', {
                   userId: user.id,
                   userName: user.name,
@@ -84,7 +101,7 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
                 style={componentStyles.menuItem}
                 onPress={() => navigateTo('MyArticles')}
               >
-                <Ionicons name="cube" size={24} color={Colors.primary} />
+                <Ionicons name="bag" size={24} color={Colors.primary} />
                 <Text style={componentStyles.menuItemText}>Mis Artículos</Text>
               </TouchableOpacity>
 
@@ -115,6 +132,34 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
               >
                 <Ionicons name="cube" size={24} color={Colors.primary} />
                 <Text style={componentStyles.menuItemText}>Mis Kits</Text>
+              </TouchableOpacity>
+
+              {user?.role === 'COURIER' && (
+                <TouchableOpacity
+                  style={componentStyles.menuItem}
+                  onPress={() => navigateTo('AssignedKits')}
+                >
+                  <Ionicons name="briefcase-sharp" size={24} color={Colors.primary} />
+                  <Text style={componentStyles.menuItemText}>Kits asignados</Text>
+                </TouchableOpacity>
+              )}
+              
+              <TouchableOpacity
+                style={componentStyles.menuItem}
+                onPress={() => navigateTo('DefaultKits')}
+              >
+                <Ionicons name="layers" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>
+                  Kits predeterminados
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
+                onPress={() => navigateTo('MyServices')}
+              >
+                <Ionicons name="construct-outline" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Mis Servicios</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

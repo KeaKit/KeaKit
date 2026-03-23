@@ -7,6 +7,10 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -18,14 +22,22 @@ public abstract class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
+    @Size(max = 255)
     @Column(nullable = false)
     protected String title;
 
+    @NotBlank
+    @Size(max = 1000)
     @Column(nullable = false, length = 1000)
     protected String description;
 
+    @NotBlank
+    @Size(max = 120)
     protected String city;
 
+    @NotNull
+    @Positive
     protected Double pricePerMonth;
 
     protected LocalDate availableFrom;
@@ -35,16 +47,23 @@ public abstract class Item {
     @JoinColumn(name = "category", referencedColumnName = "name", nullable = false)
     private Category category;
 
+    @NotNull
+    @Positive
     @Column
     protected Integer totalUnits = 1;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "item_allowed_methods", joinColumns = @JoinColumn(name = "item_id"))
+    @Column(name = "method", nullable = false)
+    @Enumerated(EnumType.STRING)
+    protected List<DeliveryMethod> allowedMethods = new ArrayList<>();
+
+    @Column(nullable = false)
+    protected boolean allowMonthFractions = false;
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
     protected User owner;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<KitItem> kitItems = new ArrayList<>();
 
     public Item() {}
 
@@ -137,6 +156,39 @@ public abstract class Item {
 
     public void setTotalUnits(Integer totalUnits) {
         this.totalUnits = totalUnits;
+    }
+
+    public List<DeliveryMethod> getAllowedMethods() {
+        return allowedMethods;
+    }
+
+    public void setAllowedMethods(List<DeliveryMethod> allowedMethods) {
+        this.allowedMethods = allowedMethods != null ? allowedMethods : new ArrayList<>();
+    }
+
+    public boolean isAllowMonthFractions() {
+        return allowMonthFractions;
+    }
+
+    public void setAllowMonthFractions(boolean allowMonthFractions) {
+        this.allowMonthFractions = allowMonthFractions;
+    }
+
+    public ItemMemento createSnapshot(Integer selectedUnits, DeliveryMethod selectedMethod, Double shippingFeeAtRental, String pickupAddressSnapshot) {
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(this.id);
+        snapshot.setSelectedUnits(selectedUnits != null ? selectedUnits : 1);
+        snapshot.setNameAtRental(this.title);
+        snapshot.setPriceAtRental(this.pricePerMonth);
+        snapshot.setOwnerAtRental(this.owner);
+        snapshot.setSelectedMethod(selectedMethod);
+        snapshot.setShippingFeeAtRental(shippingFeeAtRental);
+        snapshot.setPickupAddressSnapshot(pickupAddressSnapshot);
+        snapshot.setCategoryAtRental(this.category);
+        if (this instanceof Article) {
+            snapshot.setImageUrlAtRental(((Article) this).getImageUrl());
+        }
+        return snapshot;
     }
 
     @PrePersist
