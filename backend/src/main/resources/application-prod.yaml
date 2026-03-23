@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    # URL validada con tu instancia real en Google Cloud (Madrid)
+    url: jdbc:postgresql://localhost/postgres?socketFactory=com.google.cloud.sql.postgres.SocketFactory&cloudSqlInstance=keakitv1:europe-southwest1:keakit-db
+    username: postgres
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update # Cambiar a 'validate' en el futuro cuando la DB sea estable
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET}
+
+stripe:
+  api:
+    key: ${STRIPE_SECRET_KEY}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+app:
+  admin:
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
+    name: ${ADMIN_NAME}
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: native

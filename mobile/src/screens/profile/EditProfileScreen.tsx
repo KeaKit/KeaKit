@@ -11,7 +11,16 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  User, 
+  Phone, 
+  Home, 
+  Globe, 
+  MapPin, 
+  AlertCircle, 
+  TriangleAlert 
+} from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { updateProfile } from '../../services/userService';
@@ -120,17 +129,17 @@ const EditProfileScreen: React.FC = () => {
     key: keyof ProfileData;
     placeholder: string;
     keyboardType?: 'default' | 'phone-pad' | 'email-address';
-    icon: string;
+    icon: any;
   }[] = [
-    { key: 'name',    placeholder: 'Nombre completo', icon: 'person-outline' },
-    { key: 'phone',   placeholder: 'Teléfono',        icon: 'call-outline', keyboardType: 'phone-pad' },
-    { key: 'address', placeholder: 'Dirección',       icon: 'home-outline' },
+    { key: 'name',    placeholder: 'Nombre completo', icon: User },
+    { key: 'phone',   placeholder: 'Teléfono',        icon: Phone, keyboardType: 'phone-pad' },
+    { key: 'address', placeholder: 'Dirección',       icon: Home },
   ];
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#103a57" />
+        <ArrowLeft size={24} color="#103a57" />
       </TouchableOpacity>
 
       <Image source={require('../../../assets/logo.png')} style={styles.logo} />
@@ -138,10 +147,10 @@ const EditProfileScreen: React.FC = () => {
       <Text style={styles.title}>Editar perfil</Text>
       <Text style={styles.subtitle}>{profileUser?.email}</Text>
 
-      {fields.map(({ key, placeholder, keyboardType, icon }) => (
+      {fields.map(({ key, placeholder, keyboardType, icon: IconComponent }) => (
         <View key={key} style={styles.fieldWrapper}>
           <View style={styles.inputContainer}>
-            <Ionicons name={icon as any} size={20} color="#999" style={styles.fieldIcon} />
+            <IconComponent size={20} color="#999" style={styles.fieldIcon} />
             <TextInput
               style={[styles.input, errors[key] && styles.inputError]}
               placeholder={placeholder}
@@ -153,7 +162,7 @@ const EditProfileScreen: React.FC = () => {
           </View>
           {errors[key] && (
             <View style={styles.errorRow}>
-              <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+              <AlertCircle size={14} color="#d9534f" />
               <Text style={styles.errorText}>{errors[key]}</Text>
             </View>
           )}
@@ -162,7 +171,7 @@ const EditProfileScreen: React.FC = () => {
 
       <View style={styles.fieldWrapper}>
         <View style={[styles.inputContainer, errors.country && styles.inputErrorBorder]}>
-          <Ionicons name="earth-outline" size={20} color="#999" style={styles.fieldIcon} />
+          <Globe size={20} color="#999" style={styles.fieldIcon} />
           <SelectPicker
             options={EUROPEAN_COUNTRIES}
             selectedValue={selectedCountry}
@@ -175,7 +184,7 @@ const EditProfileScreen: React.FC = () => {
         </View>
         {errors.country && (
           <View style={styles.errorRow}>
-            <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+            <AlertCircle size={14} color="#d9534f" />
             <Text style={styles.errorText}>{errors.country}</Text>
           </View>
         )}
@@ -183,7 +192,7 @@ const EditProfileScreen: React.FC = () => {
 
       <View style={styles.fieldWrapper}>
         <View style={[styles.inputContainer, errors.city && styles.inputErrorBorder]}>
-          <Ionicons name="business-outline" size={20} color="#999" style={styles.fieldIcon} />
+          <MapPin size={20} color="#999" style={styles.fieldIcon} />
           {loadingCities
             ? <ActivityIndicator size="small" color="#999" style={{ flex: 1 }} />
             : <SelectPicker
@@ -200,7 +209,7 @@ const EditProfileScreen: React.FC = () => {
         </View>
         {errors.city && (
           <View style={styles.errorRow}>
-            <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
+            <AlertCircle size={14} color="#d9534f" />
             <Text style={styles.errorText}>{errors.city}</Text>
           </View>
         )}
@@ -208,7 +217,7 @@ const EditProfileScreen: React.FC = () => {
 
       {errors.general && (
         <View style={styles.generalError}>
-          <Ionicons name="warning-outline" size={16} color="#d9534f" />
+          <TriangleAlert size={16} color="#d9534f" />
           <Text style={styles.generalErrorText}>{errors.general}</Text>
         </View>
       )}
@@ -280,7 +289,6 @@ const styles = StyleSheet.create({
     height: 50,
     fontSize: 16,
     color: '#333',
-    ...(({ outlineWidth: 0, outlineStyle: 'none' } as any)),
   },
   inputError: {
     borderColor: '#d9534f',

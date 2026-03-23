@@ -11,7 +11,16 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  Flag, 
+  Briefcase, 
+  Box, 
+  ChevronDown, 
+  ChevronUp, 
+  CheckCircle2, 
+  Trash2 
+} from 'lucide-react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, KitResponse, KitStatus } from '../../types';
@@ -183,7 +192,7 @@ const handleConfirmKit = async () => {
 
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <ArrowLeft size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle del Kit</Text>
         {kit.status === KitStatus.PAID && (
@@ -191,7 +200,7 @@ const handleConfirmKit = async () => {
           onPress={handleReportProblem} 
           style={styles.reportButton}
         >
-          <Ionicons name="flag-outline" size={22} color="#FF3B30" />
+          <Flag size={22} color="#FF3B30" />
         </TouchableOpacity>
         )}
         {kit.status !== KitStatus.PAID && (
@@ -203,7 +212,7 @@ const handleConfirmKit = async () => {
         
         <View style={styles.mainCard}>
           <View style={styles.iconCircle}>
-            <Ionicons name="briefcase" size={40} color={Colors.primary} />
+            <Briefcase size={40} color={Colors.primary} />
           </View>
           <Text style={styles.kitNameText}>{kit.name}</Text>
           <View style={styles.statusBadge}>
@@ -272,7 +281,7 @@ const handleConfirmKit = async () => {
               <Text style={styles.verMasText}>
                 {expanded ? "Ver menos" : `Ver ${kit.items.length - 3} más...`}
               </Text>
-              <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color="#666" />
+              {expanded ? <ChevronUp size={16} color="#666" /> : <ChevronDown size={16} color="#666" />}
             </TouchableOpacity>
           )}
         </View>
@@ -395,7 +404,7 @@ const handleConfirmKit = async () => {
                   >
                     <Text style={styles.modalItemText}>{item.name}</Text>
                     {isSelected && (
-                      <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+                      <CheckCircle2 size={20} color={Colors.primary} />
                     )}
                   </TouchableOpacity>
                 );

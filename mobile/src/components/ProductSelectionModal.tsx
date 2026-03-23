@@ -6,9 +6,17 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Image,
+  Image as RNImage,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { 
+  Square, 
+  CheckSquare, 
+  Image as ImageIcon, 
+  MinusCircle, 
+  PlusCircle, 
+  CheckCircle2, 
+  Circle 
+} from "lucide-react-native";
 import { TextInput as PaperTextInput, Button } from "react-native-paper";
 import { Colors, commonStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
@@ -135,7 +143,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       return { ...p, isAvailable: true };
     });
 
-    // Filtrar por disponibilidad si el checkbox está activado
     if (showOnlyAvailable) {
       return mapped.filter((p) => p.isAvailable === true);
     }
@@ -185,11 +192,11 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   gap: 8,
                 }}
               >
-                <Ionicons
-                  name={showOnlyMyCity ? "checkbox" : "square-outline"}
-                  size={20}
-                  color={Colors.primary}
-                />
+                {showOnlyMyCity ? (
+                  <CheckSquare size={20} color={Colors.primary} />
+                ) : (
+                  <Square size={20} color={Colors.primary} />
+                )}
                 <Text style={{ color: Colors.primary, flex: 1 }}>
                   Solo productos en {userCity}
                 </Text>
@@ -215,11 +222,11 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   gap: 8,
                 }}
               >
-                <Ionicons
-                  name={showOnlyAvailable ? "checkbox" : "square-outline"}
-                  size={20}
-                  color={Colors.primary}
-                />
+                {showOnlyAvailable ? (
+                  <CheckSquare size={20} color={Colors.primary} />
+                ) : (
+                  <Square size={20} color={Colors.primary} />
+                )}
                 <Text style={{ color: Colors.primary, flex: 1 }}>
                   Solo productos disponibles en las fechas seleccionadas
                 </Text>
@@ -286,7 +293,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                     disabled={isDisabled}
                   >
                     {p.imageUrl ? (
-                      <Image
+                      <RNImage
                         source={{ uri: p.imageUrl }}
                         style={{
                           width: 60,
@@ -308,8 +315,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                           marginRight: 12,
                         }}
                       >
-                        <Ionicons
-                          name="image-outline"
+                        <ImageIcon
                           size={24}
                           color={Colors.textSecondary}
                         />
@@ -375,8 +381,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                             accessibilityRole="button"
                             accessibilityLabel={`Reducir unidades de ${p.title}`}
                           >
-                            <Ionicons
-                              name="remove-circle-outline"
+                            <MinusCircle
                               size={22}
                               color={Colors.primary}
                             />
@@ -397,8 +402,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                             accessibilityRole="button"
                             accessibilityLabel={`Aumentar unidades de ${p.title}`}
                           >
-                            <Ionicons
-                              name="add-circle-outline"
+                            <PlusCircle
                               size={22}
                               color={
                                 selectedQuantity >= p.totalUnits
@@ -418,11 +422,11 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       <Text style={commonStyles.bodySecondary}>/ mes</Text>
                     </View>
                     {!isDisabled && (
-                      <Ionicons
-                        name={checked ? "checkmark-circle" : "ellipse-outline"}
-                        size={22}
-                        color={checked ? Colors.success : Colors.primary}
-                      />
+                      checked ? (
+                        <CheckCircle2 size={22} color={Colors.success} />
+                      ) : (
+                        <Circle size={22} color={Colors.primary} />
+                      )
                     )}
                   </Pressable>
                 );

@@ -8,7 +8,15 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  Lock, 
+  AlertCircle, 
+  Pencil, 
+  Trash2, 
+  UserPlus, 
+  ArrowLeft, 
+  Users 
+} from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
@@ -30,7 +38,7 @@ const AdminUsersScreen: React.FC = () => {
     return (
       <SafeAreaView style={commonStyles.container}>
         <View style={styles.centerContainer}>
-          <Ionicons name="lock-closed-outline" size={80} color="#d9534f" />
+          <Lock size={80} color="#d9534f" />
           <Text style={styles.errorText}>
             No tienes acceso a este contenido
           </Text>
@@ -50,12 +58,9 @@ const AdminUsersScreen: React.FC = () => {
         try {
           setLoading(true);
           setError(null);
-          console.log('[AdminUsersScreen] Cargando usuarios...');
           const data = await getAllUsers(user.token);
-          console.log('[AdminUsersScreen] Usuarios cargados:', data);
           setUsers(data);
         } catch (err) {
-          console.error('[AdminUsersScreen] Error cargando usuarios:', err);
           setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
           setLoading(false);
@@ -70,12 +75,9 @@ const AdminUsersScreen: React.FC = () => {
     if (!user) return;
     try {
       setLoading(true);
-      console.log(`[AdminUsersScreen] Eliminando usuario ${id}...`);
       await deleteUser(id, user.token);
       setUsers(users.filter(u => u.id !== id));
-      console.log(`[AdminUsersScreen] Usuario ${id} eliminado`);
     } catch (err) {
-      console.error('[AdminUsersScreen] Error eliminando usuario:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
@@ -97,7 +99,7 @@ const AdminUsersScreen: React.FC = () => {
     return (
       <SafeAreaView style={commonStyles.container}>
         <View style={styles.centerContainer}>
-          <Ionicons name="alert-circle-outline" size={60} color="#d9534f" />
+          <AlertCircle size={60} color="#d9534f" />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
             <Text style={styles.retryButtonText}>Volver</Text>
@@ -107,7 +109,7 @@ const AdminUsersScreen: React.FC = () => {
     );
   }
 
- const renderUser = ({ item }: { item: UserResponse }) => (
+  const renderUser = ({ item }: { item: UserResponse }) => (
     <View style={styles.userCard}>
       <View>
         <Text style={styles.userName}>{item.name}</Text>
@@ -119,17 +121,16 @@ const AdminUsersScreen: React.FC = () => {
           style={styles.editButton}
           onPress={() => navigation.navigate('AdminUserForm' as any, { user: item })}
         >
-          <Ionicons name="create-outline" size={22} color="#fff" />
+          <Pencil size={20} color="#fff" />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => handleDelete(item.id)}
         >
-          <Ionicons name="trash-outline" size={22} color="#fff" />
+          <Trash2 size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-
     </View>
   );
 
@@ -140,14 +141,14 @@ const AdminUsersScreen: React.FC = () => {
           style={styles.createButton}
           onPress={() => navigation.navigate('AdminUserForm' as any)}
         >
-          <Ionicons name="person-add-outline" size={20} color="#fff" />
+          <UserPlus size={20} color="#fff" />
           <Text style={styles.createButtonText}>Crear usuario</Text>
         </TouchableOpacity>
       </View>
 
       <View style={commonStyles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <ArrowLeft size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Usuarios</Text>
         <View style={styles.headerRight} />
@@ -155,7 +156,7 @@ const AdminUsersScreen: React.FC = () => {
 
       {users.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="people-outline" size={80} color="#ccc" />
+          <Users size={80} color="#ccc" />
           <Text style={styles.emptyText}>No hay usuarios registrados</Text>
         </View>
       ) : (
@@ -264,7 +265,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     marginBottom: Spacing.sm,
   },
-
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -273,7 +273,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignSelf: 'flex-start',
   },
-
   createButtonText: {
     color: '#fff',
     marginLeft: 6,

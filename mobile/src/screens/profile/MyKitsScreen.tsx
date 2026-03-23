@@ -8,7 +8,12 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { 
+  ArrowLeft, 
+  Briefcase, 
+  MapPin, 
+  Inbox 
+} from "lucide-react-native";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -124,7 +129,7 @@ const MyKitsScreen: React.FC = () => {
           </View>
 
           <Text style={styles.locationText}>
-            <Ionicons name="location-outline" size={13} color="#888" />{" "}
+            <MapPin size={13} color="#888" />{" "}
             {item.city}, {item.country}
           </Text>
 
@@ -172,7 +177,7 @@ const MyKitsScreen: React.FC = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <ArrowLeft size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mis Alquileres</Text>
         <TouchableOpacity
@@ -193,7 +198,7 @@ const MyKitsScreen: React.FC = () => {
         </View>
       ) : kits.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="file-tray-full-outline" size={80} color="#ccc" />
+          <Inbox size={80} color="#ccc" />
           <Text style={styles.emptyText}>No tienes alquileres vigentes</Text>
           <Text style={styles.emptySubtext}>
             Explora el catálogo para alquilar tu primer kit de artículos

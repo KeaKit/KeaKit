@@ -11,7 +11,7 @@ import {
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { ArrowLeft, Calendar, Truck, MapPin, Plus, ShoppingCart } from "lucide-react-native";
 import { DatePickerModal } from "react-native-paper-dates";
 import { es, registerTranslation } from "react-native-paper-dates";
 import { useLocationPicker } from '../../hooks/useLocationPicker';

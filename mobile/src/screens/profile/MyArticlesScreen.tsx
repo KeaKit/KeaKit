@@ -10,7 +10,17 @@ import {
   Pressable,
   Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  Image as ImageIcon, 
+  Banknote, 
+  Calendar, 
+  Pencil, 
+  Trash2, 
+  AlertCircle, 
+  Package, 
+  Plus 
+} from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -176,7 +186,7 @@ const MyArticlesScreen: React.FC = () => {
               <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
             ) : (
               <View style={styles.noImagePlaceholder}>
-                <Ionicons name="image-outline" size={40} color="#ccc" />
+                <ImageIcon size={40} color="#ccc" />
               </View>
             )}
           </View>
@@ -207,7 +217,7 @@ const MyArticlesScreen: React.FC = () => {
             onPress={() => handleEdit(item)}
             disabled={isDeleting}
           >
-            <Ionicons name="pencil-outline" size={20} color={Colors.primary} />
+            <Pencil size={20} color={Colors.primary} />
           </Pressable>
 
           <Pressable
@@ -240,7 +250,7 @@ const MyArticlesScreen: React.FC = () => {
     return (
       <SafeAreaView style={commonStyles.container}>
         <View style={styles.centerContainer}>
-          <Ionicons name="alert-circle-outline" size={60} color="#d9534f" />
+          <AlertCircle size={60} color="#d9534f" />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
             <Text style={styles.retryButtonText}>Volver</Text>
@@ -254,7 +264,7 @@ const MyArticlesScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.container}>
       <View style={commonStyles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <ArrowLeft size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mis Artículos</Text>
         <View style={styles.headerRight} />
@@ -276,7 +286,7 @@ const MyArticlesScreen: React.FC = () => {
 
       {filteredArticles.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="cube-outline" size={80} color="#ccc" />
+          <Package size={80} color="#ccc" />
           <Text style={styles.emptyText}>
             {filter === 'ALL'
               ? 'No tienes artículos subidos'
@@ -299,7 +309,7 @@ const MyArticlesScreen: React.FC = () => {
         onPress={() => navigation.navigate('UploadArticle')}
         activeOpacity={0.85}
       >
-        <Ionicons name="add" size={32} color="#fff" />
+        <Plus size={32} color="#fff" />
       </TouchableOpacity>
 
       {/* Modal de confirmación para eliminar */}

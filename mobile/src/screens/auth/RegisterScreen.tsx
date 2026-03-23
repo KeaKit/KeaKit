@@ -12,7 +12,20 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  User, 
+  Mail, 
+  Phone, 
+  Home, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  AlertCircle, 
+  Globe, 
+  MapPin, 
+  TriangleAlert 
+} from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
@@ -50,16 +63,16 @@ type FieldConfig = {
   autoCapitalize?: 'none' | 'sentences';
   secure?: boolean;
   fullWidth?: boolean;
-  icon: string;
+  icon: any;
 };
 
 const FIELDS: FieldConfig[] = [
-  { key: 'name',     placeholder: 'Nombre completo',    fullWidth: true,  icon: 'person-outline' },
-  { key: 'email',    placeholder: 'Correo electrónico', keyboardType: 'email-address', autoCapitalize: 'none', icon: 'mail-outline' },
-  { key: 'phone',    placeholder: 'Teléfono',           keyboardType: 'phone-pad', icon: 'call-outline' },
-  { key: 'address',  placeholder: 'Dirección',          fullWidth: true,  icon: 'home-outline' },
-  { key: 'password', placeholder: 'Contraseña',         secure: true,     icon: 'lock-closed-outline' },
-  { key: 'confirm',  placeholder: 'Repetir contraseña', secure: true,     icon: 'lock-closed-outline' },
+  { key: 'name',     placeholder: 'Nombre completo',    fullWidth: true,  icon: User },
+  { key: 'email',    placeholder: 'Correo electrónico', keyboardType: 'email-address', autoCapitalize: 'none', icon: Mail },
+  { key: 'phone',    placeholder: 'Teléfono',           keyboardType: 'phone-pad', icon: Phone },
+  { key: 'address',  placeholder: 'Dirección',          fullWidth: true,  icon: Home },
+  { key: 'password', placeholder: 'Contraseña',         secure: true,     icon: Lock },
+  { key: 'confirm',  placeholder: 'Repetir contraseña', secure: true,     icon: Lock },
 ];
 
 const RegisterScreen: React.FC = () => {
@@ -131,7 +144,7 @@ const RegisterScreen: React.FC = () => {
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#103a57" />
+        <ArrowLeft size={24} color="#103a57" />
       </TouchableOpacity>
       <Image
         source={require('../../../assets/logo.png')}
@@ -139,10 +152,10 @@ const RegisterScreen: React.FC = () => {
       />
 
       <View style={styles.grid}>
-        {FIELDS.map(({ key, placeholder, keyboardType, autoCapitalize, secure, fullWidth, icon }) => (
+        {FIELDS.map(({ key, placeholder, keyboardType, autoCapitalize, secure, fullWidth, icon: IconComponent }) => (
           <View key={key} style={[styles.fieldWrapper, fullWidth && styles.fieldFull]}>
             <View style={[styles.inputContainer, errors[key as keyof FieldErrors] && styles.inputError]}>
-              <Ionicons name={icon as any} size={20} color="#999" style={styles.fieldIcon} />
+              <IconComponent size={20} color="#999" style={styles.fieldIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={placeholder}
@@ -155,13 +168,17 @@ const RegisterScreen: React.FC = () => {
               />
               {secure && (
                 <TouchableOpacity onPress={() => setShowPassword(prev => !prev)} activeOpacity={0.7}>
-                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
+                  {showPassword ? (
+                    <EyeOff size={20} color="#999" />
+                  ) : (
+                    <Eye size={20} color="#999" />
+                  )}
                 </TouchableOpacity>
               )}
             </View>
             {errors[key as keyof FieldErrors] && (
               <View style={styles.errorRow}>
-                <Ionicons name="alert-circle-outline" size={13} color="#d9534f" />
+                <AlertCircle size={13} color="#d9534f" />
                 <Text style={styles.errorText}>{errors[key as keyof FieldErrors]}</Text>
               </View>
             )}
@@ -170,7 +187,7 @@ const RegisterScreen: React.FC = () => {
 
         <View style={styles.fieldWrapper}>
           <View style={[styles.inputContainer, errors.country && styles.inputError]}>
-            <Ionicons name="earth-outline" size={20} color="#999" style={styles.fieldIcon} />
+            <Globe size={20} color="#999" style={styles.fieldIcon} />
             <SelectPicker
               options={EUROPEAN_COUNTRIES}
               selectedValue={selectedCountry}
@@ -183,7 +200,7 @@ const RegisterScreen: React.FC = () => {
           </View>
           {errors.country && (
             <View style={styles.errorRow}>
-              <Ionicons name="alert-circle-outline" size={13} color="#d9534f" />
+              <AlertCircle size={13} color="#d9534f" />
               <Text style={styles.errorText}>{errors.country}</Text>
             </View>
           )}
@@ -191,7 +208,7 @@ const RegisterScreen: React.FC = () => {
 
         <View style={styles.fieldWrapper}>
           <View style={[styles.inputContainer, errors.city && styles.inputError]}>
-            <Ionicons name="business-outline" size={20} color="#999" style={styles.fieldIcon} />
+            <MapPin size={20} color="#999" style={styles.fieldIcon} />
             {loadingCities
               ? <ActivityIndicator size="small" color="#999" style={{ flex: 1 }} />
               : <SelectPicker
@@ -208,7 +225,7 @@ const RegisterScreen: React.FC = () => {
           </View>
           {errors.city && (
             <View style={styles.errorRow}>
-              <Ionicons name="alert-circle-outline" size={13} color="#d9534f" />
+              <AlertCircle size={13} color="#d9534f" />
               <Text style={styles.errorText}>{errors.city}</Text>
             </View>
           )}
@@ -217,7 +234,7 @@ const RegisterScreen: React.FC = () => {
 
       {errors.general && (
         <View style={styles.generalError}>
-          <Ionicons name="warning-outline" size={16} color="#d9534f" />
+          <TriangleAlert size={16} color="#d9534f" />
           <Text style={styles.generalErrorText}>{errors.general}</Text>
         </View>
       )}
@@ -295,7 +312,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: '#333',
-    ...(({ outlineWidth: 0, outlineStyle: 'none' } as any)),
   },
   inputError: {
     borderColor: '#d9534f',

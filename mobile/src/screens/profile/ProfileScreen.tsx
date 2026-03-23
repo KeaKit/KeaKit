@@ -10,7 +10,16 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  User, 
+  Mail, 
+  Phone, 
+  Home, 
+  Building2, 
+  Globe, 
+  Pencil 
+} from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { getWalletByUserId } from '../../services/walletService';

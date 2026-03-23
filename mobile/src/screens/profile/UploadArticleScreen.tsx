@@ -3,7 +3,18 @@ import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, TextInput, ActivityIndicator, Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  AlertCircle, 
+  ArrowLeft, 
+  ChevronUp, 
+  ChevronDown, 
+  Check, 
+  Image as ImageIcon, 
+  Images, 
+  Camera, 
+  XCircle, 
+  CloudUpload 
+} from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -61,7 +72,7 @@ const Field: React.FC<FieldProps> = ({
     />
     {!!error && (
       <View style={commonStyles.errorContainer}>
-        <Ionicons name="alert-circle" size={14} color={Colors.error} />
+        <AlertCircle size={14} color={Colors.error} />
         <Text style={commonStyles.errorText}>{error}</Text>
       </View>
     )}
