@@ -15,6 +15,7 @@ public class KitResponse {
 
     public static class KitItemResponse {
         private Long itemId;
+        private Long ownerId;
         private Integer quantity;
         private Double pricePerMonth;
         private String name;
@@ -23,6 +24,7 @@ public class KitResponse {
 
         public KitItemResponse(
             Long itemId,
+            Long ownerId,
             Integer quantity,
             Double pricePerMonth,
             String name,
@@ -30,6 +32,7 @@ public class KitResponse {
             String imageUrl
         ) {
             this.itemId = itemId;
+            this.ownerId = ownerId;
             this.quantity = quantity;
             this.pricePerMonth = pricePerMonth;
             this.name = name;
@@ -39,6 +42,10 @@ public class KitResponse {
 
         public Long getItemId() {
             return itemId;
+        }
+
+        public Long getOwnerId() {
+            return ownerId;
         }
 
         public Integer getQuantity() {
@@ -105,6 +112,7 @@ public class KitResponse {
         this.items = snapshots.stream()
             .map(s -> new KitItemResponse(
                 s.getOriginalItemId(),
+                s.getOwnerAtRental() != null ? s.getOwnerAtRental().getId() : null,
                 s.getSelectedUnits(),
                 s.getPriceAtRental(),
                 s.getNameAtRental(),

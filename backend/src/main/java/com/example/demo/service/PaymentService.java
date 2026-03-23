@@ -122,9 +122,11 @@ public class PaymentService {
     }
 
     private void processItemPaymentToOwner(KitItemResponse item) throws ResourceNotFoundException {
-        // El itemService debe lanzar sus propias excepciones si no encuentra el item
-        Item itemDetails = itemService.findById(item.getItemId());
-        Long ownerId = itemDetails.getOwner().getId();
+        Long ownerId = item.getOwnerId();
+        if (ownerId == null) {
+            Item itemDetails = itemService.findById(item.getItemId());
+            ownerId = itemDetails.getOwner().getId();
+        }
 
         double basePrice = item.getPricePerMonth() * item.getQuantity();
         Double finalPrice = calculateFinalOwnerPrice(basePrice);
