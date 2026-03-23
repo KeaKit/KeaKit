@@ -34,10 +34,6 @@ app:
       password: ${ADMIN_PASSWORD:admin123}
       name: ${ADMIN_NAME:Admin Initial}
 
-stripe:
-  api:
-    key: ${STRIPE_SECRET_KEY}
-
 cloudinary:
   cloud_name: ${CLOUDINARY_CLOUD_NAME}
   api_key: ${CLOUDINARY_API_KEY}
