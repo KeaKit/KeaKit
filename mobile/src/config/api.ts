@@ -1,4 +1,4 @@
-const BASE_URL = 'https://backend-service-907955565973.europe-southwest1.run.app';
+const BASE_URL = 'https://keakitv2api.duckdns.org';
 
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
