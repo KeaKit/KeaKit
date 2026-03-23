@@ -129,7 +129,7 @@ const EditProfileScreen: React.FC = () => {
     key: keyof ProfileData;
     placeholder: string;
     keyboardType?: 'default' | 'phone-pad' | 'email-address';
-    icon: any
+    icon: any;
   }[] = [
     { key: 'name',    placeholder: 'Nombre completo', icon: User },
     { key: 'phone',   placeholder: 'Teléfono',        icon: Phone, keyboardType: 'phone-pad' },

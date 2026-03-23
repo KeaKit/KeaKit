@@ -354,7 +354,7 @@ const IncidentDetailScreen: React.FC = () => {
           <View style={styles.actionButtonsRow}>
             <TouchableOpacity
               style={[styles.resolveButton, resolving && styles.buttonDisabled]}
-              onPress={() => setShowResolveModal(true)}
+              onPress={() => { setShowResolveModal(true); }}
               disabled={resolving}
               activeOpacity={0.7}
             >
@@ -369,7 +369,7 @@ const IncidentDetailScreen: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.deleteButton, deleting && styles.buttonDisabled, styles.deleteButtonHalf]}
-              onPress={() => setShowDeleteModal(true)}
+              onPress={() => { setShowDeleteModal(true); }}
               disabled={deleting}
               activeOpacity={0.7}
             >
@@ -408,7 +408,7 @@ const IncidentDetailScreen: React.FC = () => {
                   style={[styles.modalConfirmButton, { backgroundColor: Colors.success }]}
                   onPress={() => {
                     setShowResolveModal(false);
-                    handleResolve();
+                    void handleResolve();
                   }}
                 >
                   <Text style={styles.modalConfirmText}>Confirmar</Text>
@@ -441,7 +441,7 @@ const IncidentDetailScreen: React.FC = () => {
                   style={[styles.modalConfirmButton, { backgroundColor: Colors.error }]}
                   onPress={() => {
                     setShowDeleteModal(false);
-                    handleDelete();
+                    void handleDelete();
                   }}
                 >
                   <Text style={styles.modalConfirmText}>Eliminar</Text>
