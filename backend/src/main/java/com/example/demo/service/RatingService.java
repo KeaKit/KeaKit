@@ -14,7 +14,9 @@ import com.example.demo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +44,10 @@ public class RatingService {
 
         if (reviewer.getId().equals(reviewee.getId())) {
             throw new InvalidRatingException("You cannot rate yourself");
+        }
+
+        if (!kit.getStatus().equals(KitStatus.FINISHED)) {
+            throw new InvalidRatingException("You cannot rate a not finished kit rent");
         }
 
         if (ratingRepository.existsByReviewerIdAndRevieweeIdAndKitId(
@@ -109,5 +115,32 @@ public class RatingService {
         }
 
         throw new InvalidRatingException("Reviewer is not a party to this kit");
+    }
+
+    public Map<Long, Boolean> hasReviewedItems(Long reviewerId, Long kitId, List<Long> itemIds) {
+        Kit kit = kitRepository.findById(kitId)
+                .orElseThrow(() -> new RuntimeException("Kit not found with id: " + kitId));
+
+        Map<Long, Long> itemToOwnerMap = kit.getSnapshots().stream()
+                .filter(snapshot -> itemIds.contains(snapshot.getOriginalItemId()))
+                .collect(Collectors.toMap(
+                        snapshot -> snapshot.getOriginalItemId(),
+                        snapshot -> snapshot.getOwnerAtRental().getId()
+                ));
+
+        Map<Long, Boolean> result = new HashMap<>();
+        for (Long itemId : itemIds) {
+            Long revieweeId = itemToOwnerMap.get(itemId);
+            if (revieweeId == null) {
+                result.put(itemId, false);
+            } else {
+                boolean alreadyRated = ratingRepository.existsByReviewerIdAndRevieweeIdAndKitId(
+                        reviewerId, revieweeId, kitId
+                );
+                result.put(itemId, alreadyRated);
+            }
+        }
+
+        return result;
     }
 }
