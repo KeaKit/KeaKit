@@ -15,17 +15,13 @@ public class Country {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column(unique = true, nullable = false, length = 2)
-    private String isoCode;
-
     @OneToMany(mappedBy = "country", cascade = CascadeType.ALL)
     private List<City> cities;
 
     public Country() {}
 
-    public Country(String name, String isoCode) {
+    public Country(String name) {
         this.name = name;
-        this.isoCode = isoCode;
     }
 
     public Long getId() {
@@ -42,14 +38,6 @@ public class Country {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getIsoCode() {
-        return isoCode;
-    }
-
-    public void setIsoCode(String isoCode) {
-        this.isoCode = isoCode;
     }
 
     public List<City> getCities() {

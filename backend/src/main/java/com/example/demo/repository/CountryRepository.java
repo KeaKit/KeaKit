@@ -9,5 +9,5 @@ import com.example.demo.model.Country;
 
 @Repository
 public interface CountryRepository extends JpaRepository<Country, Long> {
-    Optional<Country> findByIsoCode(String isoCode);
+    Optional<Country> findByName(String name);
 }

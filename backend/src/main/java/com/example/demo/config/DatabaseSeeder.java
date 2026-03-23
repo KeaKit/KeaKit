@@ -3,13 +3,12 @@ package com.example.demo.config;
 import com.example.demo.model.*; 
 import com.example.demo.repository.*;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.example.demo.tools.CityLoaders;
+import com.example.demo.tools.CityLoader;
 
 import java.util.List;
 import java.time.LocalDate;
@@ -17,9 +16,6 @@ import java.time.LocalDateTime;
 
 @Configuration
 public class DatabaseSeeder {
-
-    @Value("${GEONAMES_USERNAME}")
-    private String geoNamesUsername;
 
     @Bean
     CommandLineRunner initDatabase(
@@ -178,14 +174,8 @@ public class DatabaseSeeder {
             feedback.setCreatedAt(LocalDateTime.now());
             ratingRepo.save(feedback);
 
-            // 9. Países Y ciudades
-            if (cityRepo.count() == 0) {
-                boolean loaded = CityLoaders.loadFromGeoNames(countryRepo, cityRepo, geoNamesUsername);
-                if (!loaded) {
-                    System.out.println("GeoNames falló, cargando desde JSON local.");
-                    CityLoaders.loadFromJson(countryRepo, cityRepo);
-                }
-            }
+            // 9. Países Y ciudades       
+            CityLoader.loadFromJson(countryRepo, cityRepo);          
 
             System.out.println("✅ Seeder finalizado: Datos cargados en los 10 repositorios.");
 
