@@ -16,7 +16,7 @@ public class CityService {
 
     public List<String> getAllCityNamesByCountryName(String countryName) {
         return cityRepository.findByCountryName(countryName)
-        .stream().map(c -> c.getName())
+        .stream().map(c -> c.getName()).sorted()
         .collect(Collectors.toList());
     }
 }

@@ -10,7 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { uploadArticle, uploadArticleWithImage } from '../../services/articleService';
 import { fetchAllCategories } from '../../services/categoryService';
-import { ArticlePayload, ArticleCondition, RootStackParamList, Category, EUROPEAN_COUNTRIES } from '../../types';
+import { ArticlePayload, ArticleCondition, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
@@ -120,6 +120,7 @@ const UploadArticleScreen: React.FC = () => {
     selectedCity,
     setSelectedCity,
     cities,
+    countries,
     loadingCities,
     onCountryChange,
   } = useLocationPicker();
@@ -302,7 +303,7 @@ const UploadArticleScreen: React.FC = () => {
               <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
                 <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
                 <SelectPicker
-                  options={EUROPEAN_COUNTRIES}
+                  options={countries}
                   selectedValue={selectedCountry}
                   placeholder="Selecciona un país"
                   onValueChange={(value: string) => {
