@@ -42,7 +42,7 @@ import {
 } from "./createKitSelection";
 import { styles } from "../../styles/uploadArticleScreenStyles";
 
-const COMISION = 0.2; // 20% de comisión sobre el precio total del kit
+const COMISION = 0; // todos son usuarios pilotos y no se cobra comision
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
 const PLATFORM_COURIER_PRICE = 9.99;
 
@@ -320,7 +320,7 @@ const CreateKitScreen: React.FC = () => {
     deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
   const kitPayment = useMemo(() => {
-    const subtotal = Math.round(totalPrice * 100); // convertir a centavos
+    const subtotal = Math.round(totalPrice * 100); 
     const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
     const platformfee = Math.round(subtotal * COMISION);
     const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
