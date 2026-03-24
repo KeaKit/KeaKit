@@ -816,7 +816,7 @@ public class KitServiceTest {
 
         KitCreateRequest request = new KitCreateRequest(
             "Kit Pago", "ES", "MAD",
-            LocalDate.now(), LocalDate.now().plusDays(7),
+            LocalDate.now(), LocalDate.now().plusMonths(1),
             KitStatus.DRAFT, DeliveryMethod.COURIER, null,
             1L, List.of(selection1, selection2)
         );
@@ -835,7 +835,7 @@ public class KitServiceTest {
 
         KitCreateRequest request = new KitCreateRequest(
             "Kit Pago", "ES", "MAD",
-            LocalDate.now(), LocalDate.now().plusDays(7),
+            LocalDate.now(), LocalDate.now().plusMonths(1),
             KitStatus.DRAFT, DeliveryMethod.MEETING_POINT, "Plaza Mayor",
             1L, List.of(selection)
         );
@@ -860,6 +860,9 @@ public class KitServiceTest {
 
         Kit kit = new Kit();
         kit.setId(77L);
+    // Ensure start/end dates are set so calculateMonthsBetween does not NPE
+    kit.setStartDate(LocalDate.now());
+    kit.setEndDate(LocalDate.now().plusMonths(1));
         kit.setDeliveryMethod(DeliveryMethod.COURIER);
         kit.setSnapshots(List.of(snapshot1, snapshot2));
 
@@ -904,6 +907,8 @@ public class KitServiceTest {
 
         Kit kit = new Kit();
         kit.setId(88L);
+    kit.setStartDate(LocalDate.now());
+    kit.setEndDate(LocalDate.now().plusMonths(1));
         kit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
         kit.setSnapshots(List.of(serviceSnapshot1, serviceSnapshot2));
 
