@@ -288,13 +288,14 @@ const CreateKitScreen: React.FC = () => {
   const kitPayment = useMemo(() => {
     const subtotal = Math.round(totalPrice * 100); // convertir a centavos
     const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
-    const commission = Math.round(subtotal * COMISION);
+    const platformfee = Math.round(subtotal * COMISION);
     const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
-    const total = subtotal + guarantee + commission + courier;
+    const total = subtotal + guarantee + platformfee + courier;
 
     return {
       subtotalPrice: subtotal,
       guarantee: guarantee,
+      platformfee: platformfee,
       courierPrice: courier,
       totalPrice: total,
     };
