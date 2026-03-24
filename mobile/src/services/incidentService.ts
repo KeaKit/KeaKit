@@ -31,6 +31,16 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
+export async function getAllIncidents(
+  token: string,
+): Promise<IncidentResponse[]> {
+  const res = await fetch(API_ROUTES.GET_ALL_INCIDENTS, {
+    method: 'GET',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<IncidentResponse[]>(res);
+}
+
 export async function getIncidentsByUser(
   userId: number,
   token: string,

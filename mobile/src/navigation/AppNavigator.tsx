@@ -19,6 +19,7 @@ import MyArticlesScreen from '../screens/profile/MyArticlesScreen';
 import MyKitsScreen from '../screens/profile/MyKitsScreen';
 import MyServicesScreen from '../screens/service/MyServicesScreen';
 import MyIncidentsScreen from '../screens/incidents/MyIncidentsScreen';
+import AdminIncidentsScreen from '../screens/admin/AdminIncidentsScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
 import CategoriesScreen from '../screens/category/CategoriesScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
@@ -51,6 +52,7 @@ import CouriersScreen from '../screens/admin/CouriersScreen';
 import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
 
 import { RootStackParamList } from '../types';
+import ArticleRentalsScreen from '../screens/article/ArticleRentalsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -97,6 +99,14 @@ const AppNavigator: React.FC = () => {
                   {() => (
                     <MainLayout>
                       <MyArticlesScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="ArticleRentals">
+                  {() => (
+                    <MainLayout>
+                      <ArticleRentalsScreen />
                     </MainLayout>
                   )}
                 </Stack.Screen>
@@ -188,6 +198,14 @@ const AppNavigator: React.FC = () => {
                       {() => (
                         <MainLayout>
                           <CouriersScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+
+                    <Stack.Screen name="AdminIncidents">
+                      {() => (
+                        <MainLayout>
+                          <AdminIncidentsScreen />
                         </MainLayout>
                       )}
                     </Stack.Screen>

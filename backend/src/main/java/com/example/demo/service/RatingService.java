@@ -143,4 +143,31 @@ public class RatingService {
 
         return result;
     }
+
+    public Map<Long, Boolean> hasReviewedItemInKits(Long reviewerId, Long itemId, List<Long> kitIds) {
+    Map<Long, Boolean> result = new HashMap<>();
+
+    for (Long kitId : kitIds) {
+        Kit kit = kitRepository.findById(kitId)
+                .orElse(null);
+
+        if (kit == null) {
+            result.put(kitId, false);
+            continue;
+        }
+
+        Long revieweeId = kit.getTenant().getId();
+
+        if (revieweeId == null) {
+            result.put(kitId, false);
+        } else {
+            boolean alreadyRated = ratingRepository.existsByReviewerIdAndRevieweeIdAndKitId(
+                    reviewerId, revieweeId, kitId
+            );
+            result.put(kitId, alreadyRated);
+        }
+    }
+
+    return result;
+}
 }

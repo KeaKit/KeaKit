@@ -55,6 +55,9 @@ public class KitService {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     // TODO: Obtener la garantía de la configuración hecha por el admin
     private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2;
 

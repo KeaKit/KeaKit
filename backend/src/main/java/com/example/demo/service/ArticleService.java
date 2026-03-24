@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.example.demo.dto.ArticleNearbyDTO;
 import com.example.demo.dto.CityCoordinatesDTO;
+import com.example.demo.dto.ArticleRecordDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
@@ -448,5 +449,24 @@ public class ArticleService {
                  + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                  * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    public List<ArticleRecordDTO> findArticleRecord(Long articleId) {
+        List<Kit> kitsWhereArticleHasBeen = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
+        List<ArticleRecordDTO> articleRecord = kitsWhereArticleHasBeen.stream()
+        .filter(k -> k.getStatus() != KitStatus.DRAFT && k.getStatus() != KitStatus.CANCELLED)
+        .map(k -> {
+            ArticleRecordDTO row = new ArticleRecordDTO();
+            row.setTenantName(k.getTenant().getName());
+            row.setTenantId(k.getTenant().getId());
+            row.setStartDate(k.getStartDate());
+            row.setEndDate(k.getEndDate());
+            row.setStatus(k.getStatus());
+            row.setCity(k.getCity());
+            row.setCountry(k.getCountry());
+            row.setKitId(k.getId());
+            return row;
+        }).collect(Collectors.toList());
+        return articleRecord;
     }
 }
