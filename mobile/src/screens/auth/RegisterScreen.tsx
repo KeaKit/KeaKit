@@ -16,7 +16,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
-import { EUROPEAN_COUNTRIES } from '../../types';
 import { SelectPicker } from '../../components/SelectPicker';
 
 type RegisterNav = NativeStackNavigationProp<RootStackParamList, 'Register'>;
@@ -80,6 +79,7 @@ const RegisterScreen: React.FC = () => {
     setSelectedCity,
     cities,
     loadingCities,
+    countries,
     onCountryChange,
   } = useLocationPicker();
 
@@ -172,7 +172,7 @@ const RegisterScreen: React.FC = () => {
           <View style={[styles.inputContainer, errors.country && styles.inputError]}>
             <Ionicons name="earth-outline" size={20} color="#999" style={styles.fieldIcon} />
             <SelectPicker
-              options={EUROPEAN_COUNTRIES}
+              options={countries}
               selectedValue={selectedCountry}
               placeholder="País"
               onValueChange={(value: string) => {

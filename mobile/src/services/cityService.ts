@@ -9,3 +9,19 @@ export async function fetchCities(country: string): Promise<string[]> {
 
   return response.json();
 }
+
+export async function fetchCountries(): Promise<string[]> {
+  const response = await fetch(API_ROUTES.GET_COUNTRIES);
+  if (!response.ok) throw new Error('Error al obtener los países');
+  return response.json();
+}
+
+export async function getCityCoordinates(
+  city: string,
+  country: string,
+): Promise<{ lat: number; lng: number } | null> {
+  const response = await fetch(API_ROUTES.CITY_COORDINATES(city, country));
+  if (!response.ok) return null;
+  const data = await response.json();
+  return { lat: data.lat, lng: data.lng };
+}

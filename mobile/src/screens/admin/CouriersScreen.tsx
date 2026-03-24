@@ -8,7 +8,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../../context/AuthContext";
 import { getAllUsers } from "../../services/adminService";
-import { RootStackParamList, UserResponse, EUROPEAN_COUNTRIES } from "../../types";
+import { RootStackParamList, UserResponse } from "../../types";
 import { Colors, Spacing, commonStyles } from "../../styles";
 import { SelectPicker } from "../../components/SelectPicker";
 import { useLocationPicker } from "../../hooks/useLocationPicker";
@@ -23,7 +23,7 @@ const CouriersScreen = () => {
 
   const [couriers, setCouriers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const { selectedCountry, cities, loadingCities, onCountryChange } = useLocationPicker("", "");
+  const { selectedCountry, cities, loadingCities, onCountryChange, countries } = useLocationPicker("", "");
   const [city, setCity] = useState("");
   const [busyIds, setBusyIds] = useState<number[]>([]);
 
@@ -78,7 +78,7 @@ const CouriersScreen = () => {
           <View style={styles.inputContainer}>
             <Ionicons name="earth-outline" size={20} color="#999" style={styles.fieldIcon} />
             <SelectPicker
-              options={EUROPEAN_COUNTRIES}
+              options={countries}
               selectedValue={selectedCountry}
               placeholder="País"
               onValueChange={(value: string) => {
