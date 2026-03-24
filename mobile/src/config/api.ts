@@ -15,6 +15,7 @@ export const API_ROUTES = {
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   HAS_REVIEWED_ITEMS: `${BASE_URL}/api/ratings/has-reviewed`,
+  HAS_REVIEWED_ITEM_IN_KITS: `${BASE_URL}/api/ratings/has-reviewed-kit`,
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
   GET_KITS: `${BASE_URL}/api/kits`,
   GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,

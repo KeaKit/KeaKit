@@ -11,11 +11,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { getArticleRecord } from '../../services/articleService';
 import { RootStackParamList, ArticleRecordDTO, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { API_ROUTES } from '../../config/api';
 
 type ArticleRentals = NativeStackNavigationProp<RootStackParamList, 'ArticleRentals'>;
 type ArticleRentalsRoute = RouteProp<RootStackParamList, 'ArticleRentals'>;
@@ -29,13 +30,28 @@ const ArticleRentalsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [rentals, setRentals] = useState<ArticleRecordDTO[]>([]);
+  const [ratedItems, setRatedItems] = useState<{ [key: number]: boolean }>({});
 
-  const loadRecords = async () => {
+const loadRecords = async () => {
     if (!user) return;
     try {
       setLoading(true);
       const data = await getArticleRecord(articleId, user.token);
       setRentals(data);
+
+      if (data.length > 0) {
+        const kitIds = data.map((rental: ArticleRecordDTO) => rental.kitId);
+
+        fetch(`${API_ROUTES.HAS_REVIEWED_ITEM_IN_KITS}?reviewerId=${user.id}&itemId=${articleId}&kitIds=${kitIds.join(',')}`, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        })
+          .then(res => res.json())
+          .then((res: { [key: number]: boolean }) => {
+            setRatedItems(res); 
+            console.log(res);
+          })
+          .catch(err => console.error("Error al obtener estados de valoración:", err));
+      }
     } catch (err) {
       console.error("Error cargando historial:", err);
     } finally {
@@ -44,11 +60,15 @@ const ArticleRentalsScreen: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    loadRecords();
-  }, [articleId]);
+  useFocusEffect(
+    useCallback(() => {
+      loadRecords();
+    }, [articleId])
+  );
 
   const sections = useMemo(() => {
+    if (rentals.length === 0) return [];
+    
     const active = rentals.filter(r => r.status !== KitStatus.FINISHED );
     const past = rentals.filter(r => r.status === KitStatus.FINISHED);
 
@@ -57,6 +77,14 @@ const ArticleRentalsScreen: React.FC = () => {
       { title: 'Historial Pasado', data: past },
     ];
   }, [rentals]);
+
+  const createReview = (kitId: number, tenantId: number, tenantName: string) => {
+    navigation.navigate('CreateRating', {
+      kitId: kitId, 
+      revieweeId: tenantId,
+      revieweeName: tenantName
+    });
+  };
 
   const formatDate = (date: string) => new Date(date).toLocaleDateString('es-ES');
 
@@ -83,6 +111,7 @@ const ArticleRentalsScreen: React.FC = () => {
 
   const renderItem = ({ item }: { item: ArticleRecordDTO }) => {
     const config = getStatusConfig(item.status);
+    const alreadyRated = ratedItems[item.kitId];
 
     return (
       <View style={styles.rentalCard}>
@@ -99,6 +128,24 @@ const ArticleRentalsScreen: React.FC = () => {
               <Text style={styles.locationText}>{`${item.city}, ${item.country}`}</Text>
             </View>
           </View>
+
+          {item.status === 'FINISHED' && (
+            <TouchableOpacity
+              style={[styles.rateButton, alreadyRated && { opacity: 0.5 }]}
+              onPress={() => !alreadyRated && createReview(item.kitId, item.tenantId, item.tenantName)}
+              disabled={alreadyRated}
+            >
+              <Ionicons 
+                name={alreadyRated ? "star" : "star-outline"} 
+                size={16} 
+                color={alreadyRated ? "#FFCC00" : Colors.primary} 
+              />
+              <Text style={[styles.rateButtonText, alreadyRated && { color: '#999' }]}>
+                {alreadyRated ? "Valorado" : "Valorar"}
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <View style={[styles.badge, { backgroundColor: config.bg }]}>
             <Text style={[styles.badgeText, { color: config.color }]}>
               {config.label}
@@ -176,7 +223,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f0f0f0',
   },
-  cardMain: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  cardMain: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center'
+  },
   tenantInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   textGap: { marginLeft: 10 },
   tenantName: { fontSize: 15, fontWeight: '600', color: '#333' },
@@ -188,7 +239,24 @@ const styles = StyleSheet.create({
   label: { fontSize: 10, color: '#bbb', textTransform: 'uppercase', marginBottom: 2 },
   value: { fontSize: 13, color: '#444', fontWeight: '500' },
   empty: { alignItems: 'center', marginTop: 100 },
-  emptyText: { marginTop: 10, color: '#999', textAlign: 'center' }
+  emptyText: { marginTop: 10, color: '#999', textAlign: 'center' },
+  rateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginRight: 5,
+  },
+  rateButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginLeft: 4,
+  },
 });
 
 export default ArticleRentalsScreen;

@@ -195,6 +195,9 @@ const MyArticlesScreen: React.FC = () => {
       case 'AVAILABLE': return 'Disponible';
       case 'RENTED':    return 'Alquilado';
       case 'INACTIVE':  return 'Inactivo';
+      case 'ACTIVE':    return 'Activo';
+      case 'PAID':      return 'Pagado';
+      case 'FINISHED':  return 'Finalizado';
       default:          return status;
     }
   };
@@ -233,7 +236,7 @@ const MyArticlesScreen: React.FC = () => {
                 {`${formatDate(rental.startDate)} - ${formatDate(rental.endDate)}`}
               </Text>
               <Text style={[styles.miniStatus, { color: getStatusColor(rental.status) }]}>
-                {rental.status}
+                {translateStatus(rental.status)}
               </Text>
             </View>
           </View>
