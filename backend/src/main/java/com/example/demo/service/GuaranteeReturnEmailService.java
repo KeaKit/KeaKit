@@ -26,7 +26,7 @@ public class GuaranteeReturnEmailService {
     private final KitService kitService;
     private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(OrderConfirmationEmailService.class);
-    private static final String TEMPLATE_PATH = "templates/order-confirmation-email.html";
+    private static final String TEMPLATE_PATH = "guarantee-return-email.html";
 
     @Value("${sendgrid.api-key:}")
     private String sendGridApiKey;
