@@ -52,7 +52,7 @@ const CreateRatingScreen: React.FC = () => {
         },
         user.token,
       );
-      navigation.navigate("KitDetail", { kitId: kitId })
+      navigation.goBack();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al enviar la valoración');
     } finally {

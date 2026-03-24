@@ -464,6 +464,7 @@ public class ArticleService {
             row.setStatus(k.getStatus());
             row.setCity(k.getCity());
             row.setCountry(k.getCountry());
+            row.setKitId(k.getId());
             return row;
         }).collect(Collectors.toList());
         return articleRecord;

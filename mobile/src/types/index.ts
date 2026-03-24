@@ -68,6 +68,7 @@ export interface ArticleRecordDTO {
   status: KitStatus;
   city: string;
   country: string;
+  kitId: number;
 }
 
 export interface UserArticle {

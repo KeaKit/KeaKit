@@ -10,6 +10,7 @@ public class ArticleRecordDTO {
     private Long tenantId;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Long kitId;
     private KitStatus status;
     private String city;
     private String country;
@@ -44,6 +45,14 @@ public class ArticleRecordDTO {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public Long getKitId() {
+        return kitId;
+    }
+
+    public void setKitId(Long kitId) {
+        this.kitId = kitId;
     }
 
     public KitStatus getStatus() {
