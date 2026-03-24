@@ -1,4 +1,4 @@
-const BASE_URL = 'https://keakitv2api.duckdns.org';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://keakitv2api.duckdns.org';
 
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,

@@ -315,6 +315,7 @@ export type NavbarScreen =
   | 'MyKits'
   | 'MyServices'
   | 'MyIncidents'
+  | 'AdminIncidents'
   | 'Wallet'
   | 'MyKitsHistory'
   | 'UserRatings'
@@ -328,6 +329,7 @@ export type NavbarHeaderScreen =
   | 'MyKits'
   | 'MyServices'
   | 'MyIncidents'
+  | 'AdminIncidents'
   | 'Wallet'
   | 'MyKitsHistory'
   | 'UserRatings'
@@ -373,6 +375,7 @@ export type RootStackParamList = {
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
   MyIncidents: undefined;
+  AdminIncidents: undefined;
   CreateIncident: undefined;
   IncidentDetail: { incidentId: number; isReceived: boolean };
   MyArticles: undefined;

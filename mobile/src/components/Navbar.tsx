@@ -33,7 +33,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole }) => {
     { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers' },
     { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories' },
     { name: 'Inicio', icon: 'home-outline', screen: 'Home' },
-    { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents' },
+    { name: 'Incidencias', icon: 'warning-outline', screen: 'AdminIncidents' },
     { name: 'Perfil', icon: 'person-outline', screen: 'Profile' },
   ];
 
