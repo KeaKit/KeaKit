@@ -15,6 +15,10 @@ interface FieldErrors {
   name?: string;
   email?: string;
   password?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
   general?: string;
 }
 
@@ -28,6 +32,10 @@ const AdminUserFormScreen: React.FC = () => {
 
   const [name, setName] = useState(userToEdit?.name || '');
   const [email, setEmail] = useState(userToEdit?.email || '');
+  const [phone, setPhone] = useState(userToEdit?.phone || '');
+  const [address, setAddress] = useState(userToEdit?.address || '');
+  const [city, setCity] = useState(userToEdit?.city || '');
+  const [country, setCountry] = useState(userToEdit?.country || '');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -53,6 +61,10 @@ const AdminUserFormScreen: React.FC = () => {
     const localErrors: FieldErrors = {};
     if (!name.trim()) localErrors.name = 'El nombre es obligatorio';
     if (!email.trim()) localErrors.email = 'El email es obligatorio';
+    if (!phone.trim()) localErrors.phone = 'El teléfono es obligatorio';
+    if (!address.trim()) localErrors.address = 'La dirección es obligatoria';
+    if (!city.trim()) localErrors.city = 'La ciudad es obligatoria';
+    if (!country.trim()) localErrors.country = 'El país es obligatorio';
     if (!userToEdit && !password) localErrors.password = 'La contraseña es obligatoria al crear';
 
     if (Object.keys(localErrors).length > 0) {
@@ -64,10 +76,28 @@ const AdminUserFormScreen: React.FC = () => {
       setLoading(true);
       if (userToEdit) {
         // Editar
-        await updateUser(userToEdit.id, { name: name.trim(), email: email.trim(), password: password || undefined, role}, authUser.token);
+        await updateUser(userToEdit.id, { 
+          name: name.trim(),
+          email: email.trim(),
+          password: password || undefined,
+          role,
+          phone: phone.trim(),
+          address: address.trim(),
+          city: city.trim(),
+          country: country.trim()
+        }, authUser.token);
       } else {
         // Crear
-        await createUser({ name: name.trim(), email: email.trim(), password: password.trim(), role}, authUser.token);
+        await createUser({ 
+          name: name.trim(),
+          email: email.trim(),
+          password: password.trim(),
+          role,
+          phone: phone.trim(),
+          address: address.trim(),
+          city: city.trim(),
+          country: country.trim()
+        }, authUser.token);
       }
       navigation.goBack();
     } catch (err: unknown) {
@@ -92,6 +122,30 @@ const AdminUserFormScreen: React.FC = () => {
         placeholder="Correo electrónico"
         value={email}
         onChangeText={(v) => { setEmail(v); clearErrors(); }}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Teléfono"
+        value={phone}
+        onChangeText={(v) => { setPhone(v); clearErrors(); }}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Dirección"
+        value={address}
+        onChangeText={(v) => { setAddress(v); clearErrors(); }}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Ciudad"
+        value={city}
+        onChangeText={(v) => { setCity(v); clearErrors(); }}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="País"
+        value={country}
+        onChangeText={(v) => { setCountry(v); clearErrors(); }}
       />
       <View style={styles.inputContainer}>
         <TextInput
