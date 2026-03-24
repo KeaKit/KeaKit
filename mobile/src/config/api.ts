@@ -5,7 +5,6 @@ export const API_ROUTES = {
   LOGIN:    `${BASE_URL}/api/users/login`,
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
-  GET_CITIES: `${BASE_URL}/api/cities`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   DELETE_USER: (id: number) => `${BASE_URL}/api/admin/users/${id}`,
   CREATE_USER: `${BASE_URL}/api/admin/users`,       // POST
@@ -103,7 +102,25 @@ export const API_ROUTES = {
 
   // Default Kits (kits predeterminados)
   DEFAULT_KITS: `${BASE_URL}/api/default-kits`,
-  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`
+  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`,
+
+  // Geographic search (CU-ARRENDATARIO-10)
+  ARTICLE_NEARBY: (city: string, country: string, radiusKm = 150) =>
+    `${BASE_URL}/api/article/nearby?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&radiusKm=${radiusKm}`,
+
+  ARTICLE_MAP: (country?: string) =>
+    country
+      ? `${BASE_URL}/api/article/map?country=${encodeURIComponent(country)}`
+      : `${BASE_URL}/api/article/map`,
+
+  // Ciudades
+  GET_CITIES: `${BASE_URL}/api/cities`,
+  GET_COUNTRIES: `${BASE_URL}/api/countries`,
+  CITY_COORDINATES: (city: string, country: string) =>
+    `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`,
+
+  // Article history
+  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`
 
 } as const;
 

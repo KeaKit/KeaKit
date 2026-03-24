@@ -31,7 +31,7 @@ import com.example.demo.repository.UserRepository;
 @Service
 public class KitService {
     // TODO: Revisar reglas de negocio, validaciones y excepciones.
-    
+
     @Autowired
     private KitRepository kitRepository;
 
@@ -55,16 +55,19 @@ public class KitService {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     // TODO: Obtener la garantía de la configuración hecha por el admin
-    private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2; 
+    private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2;
 
     public List<Kit> findAll() {
         return kitRepository.findAll();
     }
 
-    public KitResponse findById(Long id) {
+    public KitResponse findById(Long id) throws ResourceNotFoundException {
         Kit kit = kitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
         return new KitResponse(kit);
     }
 
@@ -79,8 +82,9 @@ public class KitService {
         KitStatus status = request.status() != null ? request.status() : KitStatus.DRAFT;
         kit.setStatus(status);
 
-        List<KitCreateRequest.ItemSelectionRequest> selections =
-                request.itemSelections() != null ? request.itemSelections() : List.of();
+        List<KitCreateRequest.ItemSelectionRequest> selections = request.itemSelections() != null
+                ? request.itemSelections()
+                : List.of();
 
         if (status != KitStatus.DRAFT && selections.isEmpty()) {
             throw new RuntimeException("Item selections are required unless kit is DRAFT");
@@ -106,7 +110,7 @@ public class KitService {
         kit.setAppliedCommissionRate(platformConfigService.getCommissionRate());
         kit.setAppliedGuaranteeRate(PLATFORM_GUARANTEE_PERCENTAGE);
 
-        if(request.tenantId() == null){
+        if (request.tenantId() == null) {
             throw new RuntimeException("Tenant ID is required");
         }
 
@@ -116,7 +120,7 @@ public class KitService {
             kit.setTenant(tenant);
         }
 
-        if(!selections.isEmpty()){
+        if (!selections.isEmpty()) {
             for (KitCreateRequest.ItemSelectionRequest item : selections) {
                 Item foundItem = itemRepository.findById(item.itemId())
                         .orElseThrow(() -> new RuntimeException("Item not found: " + item.itemId()));
@@ -134,7 +138,7 @@ public class KitService {
 
         if (!snapshots.isEmpty()) {
             kit.setSnapshots(snapshots);
-}
+        }
         validateDates(kit.getStartDate(), kit.getEndDate());
 
         Kit savedKit = kitRepository.save(kit);
@@ -146,7 +150,7 @@ public class KitService {
         return savedKit;
     }
 
-     public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
         double subtotalPrice = request.itemSelections().stream()
                 .mapToDouble(item -> item.pricePerMonth() * item.quantity())
                 .sum();
@@ -162,9 +166,9 @@ public class KitService {
                 toCents(subtotalPrice),
                 toCents(guarantee),
                 toCents(courierPrice));
-        }
+    }
 
-    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException{
+    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException {
         Kit kit = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
 
@@ -245,7 +249,7 @@ public class KitService {
         List<Kit> activeKits = findActiveKitsByTenant(tenantId);
         List<RentedItemResponse> result = new ArrayList<>();
         for (Kit kit : activeKits) {
-            if (kit.getStatus() == KitStatus.PAID || kit.getStatus()== KitStatus.ACTIVE) {
+            if (kit.getStatus() == KitStatus.PAID || kit.getStatus() == KitStatus.ACTIVE) {
                 for (ItemMemento snapshot : kit.getSnapshots()) {
                     result.add(new RentedItemResponse(snapshot, kit));
                 }
@@ -262,16 +266,15 @@ public class KitService {
     }
 
     public Page<KitResponse> findHistoryForAuthenticatedTenant(int page, int size) {
-    Long tenantId = authService.getAuthenticatedUserId();
+        Long tenantId = authService.getAuthenticatedUserId();
 
-    Pageable pageable = PageRequest.of(
-        Math.max(page, 0),
-        Math.max(size, 1),
-        Sort.by(Sort.Direction.DESC, "orderDate").and(Sort.by(Sort.Direction.DESC, "id"))
-    );
+        Pageable pageable = PageRequest.of(
+                Math.max(page, 0),
+                Math.max(size, 1),
+                Sort.by(Sort.Direction.DESC, "orderDate").and(Sort.by(Sort.Direction.DESC, "id")));
 
-    return kitRepository.findByTenantIdAndStatusNot(tenantId, KitStatus.DRAFT, pageable)
-        .map(KitResponse::new);
+        return kitRepository.findByTenantIdAndStatusNot(tenantId, KitStatus.DRAFT, pageable)
+                .map(KitResponse::new);
     }
 
     public KitResponse findTrackingKitById(Long kitId, Long tenantId) {
@@ -322,7 +325,7 @@ public class KitService {
 
     public KitResponse markAsPaid(Long id) {
         Kit kit = kitRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
 
         if (kit.getStatus() != KitStatus.DRAFT) {
             throw new RuntimeException("Only DRAFT kits can be paid");
@@ -332,13 +335,13 @@ public class KitService {
         Kit saved = kitRepository.save(kit);
 
         kitDeliveryService.ensureDeliveryExists(saved);
-        
+
         return new KitResponse(saved);
     }
 
     public KitResponse cancel(Long id) {
         Kit kit = kitRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit not found"));
 
         if (kit.getStatus() == KitStatus.ACTIVE || kit.getStatus() == KitStatus.FINISHED) {
             throw new RuntimeException("Cannot cancel ACTIVE or FINISHED kits");
@@ -371,22 +374,21 @@ public class KitService {
 
         // 3. Evitamos duplicados usando getOriginalItemId()
         boolean alreadyExists = snapshots.stream()
-                .anyMatch(snapshot -> snapshot.getOriginalItemId() != null && 
-                                      snapshot.getOriginalItemId().equals(itemId));
-        
+                .anyMatch(snapshot -> snapshot.getOriginalItemId() != null &&
+                        snapshot.getOriginalItemId().equals(itemId));
+
         if (alreadyExists) {
             throw new RuntimeException("This item is already in the kit");
         }
 
         // 4. Creamos el Snapshot para el nuevo objeto
         ItemMemento newSnapshot = item.createSnapshot(
-                1, 
-                kit.getDeliveryMethod(), 
-                kit.getCourierPrice(), 
-                kit.getMeetingPoint()
-        );
-        newSnapshot.setPriceAtRental(item.getPricePerMonth()); 
-        
+                1,
+                kit.getDeliveryMethod(),
+                kit.getCourierPrice(),
+                kit.getMeetingPoint());
+        newSnapshot.setPriceAtRental(item.getPricePerMonth());
+
         // ¡IMPORTANTE! Relación bidireccional: asignamos el kit al memento
         newSnapshot.setKit(kit);
 
@@ -425,9 +427,9 @@ public class KitService {
 
         // 5. Eliminamos la relación y guardamos
         snapshots.remove(snapshotToRemove);
-        
+
         // Desvinculamos el kit del memento por buenas prácticas con JPA
-        snapshotToRemove.setKit(null); 
+        snapshotToRemove.setKit(null);
 
         Kit savedKit = kitRepository.save(kit);
         return new KitResponse(savedKit);

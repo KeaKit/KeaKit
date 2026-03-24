@@ -9,7 +9,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { updateArticle } from '../../services/articleService';
 import { fetchAllCategories } from '../../services/categoryService';
-import { ArticlePayload, ArticleCondition, RootStackParamList, Category, EUROPEAN_COUNTRIES } from '../../types';
+import { ArticlePayload, ArticleCondition, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
@@ -126,6 +126,7 @@ const EditArticleScreen: React.FC = () => {
     setSelectedCity,
     cities,
     loadingCities,
+    countries,
     onCountryChange,
   } = useLocationPicker('', originalCity);
 
@@ -250,7 +251,16 @@ const EditArticleScreen: React.FC = () => {
             <Ionicons name="arrow-back" size={28} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Editar artículo</Text>
-          <View style={{ width: 36 }} />
+
+          <TouchableOpacity 
+            style={styles.historyHeaderBtn} 
+            onPress={() => navigation.navigate('ArticleRentals', { 
+              articleId: article.id, 
+              articleTitle: article.title 
+            })}
+          >
+            <Ionicons name="receipt-outline" size={24} color={Colors.primary} />
+          </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -280,7 +290,7 @@ const EditArticleScreen: React.FC = () => {
               <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
                 <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
                 <SelectPicker
-                  options={EUROPEAN_COUNTRIES}
+                  options={countries}
                   selectedValue={selectedCountry}
                   placeholder="Selecciona un país"
                   onValueChange={(value: string) => {
@@ -726,6 +736,14 @@ const styles = StyleSheet.create({
   conditionChipTextActive: {
     color: Colors.primary,
     fontWeight: '700',
+  },
+  historyHeaderBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: Colors.primary + '10',
   },
 });
 

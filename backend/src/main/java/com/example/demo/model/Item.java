@@ -33,6 +33,9 @@ public abstract class Item {
     @Size(max = 120)
     protected String city;
 
+    @Size(max = 120)
+    protected String country;
+
     @NotNull
     @Positive
     protected Double pricePerMonth;
@@ -105,6 +108,14 @@ public abstract class Item {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 
     public Double getPricePerMonth() {

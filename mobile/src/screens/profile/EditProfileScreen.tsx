@@ -17,7 +17,6 @@ import { RootStackParamList } from '../../types';
 import { updateProfile } from '../../services/userService';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
-import { EUROPEAN_COUNTRIES } from '../../types';
 
 type EditProfileNav = NativeStackNavigationProp<RootStackParamList, 'EditProfile'>;
 
@@ -65,6 +64,7 @@ const EditProfileScreen: React.FC = () => {
     selectedCity,
     setSelectedCity,
     cities,
+    countries,
     loadingCities,
     onCountryChange,
   } = useLocationPicker(profileUser?.country ?? '', profileUser?.city ?? '');
@@ -166,7 +166,7 @@ const EditProfileScreen: React.FC = () => {
         <View style={[styles.inputContainer, errors.country && styles.inputErrorBorder]}>
           <Ionicons name="earth-outline" size={20} color="#999" style={styles.fieldIcon} />
           <SelectPicker
-            options={EUROPEAN_COUNTRIES}
+            options={countries}
             selectedValue={selectedCountry}
             placeholder="País"
             onValueChange={(value: string) => {

@@ -23,16 +23,18 @@ import {
   SegmentedButtons,
 } from "react-native-paper";
 
-import { EUROPEAN_COUNTRIES } from '../../types';
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
+import { getNearbyArticles, getArticlesForMap } from "../../services/articleService";
+import { getCityCoordinates } from "../../services/cityService";
 import { API_ROUTES } from "../../config/api";
-import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus } from "../../types";
+import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus, ArticleNearby } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
+import { KitPaymentResumeComponent } from "../../components/KitPaymentResumeComponent";
 import { ProductSelectionModal } from "../../components/ProductSelectionModal";
 import {
   removeSelectedQuantity,
@@ -76,6 +78,9 @@ type CatalogProduct = {
   availableUntil?: string;
   isAvailable?: boolean;
   availabilityMessage?: string;
+  distanceKm?: number;
+  cityLat?: number;
+  cityLng?: number;
 };
 
 const toIsoDate = (raw: string): string | null => {
@@ -127,6 +132,7 @@ const CreateKitScreen: React.FC = () => {
       selectedCity,
       setSelectedCity,
       cities,
+      countries,
       loadingCities,
       onCountryChange,
     } = useLocationPicker();
@@ -161,6 +167,35 @@ const CreateKitScreen: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [payment, setPayment] = useState<KitPaymentDTO | null>(null);
+  const [expandedSearch, setExpandedSearch] = useState(false);
+  const [nearbyProducts, setNearbyProducts] = useState<ArticleNearby[]>([]);
+  const [loadingNearby, setLoadingNearby] = useState(false);
+  const [targetCityCoords, setTargetCityCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
+
+  useEffect(() => {
+    if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
+      setNearbyProducts([]);
+      setTargetCityCoords(null);
+      return;
+    }
+    let cancelled = false;
+    setLoadingNearby(true);
+    Promise.all([
+      getNearbyArticles(city.trim(), country.trim(), user.token),
+      getCityCoordinates(city.trim(), country.trim()),
+    ]).then(([results, coords]) => {
+      if (!cancelled) {
+        setNearbyProducts(results);
+        setTargetCityCoords(coords);
+      }
+    }).catch(() => {
+      if (!cancelled) setNearbyProducts([]);
+    }).finally(() => {
+      if (!cancelled) setLoadingNearby(false);
+    });
+    return () => { cancelled = true; };
+  }, [expandedSearch, city, country, user?.token]);
 
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
@@ -284,6 +319,22 @@ const CreateKitScreen: React.FC = () => {
   const courierPrice =
     deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
+  const kitPayment = useMemo(() => {
+    const subtotal = Math.round(totalPrice * 100); // convertir a centavos
+    const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
+    const platformfee = Math.round(subtotal * COMISION);
+    const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
+    const total = subtotal + guarantee + platformfee + courier;
+
+    return {
+      subtotalPrice: subtotal,
+      guarantee: guarantee,
+      platformfee: platformfee,
+      courierPrice: courier,
+      totalPrice: total,
+    };
+  }, [totalPrice, deliveryMethod]);
+
   const categories = useMemo(() => {
     const set = new Set(
       availableProducts
@@ -296,7 +347,7 @@ const CreateKitScreen: React.FC = () => {
   const filteredProducts = useMemo(() => {
     const q = searchText.trim().toLowerCase();
 
-    return availableProducts.filter((p) => {
+    const local = availableProducts.filter((p) => {
       const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
       const byCategory =
         categoryFilter === "ALL" || p.category === categoryFilter;
@@ -312,7 +363,42 @@ const CreateKitScreen: React.FC = () => {
 
       return notInactive && byCategory && byCity && bySearch;
     });
-  }, [availableProducts, searchText, categoryFilter, showOnlyMyCity, city]);
+
+    if (!expandedSearch || nearbyProducts.length === 0) return local;
+
+    const localIds = new Set(local.map((p) => p.id));
+    const nearby: CatalogProduct[] = nearbyProducts
+      .filter((p) => {
+        if (localIds.has(p.id)) return false;
+        const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
+        const bySearch =
+          q.length === 0 ||
+          p.title.toLowerCase().includes(q) ||
+          (p.city ?? "").toLowerCase().includes(q) ||
+          (p.category ?? "").toLowerCase().includes(q);
+        return byCategory && bySearch;
+      })
+      .map((p) => ({
+        id: p.id,
+        itemType: p.itemType,
+        title: p.title,
+        pricePerMonth: p.pricePerMonth,
+        status: p.status ?? "AVAILABLE",
+        category: p.category ?? undefined,
+        city: p.city,
+        ownerId: p.ownerId ?? 0,
+        ownerName: p.ownerName ?? undefined,
+        imageUrl: p.imageUrl,
+        totalUnits: p.totalUnits ?? 1,
+        availableFrom: p.availableFrom ?? undefined,
+        availableUntil: p.availableUntil ?? undefined,
+        distanceKm: p.distanceKm,
+        cityLat: p.cityLat,
+        cityLng: p.cityLng,
+      }));
+
+    return [...local, ...nearby];
+  }, [availableProducts, nearbyProducts, searchText, categoryFilter, showOnlyMyCity, city, expandedSearch]);
 
   const openAddProductModal = async () => {
     await loadCatalog();
@@ -322,6 +408,12 @@ const CreateKitScreen: React.FC = () => {
     setCategoryFilter("ALL");
     setShowOnlyMyCity(city.trim().length > 0);
     setShowOnlyAvailable(true);
+
+    if (user?.token) {
+      getArticlesForMap(user.token, country.trim() || undefined)
+        .then(setMapProducts)
+        .catch(() => setMapProducts([]));
+    }
 
     setCatalogModalVisible(true);
   };
@@ -537,7 +629,7 @@ const CreateKitScreen: React.FC = () => {
               <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
                 <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
                 <SelectPicker
-                  options={EUROPEAN_COUNTRIES}
+                  options={countries}
                   selectedValue={selectedCountry}
                   placeholder="Selecciona un país"
                   onValueChange={(value: string) => {
@@ -803,90 +895,7 @@ const CreateKitScreen: React.FC = () => {
         <View style={createKitStyles.footerRow}>
           {/* Resumen de precios */}
           <View style={{ flex: 1 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 8,
-              }}
-            >
-              <Text style={commonStyles.caption}>Subtotal productos</Text>
-              <Text style={commonStyles.caption}>{totalPrice.toFixed(2)}€</Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Garantía (20%)</Text>
-              <Text style={commonStyles.caption}>
-                {(totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Comisión (20%)</Text>
-              <Text style={commonStyles.caption}>
-                {(totalPrice * COMISION).toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
-              <Text style={commonStyles.caption}>
-                {courierPrice.toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                borderTopWidth: 1,
-                borderTopColor: Colors.border,
-                paddingTop: 12,
-                marginBottom: 16,
-              }}
-            >
-              <Text
-                style={[
-                  commonStyles.caption,
-                  { color: Colors.primary, fontWeight: "600", fontSize: 16 },
-                ]}
-              >
-                Total a pagar
-              </Text>
-              <Text
-                style={[
-                  createKitStyles.productTitle,
-                  { fontSize: 20, color: Colors.primary },
-                ]}
-              >
-                {(
-                  totalPrice +
-                  totalPrice * GUARANTEE_PERCENTAGE +
-                  +totalPrice * COMISION +
-                  courierPrice
-                ).toFixed(2)}
-                €
-              </Text>
-            </View>
+            <KitPaymentResumeComponent kitPrices={kitPayment} />
 
             <Button
               mode="outlined"
@@ -973,6 +982,11 @@ const CreateKitScreen: React.FC = () => {
           onToggleAvailable={setShowOnlyAvailable}
           startDate={startDate}
           endDate={endDate}
+          expandedSearch={expandedSearch}
+          onToggleExpandedSearch={() => setExpandedSearch((v) => !v)}
+          loadingNearby={loadingNearby}
+          targetCityCoords={targetCityCoords}
+          mapProducts={mapProducts}
         />
 
         <Modal

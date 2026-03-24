@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -11,13 +12,15 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.demo.dto.ArticleNearbyDTO;
+import com.example.demo.dto.CityCoordinatesDTO;
+import com.example.demo.dto.ArticleRecordDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.User;
-import com.example.demo.model.Wallet;
 import com.example.demo.model.Category;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Kit;
@@ -25,7 +28,6 @@ import com.example.demo.model.KitStatus;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.WalletRepository;
 import com.example.demo.repository.CategoryRepository;
 
 @Service
@@ -35,19 +37,16 @@ public class ArticleService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final PaymentService paymentService;
-    private final WalletRepository walletRepository;
     private final KitRepository kitRepository;
-
     private final DefaultKitService defaultKitService;
-    @Autowired
-    private WalletService walletService;
-    
-
     private final CloudinaryService cloudinaryService;
+    private final CityService cityService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
-                          KitRepository kitRepository, CategoryRepository categoryRepository, PaymentService paymentService, WalletRepository walletRepository,
-                          CloudinaryService cloudinaryService, DefaultKitService defaultKitService) {
+                          KitRepository kitRepository, CategoryRepository categoryRepository,
+                          PaymentService paymentService,
+                          CloudinaryService cloudinaryService, DefaultKitService defaultKitService,
+                          CityService cityService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.kitRepository = kitRepository;
@@ -55,7 +54,7 @@ public class ArticleService {
         this.cloudinaryService = cloudinaryService;
         this.defaultKitService = defaultKitService;
         this.paymentService = paymentService;
-        this.walletRepository = walletRepository;
+        this.cityService = cityService;
     }
 
     public Article createWithImage(Article article, MultipartFile image, Long ownerId, Long categoryId) throws IOException {
@@ -366,5 +365,122 @@ public class ArticleService {
                 rentedUntil
             );
         }).collect(Collectors.toList());
+    }
+
+    public List<ArticleNearbyDTO> findNearbyArticles(String targetCity, String country, double radiusKm) {
+        CityCoordinatesDTO targetCoords = cityService.getCityCoordinates(targetCity, country);
+        if (targetCoords == null) {
+            return List.of();
+        }
+
+        List<String> availableCities = articleRepository.findDistinctCitiesByStatus(ArticleStatus.AVAILABLE);
+
+        List<String> nearbyCities = availableCities.stream()
+            .filter(city -> !city.equalsIgnoreCase(targetCity))
+            .filter(city -> {
+                CityCoordinatesDTO coords = cityService.getCityCoordinates(city, country);
+                if (coords == null) return false;
+                return haversineKm(targetCoords.lat(), targetCoords.lng(), coords.lat(), coords.lng()) <= radiusKm;
+            })
+            .collect(Collectors.toList());
+
+        if (nearbyCities.isEmpty()) {
+            return List.of();
+        }
+
+        List<Article> articles = articleRepository.findByStatusAndCityIn(ArticleStatus.AVAILABLE, nearbyCities);
+
+        return articles.stream().map(article -> {
+            CityCoordinatesDTO cityCoords = cityService.getCityCoordinates(article.getCity(), country);
+            double lat = cityCoords != null ? cityCoords.lat() : 0.0;
+            double lng = cityCoords != null ? cityCoords.lng() : 0.0;
+            double distance = haversineKm(targetCoords.lat(), targetCoords.lng(), lat, lng);
+
+            String categoryName = article.getCategory() != null ? article.getCategory().getName() : null;
+            String ownerName = article.getOwner() != null ? article.getOwner().getName() : null;
+            Long ownerId = article.getOwner() != null ? article.getOwner().getId() : null;
+
+            return new ArticleNearbyDTO(
+                article.getId(),
+                "ARTICLE",
+                article.getTitle(),
+                article.getDescription(),
+                article.getCity(),
+                article.getPricePerMonth(),
+                article.getAvailableFrom(),
+                article.getAvailableUntil(),
+                categoryName,
+                article.getTotalUnits(),
+                ownerId,
+                ownerName,
+                article.getStatus() != null ? article.getStatus().name() : null,
+                article.getImageUrl(),
+                lat,
+                lng,
+                Math.round(distance * 10.0) / 10.0
+            );
+        }).collect(Collectors.toList());
+    }
+
+    public List<ArticleNearbyDTO> findAllWithCoords(String country) {
+        List<Article> articles = articleRepository.findByStatus(ArticleStatus.AVAILABLE);
+        return articles.stream().map(article -> {
+            String resolvedCountry = article.getCountry() != null ? article.getCountry() : country;
+            CityCoordinatesDTO coords = resolvedCountry != null
+                ? cityService.getCityCoordinates(article.getCity(), resolvedCountry)
+                : null;
+            double lat = coords != null ? coords.lat() : 0.0;
+            double lng = coords != null ? coords.lng() : 0.0;
+            String categoryName = article.getCategory() != null ? article.getCategory().getName() : null;
+            String ownerName = article.getOwner() != null ? article.getOwner().getName() : null;
+            Long ownerId = article.getOwner() != null ? article.getOwner().getId() : null;
+            return new ArticleNearbyDTO(
+                article.getId(),
+                "ARTICLE",
+                article.getTitle(),
+                article.getDescription(),
+                article.getCity(),
+                article.getPricePerMonth(),
+                article.getAvailableFrom(),
+                article.getAvailableUntil(),
+                categoryName,
+                article.getTotalUnits(),
+                ownerId,
+                ownerName,
+                article.getStatus() != null ? article.getStatus().name() : null,
+                article.getImageUrl(),
+                lat,
+                lng,
+                0.0
+            );
+        }).collect(Collectors.toList());
+    }
+
+    private double haversineKm(double lat1, double lon1, double lat2, double lon2) {
+        final double R = 6371.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                 * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    public List<ArticleRecordDTO> findArticleRecord(Long articleId) {
+        List<Kit> kitsWhereArticleHasBeen = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
+        List<ArticleRecordDTO> articleRecord = kitsWhereArticleHasBeen.stream()
+        .filter(k -> k.getStatus() != KitStatus.DRAFT && k.getStatus() != KitStatus.CANCELLED)
+        .map(k -> {
+            ArticleRecordDTO row = new ArticleRecordDTO();
+            row.setTenantName(k.getTenant().getName());
+            row.setTenantId(k.getTenant().getId());
+            row.setStartDate(k.getStartDate());
+            row.setEndDate(k.getEndDate());
+            row.setStatus(k.getStatus());
+            row.setCity(k.getCity());
+            row.setCountry(k.getCountry());
+            return row;
+        }).collect(Collectors.toList());
+        return articleRecord;
     }
 }
