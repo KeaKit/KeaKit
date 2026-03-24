@@ -101,15 +101,40 @@ const ActivityNotificationsScreen: React.FC = () => {
     await markAllRead();
   };
 
+  const handleMarkSingleRead = async (notificationId: number) => {
+    if (!user?.token) return;
+
+    try {
+      await markNotificationRead(notificationId, user.token);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+      );
+    } catch (err) {
+      console.error("Error al marcar notificación como leída:", err);
+    }
+  };
+
   const renderItem = ({ item }: { item: ActivityNotification }) => (
     <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
       <View style={styles.cardHeader}>
-        <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-          {item.type === "ITEM_RENTED" ? "Objeto alquilado" : "Fin de alquiler"}
-        </Text>
-        <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
+            {item.type === "ITEM_RENTED" ? "Objeto alquilado" : "Fin de alquiler"}
+          </Text>
+          <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
+        </View>
+        {!item.read && (
+          <TouchableOpacity
+            style={styles.markReadButton}
+            onPress={() => handleMarkSingleRead(item.id)}
+          >
+            <Ionicons name="checkmark-circle-outline" size={20} color={Colors.primary} />
+          </TouchableOpacity>
+        )}
       </View>
-      <Text style={styles.cardMessage}>{item.message}</Text>
+      <Text style={[styles.cardMessage, item.read && styles.cardMessageRead]}>
+        {item.message}
+      </Text>
     </View>
   );
 
@@ -200,11 +225,13 @@ const styles = StyleSheet.create({
   },
   cardRead: {
     borderColor: Colors.border,
+    opacity: 0.6,
+    backgroundColor: "#F9F9F9",
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: Spacing.xs,
     gap: Spacing.sm,
   },
@@ -220,10 +247,17 @@ const styles = StyleSheet.create({
   cardDate: {
     fontSize: FontSizes.sm,
     color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
   cardMessage: {
     fontSize: FontSizes.base,
     color: Colors.textSecondary,
+  },
+  cardMessageRead: {
+    color: "#A0A0A0",
+  },
+  markReadButton: {
+    padding: Spacing.xs,
   },
   actionsRow: {
     paddingHorizontal: Spacing.lg,
