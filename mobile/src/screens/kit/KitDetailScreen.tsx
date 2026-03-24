@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, KitResponse, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
@@ -45,44 +45,48 @@ const KitDetailScreen: React.FC = () => {
   const [ratedItems, setRatedItems] = useState<{ [key: number]: boolean }>({});
 
 
-  useEffect(() => {
-    const fetchKitDetail = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(API_ROUTES.GET_KIT(kitId), {
-          headers: user?.token
-            ? {
-                Authorization: `Bearer ${user.token}`,
-                "Content-Type": "application/json",
-              }
-            : undefined,
-        });
-        if (!response.ok) throw new Error('Error al obtener kit');
-        const data = await response.json();
-        setKit(data);
-
-        if (data && data.items?.length > 0 && user?.id) {
-          const itemIds = data.items.map((item: any) => item.itemId);
-          fetch(`${API_ROUTES.HAS_REVIEWED_ITEMS}?reviewerId=${user.id}&kitId=${kitId}&itemIds=${itemIds.join(',')}`, {
-            headers: user?.token
-              ? { Authorization: `Bearer ${user.token}` }
-              : undefined,
-          })
-            .then(res => res.json())
-            .then((res: { [key: number]: boolean }) => {
-              setRatedItems(res);
-            })
-            .catch(err => console.error("Error al obtener items valorados", err));
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (kitId) fetchKitDetail();
+  const fetchKitDetail = useCallback(async () => {
+    if (!kitId) return;
     
-  }, [kitId, user?.token]);
+    try {
+      setLoading(true);
+      const response = await fetch(API_ROUTES.GET_KIT(kitId), {
+        headers: user?.token
+          ? {
+              Authorization: `Bearer ${user.token}`,
+              "Content-Type": "application/json",
+            }
+          : undefined,
+      });
+      
+      if (!response.ok) throw new Error('Error al obtener kit');
+      const data = await response.json();
+      setKit(data);
+
+      if (data && data.items?.length > 0 && user?.id) {
+        const itemIds = data.items.map((item: any) => item.itemId);
+        
+        fetch(`${API_ROUTES.HAS_REVIEWED_ITEMS}?reviewerId=${user.id}&kitId=${kitId}&itemIds=${itemIds.join(',')}`, {
+          headers: user?.token ? { Authorization: `Bearer ${user.token}` } : undefined,
+        })
+          .then(res => res.json())
+          .then((res: { [key: number]: boolean }) => {
+            setRatedItems(res);
+          })
+          .catch(err => console.error("Error al obtener items valorados", err));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [kitId, user?.token, user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchKitDetail();
+    }, [fetchKitDetail])
+  );
 
 const handleConfirmKit = async () => {
   try {

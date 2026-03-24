@@ -163,6 +163,15 @@ const MyArticlesScreen: React.FC = () => {
     setArticleToDelete(null);
   };
 
+  const navigateToUserReviews = (tenantId: number, tenantName: string) => {
+    setExpandedId(null);
+
+    navigation.navigate('UserRatings', {
+      userId: tenantId,
+      userName: tenantName,
+    });
+  };
+
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return '-';
     try {
@@ -186,6 +195,9 @@ const MyArticlesScreen: React.FC = () => {
       case 'AVAILABLE': return 'Disponible';
       case 'RENTED':    return 'Alquilado';
       case 'INACTIVE':  return 'Inactivo';
+      case 'ACTIVE':    return 'Activo';
+      case 'PAID':      return 'Pagado';
+      case 'FINISHED':  return 'Finalizado';
       default:          return status;
     }
   };
@@ -211,7 +223,12 @@ const MyArticlesScreen: React.FC = () => {
         {lastThree.map((rental, index) => (
           <View key={index} style={styles.rentalItem}>
             <View style={styles.rentalMainInfo}>
-              <Text style={styles.tenantName}>{rental.tenantName}</Text>
+              <Text
+                style={{ color: "#007AFF" }}
+                onPress={() => navigateToUserReviews(rental.tenantId, rental.tenantName)}
+              >
+                {rental.tenantName}
+              </Text>
               <Text style={styles.rentalCity}>{`${rental.city ?? ""}, ${rental.country ?? ""}`}</Text>
             </View>
             <View style={styles.rentalDateStatus}>
@@ -219,7 +236,7 @@ const MyArticlesScreen: React.FC = () => {
                 {`${formatDate(rental.startDate)} - ${formatDate(rental.endDate)}`}
               </Text>
               <Text style={[styles.miniStatus, { color: getStatusColor(rental.status) }]}>
-                {rental.status}
+                {translateStatus(rental.status)}
               </Text>
             </View>
           </View>

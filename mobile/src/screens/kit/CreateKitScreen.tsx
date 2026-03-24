@@ -44,6 +44,7 @@ import {
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
+import { KitPaymentResumeComponent } from "../../components/KitPaymentResumeComponent";
 import { ProductSelectionModal } from "../../components/ProductSelectionModal";
 import {
   removeSelectedQuantity,
@@ -358,11 +359,21 @@ const CreateKitScreen: React.FC = () => {
   const courierPrice =
     deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
-  const finalPrice = useMemo(() => {
-    const guarantee = totalPrice * GUARANTEE_PERCENTAGE;
-    const commission = totalPrice * COMISION;
-    return totalPrice + guarantee + commission + courierPrice;
-  }, [totalPrice, courierPrice]);
+  const kitPayment = useMemo(() => {
+    const subtotal = Math.round(totalPrice * 100); // convertir a centavos
+    const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
+    const platformfee = Math.round(subtotal * COMISION);
+    const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
+    const total = subtotal + guarantee + platformfee + courier;
+
+    return {
+      subtotalPrice: subtotal,
+      guarantee: guarantee,
+      platformfee: platformfee,
+      courierPrice: courier,
+      totalPrice: total,
+    };
+  }, [totalPrice, deliveryMethod]);
 
   const categories = useMemo(() => {
     const set = new Set(
@@ -984,10 +995,11 @@ const CreateKitScreen: React.FC = () => {
             <Text style={commonStyles.errorText}>{errors.general}</Text>
           ) : null}
         </ScrollView>
-
+        
         <View style={createKitStyles.footerRow}>
           {/* Resumen de precios */}
           <View style={{ flex: 1 }}>
+            <KitPaymentResumeComponent kitPrices={kitPayment} />
             <View
               style={{
                 flexDirection: "row",
