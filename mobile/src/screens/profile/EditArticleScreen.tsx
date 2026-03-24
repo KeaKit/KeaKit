@@ -250,7 +250,16 @@ const EditArticleScreen: React.FC = () => {
             <Ionicons name="arrow-back" size={28} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Editar artículo</Text>
-          <View style={{ width: 36 }} />
+
+          <TouchableOpacity 
+            style={styles.historyHeaderBtn} 
+            onPress={() => navigation.navigate('ArticleRentals', { 
+              articleId: article.id, 
+              articleTitle: article.title 
+            })}
+          >
+            <Ionicons name="receipt-outline" size={24} color={Colors.primary} />
+          </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -726,6 +735,14 @@ const styles = StyleSheet.create({
   conditionChipTextActive: {
     color: Colors.primary,
     fontWeight: '700',
+  },
+  historyHeaderBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: Colors.primary + '10',
   },
 });
 

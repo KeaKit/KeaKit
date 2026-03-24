@@ -204,7 +204,6 @@ const MyArticlesScreen: React.FC = () => {
     }
 
     const lastThree = [...item.rentals].reverse().slice(0, 3);
-    const hasMore = item.rentals.length > 5;
 
     return (
       <View style={styles.rentalsWrapper}>
@@ -226,15 +225,16 @@ const MyArticlesScreen: React.FC = () => {
           </View>
         ))}
 
-        {hasMore && (
-          <TouchableOpacity 
-            style={styles.viewMoreButton}
-            onPress={() => console.log("Nice")}
-          >
-            <Text style={styles.viewMoreText}>Ver historial completo ({item.rentals.length})</Text>
-            <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity 
+          style={styles.viewMoreButton}
+          onPress={() => {
+            setExpandedId(null);
+            navigation.navigate("ArticleRentals", { articleId: item.id, articleTitle: item.title })
+          }}
+        >
+          <Text style={styles.viewMoreText}>Ver historial completo ({item.rentals.length})</Text>
+          <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+        </TouchableOpacity>
       </View>
     );
   };
@@ -245,7 +245,6 @@ const MyArticlesScreen: React.FC = () => {
 
     return (
       <View style={styles.cardContainer}>
-        {/* CUERPO PRINCIPAL (Imagen + Info + Acciones laterales) */}
         <View style={styles.articleCard}>
           <TouchableOpacity
             style={styles.cardPressable}
@@ -274,7 +273,6 @@ const MyArticlesScreen: React.FC = () => {
             </View>
           </TouchableOpacity>
 
-          {/* ACCIONES LATERALES (Solo Editar y Borrar) */}
           <View style={styles.actionsContainer}>
             <Pressable
               style={styles.editButton}
@@ -297,13 +295,12 @@ const MyArticlesScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* BOTÓN INFERIOR PARA DESPLEGAR (La flecha) */}
         <Pressable 
           style={styles.expandButton} 
           onPress={() => toggleExpand(item.id)}
         >
           <Text style={styles.expandText}>
-            {isExpanded ? 'Ocultar historial' : 'Ver historial de alquileres'}
+            {isExpanded ? 'Ocultar historial' : 'Ver alquileres más recientes'}
           </Text>
           <Ionicons 
             name={isExpanded ? "chevron-up" : "chevron-down"} 
@@ -312,7 +309,6 @@ const MyArticlesScreen: React.FC = () => {
           />
         </Pressable>
 
-        {/* HISTORIAL DESPLEGABLE */}
         {isExpanded && (
           <View style={styles.expandedContent}>
             {renderRentalHistory(item)}

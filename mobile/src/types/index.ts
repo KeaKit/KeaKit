@@ -410,6 +410,7 @@ export type RootStackParamList = {
   AssignedKits: undefined;
   Couriers: undefined;
   CourierDetail: { courier: UserResponse, isBusy?: boolean };
+  ArticleRentals: { articleId: number, articleTitle: string };
 };
 
 export interface ProfileData {
