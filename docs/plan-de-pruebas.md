@@ -42,7 +42,7 @@ Las pruebas unitarias validarán el comportamiento de los componentes individual
 
 Las pruebas de integración verifican la correcta comunicación entre los diferentes módulos y la base de datos. Al igual que las pruebas unitarias, estas pruebas también se realizan durante el desarrollo de cada funcionalidad, y además, están automatizadas en el flujo de CI/CD de la aplicación.
 
-- **Alcance por Módulos**: Comunicación Backend-Database (MariaDB/H2), Flujo de Persistencia de Artículos, y Endpoints de la API REST.
+- **Alcance por Módulos**: Comunicación Backend-Database (PostgreSQL/H2), Flujo de Persistencia de Artículos, y Endpoints de la API REST.
 
 ## 4.1 Backend
 

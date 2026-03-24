@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui.html","/swagger-ui/**","/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                 .requestMatchers("/api/cities/**").permitAll()
+                .requestMatchers("/api/countries/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 //Para asegurar que las url que comiencen por api/admin/ solo serán accesibles por usuarios con rol ADMIN
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Item;
 import com.example.demo.repository.ItemRepository;
 import org.springframework.stereotype.Service;
@@ -27,9 +28,9 @@ public class ItemService {
         return allItemsForRent;
     }
 
-    public Item findById(Long id) {
+    public Item findById(Long id) throws ResourceNotFoundException {
         return itemRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Item not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
     }
 
     public Item save(Item item) {

@@ -5,7 +5,6 @@ export const API_ROUTES = {
   LOGIN:    `${BASE_URL}/api/users/login`,
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
-  GET_CITIES: `${BASE_URL}/api/cities`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   DELETE_USER: (id: number) => `${BASE_URL}/api/admin/users/${id}`,
   CREATE_USER: `${BASE_URL}/api/admin/users`,       // POST
@@ -103,7 +102,12 @@ export const API_ROUTES = {
 
   // Default Kits (kits predeterminados)
   DEFAULT_KITS: `${BASE_URL}/api/default-kits`,
-  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`
+  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`,
+
+  // Ciudades
+  GET_CITIES: `${BASE_URL}/api/cities`,
+  GET_COUNTRIES: `${BASE_URL}/api/countries`,
+
 
 } as const;
 

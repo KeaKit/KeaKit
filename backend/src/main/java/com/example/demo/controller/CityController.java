@@ -17,8 +17,8 @@ public class CityController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<String>> getCities(@RequestParam String country) {
-        List<String> cities = cityService.getCitiesByCountry(country.toLowerCase());
+    public ResponseEntity<List<String>> getAllCityNamesByCountryName(@RequestParam String country) {
+        List<String> cities = cityService.getAllCityNamesByCountryName(country);
         
         if (cities == null || cities.isEmpty()) {
             return ResponseEntity.notFound().build();

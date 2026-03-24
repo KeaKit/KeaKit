@@ -23,7 +23,6 @@ import {
   SegmentedButtons,
 } from "react-native-paper";
 
-import { EUROPEAN_COUNTRIES } from '../../types';
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
@@ -127,6 +126,7 @@ const CreateKitScreen: React.FC = () => {
       selectedCity,
       setSelectedCity,
       cities,
+      countries,
       loadingCities,
       onCountryChange,
     } = useLocationPicker();
@@ -537,7 +537,7 @@ const CreateKitScreen: React.FC = () => {
               <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
                 <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
                 <SelectPicker
-                  options={EUROPEAN_COUNTRIES}
+                  options={countries}
                   selectedValue={selectedCountry}
                   placeholder="Selecciona un país"
                   onValueChange={(value: string) => {

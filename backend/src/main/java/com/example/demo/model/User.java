@@ -33,6 +33,7 @@ public class User {
     private String phone;
 
     @Column(nullable = false)
+    @Size(min = 5, max = 255, message = "Address size must be between 5 and 255")
     private String address;
 
     @Column(nullable = false)
