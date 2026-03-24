@@ -15,13 +15,15 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { getArticleRecord } from '../../services/articleService';
 import { RootStackParamList, ArticleRecordDTO, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-type ArticleRentalsRouteProp = RouteProp<RootStackParamList, 'ArticleRentals'>;
+type ArticleRentals = NativeStackNavigationProp<RootStackParamList, 'ArticleRentals'>;
+type ArticleRentalsRoute = RouteProp<RootStackParamList, 'ArticleRentals'>;
 
 const ArticleRentalsScreen: React.FC = () => {
   const { user } = useAuth();
-  const navigation = useNavigation();
-  const route = useRoute<ArticleRentalsRouteProp>();
+  const navigation = useNavigation<ArticleRentals>();
+  const route = useRoute<ArticleRentalsRoute>();
   const { articleId, articleTitle } = route.params;
 
   const [loading, setLoading] = useState(true);
@@ -72,6 +74,13 @@ const ArticleRentalsScreen: React.FC = () => {
     }
   };
 
+  const navigateToUserReviews = (tenantId: number, tenantName: string) => {
+    navigation.navigate('UserRatings', {
+      userId: tenantId,
+      userName: tenantName,
+    });
+  };
+
   const renderItem = ({ item }: { item: ArticleRecordDTO }) => {
     const config = getStatusConfig(item.status);
 
@@ -81,7 +90,12 @@ const ArticleRentalsScreen: React.FC = () => {
           <View style={styles.tenantInfo}>
             <Ionicons name="person-circle-outline" size={32} color={Colors.primary} />
             <View style={styles.textGap}>
-              <Text style={styles.tenantName}>{item.tenantName}</Text>
+              <Text
+                style={{ color: "#007AFF" }}
+                onPress={() => navigateToUserReviews(item.tenantId, item.tenantName)}
+              >
+                {item.tenantName}
+              </Text>
               <Text style={styles.locationText}>{`${item.city}, ${item.country}`}</Text>
             </View>
           </View>

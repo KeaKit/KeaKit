@@ -163,6 +163,15 @@ const MyArticlesScreen: React.FC = () => {
     setArticleToDelete(null);
   };
 
+  const navigateToUserReviews = (tenantId: number, tenantName: string) => {
+    setExpandedId(null);
+
+    navigation.navigate('UserRatings', {
+      userId: tenantId,
+      userName: tenantName,
+    });
+  };
+
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return '-';
     try {
@@ -211,7 +220,12 @@ const MyArticlesScreen: React.FC = () => {
         {lastThree.map((rental, index) => (
           <View key={index} style={styles.rentalItem}>
             <View style={styles.rentalMainInfo}>
-              <Text style={styles.tenantName}>{rental.tenantName}</Text>
+              <Text
+                style={{ color: "#007AFF" }}
+                onPress={() => navigateToUserReviews(rental.tenantId, rental.tenantName)}
+              >
+                {rental.tenantName}
+              </Text>
               <Text style={styles.rentalCity}>{`${rental.city ?? ""}, ${rental.country ?? ""}`}</Text>
             </View>
             <View style={styles.rentalDateStatus}>
