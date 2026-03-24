@@ -38,7 +38,6 @@ Para realizar las pruebas de inicio de sesión, se pueden utilizar las siguiente
 | `owner@example.com` | `password123` |
 | `tenant@example.com` | `password123` |
 | `admin@tusitio.com` | `password_admin` |
-||
 
 ## Requisitos para utilizar el sistema
 * Conexión a Internet.
