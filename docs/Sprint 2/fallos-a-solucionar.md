@@ -16,6 +16,7 @@ Este documento detalla las incidencias detectadas en la plataforma, divididas se
 
 ### 2. Gestión de categorías
 - **precio de categoria:** limitar los digitos a 2, porque puedes poner de precio 12.1212121212121, no se si convendria poner un tope de precio porque tambien puedes poner como 10 mil millones.
+- **pantalla de categorias:** solo se ve desde el frontend la categoría creada en el seeder, por mucho que edites o crees nuevas categorias, estas no salen por pantalla, sin embargo si que existen en la base de datos.
 
 ### 3. Establecer comisión de la plataforma
 - *(Sin incidencias reportadas)*.
