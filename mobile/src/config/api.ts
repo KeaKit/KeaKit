@@ -34,6 +34,7 @@ export const API_ROUTES = {
   UPDATE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
   DELETE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
   TOGGLE_RENT:    (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/toggle-rent?ownerId=${ownerId}`,
+  ARTICLE_RECORD: (id: number) => `${BASE_URL}/api/article/record/${id}`,
   CATEGORIES: `${BASE_URL}/api/category`,
   CATEGORY_BY_ID: (id: number) => `${BASE_URL}/api/category/${id}`,
   GET_LATEST_ARTICLES_BY_CATEGORY: (categoryId: number) => `${BASE_URL}/api/article/category/${categoryId}/latest`,

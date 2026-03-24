@@ -1,5 +1,5 @@
 import { API_ROUTES } from '../config/api';
-import { Article, ArticlePayload } from '../types';
+import { Article, ArticlePayload, ArticleRecordDTO } from '../types';
 import { Platform } from 'react-native';
 
 const normalizeErrorMessage = (raw: string): string => {
@@ -143,3 +143,19 @@ export async function toggleRent(
   });
   return handleResponse<Article>(res);
 }
+
+export const getArticleRecord = async (articleId: number, token: string): Promise<ArticleRecordDTO[]> => {
+  const response = await fetch(API_ROUTES.ARTICLE_RECORD(articleId), {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('No se pudo obtener el historial del artículo');
+  }
+
+  return await response.json();
+};
