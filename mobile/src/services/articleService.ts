@@ -145,7 +145,7 @@ export async function toggleRent(
 }
 
 export const getArticleRecord = async (articleId: number, token: string): Promise<ArticleRecordDTO[]> => {
-  const response = await fetch(API_ROUTES.ARTICLE_RECORD(articleId), {
+  const response = await fetch(API_ROUTES.GET_ARTICLE_HISTORY(articleId), {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
