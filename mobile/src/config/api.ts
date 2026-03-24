@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'https://keakitv2api.duckdns.org';
 
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
