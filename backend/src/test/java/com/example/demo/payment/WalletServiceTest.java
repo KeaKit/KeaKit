@@ -27,6 +27,14 @@ import com.example.demo.model.Transaction;
 import com.example.demo.model.TransactionType;
 
 import com.example.demo.exception.ResourceNotFoundException;
+import org.mockito.ArgumentCaptor;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.any;
+
+import com.example.demo.exception.NotEnoughBalanceException;
+
 
 
 @ExtendWith(MockitoExtension.class)
@@ -108,6 +116,44 @@ public class WalletServiceTest {
         assertTrue(transactions.isEmpty());
     }
 
-    // TODO: Tests para updateWalletBalance, incluyendo casos de éxito y casos de error (saldo insuficiente, monto negativo, etc.)
-    
+    @Test
+    void updateWalletBalance_ShouldCreatePayoutTransaction_WhenBalanceIsEnough() {
+        Wallet wallet = TestDataFactory.createMockWallet(5L, USER, 200.0);
+        when(walletRepository.findByUserId(USER.getId())).thenReturn(Optional.of(wallet));
+
+        walletService.updateWalletBalance(USER.getId(), 50.0);
+
+        ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
+        verify(transactionRepository).save(captor.capture());
+
+        Transaction saved = captor.getValue();
+        assertEquals(-50.0, saved.getAmount());
+        assertEquals(wallet, saved.getDestinationWallet());
+        assertEquals(TransactionType.PAYOUT, saved.getType());
+    }
+
+    @Test
+    void updateWalletBalance_ShouldThrow_WhenBalanceInsufficient() {
+        Wallet wallet = TestDataFactory.createMockWallet(5L, USER, 10.0);
+        when(walletRepository.findByUserId(USER.getId())).thenReturn(Optional.of(wallet));
+
+        NotEnoughBalanceException ex = assertThrows(NotEnoughBalanceException.class,
+                () -> walletService.updateWalletBalance(USER.getId(), 50.0));
+
+        assertTrue(ex.getMessage().contains("Insufficient balance"));
+        verify(transactionRepository, never()).save(any());
+    }
+
+    @Test
+    void updateWalletBalance_ShouldThrow_WhenAmountIsNonPositive() {
+        Wallet wallet = TestDataFactory.createMockWallet(5L, USER, 200.0);
+        when(walletRepository.findByUserId(USER.getId())).thenReturn(Optional.of(wallet));
+
+        NotEnoughBalanceException ex = assertThrows(NotEnoughBalanceException.class,
+                () -> walletService.updateWalletBalance(USER.getId(), 0.0));
+
+        assertTrue(ex.getMessage().contains("positive"));
+        verify(transactionRepository, never()).save(any());
+    }
+
 }
