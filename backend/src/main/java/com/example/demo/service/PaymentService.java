@@ -66,7 +66,7 @@ public class PaymentService {
     @Value("${stripe.api.key}")
     private String stripeApiKey;
 
-    PaymentService(GuaranteeReturnEmailService guaranteeReturnEmailService) {
+    public PaymentService(GuaranteeReturnEmailService guaranteeReturnEmailService) {
         this.guaranteeReturnEmailService = guaranteeReturnEmailService;
     }
 
