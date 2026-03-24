@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ArticleRecordDTO;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
@@ -7,6 +8,7 @@ import com.example.demo.model.Category;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.service.ArticleService;
+import com.example.demo.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,8 @@ public class ArticleController {
     private CategoryRepository categoryRepository;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private AuthService authService;
 
     @PostMapping(value = "/upload-with-image", consumes = {"multipart/form-data"})
     public ResponseEntity<?> uploadArticleWithImage(
@@ -143,4 +147,22 @@ public class ArticleController {
         }
     }
 
+    @GetMapping("/record/{articleId}")
+    public ResponseEntity<List<ArticleRecordDTO>> getArticleRecord(@PathVariable Long articleId) {
+        try {
+            Long ownerId = authService.getAuthenticatedUserId();
+            Article article = articleService.findById(articleId);
+            if (article == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            } 
+            if (ownerId == null || !ownerId.equals(article.getOwner().getId())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+            List<ArticleRecordDTO> articleRecord = articleService.findArticleRecord(articleId);
+            return ResponseEntity.ok(articleRecord);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+    
 }

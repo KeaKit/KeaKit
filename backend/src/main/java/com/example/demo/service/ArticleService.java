@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.demo.dto.ArticleRecordDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
@@ -353,5 +354,23 @@ public class ArticleService {
                 rentedUntil
             );
         }).collect(Collectors.toList());
+    }
+
+    public List<ArticleRecordDTO> findArticleRecord(Long articleId) {
+        List<Kit> kitsWhereArticleHasBeen = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
+        List<ArticleRecordDTO> articleRecord = kitsWhereArticleHasBeen.stream()
+        .filter(k -> k.getStatus() != KitStatus.DRAFT && k.getStatus() != KitStatus.CANCELLED)
+        .map(k -> {
+            ArticleRecordDTO row = new ArticleRecordDTO();
+            row.setTenantName(k.getTenant().getName());
+            row.setTenantId(k.getTenant().getId());
+            row.setStartDate(k.getStartDate());
+            row.setEndDate(k.getEndDate());
+            row.setStatus(k.getStatus());
+            row.setCity(k.getCity());
+            row.setCountry(k.getCountry());
+            return row;
+        }).collect(Collectors.toList());
+        return articleRecord;
     }
 }
