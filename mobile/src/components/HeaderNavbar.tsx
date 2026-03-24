@@ -98,7 +98,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers', requiresAdmin: true },
     { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories', requiresAdmin: true },
     { name: 'Comisión de Plataforma', icon: 'cash', screen: 'Commission', requiresAdmin: true },
-    { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents', requiresAdmin: true },
+    { name: 'Incidencias', icon: 'warning-outline', screen: 'AdminIncidents', requiresAdmin: true },
     { name: 'Kits Predeterminados', icon: 'cube-outline', screen: 'DefaultKits', requiresAdmin: true },
   ];
 
