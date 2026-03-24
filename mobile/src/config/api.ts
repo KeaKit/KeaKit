@@ -103,7 +103,10 @@ export const API_ROUTES = {
 
   // Default Kits (kits predeterminados)
   DEFAULT_KITS: `${BASE_URL}/api/default-kits`,
-  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`
+  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`,
+
+  // Article history
+  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`
 
 } as const;
 
