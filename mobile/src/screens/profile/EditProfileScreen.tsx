@@ -41,6 +41,8 @@ const parseBackendError = (err: unknown): FieldErrors => {
   const message = err.message.toLowerCase();
   if (message.includes('phone number must be valid'))
     return { phone: 'Número de teléfono no válido.' };
+  if (message.includes('address'))
+    return { address: 'El tamaño de la dirección debe estar entre 5 y 255 caracteres.'}
   return { general: err.message || 'Error al actualizar el perfil.' };
 };
 

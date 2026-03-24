@@ -43,7 +43,7 @@ class AdminUserIntegrationTest {
         u.setName("Integration");
         u.setRole(UserRole.USER);
         u.setPhone("+34111111111");
-        u.setAddress("Addr");
+        u.setAddress("Address");
         u.setCity("City");
         u.setCountry("Country");
 

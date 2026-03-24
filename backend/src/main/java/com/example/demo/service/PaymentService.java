@@ -34,6 +34,8 @@ import jakarta.annotation.PostConstruct;
 @Service
 public class PaymentService {
 
+    private final GuaranteeReturnEmailService guaranteeReturnEmailService;
+
     @Value("${ADMIN_EMAIL:admin@keakit.com}")
     private String KEAKIT_ADMIN_EMAIL;
 
@@ -63,6 +65,10 @@ public class PaymentService {
 
     @Value("${stripe.api.key}")
     private String stripeApiKey;
+
+    PaymentService(GuaranteeReturnEmailService guaranteeReturnEmailService) {
+        this.guaranteeReturnEmailService = guaranteeReturnEmailService;
+    }
 
     @PostConstruct
     public void init() {
@@ -166,6 +172,7 @@ public class PaymentService {
             Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
             Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
             transactionRepository.save(tenantReceive);
+            guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
 
         } else if ("DAMAGED".equalsIgnoreCase(condition)) {
             // Compensamos al propietario enviando la fianza a su monedero
