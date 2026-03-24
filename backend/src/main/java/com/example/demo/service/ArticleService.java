@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +14,6 @@ import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
-import com.example.demo.model.Wallet;
 import com.example.demo.model.Category;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Kit;
@@ -23,7 +21,6 @@ import com.example.demo.model.KitStatus;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.WalletRepository;
 import com.example.demo.repository.CategoryRepository;
 
 @Service
@@ -33,18 +30,12 @@ public class ArticleService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final PaymentService paymentService;
-    private final WalletRepository walletRepository;
     private final KitRepository kitRepository;
-
     private final DefaultKitService defaultKitService;
-    @Autowired
-    private WalletService walletService;
-    
-
     private final CloudinaryService cloudinaryService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
-                          KitRepository kitRepository, CategoryRepository categoryRepository, PaymentService paymentService, WalletRepository walletRepository,
+                          KitRepository kitRepository, CategoryRepository categoryRepository, PaymentService paymentService,
                           CloudinaryService cloudinaryService, DefaultKitService defaultKitService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
@@ -53,7 +44,6 @@ public class ArticleService {
         this.cloudinaryService = cloudinaryService;
         this.defaultKitService = defaultKitService;
         this.paymentService = paymentService;
-        this.walletRepository = walletRepository;
     }
 
     public Article createWithImage(Article article, MultipartFile image, Long ownerId, Long categoryId) throws IOException {
