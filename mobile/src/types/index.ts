@@ -500,3 +500,23 @@ export interface TrackingNotification {
   createdAt: string;
   read: boolean;
 }
+
+export interface ArticleNearby {
+  id: number;
+  itemType: string;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string | null;
+  availableUntil: string | null;
+  category: string | null;
+  totalUnits: number | null;
+  ownerId: number | null;
+  ownerName: string | null;
+  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE' | null;
+  imageUrl: string | null;
+  cityLat: number;
+  cityLng: number;
+  distanceKm: number;
+}
