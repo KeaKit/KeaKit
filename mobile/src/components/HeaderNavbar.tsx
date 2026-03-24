@@ -142,7 +142,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           items: [
             { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
             { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
-            { name: 'Notificaciones', icon: 'notifications', screen: 'TrackingNotifications' },
+            { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications' },
+            { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications' },
           ]
         },
         {
@@ -160,7 +161,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           items: [
             { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
             { name: 'Kits asignados', icon: 'cube-outline', screen: 'AssignedKits' },
-            { name: 'Notificaciones', icon: 'notifications', screen: 'TrackingNotifications' },
+            { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications' },
           ]
         },
         {
@@ -178,7 +179,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         items: [
           { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
           { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
-          { name: 'Notificaciones', icon: 'notifications', screen: 'TrackingNotifications' },
+          { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications' },
+          { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications' },
         ]
       },
       {
