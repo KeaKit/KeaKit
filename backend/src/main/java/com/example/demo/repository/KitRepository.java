@@ -25,5 +25,6 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
     @Query("SELECT k FROM Kit k JOIN k.snapshots s WHERE s.originalItemId = :itemId AND k.status = :status")
     Optional<Kit> findActiveKitByItemId(@Param("itemId") Long itemId, @Param("status") KitStatus status);
 
+    List<Kit> findByStatusAndEndDate(KitStatus status, LocalDate endDate);
 }
 
