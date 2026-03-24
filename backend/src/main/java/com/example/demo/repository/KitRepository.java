@@ -3,6 +3,8 @@ package com.example.demo.repository;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +17,8 @@ import java.util.Optional;
 @Repository
 public interface KitRepository extends JpaRepository<Kit, Long> {
     List<Kit> findByTenantId(Long tenantId);
+    Page<Kit> findByTenantId(Long tenantId, Pageable pageable);
+    Page<Kit> findByTenantIdAndStatusNot(Long tenantId, KitStatus status, Pageable pageable);
     List<Kit> findByTenantIdAndEndDateGreaterThanEqual(Long tenantId, LocalDate date);
 
     // Busca un Kit que contenga el artículo y que esté actualmente en curso

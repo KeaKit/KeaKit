@@ -122,16 +122,16 @@
 | RN-KIT-06 | La fecha de fin del alquiler (`endDate`) es obligatoria. |
 | RN-KIT-07 | La fecha de fin no puede ser anterior a la fecha de inicio. |
 | RN-KIT-08 | La fecha de inicio del alquiler no puede ser anterior a la fecha actual. |
-| RN-KIT-09 | Los estados posibles de un kit son: `PENDING`, `PAID`, `PENDING_VALIDATION`, `ACTIVE`, `COMPLETED`, `CANCELLED`, `UPCOMING` y `FINISHED`. |
+| RN-KIT-09 | Los estados posibles de un kit son: `DRAFT`, `PAID`, `ACTIVE`, `CANCELLED` y `FINISHED`. |
 | RN-KIT-10 | Un kit se crea en estado `PAID` por defecto (se crea en el momento del pago). |
-| RN-KIT-11 | Un kit debe tener al menos un ítem seleccionado. |
+| RN-KIT-11 | Un kit debe tener al menos un ítem seleccionado, excepto si está en estado `DRAFT`. |
 | RN-KIT-12 | Cada selección de ítem debe incluir un ID de ítem válido y existente. |
 | RN-KIT-13 | La cantidad solicitada de cada ítem debe ser al menos 1. |
 | RN-KIT-14 | La cantidad solicitada de un ítem no puede superar las unidades totales disponibles (`totalUnits`) de dicho ítem. |
 | RN-KIT-15 | Un kit debe estar asociado a un arrendatario (tenant). |
 | RN-KIT-16 | Un arrendatario puede tener múltiples kits activos simultáneamente. |
 | RN-KIT-17 | El seguimiento de un kit solo puede ser consultado por el arrendatario al que pertenece. |
-| RN-KIT-18 | Un kit solo puede pasar a estado `ACTIVE` si su estado actual es `PENDING_VALIDATION`. |
+| RN-KIT-18 | Un kit solo puede pasar a estado `ACTIVE` si su estado actual es `PAID`. |
 | RN-KIT-19 | Al confirmar un kit (transición a `ACTIVE`), se envía un email de confirmación al arrendatario. |
 | RN-KIT-20 | Un arrendatario puede ver todos sus kits en la sección "Mis Kits". |
 | RN-KIT-21 | Un arrendatario puede ver la fecha de devolución de cada kit para no olvidarse. |
@@ -144,6 +144,7 @@
 | RN-KIT-28 | El arrendatario puede ver el precio, estado, fotos y descripción de cada artículo antes de seleccionarlo. |
 | RN-KIT-29 | El arrendatario puede cambiar un artículo elegido por otro del mismo tipo antes de pagar. |
 | RN-KIT-30 | La duración del alquiler se calcula en meses entre la fecha de inicio y la fecha de fin, incluyendo fracciones de mes (cada día equivale a 1/30 de mes). |
+| RN-KIT-31 | Un arrendatario no puede seleccionar ítems de su propia propiedad al crear un kit. |
 
 ### 1.6 Precios, Comisiones y Garantías
 

@@ -20,6 +20,7 @@ import { Colors, Spacing, commonStyles } from '../../styles';
 import { useAuth } from '../../context/AuthContext';
 import { API_ROUTES } from "../../config/api";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { deleteKit } from '../../services/kitService';
 import { createIncident } from '../../services/incidentService';
 
 type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
@@ -50,6 +51,7 @@ const KitDetailScreen: React.FC = () => {
   const [actionModalTitle, setActionModalTitle] = useState('');
   const [actionModalMessage, setActionModalMessage] = useState('');
   const [onActionConfirm, setOnActionConfirm] = useState<() => void>(() => () => {});
+  const [ratedItems, setRatedItems] = useState<{ [key: number]: boolean }>({});
 
 
   useEffect(() => {
@@ -67,6 +69,20 @@ const KitDetailScreen: React.FC = () => {
         if (!response.ok) throw new Error('Error al obtener kit');
         const data = await response.json();
         setKit(data);
+
+        if (data && data.items?.length > 0 && user?.id) {
+          const itemIds = data.items.map((item: any) => item.itemId);
+          fetch(`${API_ROUTES.HAS_REVIEWED_ITEMS}?reviewerId=${user.id}&kitId=${kitId}&itemIds=${itemIds.join(',')}`, {
+            headers: user?.token
+              ? { Authorization: `Bearer ${user.token}` }
+              : undefined,
+          })
+            .then(res => res.json())
+            .then((res: { [key: number]: boolean }) => {
+              setRatedItems(res);
+            })
+            .catch(err => console.error("Error al obtener items valorados", err));
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -74,6 +90,7 @@ const KitDetailScreen: React.FC = () => {
       }
     };
     if (kitId) fetchKitDetail();
+    
   }, [kitId, user?.token]);
 
 const handleConfirmKit = async () => {
@@ -169,6 +186,21 @@ const handleSubmitReport = async () => {
 
   if (!kit) return null;
 
+  const navigateToUserReviews = (ownerId: number, ownerName: string) => {
+    navigation.navigate('UserRatings', {
+      userId: ownerId,
+      userName: ownerName,
+    });
+  };
+
+  const createReview = (kitId: number, revieweeId: number, revieweeName: string) => {
+    navigation.navigate('CreateRating', {
+      kitId: kitId,
+      revieweeId: revieweeId,
+      revieweeName: revieweeName
+    });
+  };
+
   return (
     <SafeAreaView style={commonStyles.container}>
 
@@ -208,12 +240,40 @@ const handleSubmitReport = async () => {
 
         <Text style={styles.sectionTitle}>Productos Incluidos</Text>
         <View style={styles.itemsContainer}>
-          {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => (
+          {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => {
+            const alreadyRated = ratedItems[item.itemId];
+
+            return (
             <View key={item.itemId} style={styles.itemCard}>
+              
               <View style={styles.itemInfo}>
                 <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemMeta}>{item.category} • {item.pricePerMonth}€/mes</Text>
+
+                <Text style={styles.itemMeta}>
+                  {item.ownerName ? (
+                    <Text
+                      style={{ color: "#007AFF" }}
+                      onPress={() => navigateToUserReviews(item.ownerId, item.ownerName)}
+                    >
+                      {item.ownerName}
+                    </Text>
+                  ) : ""} • {item.category} • {item.pricePerMonth}€/mes
+                </Text>
               </View>
+
+              {kit.status === "FINISHED" && (
+                <TouchableOpacity
+                  style={[styles.itemButton, alreadyRated && { opacity: 0.5 }]}
+                  onPress={() => !alreadyRated && createReview(kitId, item.ownerId, item.ownerName)}
+                  disabled={alreadyRated}
+                >
+                  <Ionicons name="star-outline" size={18} color="#666" />
+                  <Text style={styles.itemButtonText}>
+                    {alreadyRated ? "Valorado" : "Valorar"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
               {kit.status === KitStatus.ACTIVE && (
                 <TouchableOpacity 
                   onPress={() => {
@@ -227,7 +287,8 @@ const handleSubmitReport = async () => {
               )}
               <Ionicons name="cube-outline" size={20} color="#DDD" />
             </View>
-          ))}
+            );
+          })}
 
           {kit.items && kit.items.length > 3 && (
             <TouchableOpacity 
@@ -247,6 +308,15 @@ const handleSubmitReport = async () => {
           <Text style={styles.totalValue}>{kit.totalPrice?.toLocaleString('es-ES')} €</Text>
         </View>
 
+        <TouchableOpacity
+          style={styles.trackingButton}
+          onPress={() => navigation.navigate("Tracking", { kitId: kit.id })}
+        >
+          <Ionicons name="navigate-outline" size={18} color={Colors.primary} />
+          <Text style={styles.trackingButtonText}>Ver seguimiento</Text>
+        </TouchableOpacity>
+
+
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
             style={styles.confirmButton}
@@ -264,20 +334,10 @@ const handleSubmitReport = async () => {
               async () => {
                 try {
                   setDeleting(true);
-                  const response = await fetch(API_ROUTES.GET_KIT(kitId), {
-                    method: 'DELETE',
-                    headers: user?.token
-                      ? {
-                          Authorization: `Bearer ${user.token}`,
-                          "Content-Type": "application/json",
-                        }
-                      : undefined,
-                  });
-                  if (!response.ok) throw new Error('No se pudo eliminar');
-                  console.log('Éxito', 'El kit ha sido eliminado correctamente.');
-                  navigation.goBack();
+                  await deleteKit(kitId, user?.token ?? "");
+                  navigation.navigate("MyKits");
                 } catch (error) {
-                  console.error('Error', 'No se pudo eliminar el kit.');
+                  console.error('Error', 'No se pudo eliminar el kit.', error);
                 } finally {
                   setDeleting(false);
                   setActionModalVisible(false);
@@ -290,7 +350,7 @@ const handleSubmitReport = async () => {
         )}
 
 
-        {kit.status === KitStatus.PAID && (
+        {kit.status === KitStatus.PAID && user?.role === "USER" &&(
           <TouchableOpacity
             style={styles.confirmButton}
             onPress={() => openActionModal(
@@ -305,58 +365,6 @@ const handleSubmitReport = async () => {
         )}
 
       </ScrollView>
-
-      <Modal
-        visible={cancelModalVisible}
-        transparent
-        animationType="fade"
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>eliminar Kit</Text>
-            <Text style={styles.modalSubtitle}>
-              ¿Estás seguro de que deseas eliminar este kit? Esta acción no se puede deshacer.
-            </Text>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => setCancelModalVisible(false)}
-              >
-                <Text style={styles.modalCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalSubmitButton}
-                onPress={async () => {
-                  try {
-                    setDeleting(true);
-                    const response = await fetch(API_ROUTES.GET_KIT(kitId), {
-                      method: 'DELETE',
-                      headers: user?.token
-                        ? {
-                            Authorization: `Bearer ${user.token}`,
-                            "Content-Type": "application/json",
-                          }
-                        : undefined,
-                    });
-                    if (!response.ok) throw new Error('No se pudo eliminar');
-                    console.log('Éxito', 'El kit ha sido eliminado correctamente.');
-                    navigation.goBack();
-                  } catch (error) {
-                    console.error('Error', 'No se pudo eliminar el kit.');
-                  } finally {
-                    setDeleting(false);
-                    setCancelModalVisible(false);
-                  }
-                }}
-              >
-                <Text style={styles.modalSubmitText}>Eliminar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <Modal
           visible={actionModalVisible}
@@ -487,6 +495,26 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#666', fontWeight: '600', },
   modalSubmitButton: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: Colors.primary, alignItems: 'center' },
   modalSubmitText: { color: '#FFF', fontWeight: 'bold' },
+    trackingButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    backgroundColor: "#FFF",
+    gap: 8,
+  },
+  trackingButtonText: {
+    color: Colors.primary,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+
+  itemButton: { marginLeft: 20, flexDirection: "column", alignItems: "center", padding: 6 },
+  itemButtonText: { fontSize: 12, color: "#666", fontWeight: "600" },
   textArea: { borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 10, marginTop: 15, marginBottom: 20, minHeight: 100, textAlignVertical: "top", color: "#000", },
 });
 

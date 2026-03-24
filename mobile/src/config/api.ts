@@ -15,9 +15,15 @@ export const API_ROUTES = {
   GET_RATINGS_BY_USER:   (userId: number) => `${BASE_URL}/api/ratings/given/${userId}`,
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
+  HAS_REVIEWED_ITEMS: `${BASE_URL}/api/ratings/has-reviewed`,
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
+  GET_KITS: `${BASE_URL}/api/kits`,
   GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,
   CONFIRM_KIT: (id: number) => `${BASE_URL}/api/kits/confirm/${id}`,
+  ADD_ITEM_TO_KIT: (kitId: number, itemId: number, userId: number) =>
+    `${BASE_URL}/api/kits/${kitId}/items/${itemId}?userId=${userId}`,
+  REMOVE_ITEM_FROM_KIT: (kitId: number, itemId: number, userId: number) =>
+    `${BASE_URL}/api/kits/${kitId}/items/${itemId}?userId=${userId}`,
   KIT_PAYMENT: `${BASE_URL}/api/kits/payment`,
   KIT_MARK_PAID: (id: number) => `${BASE_URL}/api/kits/${id}/pay`,
   KIT_CANCEL: (id: number) => `${BASE_URL}/api/kits/${id}/cancel`,
@@ -48,8 +54,30 @@ export const API_ROUTES = {
   ADD_INCIDENT_COMMENT:       (incidentId: number) => `${BASE_URL}/api/incidents/${incidentId}/comments`,
 
   // Kits / Rented items
-    MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
+  MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
+  MY_KITS_HISTORY: (page: number = 0, size: number = 10) => `${BASE_URL}/api/kits/my-history?page=${page}&size=${size}`,
+
+  // Kits / Tracking-Assign 
+
+  GET_KIT_TRACKING: (kitId: number) => `${BASE_URL}/api/kits/${kitId}/tracking`,
+  UPDATE_KIT_TRACKING: (kitId: number) => `${BASE_URL}/api/kits/${kitId}/tracking`,
+  ASSIGNED_KITS: `${BASE_URL}/api/kits/courier/assigned`,
+  GET_ALL_KITS: `${BASE_URL}/api/kits`,
+  ASSIGN_COURIER: (kitId: number, courierId: number) => `${BASE_URL}/api/kits/${kitId}/assign-courier/${courierId}`,
+  BUSY_COURIERS: (country?: string, city?: string) => {
+    const params = new URLSearchParams();
+    if (country) params.append("country", country);
+    if (city) params.append("city", city);
+    return `${BASE_URL}/api/kits/busy-couriers?${params.toString()}`;
+  },
+  UNASSIGNED_KITS: (country?: string, city?: string) => {
+    const params = new URLSearchParams();
+    if (country) params.append("country", country);
+    if (city) params.append("city", city);
+    return `${BASE_URL}/api/kits/unassigned?${params.toString()}`;
+  },
+
 
   // Payments
   CREATE_PAYMENT_INTENT:     `${BASE_URL}/api/payments/create`,
@@ -57,6 +85,11 @@ export const API_ROUTES = {
   PROCESS_PAYMENT_WALLET:    (kitId: number) => `${BASE_URL}/api/payments/process/wallet/${kitId}`,
   GET_KIT_PAYMENT_BY_ID:     (kitId: number) => `${BASE_URL}/api/kits/payment/${kitId}`,
   SIMULATE_PAYMENT:           `${BASE_URL}/api/payments/pay-kit`,
+
+  // Wallet
+  GET_WALLET_BY_USER_ID:     (userId: number) => `${BASE_URL}/api/wallet/user/${userId}`,
+  GET_MY_WALLET:             `${BASE_URL}/api/wallet/my-wallet`,
+  GET_MY_TRANSACTIONS:       `${BASE_URL}/api/wallet/my-wallet/transactions`,
 
   // Services
   ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,
@@ -67,6 +100,10 @@ export const API_ROUTES = {
   DELETE_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}`,
   REQUEST_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}/request`,
   RELEASE_SERVICE: (id: number) => `${BASE_URL}/api/services/${id}/release`,
+
+  // Default Kits (kits predeterminados)
+  DEFAULT_KITS: `${BASE_URL}/api/default-kits`,
+  DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`
 
 } as const;
 
