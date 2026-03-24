@@ -77,12 +77,14 @@
 | Luis Emmanuel Chávez Malavé | 9                      | 9                         | 31               |
 | Salma El Hakimy Ettorabi    | 10                     | 3                         | 25               |
 | Lucía Ponce García de Sola  | 18                     | 18                        | 43               |
+| **Total**                   | **76**                 | **60**                    | **159**          |
 
 ## 6. Historial de versiones
 
-| Versión | Fecha       | Descripción                    | Autor(es)                  |
-|---------|-------------|--------------------------------|----------------------------|
-| 1.0.0   | 24/03/2026  |  Versión inicial               | Lucía Ponce García de Sola |
+| Versión | Fecha      | Descripción                                     | Autor(es)                  |
+|---------|------------|-------------------------------------------------|----------------------------|
+| 1.0.0   | 24/03/2026 | Versión inicial                                 | Lucía Ponce García de Sola |
+| 1.1.0   | 24/03/2026 | Añadido total al resumen de la carga de trabajo | Lucía Ponce García de Sola |
 
 
 ---
