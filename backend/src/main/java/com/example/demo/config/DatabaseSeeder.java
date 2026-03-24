@@ -27,6 +27,7 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
+            NotificationRepository notificationRepo,
             RatingRepository ratingRepo,
             CountryRepository countryRepo,
             CityRepository cityRepo,
@@ -230,6 +231,39 @@ public class DatabaseSeeder {
             kitRepo.save(pendingPaidKit);
 
 
+            // 7.2 Kit con devolución cercana para CU-ARRENDADOR-08
+            Kit upcomingReturnKit = new Kit();
+            upcomingReturnKit.setName("Pack Fotografía Pro");
+            upcomingReturnKit.setTenant(tenant);
+            upcomingReturnKit.setStatus(KitStatus.ACTIVE);
+            upcomingReturnKit.setDeliveryMethod(DeliveryMethod.COURIER);
+            upcomingReturnKit.setStartDate(LocalDate.now().minusDays(5));
+            upcomingReturnKit.setEndDate(LocalDate.now().plusDays(2));
+            upcomingReturnKit.setCountry("Spain");
+            upcomingReturnKit.setCity("Sevilla");
+            kitRepo.save(upcomingReturnKit);
+
+            ItemMemento snap5 = camara.createSnapshot(1, upcomingReturnKit.getDeliveryMethod(), upcomingReturnKit.getCourierPrice(), upcomingReturnKit.getMeetingPoint());
+            snap5.setKit(upcomingReturnKit);
+            snap5.setPriceAtRental(camara.getPricePerMonth());
+            upcomingReturnKit.setSnapshots(List.of(snap5));
+            kitRepo.save(upcomingReturnKit);
+
+            // 7.3 Notificaciones de actividad (CU-ARRENDADOR-08)
+            Notification rentedNotification = new Notification(
+                owner,
+                "¡Enhorabuena! Uno o más de tus objetos han sido alquilados en el Kit: " + myKit.getName(),
+                NotificationType.ITEM_RENTED,
+                myKit.getId());
+            notificationRepo.save(rentedNotification);
+
+            Notification returnReminder = new Notification(
+                owner,
+                "Recordatorio: Los objetos que tienes alquilados en el Kit '" + upcomingReturnKit.getName() + "' están a punto de ser devueltos (" + upcomingReturnKit.getEndDate() + ").",
+                NotificationType.RETURN_REMINDER,
+                upcomingReturnKit.getId());
+            notificationRepo.save(returnReminder);
+            
             // 8. Rating
             Rating feedback = new Rating();
             feedback.setKit(myKit);
