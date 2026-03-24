@@ -21,7 +21,6 @@ public class KitResponse {
         private String name;
         private String category;
         private String imageUrl;
-        private Long ownerId;
         private String ownerName;
 
         public KitItemResponse(
@@ -32,7 +31,6 @@ public class KitResponse {
             String name,
             String category,
             String imageUrl,
-            Long ownerId,
             String ownerName
         ) {
             this.itemId = itemId;
@@ -72,10 +70,6 @@ public class KitResponse {
 
         public String getImageUrl() {
             return imageUrl;
-        }
-
-        public Long getOwnerId() {
-            return ownerId;
         }
 
         public String getOwnerName() {
@@ -132,7 +126,6 @@ public class KitResponse {
                 s.getNameAtRental(),
                 s.getCategoryAtRental() != null ? s.getCategoryAtRental().getName() : null,
                 s.getImageUrlAtRental(),
-                s.getOwnerAtRental().getId(),
                 s.getOwnerAtRental().getName()
             ))
             .collect(Collectors.toList());
