@@ -529,8 +529,6 @@ const CreateKitScreen: React.FC = () => {
         throw new Error("No se pudo crear el kit.");
       }
 
-      console.log("Created kit:", createdKit);
-
       if (paymentType === "WALLET") {
         // Multiplicamos por 100 para pasarlo a céntimos
         const amountInCents = Math.round(finalPrice * 100);
@@ -540,8 +538,7 @@ const CreateKitScreen: React.FC = () => {
           user.token,
           amountInCents
         );
-
-        console.log("✅ Pago con wallet procesado exitosamente.");
+        
         navigation.navigate("MyKits");
       } else {
         navigation.navigate("Checkout", { kitId: createdKit.id });
