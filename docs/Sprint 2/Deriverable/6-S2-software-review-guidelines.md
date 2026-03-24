@@ -1,0 +1,45 @@
+# S2 - Software Review Guidelines
+
+## Enlace al Despliegue
+**Enlace:** [https://keakitv2.web.app](https://keakitv2.web.app)
+
+## Casos de Uso
+* **CU-GENERAL-01** – Registro e inicio de sesión: Permite a los usuarios crear una cuenta o acceder al sistema mediante sus credenciales.
+* **CU-GENERAL-02** – Gestión de datos personales: Facilita la edición y actualización de la información del perfil de un usuario registrado.
+* **CU-GENERAL-03** – Valoraciones: Permite a los usuarios puntuar y comentar su experiencia tras finalizar un alquiler.
+* **CU-GENERAL-04** – Soporte: Proporciona un canal de comunicación directo para resolver dudas o problemas técnicos.
+* **CU-GENERAL-05** – Home: Ofrece una pantalla principal con accesos rápidos y artículos destacados personalizados.
+* **CU-ARRENDADOR-01** – Subida de artículos: Permite a los dueños publicar objetos reales definiendo precio, ciudad y categoría.
+* **CU-ARRENDADOR-02** – Listado de artículos subidos: Muestra una vista organizada de todos los artículos que el dueño ha subido a la plataforma.
+* **CU-ARRENDADOR-03** – Gestión de artículos subidos: Habilita la edición de detalles o el borrado de artículos siempre que no estén alquilados.
+* **CU-ARRENDADOR-04** – Gestión de fin de alquiler: Gestiona la devolución del objeto y el desbloqueo del pago tras verificar su estado.
+* **CU-ARRENDADOR-05** – Retirada de ingresos: Permite transferir el saldo acumulado en la cartera de la app hacia una cuenta externa.
+* **CU-ARRENDADOR-10** – Historial de alquileres de un objeto: Registra y muestra el listado histórico de todas las veces que un objeto específico fue alquilado.
+* **CU-ARRENDATARIO-01** – Creación de kits: Permite agrupar varios artículos para alquilarlos conjuntamente bajo un mismo nombre y fechas.
+* **CU-ARRENDATARIO-02** – Visualización dinámica de precios: Calcula y muestra en tiempo real el coste total del kit según se añaden o quitan objetos.
+* **CU-ARRENDATARIO-03** – Gestión logística del alquiler: Permite elegir entre recogida en mano o envío mediante servicios de logística externos.
+* **CU-ARRENDATARIO-04** – Pago del kit: Procesa el pago seguro del alquiler mediante tarjeta de crédito o métodos electrónicos.
+* **CU-ARRENDATARIO-05** – Seguimiento de alquileres activos: Ofrece una vista del estado actual y fechas límite de los kits que el usuario tiene alquilados.
+* **CU-ARRENDATARIO-07** – Modificar kits predeterminados: Habilita la personalización de kits sugeridos por la app para adaptarlos a necesidades específicas.
+* **CU-ARRENDATARIO-10** – Ampliación de búsqueda geográfica: Sugiere artículos en localidades cercanas cuando no hay stock exacto en la ciudad buscada.  
+* **CU-ARRENDATARIO-11** – Historial de alquileres: Muestra el archivo histórico de todos los kits alquilados y completados por el usuario.  
+* **CU-ADMIN-01** – Gestión de categorías: Permite crear y organizar las categorías de la plataforma y sus rangos de precios permitidos.
+* **CU-ADMIN-02** – Listado de usuarios: Proporciona una vista global de todas las cuentas registradas en el sistema.
+* **CU-ADMIN-04** – Gestión de usuarios: Facilita la creación, edición o eliminación de cuentas de usuario desde el panel de gestión.
+* **CU-ADMIN-05** – Configuración modelo negocio: Habilita la configuración de parámetros críticos como el porcentaje de comisión de la plataforma.
+* **CU-ADMIN-06** – Creación kits predeterminados: Permite diseñar packs de artículos sugeridos para facilitar la experiencia de alquiler al usuario.
+
+
+## Datos necesarios
+Para realizar las pruebas de inicio de sesión, se pueden utilizar las siguientes credenciales:
+
+| Correo electrónico | Contraseña |
+| :--- | :--- |
+| `owner@example.com` | `password123` |
+| `tenant@example.com` | `password123` |
+| `admin@tusitio.com` | `password_admin` |
+||
+
+## Requisitos para utilizar el sistema
+* Conexión a Internet.
+* Navegador web actualizado.
