@@ -38,12 +38,11 @@ A continuación se muestra una tabla resumen de las incidencias reportadas por a
 | CU-ARRENDADOR    | 7                 | Media/Alta              | Problemas de carga, validaciones, flujos rotos |
 | CU-ADMIN         | 2                 | Alta                    | Falta de restricciones por roles, validaciones incorrectas |
 
-
 ## 3. Análisis detallado por caso de uso
 
 A continuación se integran las incidencias reportadas por ambos grupos.
 
-### CU-GENERAL-01 – Registro e inicio de sesión  
+### CU-GENERAL-01 – Registro e inicio de sesión
 
 **Incidencias reportadas:**  
 - T-13: Falta de validación en campo teléfono.  
@@ -53,12 +52,12 @@ A continuación se integran las incidencias reportadas por ambos grupos.
 
 **Impacto:**  
 - Riesgo de datos inconsistentes.  
-- Posible mal funcionamiento en funcionalidades dependientes.
-- Posibles errores silenciosos o flujos rotos.
-- Mala experiencia de usuario.  
+- Posible mal funcionamiento en funcionalidades dependientes.  
+- Posibles errores silenciosos o flujos rotos.  
+- Mala experiencia de usuario.
 
 **Causa probable:**  
-- Validaciones insuficientes en frontend/backend.   
+- Validaciones insuficientes en frontend/backend.  
 - Posible suspensión del backend o timeouts.
 
 **Acciones propuestas:**  
@@ -68,7 +67,7 @@ A continuación se integran las incidencias reportadas por ambos grupos.
 - Implementar mensajes de error claros.  
 - Revisar estabilidad del despliegue del backend para evitar fallos de fetch.
 
-### CU-GENERAL-02 – Gestión de datos personales  
+### CU-GENERAL-02 – Gestión de datos personales
 
 **Incidencias reportadas:**  
 - T-13: Falta de validación en teléfono (se permiten letras, símbolos, longitudes incorrectas).  
@@ -81,33 +80,31 @@ A continuación se integran las incidencias reportadas por ambos grupos.
 - Posibles errores en funcionalidades dependientes.
 
 **Causa probable:**  
-- Parte del sistema entra en suspensión, lo que hace que no se puedan obtener las categorías.
+- Parte del sistema entra en suspensión, lo que hace que no se puedan obtener las categorías.  
 - Fallo en el endpoint de carga de categorías.
 
 **Acciones propuestas:**  
-- Revisar carga de categorías.
-- Validar que el usuario tenga permisos correctos.
-- Añadir fallback si no hay categorías disponibles.
+- Revisar carga de categorías.  
+- Validar que el usuario tenga permisos correctos.  
+- Añadir fallback si no hay categorías disponibles.  
 - Buscar alternativas de despliegue, pues el equipo es consciente de que existen problemas con la entrada en suspensión automática de parte del sistema.
-- Añadir mensajes de error junto a los campos.   
+- Añadir mensajes de error junto a los campos.  
 - Estructurar dirección o integrar API de validación.
 
-### CU-GENERAL-03 – Valoraciones  
+### CU-GENERAL-03 – Valoraciones
 
 **Incidencias reportadas:**  
-- T-12: No se ha podido probar la funcionalidad.  
+- T-12: No se ha podido probar la funcionalidad.
 
 **Impacto:**  
 - Caso de uso incompleto.  
 - Imposibilidad de validar comportamiento esperado.
 
-**Causa probable**
-
 **Acciones propuestas:**  
 - Implementar lógica completa de creación y gestión de valoraciones.  
 - Añadir tests funcionales.
 
-### CU-GENERAL-04 – Soporte  
+### CU-GENERAL-04 – Soporte
 
 **Incidencias reportadas:**  
 - T-12: Error “Type Definition Error” al crear una incidencia relacionada con un artículo.
@@ -122,14 +119,14 @@ A continuación se integran las incidencias reportadas por ambos grupos.
 
 ---
 
-### CU-ARRENDADOR-01 – Subida de artículos  
+### CU-ARRENDADOR-01 – Subida de artículos
 
 **Incidencias reportadas:**  
 - T‑12: No permite elegir categoría, lo que bloquea creación del artículo.  
 - T‑13: Se permiten fechas pasadas sin validación.  
 - T‑13: Se permiten caracteres especiales en ciudad, descripción y nombre.  
 - T‑10: Las categorías tardan mucho en cargar o no cargan.  
-- Fallos de fetch frecuentes.  
+- Fallos de fetch frecuentes.
 
 **Impacto:**  
 - Funcionalidad crítica inutilizable.  
@@ -138,31 +135,31 @@ A continuación se integran las incidencias reportadas por ambos grupos.
 
 **Causa probable:**  
 - Parte del sistema entra en suspensión, lo que hace que no se puedan obtener las categorías.
-- Fallo en el endpoint de carga de categorías.
+- Fallo en el endpoint de carga de categorías.  
 - Validaciones insuficientes.
 
 **Acciones propuestas:**  
 - Revisar carga de categorías.  
 - Añadir fallback si no hay categorías disponibles.  
-- Validar campos de texto y fechas, añadiendo incluso un calendario para mejorar la experiencia de usuario.  
-- Añadir desplegable de ciudades según un país.
-- Revisar despliegue para evitar suspensión automática.  
+- Validar campos de texto y fechas, añadiendo incluso un calendario para mejorar la experiencia de usuario.
+- Añadir desplegable de ciudades según país.  
+- Revisar despliegue.
 
-### CU-ARRENDADOR-02 – Listado de artículos subidos  
+### CU-ARRENDADOR-02 – Listado de artículos subidos
 
 **Incidencias reportadas:**  
 - Todo correcto.
 
-### CU-ARRENDADOR-03 – Gestión de artículos subidos  
+### CU-ARRENDADOR-03 – Gestión de artículos subidos
 
 **Incidencias reportadas:**  
-- T13: Fechas inválidas aceptadas.
-- T13: URL inválida aceptada.
-- T13: Ciudad con formato incorrecto aceptada.
-- T12: Botón “volver” redirige a la misma pantalla (flujo roto).  
-- T12: No se pueden editar categorías (no cargan).  
+- T13: Fechas inválidas aceptadas.  
+- T13: URL inválida aceptada.  
+- T13: Ciudad con formato incorrecto aceptada.  
+- T12: Botón “volver” redirige a la misma pantalla.  
+- T12: No se pueden editar categorías.  
 - T13: Validaciones insuficientes en campos de texto.  
-- A veces el botón de editar no responde.  
+- A veces el botón de editar no responde.
 
 **Impacto:**  
 - Flujos bloqueados.  
@@ -180,7 +177,7 @@ A continuación se integran las incidencias reportadas por ambos grupos.
 - Implementación de desplegable para elegir el país y la ciudad.
 - Mostrar mensajes de error claros.
 
-### CU-ADMIN-01 – Gestión de categorías  
+### CU-ADMIN-01 – Gestión de categorías
 
 **Incidencias reportadas:**  
 - T‑14: Cualquier usuario puede gestionar categorías.  
@@ -218,7 +215,6 @@ A continuación se integran las incidencias reportadas por ambos grupos.
 | **Could** | Mejoras de UX, ajustes visuales |
 | **Won’t** | - |
 
-
 ## 6. Plan de acción
 
 | Tarea | Responsable | Fecha estimada | Estado |
@@ -228,25 +224,27 @@ A continuación se integran las incidencias reportadas por ambos grupos.
 | Refactorizar home - ARRENDADOR - ARRENDATARIO | Grupo 4 | 10/03/2026 | Done |
 | Servicios - Backend | Grupo 4 | 10/03/2026 | Done |
 | Refactorizar artículos frontend | Grupo 4 | 10/03/2026 | Done |
-| Refactorización del backend de kits | Grupo 1 |  | In Review |
-| Refactorización del frontend | Grupo 1 |  | In Review |
-| Refactorizar - CU-ARENDADOR-04 - Gestión de fin de alquiler | Grupo 2  | 10/03/2026 | In review |
-| Estudio de viabilidad de despliegue alternativo usando supabase y DigitalOcean | Grupo 4 | 11/03/2026 | In Review |
-| Servicios - Frontend | Grupo 4 | 11/03/2026 | In Review |
-| Refactorizar - CU-ARRENDADOR-02 - Listado de artículos subidos | Grupo 2 | 10/03/2026 | In Progress |
-| Servicios - Test | Grupo 4 | 11/03/2026 | In Progress |
-| Refactorización del backend de pagos | Grupo 1 |  | In Progress |
-| Refactorizar valoraciones| Grupo 3 | 10/03/2026 | Done |
+| Refactorizar - CU-Arrendador-02 - Listado de artículos subidos | Grupo 2 | 18/03/2026 | Done |
+| Refactorización del backend de kits | Grupo 1 | 13/03/2026  | Done |
+| Refactorización del frontend de kits | Grupo 1 | 13/03/2026  | Done |
+| Refactorizar - CU-ARENDADOR-04 - Gestión de fin de alquiler | Grupo 2  | 19/03/2026 | Done |
+| Estudio de viabilidad de despliegue alternativo usando supabase y DigitalOcean | Grupo 4 | 17/03/2026 | Done |
+| Servicios - Frontend | Grupo 4 | 12/03/2026 | Done |
+| Refactorizar - CU-ARRENDADOR-02 - Listado de artículos subidos | Grupo 2 | 18/03/2026 | Done |
+| Servicios - Test | Grupo 4 | 16/03/2026 | Done |
+| Refactorización del backend de pagos | Grupo 1 | 14/03/2026 | Done |
+| Refactorización del frontend de pagos | Grupo 1 | 18/03/2026 | Done |
+| Refactorizar valoraciones | Grupo 3 | 23/03/2026 | Done |
 | Refactorizar autenticación y gestión del perfil| Grupo 3 | 10/03/2026 | Done |
-| | Grupo 3 | 10/03/2026 | Done |
 
 ## 7. Historial de versiones
 
-| Versión | Fecha       | Descripción                                           | Autor(es)                  |
-|---------|-------------|-------------------------------------------------------|----------------------------|
-| 1.0.0   | 11/03/2026  | Integración del análisis del feedback del grupo 1 - RoomA       | Cristina Fernández Chica   |
-| 1.1.0   | 12/03/2026  | Integración del feedback del grupo 8 - Bookmerang    | Candela Jazmín Gutiérrez González   |
+| Versión | Fecha       | Descripción                                               | Autor(es)                             |
+|---------|-------------|-----------------------------------------------------------|----------------------------------------|
+| 1.0.0   | 11/03/2026  | Integración del análisis del feedback del grupo 1 - RoomA | Cristina Fernández Chica               |
+| 1.1.0   | 12/03/2026  | Integración del feedback del grupo 8 - Bookmerang         | Candela Jazmín Gutiérrez González      |
+| 2.0.0   | 24/03/2026  | Actualización de estado de las tareas del plan de acción  | Candela Jazmín Gutiérrez González      |
 
-**Redactado por:** Cristina Fernández Chica y Candela Jazmín Gutiérrez González
+**Redactado por:** Cristina Fernández Chica y Candela Jazmín Gutiérrez González  
 **Fecha de redacción:** 12/03/2026  
-**Versión:** 1.1.0
+**Versión:** 2.0.0
