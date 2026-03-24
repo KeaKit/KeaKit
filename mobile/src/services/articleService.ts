@@ -1,5 +1,5 @@
 import { API_ROUTES } from '../config/api';
-import { Article, ArticleNearby, ArticlePayload } from '../types';
+import { Article, ArticleNearby, ArticlePayload, ArticleRecordDTO } from '../types';
 import { Platform } from 'react-native';
 
 const normalizeErrorMessage = (raw: string): string => {
@@ -167,3 +167,19 @@ export async function getArticlesForMap(
   });
   return handleResponse<ArticleNearby[]>(res);
 }
+
+export const getArticleRecord = async (articleId: number, token: string): Promise<ArticleRecordDTO[]> => {
+  const response = await fetch(API_ROUTES.GET_ARTICLE_HISTORY(articleId), {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('No se pudo obtener el historial del artículo');
+  }
+
+  return await response.json();
+};

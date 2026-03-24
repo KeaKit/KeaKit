@@ -51,6 +51,7 @@ import CouriersScreen from '../screens/admin/CouriersScreen';
 import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
 
 import { RootStackParamList } from '../types';
+import ArticleRentalsScreen from '../screens/article/ArticleRentalsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -97,6 +98,14 @@ const AppNavigator: React.FC = () => {
                   {() => (
                     <MainLayout>
                       <MyArticlesScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="ArticleRentals">
+                  {() => (
+                    <MainLayout>
+                      <ArticleRentalsScreen />
                     </MainLayout>
                   )}
                 </Stack.Screen>

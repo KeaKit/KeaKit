@@ -193,6 +193,8 @@ public class DatabaseSeeder {
             myKit.setDeliveryMethod(DeliveryMethod.COURIER);
             myKit.setStartDate(LocalDate.now());
             myKit.setEndDate(LocalDate.now().plusMonths(1));
+            myKit.setCountry("Spain");
+            myKit.setCity("Sevilla");
             kitRepo.save(myKit);
 
             Kit pendingPaidKit = new Kit();

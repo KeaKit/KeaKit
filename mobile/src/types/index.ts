@@ -60,6 +60,16 @@ export interface RatingResponse {
   createdAt: string;
 }
 
+export interface ArticleRecordDTO {
+  tenantName: string;
+  tenantId: number;
+  startDate: string;
+  endDate: string;
+  status: KitStatus;
+  city: string;
+  country: string;
+}
+
 export interface UserArticle {
   id: number;
   title: string;
@@ -68,6 +78,7 @@ export interface UserArticle {
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
   totalUnits?: number;
+  rentals?: ArticleRecordDTO[];
 }
 
 export interface KitItemSelection {
@@ -399,6 +410,7 @@ export type RootStackParamList = {
   AssignedKits: undefined;
   Couriers: undefined;
   CourierDetail: { courier: UserResponse, isBusy?: boolean };
+  ArticleRentals: { articleId: number, articleTitle: string };
 };
 
 export interface ProfileData {
