@@ -186,6 +186,11 @@ const HomeScreen: React.FC = () => {
   };
 
   const gridColumns = getGridColumns();
+  const gridCardWidth = gridColumns === 1
+    ? '100%'
+    : gridColumns === 2
+    ? '48%'
+    : '32%';
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
@@ -327,14 +332,17 @@ const HomeScreen: React.FC = () => {
             { 
               flexDirection: gridColumns === 1 ? 'column' : 'row',
               flexWrap: gridColumns > 1 ? 'wrap' : 'nowrap',
+              justifyContent: gridColumns === 1 ? 'center' : 'space-between',
+              alignItems: 'stretch',
               marginBottom: isMobile ? 16 : 20,
-              gap: isMobile ? 12 : 16,
+              columnGap: isMobile ? 12 : 16,
+              rowGap: isMobile ? 12 : 16,
             }
           ]}>
             {/* Create kit card */}
             <View style={[
               styles.gridCardWrapper,
-              { width: gridColumns === 1 ? '100%' : `${100 / gridColumns - 2}%` }
+              { width: gridCardWidth, maxWidth: gridCardWidth }
             ]}>
               <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryBlue }]}>
                 <View style={[
@@ -386,7 +394,7 @@ const HomeScreen: React.FC = () => {
             {/* Upload Article card */}
             <View style={[
               styles.gridCardWrapper,
-              { width: gridColumns === 1 ? '100%' : `${100 / gridColumns - 2}%` }
+              { width: gridCardWidth, maxWidth: gridCardWidth }
             ]}>
               <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryMint }]}>
                 <View style={[
@@ -439,7 +447,7 @@ const HomeScreen: React.FC = () => {
             {user?.role === 'USER' && (
               <View style={[
                 styles.gridCardWrapper,
-                { width: gridColumns === 1 ? '100%' : `${100 / gridColumns - 2}%` }
+                { width: gridCardWidth, maxWidth: gridCardWidth }
               ]}>
                 <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryCoral }]}>
                   <View style={[
