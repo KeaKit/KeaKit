@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.KitCreateRequest;
@@ -28,7 +27,6 @@ import com.example.demo.model.Kit;
 import com.example.demo.service.KitService;
 
 import jakarta.validation.Valid;
-
 
 @RestController
 @RequestMapping("/api/kits")
@@ -70,7 +68,7 @@ public class KitController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-    
+
     @PostMapping("/payment")
     public ResponseEntity<?> getKitPayment(@Valid @RequestBody KitCreateRequest request) {
         // No es necesario que el kit esté en el repositorio para calcular su precio
@@ -188,8 +186,8 @@ public class KitController {
 
     @PostMapping("/{kitId}/items/{itemId}")
     public ResponseEntity<?> addItemToKit(
-            @PathVariable Long kitId, 
-            @PathVariable Long itemId, 
+            @PathVariable Long kitId,
+            @PathVariable Long itemId,
             @RequestParam Long userId) {
         try {
             KitResponse updatedKit = kitService.addItemToKit(kitId, itemId, userId);
@@ -201,8 +199,8 @@ public class KitController {
 
     @DeleteMapping("/{kitId}/items/{itemId}")
     public ResponseEntity<?> removeItemFromKit(
-            @PathVariable Long kitId, 
-            @PathVariable Long itemId, 
+            @PathVariable Long kitId,
+            @PathVariable Long itemId,
             @RequestParam Long userId) {
         try {
             KitResponse updatedKit = kitService.removeItemFromKit(kitId, itemId, userId);
@@ -211,7 +209,5 @@ public class KitController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
-
 
 }
