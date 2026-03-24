@@ -126,7 +126,7 @@ public class KitResponse {
                 s.getNameAtRental(),
                 s.getCategoryAtRental() != null ? s.getCategoryAtRental().getName() : null,
                 s.getImageUrlAtRental(),
-                s.getOwnerAtRental().getName()
+                s.getOwnerAtRental() != null ? s.getOwnerAtRental().getName() : null
             ))
             .collect(Collectors.toList());
 

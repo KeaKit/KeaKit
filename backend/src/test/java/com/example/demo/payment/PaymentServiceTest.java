@@ -26,7 +26,6 @@ import com.example.demo.dto.UserResponse;
 
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
-import com.example.demo.model.Item;
 import com.example.demo.model.User;
 import com.example.demo.model.Wallet;
 import com.example.demo.model.Transaction;
@@ -99,8 +98,6 @@ public class PaymentServiceTest {
     private final Wallet OWNER_WALLET = TestDataFactory.createMockWallet(20L, OWNER, 100.0);
     private final Wallet ADMIN_WALLET = TestDataFactory.createMockWallet(ADMIN_ID, ADMIN, 1000.0);
 
-    private final Item ITEM = TestDataFactory.createDefaultItem();
-
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(paymentService, "stripeApiKey", STRIPE_API_KEY);
@@ -145,7 +142,6 @@ public class PaymentServiceTest {
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
-        when(itemService.findById(anyLong())).thenReturn(ITEM);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
 
@@ -165,7 +161,6 @@ public class PaymentServiceTest {
         when(kitService.getKitPayment(KIT_ID)).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
-        when(itemService.findById(anyLong())).thenReturn(ITEM);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
 
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
@@ -237,17 +232,9 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
 
-        Item item1 = TestDataFactory.createMockItem(1L, "Item 1", 100.0, OWNER);
-        Item item2 = TestDataFactory.createMockItem(2L, "Item 2", 50.0, OWNER);
-        Item item3 = TestDataFactory.createMockItem(3L, "Item 3", 10.0, OWNER);
-
-        when(itemService.findById(1L)).thenReturn(item1);
-        when(itemService.findById(2L)).thenReturn(item2);
-        when(itemService.findById(3L)).thenReturn(item3);
-
         paymentService.processPayment(KIT_ID, false);
 
-        verify(itemService, times(3)).findById(anyLong());
+        verify(itemService, never()).findById(anyLong());
         verify(transactionRepository, atLeast(3)).save(any(Transaction.class));
         verify(emailService).sendOrderConfirmation(any());
     }

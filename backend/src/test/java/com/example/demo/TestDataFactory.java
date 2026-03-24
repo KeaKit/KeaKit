@@ -97,10 +97,12 @@ public class TestDataFactory {
     // Método auxiliar para los items dentro del Kit
     private static ItemMemento createMockItemMemento(Long itemId, Double price, Integer units) {
         ItemMemento memento = new ItemMemento();
+        User ownerAtRental = createMockOwnerUser();
         ReflectionTestUtils.setField(memento, "originalItemId", itemId);
         ReflectionTestUtils.setField(memento, "priceAtRental", price);
         ReflectionTestUtils.setField(memento, "selectedUnits", units);
         ReflectionTestUtils.setField(memento, "nameAtRental", "Item de prueba");
+        ReflectionTestUtils.setField(memento, "ownerAtRental", ownerAtRental);
         return memento;
     }
 
