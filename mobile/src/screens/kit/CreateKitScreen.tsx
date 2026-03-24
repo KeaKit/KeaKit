@@ -34,6 +34,7 @@ import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus, Article
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
 import KitItemComponent from "../../components/KitItemComponent";
+import { KitPaymentResumeComponent } from "../../components/KitPaymentResumeComponent";
 import { ProductSelectionModal } from "../../components/ProductSelectionModal";
 import {
   removeSelectedQuantity,
@@ -317,6 +318,22 @@ const CreateKitScreen: React.FC = () => {
 
   const courierPrice =
     deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
+
+  const kitPayment = useMemo(() => {
+    const subtotal = Math.round(totalPrice * 100); // convertir a centavos
+    const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
+    const platformfee = Math.round(subtotal * COMISION);
+    const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
+    const total = subtotal + guarantee + platformfee + courier;
+
+    return {
+      subtotalPrice: subtotal,
+      guarantee: guarantee,
+      platformfee: platformfee,
+      courierPrice: courier,
+      totalPrice: total,
+    };
+  }, [totalPrice, deliveryMethod]);
 
   const categories = useMemo(() => {
     const set = new Set(
@@ -878,90 +895,7 @@ const CreateKitScreen: React.FC = () => {
         <View style={createKitStyles.footerRow}>
           {/* Resumen de precios */}
           <View style={{ flex: 1 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 8,
-              }}
-            >
-              <Text style={commonStyles.caption}>Subtotal productos</Text>
-              <Text style={commonStyles.caption}>{totalPrice.toFixed(2)}€</Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Garantía (20%)</Text>
-              <Text style={commonStyles.caption}>
-                {(totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Comisión (20%)</Text>
-              <Text style={commonStyles.caption}>
-                {(totalPrice * COMISION).toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
-              <Text style={commonStyles.caption}>
-                {courierPrice.toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                borderTopWidth: 1,
-                borderTopColor: Colors.border,
-                paddingTop: 12,
-                marginBottom: 16,
-              }}
-            >
-              <Text
-                style={[
-                  commonStyles.caption,
-                  { color: Colors.primary, fontWeight: "600", fontSize: 16 },
-                ]}
-              >
-                Total a pagar
-              </Text>
-              <Text
-                style={[
-                  createKitStyles.productTitle,
-                  { fontSize: 20, color: Colors.primary },
-                ]}
-              >
-                {(
-                  totalPrice +
-                  totalPrice * GUARANTEE_PERCENTAGE +
-                  +totalPrice * COMISION +
-                  courierPrice
-                ).toFixed(2)}
-                €
-              </Text>
-            </View>
+            <KitPaymentResumeComponent kitPrices={kitPayment} />
 
             <Button
               mode="outlined"
