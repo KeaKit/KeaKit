@@ -8,6 +8,8 @@ import com.example.demo.model.Category;
 import com.example.demo.model.User;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.service.ArticleService;
+import com.example.demo.service.AuthService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,9 @@ class ArticleControllerTest {
 
     @MockitoBean
     private com.example.demo.repository.CategoryRepository categoryRepository;
+
+    @MockitoBean
+    private AuthService authService;
 
     @MockitoBean
     private JwtUtil jwtUtil;

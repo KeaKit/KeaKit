@@ -117,8 +117,10 @@ export const API_ROUTES = {
   GET_CITIES: `${BASE_URL}/api/cities`,
   GET_COUNTRIES: `${BASE_URL}/api/countries`,
   CITY_COORDINATES: (city: string, country: string) =>
-    `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`
+    `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`,
 
+  // Article history
+  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`
 
 } as const;
 
