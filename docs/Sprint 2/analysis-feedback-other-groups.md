@@ -230,7 +230,6 @@ A continuación se integran las incidencias reportadas por ambos grupos.
 | Refactorizar - CU-ARENDADOR-04 - Gestión de fin de alquiler | Grupo 2  | 19/03/2026 | Done |
 | Estudio de viabilidad de despliegue alternativo usando supabase y DigitalOcean | Grupo 4 | 17/03/2026 | Done |
 | Servicios - Frontend | Grupo 4 | 12/03/2026 | Done |
-| Refactorizar - CU-ARRENDADOR-02 - Listado de artículos subidos | Grupo 2 | 18/03/2026 | Done |
 | Servicios - Test | Grupo 4 | 16/03/2026 | Done |
 | Refactorización del backend de pagos | Grupo 1 | 14/03/2026 | Done |
 | Refactorización del frontend de pagos | Grupo 1 | 18/03/2026 | Done |
