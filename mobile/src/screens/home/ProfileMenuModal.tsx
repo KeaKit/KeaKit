@@ -74,10 +74,18 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
 
               <TouchableOpacity
                 style={componentStyles.menuItem}
-                onPress={() => navigateTo('TrackingNotifications')}
+                onPress={() => navigateTo('ActivityNotifications')}
               >
                 <Ionicons name="notifications" size={24} color={Colors.primary} />
-                <Text style={componentStyles.menuItemText}>Notificaciones</Text>
+                <Text style={componentStyles.menuItemText}>Notificaciones de actividad</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
+                onPress={() => navigateTo('TrackingNotifications')}
+              >
+                <Ionicons name="navigate" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Notificaciones de seguimiento</Text>
                 {unreadCount > 0 ? (
                   <View style={componentStyles.menuBadge}>
                     <Text style={componentStyles.menuBadgeText}>{unreadCount}</Text>
