@@ -66,19 +66,37 @@
 
 ## 4. Sprint Backlog - Semana 3
 
-Apartado a rellenar tras el próximo reparto.
+| ID Issue | Descripción | Prioridad | Estimación (SP) | Estado | Responsable |
+|----------|-------------|-----------|-----------------|--------|-------------|
+| [#329](https://github.com/KeaKit/KeaKit/issues/329)  | Configurar SonarQube / Codacy  | High |  5  | Done | Cristina Fernández Chica |
+| [#362](https://github.com/KeaKit/KeaKit/issues/362)  | Añadir feedback a la base de conocimiento conjunta  | Mid |  2  | Done | Marta Aguilar Morcillo |
+| [#355](https://github.com/KeaKit/KeaKit/issues/355)  | Actualizar Sprint 2 Backlog Grupo 4  | Low |  1  | Done | Cristina Fernández Chica |
+| [#367](https://github.com/KeaKit/KeaKit/issues/367)  | Informe de contribuciones a la base de conocimiento conjunta  | Mid |  2  | Done | Marta Aguilar Morcillo |
+| [#377](https://github.com/KeaKit/KeaKit/issues/377)  | Crear el cronjob para que Supabase no se apague cada semana  | Mid |  3  | Done | José Luis Moraza Vergara |
+| [#357](https://github.com/KeaKit/KeaKit/issues/357)  | Demo presentación  | High |  3  | Done | José Luis Moraza Vergara |
+| [#358](https://github.com/KeaKit/KeaKit/issues/358)  | Demo youtube  | High |  5  | Done | José Luis Moraza Vergara |
+| [#359](https://github.com/KeaKit/KeaKit/issues/359)  | Sprint 2 Retrospective | High |  3  | Done | Paula Rosa González Páez |
+| [#364](https://github.com/KeaKit/KeaKit/issues/364)  | Sistema de recompensas para usuarios piloto - ADMIN - Backend/Frontend | Mid |  6  | ToDo | Cristina Fernández Chica |
+| [#365](https://github.com/KeaKit/KeaKit/issues/365)  | Sistema de recompensas para usuarios piloto - ADMIN - Test  | Mid |  2  | ToDo | Ángel Amo Sánchez |
+| [#368](https://github.com/KeaKit/KeaKit/issues/368)  | Insignia usuario fundador - Backend/Frontend  | Mid |  6  | ToDo | Candela Jazmín Gutiérrez González |
+| [#369](https://github.com/KeaKit/KeaKit/issues/369)  | Insignia usuario fundador - Test  | Mid |  2  | ToDo | José Luis Moraza Vergara |
+| [#370](https://github.com/KeaKit/KeaKit/issues/370)  | Descuentos según nivel de usuario piloto - Backend/Frontend  | Mid |  7  | ToDo | Ángel Amo Sánchez |
+| [#371](https://github.com/KeaKit/KeaKit/issues/371)  | Descuentos según nivel de usuario piloto - Test  | Mid |  2  | ToDo | Marta Aguilar Morcillo |
+| [#376](https://github.com/KeaKit/KeaKit/issues/376)  | Actualización del seguimiento del Gantt  | High |  3  | Done | Paula Rosa González Páez |
+| [#378](https://github.com/KeaKit/KeaKit/issues/378)  | Actualizar documentación relativa a usuarios piloto  | High |  3  | ToDo | Candela Jazmín Gutiérrez González |
+
 
 ## 5. Resumen carga de trabajo
 
 | Responsable       | SP - Semana 1|  SP - Semana 2|  SP - Semana 3| **TOTAL** |
 |-------------------|------------------------|------------------------|------------------------|------------------------|
-| Marta Aguilar Morcillo    |    14 SP   |  2 SP |    |  **16 SP**  |                                    
-| Ángel Amo Sánchez         | 12 SP   |  4 SP  |       |   **16 SP**  | 
-| Cristina Fernández Chica      | 11 SP  |  12  SP |    |   **23 SP**   | 
-| Paula Rosa González Páez     | 11 SP    |  - SP*     |    |   **11 SP**   | 
-| Candela Jazmín Gutiérrez González   | 12 SP    |  5 SP   |    |  **17 SP**     | 
-| José Luis Moraza Vergara     | 17 SP    |  4 SP  |    |   **21 SP**   | 
-| **TOTAL EQUIPO**   | **77 SP**  | **27 SP** |    |     | 
+| Marta Aguilar Morcillo    |    14 SP   |  2 SP |  6 SP  |  **22 SP**  |                                    
+| Ángel Amo Sánchez         | 12 SP   |  4 SP  |   9 SP    |   **25 SP**  | 
+| Cristina Fernández Chica      | 11 SP  |  12  SP |  12 SP  |   **35 SP**   | 
+| Paula Rosa González Páez     | 11 SP    |  - SP*     |  6 SP  |   **17 SP**   | 
+| Candela Jazmín Gutiérrez González   | 12 SP    |  5 SP   |  9 SP  |  **26 SP**     | 
+| José Luis Moraza Vergara     | 17 SP    |  4 SP  |  13 SP   |   **34 SP**   | 
+| **TOTAL EQUIPO**   | **77 SP**  | **27 SP** |  **55 SP**  |  **159 SP**   | 
 
 *Ausencia de puntos de historia justificada.
 
@@ -88,10 +106,10 @@ Apartado a rellenar tras el próximo reparto.
 |---------|-------------|--------------------------------|----------------------------|
 | 1.0.0   | 09/03/2026  |  Sprint Backlog Semana 1               | Cristina Fernández Chica |
 | 1.1.0   | 18/03/2026  |  Actualizado estado tareas semana 1 y añadidas las tareas de la semana 2 con su estado actualizado          | Cristina Fernández Chica |
-| 1.1.1   | 19/03/2026  |  Añadida nueva tarea          | Cristina Fernández Chica |
+| 1.2.0   | 23/03/2026  |  Actualizado estado tareas semana 2 y añadidas las tareas de la semana 3 con su estado actualizado   | Cristina Fernández Chica |
 
 
 ---
 **Redactado por:** Cristina Fernández Chica
-**Fecha de redacción:** 19/03/2026  
-**Versión:** 1.1.1
+**Fecha de redacción:** 23/03/2026  
+**Versión:** 1.2.0
