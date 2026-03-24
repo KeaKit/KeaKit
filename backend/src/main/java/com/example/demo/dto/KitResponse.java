@@ -15,25 +15,26 @@ public class KitResponse {
 
     public static class KitItemResponse {
         private Long itemId;
+        private Long ownerId;
         private Integer quantity;
         private Double pricePerMonth;
         private String name;
         private String category;
         private String imageUrl;
-        private Long ownerId;
         private String ownerName;
 
         public KitItemResponse(
             Long itemId,
+            Long ownerId,
             Integer quantity,
             Double pricePerMonth,
             String name,
             String category,
             String imageUrl,
-            Long ownerId,
             String ownerName
         ) {
             this.itemId = itemId;
+            this.ownerId = ownerId;
             this.quantity = quantity;
             this.pricePerMonth = pricePerMonth;
             this.name = name;
@@ -45,6 +46,10 @@ public class KitResponse {
 
         public Long getItemId() {
             return itemId;
+        }
+
+        public Long getOwnerId() {
+            return ownerId;
         }
 
         public Integer getQuantity() {
@@ -65,10 +70,6 @@ public class KitResponse {
 
         public String getImageUrl() {
             return imageUrl;
-        }
-
-        public Long getOwnerId() {
-            return ownerId;
         }
 
         public String getOwnerName() {
@@ -119,13 +120,13 @@ public class KitResponse {
         this.items = snapshots.stream()
             .map(s -> new KitItemResponse(
                 s.getOriginalItemId(),
+                s.getOwnerAtRental() != null ? s.getOwnerAtRental().getId() : null,
                 s.getSelectedUnits(),
                 s.getPriceAtRental(),
                 s.getNameAtRental(),
                 s.getCategoryAtRental() != null ? s.getCategoryAtRental().getName() : null,
                 s.getImageUrlAtRental(),
-                s.getOwnerAtRental().getId(),
-                s.getOwnerAtRental().getName()
+                s.getOwnerAtRental() != null ? s.getOwnerAtRental().getName() : null
             ))
             .collect(Collectors.toList());
 

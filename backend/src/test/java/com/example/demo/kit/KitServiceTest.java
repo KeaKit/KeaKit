@@ -27,13 +27,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import com.example.demo.dto.KitCreateRequest;
+import com.example.demo.dto.KitPaymentDTO;
 import com.example.demo.dto.KitResponse;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Article;
 import com.example.demo.model.DeliveryMethod;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitDelivery;
 import com.example.demo.model.KitStatus;
+import com.example.demo.model.ServiceItem;
 import com.example.demo.model.User;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
@@ -805,5 +808,115 @@ public class KitServiceTest {
         assertEquals(KitStatus.FINISHED, response.getStatus());
         assertEquals(tenantId, response.getTenantId());
     }
+
+    @Test
+    void getKitPayment_fromRequest_withCourier_returnsCorrectPaymentDetails() {
+        KitCreateRequest.ItemSelectionRequest selection1 = new KitCreateRequest.ItemSelectionRequest(100L, 2, 50.0);
+        KitCreateRequest.ItemSelectionRequest selection2 = new KitCreateRequest.ItemSelectionRequest(101L, 1, 19.99);
+
+        KitCreateRequest request = new KitCreateRequest(
+            "Kit Pago", "ES", "MAD",
+            LocalDate.now(), LocalDate.now().plusDays(7),
+            KitStatus.DRAFT, DeliveryMethod.COURIER, null,
+            1L, List.of(selection1, selection2)
+        );
+
+        KitPaymentDTO result = kitService.getKitPayment(request);
+
+        assertEquals(15398, result.totalPrice());
+        assertEquals(11999, result.subtotalPrice());
+        assertEquals(2400, result.guarantee());
+        assertEquals(999, result.courierPrice());
+    }
+
+    @Test
+    void getKitPayment_fromRequest_meetingPoint_returnsCorrectPaymentDetailsWithZeroCourierPrice() {
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(100L, 3, 10.0);
+
+        KitCreateRequest request = new KitCreateRequest(
+            "Kit Pago", "ES", "MAD",
+            LocalDate.now(), LocalDate.now().plusDays(7),
+            KitStatus.DRAFT, DeliveryMethod.MEETING_POINT, "Plaza Mayor",
+            1L, List.of(selection)
+        );
+
+        KitPaymentDTO result = kitService.getKitPayment(request);
+
+        assertEquals(3600, result.totalPrice());
+        assertEquals(3000, result.subtotalPrice());
+        assertEquals(600, result.guarantee());
+        assertEquals(0, result.courierPrice());
+    }
+
+    @Test
+    void getKitPayment_fromKitId_withCourier_returnsCorrectPaymentDetails() throws ResourceNotFoundException {
+        ItemMemento snapshot1 = new ItemMemento();
+        snapshot1.setPriceAtRental(40.0);
+        snapshot1.setSelectedUnits(2);
+
+        ItemMemento snapshot2 = new ItemMemento();
+        snapshot2.setPriceAtRental(15.5);
+        snapshot2.setSelectedUnits(1);
+
+        Kit kit = new Kit();
+        kit.setId(77L);
+        kit.setDeliveryMethod(DeliveryMethod.COURIER);
+        kit.setSnapshots(List.of(snapshot1, snapshot2));
+
+        when(kitRepository.findById(77L)).thenReturn(Optional.of(kit));
+
+        KitPaymentDTO result = kitService.getKitPayment(77L);
+
+        assertEquals(12459, result.totalPrice());
+        assertEquals(9550, result.subtotalPrice());
+        assertEquals(1910, result.guarantee());
+        assertEquals(999, result.courierPrice());
+    }
+
+    @Test
+    void getKitPayment_fromKitId_whenKitNotFound_throwsResourceNotFoundException() {
+        when(kitRepository.findById(999L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () ->
+            kitService.getKitPayment(999L));
+
+        assertEquals("Kit not found", ex.getMessage());
+    }
+
+    @Test
+    void getKitPayment_fromKitId_withServiceItems_returnsCorrectPaymentDetails() throws ResourceNotFoundException {
+        User owner = createTestUser(50L, "ServiceOwner");
+
+        ServiceItem service1 = new ServiceItem();
+        service1.setId(201L);
+        service1.setTitle("Montaje de muebles");
+        service1.setPricePerMonth(80.0);
+        service1.setOwner(owner);
+
+        ServiceItem service2 = new ServiceItem();
+        service2.setId(202L);
+        service2.setTitle("Limpieza profunda");
+        service2.setPricePerMonth(35.0);
+        service2.setOwner(owner);
+
+        ItemMemento serviceSnapshot1 = service1.createSnapshot(1, DeliveryMethod.MEETING_POINT, null, "Centro");
+        ItemMemento serviceSnapshot2 = service2.createSnapshot(2, DeliveryMethod.MEETING_POINT, null, "Centro");
+
+        Kit kit = new Kit();
+        kit.setId(88L);
+        kit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
+        kit.setSnapshots(List.of(serviceSnapshot1, serviceSnapshot2));
+
+        when(kitRepository.findById(88L)).thenReturn(Optional.of(kit));
+
+        KitPaymentDTO result = kitService.getKitPayment(88L);
+
+        assertEquals(18000, result.totalPrice());
+        assertEquals(15000, result.subtotalPrice());
+        assertEquals(3000, result.guarantee());
+        assertEquals(0, result.courierPrice());
+    }
+
+    
 
 }

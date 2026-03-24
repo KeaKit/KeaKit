@@ -4,7 +4,6 @@ import com.example.demo.model.*;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ServiceRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.ServiceItemService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
