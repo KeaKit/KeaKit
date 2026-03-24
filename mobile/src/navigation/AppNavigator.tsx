@@ -49,6 +49,8 @@ import TrackingNotificationsScreen from '../screens/notifications/TrackingNotifi
 import AssignedKitsScreen from '../screens/kit/AssignedKitsScreen';
 import CouriersScreen from '../screens/admin/CouriersScreen';
 import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
+import PromoCodesScreen from '../screens/admin/PromoCodesScreen';
+import PromoCodeFormScreen from '../screens/admin/PromoCodeFormScreen';
 
 import { RootStackParamList } from '../types';
 import ArticleRentalsScreen from '../screens/article/ArticleRentalsScreen';
@@ -200,6 +202,14 @@ const AppNavigator: React.FC = () => {
                         </MainLayout>
                       )}
                     </Stack.Screen>
+
+                    <Stack.Screen name="PromoCodes">
+                      {() => (
+                        <MainLayout>
+                          <PromoCodesScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
                   </>
                 )}
 
@@ -240,6 +250,9 @@ const AppNavigator: React.FC = () => {
                 <Stack.Screen name="TrackingNotifications" component={TrackingNotificationsScreen} />
                 <Stack.Screen name="AssignedKits" component={AssignedKitsScreen} />
                 <Stack.Screen name="CourierDetail" component={CourierDetailScreen} />
+
+                {/* Códigos Promocionales */}
+                <Stack.Screen name="PromoCodeForm" component={PromoCodeFormScreen} />
               </>
             ) : (
               /* === PANTALLAS PÚBLICAS === */

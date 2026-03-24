@@ -32,17 +32,18 @@ export const KitPaymentResumeComponent = ({
         </Text>
       </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          borderTopWidth: 1,
-          borderTopColor: Colors.border,
-          paddingTop: 12,
-          marginBottom: 16,
-        }}
-      >
+      {kitPrices.discount > 0 && (
+        <View style={styles.row}>
+          <Text style={[commonStyles.caption, styles.discountLabel]}>
+            Descuento aplicado
+          </Text>
+          <Text style={[commonStyles.caption, styles.discountValue]}>
+            -{(kitPrices.discount / 100).toFixed(2)}€
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.totalRow}>
         <Text style={styles.total}>Total a pagar</Text>
         <Text style={styles.totalPrice}>
           {(kitPrices.totalPrice / 100).toFixed(2)}€
@@ -72,5 +73,22 @@ const styles = StyleSheet.create({
     fontWeight: FontWeights.bold,
     color: Colors.primaryHome,
     marginBottom: 2,
+  },
+  discountLabel: {
+    color: Colors.success,
+    fontWeight: FontWeights.semibold,
+  },
+  discountValue: {
+    color: Colors.success,
+    fontWeight: FontWeights.bold,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: 12,
+    marginBottom: 16,
   },
 });

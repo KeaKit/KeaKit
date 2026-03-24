@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput } from "react-native";
 import { Text } from "react-native-paper";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { useNavigation } from "@react-navigation/native";
@@ -55,6 +55,11 @@ export default function CheckoutScreen({ route }: Props) {
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [kitDetails, setKitDetails] = useState<KitResponse>();
   const [kitPrices, setKitPrices] = useState<KitPaymentDTO | null>(null);
+  const [promoCode,        setPromoCode]        = useState('');
+  const [promoValidation,  setPromoValidation]  = useState<{ valid: boolean; message: string } | null>(null);
+  const [promoLoading,     setPromoLoading]     = useState(false);
+  const BASE_URL = 'http://localhost:8080';
+
 
   const isStripePayDisabled =
     !stripe ||
@@ -230,6 +235,29 @@ export default function CheckoutScreen({ route }: Props) {
     }
   };
 
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim() || !user?.email || !user?.token) return;
+    setPromoLoading(true);
+    try {
+      const { validatePromoCode } = await import('../../services/promoCodeService');
+      const result = await validatePromoCode(user.token, promoCode.trim(), user.email);
+      setPromoValidation(result);
+      if (result.valid) {
+        // Recalcular precios con el descuento
+        const res = await fetch(
+          `${BASE_URL}/api/kits/payment/${kitId}?promoCode=${encodeURIComponent(promoCode.trim())}&email=${encodeURIComponent(user.email)}`,
+          { headers: { Authorization: `Bearer ${user.token}` } }
+        );
+        const updatedPrices = await res.json();
+        setKitPrices(updatedPrices);
+      }
+    } catch {
+      setPromoValidation({ valid: false, message: 'Error al validar el código' });
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
   const handleKitDelete = async () => {
     try {
       await deleteKit(kitId, user?.token ?? "");
@@ -288,6 +316,41 @@ export default function CheckoutScreen({ route }: Props) {
       </View>
       {/* Footer */}
       <View style={commonStyles.footerContainer}>
+        <FadeInItem delay={50}>
+          <View style={styles.promoContainer}>
+            <Text style={styles.promoLabel}>¿Tienes un código promocional?</Text>
+            <View style={styles.promoInputRow}>
+              <TextInput
+                style={[
+                  styles.promoInput,
+                  promoValidation?.valid === true  && styles.promoInputValid,
+                  promoValidation?.valid === false && styles.promoInputError,
+                ]}
+                value={promoCode}
+                onChangeText={t => { setPromoCode(t.toUpperCase()); setPromoValidation(null); }}
+                placeholder="CÓDIGO"
+                placeholderTextColor="#aaa"
+                autoCapitalize="characters"
+                editable={!loading}
+              />
+              <TouchableOpacity
+                style={[styles.promoBtn, (!promoCode.trim() || promoLoading) && styles.promoBtnDisabled]}
+                onPress={handleApplyPromo}
+                disabled={!promoCode.trim() || promoLoading}
+              >
+                {promoLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.promoBtnText}>Aplicar</Text>
+                }
+              </TouchableOpacity>
+            </View>
+            {promoValidation && (
+              <Text style={promoValidation.valid ? styles.promoSuccess : styles.promoError}>
+                {promoValidation.message}
+              </Text>
+            )}
+          </View>
+        </FadeInItem>
         {kitPrices !== null && (
           <FadeInItem delay={50}>
             <KitPaymentResumeComponent kitPrices={kitPrices} />
@@ -396,4 +459,29 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     fontSize: FontSizes.xs,
   },
+  promoContainer: {
+    width: '100%', gap: 8,
+  },
+  promoLabel: {
+    fontSize: 13, color: '#595959', fontWeight: '600',
+  },
+  promoInputRow: {
+    flexDirection: 'row', gap: 10, alignItems: 'center',
+  },
+  promoInput: {
+    flex: 1, height: 48, borderWidth: 1.5, borderColor: '#CBD5E1',
+    borderRadius: 10, paddingHorizontal: 14, fontSize: 16,
+    fontWeight: '700', color: '#2d6e91', backgroundColor: '#f8fbff',
+    letterSpacing: 1,
+  },
+  promoInputValid:  { borderColor: '#10B981', backgroundColor: '#f0fdf4' },
+  promoInputError:  { borderColor: '#EF4444', backgroundColor: '#fef2f2' },
+  promoBtn: {
+    height: 48, paddingHorizontal: 18, borderRadius: 10,
+    backgroundColor: '#2d6e91', alignItems: 'center', justifyContent: 'center',
+  },
+  promoBtnDisabled: { opacity: 0.45 },
+  promoBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  promoSuccess: { fontSize: 13, color: '#10B981', fontWeight: '600' },
+  promoError:   { fontSize: 13, color: '#EF4444', fontWeight: '600' },
 });

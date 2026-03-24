@@ -128,6 +128,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     implemented: false,
   },
   {
+    id: 'promo-codes',
+    icon: 'pricetag',
+    label: 'Códigos Promocionales',
+    description: 'Gestionar descuentos y usuarios piloto',
+    color: KC.mint,
+    implemented: true,
+    screen: 'PromoCodes',
+  },
+  {
     id: 'stats',
     icon: 'bar-chart',
     label: 'Estadísticas',
