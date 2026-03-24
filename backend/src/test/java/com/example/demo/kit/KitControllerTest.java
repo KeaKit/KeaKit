@@ -305,7 +305,7 @@ public class KitControllerTest {
 
     @Test
     void getKitPaymentByRequest_success_returnsOkAndPaymentDto() throws Exception {
-        KitPaymentDTO paymentDTO = new KitPaymentDTO(15398, 11999, 2400, 999);
+        KitPaymentDTO paymentDTO = new KitPaymentDTO(15398, 11999, 2400, 999, 0);
         when(kitService.getKitPayment(any(KitCreateRequest.class))).thenReturn(paymentDTO);
 
         String requestJson = """
@@ -384,7 +384,7 @@ public class KitControllerTest {
 
     @Test
     void getKitPaymentById_success_returnsOkAndPaymentDto() throws Exception {
-        KitPaymentDTO paymentDTO = new KitPaymentDTO(12459, 9550, 1910, 999);
+        KitPaymentDTO paymentDTO = new KitPaymentDTO(12459, 9550, 1910, 999, 0);
         when(kitService.getKitPayment(77L)).thenReturn(paymentDTO);
 
         mockMvc.perform(get("/api/kits/payment/77"))
