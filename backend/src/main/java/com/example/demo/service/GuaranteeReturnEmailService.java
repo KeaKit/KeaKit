@@ -61,10 +61,9 @@ public class GuaranteeReturnEmailService {
 
         String recipientEmail = tenant.getEmail();
         String tenantName = tenant.getName() != null ? tenant.getName() : "usuario";
-        Double guarantee = kit.getGuaranteePrice();
         String subject = "Devolución de garantía - KeaKit";
 
-        String htmlContent = buildHtmlContent(kit, tenantName, guarantee);
+        String htmlContent = buildHtmlContent(kit, tenantName);
 
         Mail mail = new Mail(
             new Email(fromEmail),
@@ -104,7 +103,7 @@ public class GuaranteeReturnEmailService {
         return value == null ? "-" : String.valueOf(value);
     }
 
-    private String buildHtmlContent(KitResponse kit, String tenantName, Double guarantee) {
+    private String buildHtmlContent(KitResponse kit, String tenantName) {
         try {
             ClassPathResource templateResource = new ClassPathResource(TEMPLATE_PATH);
             String template = StreamUtils.copyToString(templateResource.getInputStream(), StandardCharsets.UTF_8);
@@ -117,10 +116,9 @@ public class GuaranteeReturnEmailService {
                 .replace("{{kitCountry}}", safeValue(kit.getCountry()))
                 .replace("{{kitStartDate}}", safeValue(kit.getStartDate()))
                 .replace("{{kitEndDate}}", safeValue(kit.getEndDate()))
-                .replace("{{guarantee}}", safeValue(guarantee));
         } catch (IOException ex) {
             logger.error("No se pudo cargar la plantilla HTML de devolución de garantía", ex);
-            return "<p>Tu garantía ha sido devuelta correctamente. ID: " + safeValue(kit.getId()) + "</p>";
+            return "<p>Tu garantía ha sido devuelta correctamente.</p>";
         }
     }
 }
