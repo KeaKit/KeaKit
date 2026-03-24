@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
@@ -15,6 +16,7 @@ import { createKitStyles } from "../styles/createKitStyles";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types";
 import { useNavigation } from "@react-navigation/native";
+import { ArticleMapView } from "./ArticleMapView";
 
 type ProductSelectionNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -33,6 +35,9 @@ type CatalogProduct = {
   availableUntil?: string;
   isAvailable?: boolean;
   availabilityMessage?: string;
+  distanceKm?: number;
+  cityLat?: number;
+  cityLng?: number;
 };
 
 type ProductSelectionModalProps = {
@@ -55,6 +60,11 @@ type ProductSelectionModalProps = {
   onToggleAvailable: (show: boolean) => void;
   startDate?: Date | null;
   endDate?: Date | null;
+  expandedSearch: boolean;
+  onToggleExpandedSearch: () => void;
+  loadingNearby: boolean;
+  targetCityCoords?: { lat: number; lng: number } | null;
+  mapProducts?: { id: number; title: string; city?: string | null; pricePerMonth: number; ownerName?: string | null; distanceKm?: number; cityLat?: number; cityLng?: number }[];
 };
 
 export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
@@ -77,9 +87,14 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   onToggleAvailable,
   startDate,
   endDate,
-  
+  expandedSearch,
+  onToggleExpandedSearch,
+  loadingNearby,
+  targetCityCoords,
+  mapProducts = [],
 }) => {
   const navigation = useNavigation<ProductSelectionNav>();
+  const [mapView, setMapView] = React.useState(false);
 
   // Calcular disponibilidad de productos basado en fechas
   const productsWithAvailability = React.useMemo(() => {
@@ -168,6 +183,36 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
               activeOutlineColor={Colors.primary}
             />
 
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TouchableOpacity
+                onPress={() => setMapView(false)}
+                style={{
+                  flex: 1, flexDirection: "row", alignItems: "center",
+                  justifyContent: "center", gap: 6, paddingVertical: 8,
+                  borderRadius: 8, borderWidth: 1,
+                  borderColor: !mapView ? Colors.primary : Colors.border,
+                  backgroundColor: !mapView ? "#E3F2FD" : Colors.backgroundWhite,
+                }}
+              >
+                <Ionicons name="list-outline" size={18} color={!mapView ? Colors.primary : Colors.textSecondary} />
+                <Text style={{ color: !mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Lista</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setMapView(true)}
+                style={{
+                  flex: 1, flexDirection: "row", alignItems: "center",
+                  justifyContent: "center", gap: 6, paddingVertical: 8,
+                  borderRadius: 8, borderWidth: 1,
+                  borderColor: mapView ? Colors.primary : Colors.border,
+                  backgroundColor: mapView ? "#E3F2FD" : Colors.backgroundWhite,
+                }}
+              >
+                <Ionicons name="map-outline" size={18} color={mapView ? Colors.primary : Colors.textSecondary} />
+                <Text style={{ color: mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Mapa</Text>
+              </TouchableOpacity>
+            </View>
+
+
             {userCity && (
               <TouchableOpacity
                 onPress={() => onToggleMyCity(!showOnlyMyCity)}
@@ -254,7 +299,21 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             </ScrollView>
           </View>
 
-          <ScrollView style={createKitStyles.modalList}>
+          {mapView ? (
+            <ArticleMapView
+              articles={(
+                showOnlyMyCity && userCity
+                  ? mapProducts.filter((a) => a.city?.toLowerCase() === userCity.toLowerCase())
+                  : mapProducts
+              ).map((a) => ({ ...a, city: a.city ?? undefined, ownerName: a.ownerName ?? undefined }))}
+              targetCityCoords={targetCityCoords ?? null}
+              userCity={userCity}
+              selectedIds={Object.keys(tempSelectedQuantities).map(Number)}
+              onAddArticle={onToggleSelection}
+            />
+          ) : null}
+
+          <ScrollView style={[createKitStyles.modalList, mapView ? { height: 0 } : {}]}>
             {productsWithAvailability.length === 0 ? (
               <Text
                 style={[
@@ -323,12 +382,18 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       <Text style={commonStyles.caption}>
                           {p.ownerName ? (
                             <Text
-                              style={{ color: "#007AFF" }} 
+                              style={{ color: "#007AFF" }}
                               onPress={() => navigateToUserReviews(p.ownerId, p.ownerName || "")}
                             >
                               {`${p.ownerName}`}
-                            </Text>
+                            {" • "}
+                            </Text> 
                           ) : ""}
+                        {p.city ? `${p.city}` : ""}
+                        {p.distanceKm !== undefined ? (
+                          <Text style={{ color: "#F57F17" }}>{` · ~${p.distanceKm} km`}</Text>
+                        ) : null}
+                        {p.category ? ` · ${p.category}` : ""}
                         {" • "}
                         {p.city ? `${p.city} • ` : ""}
                         {p.category ? `${p.category}` : ""}

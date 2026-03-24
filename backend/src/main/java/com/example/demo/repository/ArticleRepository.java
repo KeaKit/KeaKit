@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import com.example.demo.model.Article;
+import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Kit;
 
 import java.util.List;
@@ -18,6 +19,13 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     long countByCategoryId(Long categoryId);
 
     List<Article> findTop10ByCategoryIdOrderByIdDesc(Long categoryId);
+
+    @Query("SELECT DISTINCT a.city FROM Article a WHERE a.status = :status")
+    List<String> findDistinctCitiesByStatus(@Param("status") ArticleStatus status);
+
+    List<Article> findByStatusAndCityIn(ArticleStatus status, List<String> cities);
+
+    List<Article> findByStatus(ArticleStatus status);
 
     @Query("SELECT k FROM Kit k JOIN k.snapshots s WHERE s.originalItemId = :articleId")
     List<Kit> findAllKitsWhereArticleHasBeen(@Param("articleId") Long articleId);

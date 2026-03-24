@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ArticleNearbyDTO;
 import com.example.demo.dto.ArticleRecordDTO;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
@@ -165,4 +166,28 @@ public class ArticleController {
         }
     }
     
+    @GetMapping("/nearby")
+    public ResponseEntity<List<ArticleNearbyDTO>> getNearbyArticles(
+            @RequestParam String city,
+            @RequestParam String country,
+            @RequestParam(defaultValue = "150") double radiusKm) {
+        try {
+            List<ArticleNearbyDTO> articles = articleService.findNearbyArticles(city, country, radiusKm);
+            return ResponseEntity.ok(articles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/map")
+    public ResponseEntity<List<ArticleNearbyDTO>> getArticlesForMap(
+            @RequestParam(required = false) String country) {
+        try {
+            List<ArticleNearbyDTO> articles = articleService.findAllWithCoords(country);
+            return ResponseEntity.ok(articles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 }
