@@ -1,8 +1,10 @@
 package com.example.demo.model;
 
-import com.example.demo.model.Article;
 import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate; // Asegúrate de tener este import
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ArticleFilter {
 
@@ -18,7 +20,20 @@ public class ArticleFilter {
         return (root, query, cb) -> (condition == null || condition.isEmpty()) ? null : cb.equal(root.get("condition"), condition);
     }
 
-    public static Specification<Article> hasPurchaseDate(LocalDate date) {
-        return (root, query, cb) -> (date == null) ? null : cb.equal(root.get("purchaseDate"), date);
+
+    public static Specification<Article> isPriceInRange(Double minPrice, Double maxPrice) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (minPrice != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("pricePerMonth"), minPrice));
+            }
+
+            if (maxPrice != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("pricePerMonth"), maxPrice));
+            }
+
+            return predicates.isEmpty() ? null : cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
-} 
+}

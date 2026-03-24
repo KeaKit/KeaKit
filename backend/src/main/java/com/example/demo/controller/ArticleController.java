@@ -125,10 +125,11 @@ public class ArticleController {
         @PathVariable Long userId, 
         @RequestParam(required = false) Long categoryId,
         @RequestParam(required = false) String condition,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate purchaseDate) {
+        @RequestParam(required = false) Double minPrice,   
+        @RequestParam(required = false) Double maxPrice) {
         try {
         
-        List<UserArticle> articles = articleService.findArticlesByUserId(userId, categoryId, condition, purchaseDate);
+        List<UserArticle> articles = articleService.findArticlesByUserId(userId, categoryId, condition, minPrice, maxPrice);
         return ResponseEntity.ok(articles);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

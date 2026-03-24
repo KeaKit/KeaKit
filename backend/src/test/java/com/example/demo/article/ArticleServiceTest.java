@@ -618,7 +618,7 @@ class ArticleServiceTest {
         when(articleRepository.findAll(any(Specification.class)))
             .thenReturn(List.of(article, rented));
 
-        var result = articleService.findArticlesByUserId(1L, null, null, null);
+        var result = articleService.findArticlesByUserId(1L, null, null, null, null);
 
         assertThat(result).hasSize(2);
 
@@ -643,7 +643,7 @@ class ArticleServiceTest {
         when(articleRepository.findAll(any(Specification.class)))
         .thenReturn(List.of(articleAvailable, articleRented));
 
-        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null);
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null, null);
 
         assertThat(result).hasSize(2);
 
@@ -662,7 +662,7 @@ class ArticleServiceTest {
     void findArticlesByUserId_emptyList_returnsEmpty() {
         when(articleRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        var result = articleService.findArticlesByUserId(99L, null, null, null);
+        var result = articleService.findArticlesByUserId(99L, null, null, null, null);
         assertThat(result).isEmpty();
     }
 
@@ -670,7 +670,7 @@ class ArticleServiceTest {
     void findArticlesByUserId_whenUserHasNoArticles_returnsEmptyAndNotNull() {
         when(articleRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null);
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null, null);
 
         assertThat(result).isNotNull();
         assertThat(result).isEmpty();

@@ -262,11 +262,12 @@ public class ArticleService {
         return articleRepository.save(article);
     }
 
-    public List<UserArticle> findArticlesByUserId(Long userId, Long categoryId, String condition, LocalDate purchaseDate) {
-        Specification<Article> spec = Specification.where(ArticleFilter.hasOwnerId(userId))
+   public List<UserArticle> findArticlesByUserId(Long userId, Long categoryId, String condition, Double minPrice, Double maxPrice) {
+    Specification<Article> spec = Specification.where(ArticleFilter.hasOwnerId(userId))
             .and(ArticleFilter.hasCategoryId(categoryId))
             .and(ArticleFilter.hasCondition(condition))
-            .and(ArticleFilter.hasPurchaseDate(purchaseDate));
+            .and(ArticleFilter.isPriceInRange(minPrice, maxPrice));
+            
         List<Article> articles = articleRepository.findAll(spec);
 
         return articles.stream()
