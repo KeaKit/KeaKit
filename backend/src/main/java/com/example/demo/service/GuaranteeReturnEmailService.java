@@ -26,7 +26,7 @@ public class GuaranteeReturnEmailService {
     private final KitService kitService;
     private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(OrderConfirmationEmailService.class);
-    private static final String TEMPLATE_PATH = "guarantee-return-email.html";
+    private static final String TEMPLATE_PATH = "templates/guarantee-return-email.html";
 
     @Value("${sendgrid.api-key:}")
     private String sendGridApiKey;
@@ -115,7 +115,7 @@ public class GuaranteeReturnEmailService {
                 .replace("{{kitCity}}", safeValue(kit.getCity()))
                 .replace("{{kitCountry}}", safeValue(kit.getCountry()))
                 .replace("{{kitStartDate}}", safeValue(kit.getStartDate()))
-                .replace("{{kitEndDate}}", safeValue(kit.getEndDate()))
+                .replace("{{kitEndDate}}", safeValue(kit.getEndDate()));
         } catch (IOException ex) {
             logger.error("No se pudo cargar la plantilla HTML de devolución de garantía", ex);
             return "<p>Tu garantía ha sido devuelta correctamente.</p>";
