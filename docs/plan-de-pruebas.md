@@ -4,10 +4,26 @@
 
 El propósito de este plan de pruebas es asegurar la calidad, funcionalidad, rendimiento y fiabilidad de la aplicación KeaKit. El alcance incluye la validación de la lógica de negocio, la integración de componentes, la validación de los flujos principales por parte del usuario y la respuesta del sistema bajo carga.
 
-## 2. Pruebas Unitarias
+## 2. Estrategia: Orden de Ejecución y Prioridad
+
+Para garantizar la estabilidad del sistema, las pruebas se ejecutarán siguiendo el orden y las prioridades descritas a continuación:
+
+| Orden | Prioridad | Tipo de Prueba | Framework / Herramienta |
+| :--- | :--- | :--- | :--- |
+| 1º | **Crítica** | Unitarias | JUnit 5, Mockito (Back) / Jest (Front) |
+| 2º | **Alta** | Integración | Spring Boot Test (Back) / React Native Testing Library (Front) |
+| 3º | **Media** | Rendimiento | Locust |
+| 4º | **Muy Alta** | Aceptación | Manual (Scripts UI) |
+
+*Se prioriza la ejecución de pruebas de rendimiento (Locust) antes de las de aceptación para asegurar que los flujos de usuario se prueben sobre un entorno estable y capaz de soportar la concurrencia.*
+
+## 3. Pruebas Unitarias
 
 Las pruebas unitarias validarán el comportamiento de los componentes individuales (clases, métodos o funciones) de forma aislada. Repositorios y elementos externos al componente a testear son remplazados por mocks. Estas se realizan durante el desarrollo de cada funcionalidad. Estas están automatizadas en el flujo de CI/CD de la aplicación.
-## 2.1 Backend
+
+- **Alcance por Módulos**: Gestión de Usuarios (Auth/Perfil), Catálogo de Artículos e Items, Gestión de Kits, Cartera y Transacciones, y Gestión de Incidencias.
+
+## 3.1 Backend
 
 - **Herramientas**: JUnit 5, Mockito.
     
@@ -15,29 +31,55 @@ Las pruebas unitarias validarán el comportamiento de los componentes individual
 	- Validan el funcionamiento correcto de los controladores y servicios.
 	- Sirven para validar reglas de negocio y manejo de excepciones.
     - Validan la generación y validación de tokens JWT.
-## 2.2 Frontend
+## 3.2 Frontend
 
 - **Herramientas**: Jest.
 - **Alcance**:
     - Prueba funciones que manipulan datos locales utilizados en la interfaz de usuario.
     - Pruebas las funciones que se encargan de comunicarse con el servidor, mockeando las respuestas de la API.
 
-## 3. Pruebas de Integración
+## 4. Pruebas de Integración
 
 Las pruebas de integración verifican la correcta comunicación entre los diferentes módulos y la base de datos. Al igual que las pruebas unitarias, estas pruebas también se realizan durante el desarrollo de cada funcionalidad, y además, están automatizadas en el flujo de CI/CD de la aplicación.
-## 3.1 Backend
+
+- **Alcance por Módulos**: Comunicación Backend-Database (PostgreSQL/H2), Flujo de Persistencia de Artículos, y Endpoints de la API REST.
+
+## 4.1 Backend
 
 - **Herramientas**: Spring Boot Test, MockMvc.
 - **Alcance**:
     - **Repositorios**: Verificar que las consultas personalizadas a la base de datos funcionan correctamente sobre una base de datos de prueba en memoria (H2).
     - **Controladores REST**: Usar `MockMvc` para realizar peticiones HTTP a los endpoints y verificar las respuestas, el mapeo de JSON (DTOs) y la correcta delegación a la capa de servicios.
 
-## 4. Pruebas de Aceptación
+## 5. Pruebas de Rendimiento 
+
+El objetivo de este apartado es definir la estrategia para evaluar el comportamiento, la estabilidad y la escalabilidad del sistema bajo diferentes niveles de demanda. Para ello, se utilizará la herramienta de simulación **Locust**, la cual nos permitirá generar tráfico de usuarios y evaluar el rendimiento del backend de la aplicación.
+
+- **Alcance por Módulos**: Principalmente los módulos de **Catálogo** (Búsquedas concurrentes) y **Alquiler/Pago** (Creación masiva de transacciones).
+### 5.1. Test de Carga
+
+- **Objetivo:** Validar que el sistema funciona correctamente y mantiene tiempos de respuesta aceptables bajo el volumen de tráfico esperado (menos de 200 usuarios)
+    
+- **Descripción:** Se probará el sistema **incrementando el número de usuarios concurrentes gradualmente** para observar la evolución del rendimiento de la aplicación. 
+    
+- **Criterios de Éxito:** El sistema debe superar estabilizando los tiempos de respuesta por debajo de los 2 segundos (2000 ms) y manteniendo una tasa de error inferior al 1%.
+    
+### 5.2. Test de Estrés
+
+- **Objetivo:** Identificar el punto de ruptura de la infraestructura y del software.
+    
+- **Descripción:** A diferencia del test de carga, aquí se inyectará una cantidad extrema de tráfico que superará con creces las expectativas de uso normal. El propósito es **saber el número máximo absoluto de usuarios concurrentes** que la aplicación y la base de datos pueden soportar antes de colapsar, bloquearse o empezar a devolver errores constantes.
+    
+- **Criterios de Éxito:** Más que evitar la caída , el éxito reside en conocer el límite exacto del sistema actual, observar cómo se degrada el rendimiento y comprobar si el sistema es capaz de recuperarse adecuadamente una vez que cesa el ataque de estrés.
+
+## 6. Pruebas de Aceptación
 
 Validan que el sistema cumple con los requerimientos desde el punto de vista del usuario final, actualmente cubren las funcionalidades principales. Se redactan usando el formato Given-When-Then.
 Se implementarán mediante el testing de interfaz de usuario, replicando el procedimiento de cada caso de prueba y grabandolo en scripts para poder ejecutar los tests de manera automatizada. 
 
-### 4.1 CU-ARRENDADOR-01 - Subida de artículos
+- **Alcance por Módulos**: Todos los Casos de Uso (CU) descritos a continuación.
+
+### 6.1 CU-ARRENDADOR-01 - Subida de artículos
 
 **Escenario:** Un usuario sube un artículo.
 
@@ -56,7 +98,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 4.2 CU-ARRENDATARIO-01 - Creación de kits
+### 6.2 CU-ARRENDATARIO-01 - Creación de kits
 
 **Escenario:** Un usuario crea y alquila un kit.
 
@@ -75,7 +117,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 4.3 CU-ARRENDATARIO-05 - Seguimiento de alquileres activos
+### 6.3 CU-ARRENDATARIO-05 - Seguimiento de alquileres activos
 
 **Escenario:** Un usuario revisa los kits que ha alquilado.
 
@@ -93,7 +135,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 4.4 CU-ARRENDADOR-02 - Listado de artículos subidos
+### 6.4 CU-ARRENDADOR-02 - Listado de artículos subidos
 
 **Escenario:** Un usuario revisa su inventario de artículos subidos en la aplicación.
 
@@ -110,33 +152,12 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 | **P-02: Filtro por estado**            | En la vista "Mis artículos", el usuario selecciona el filtro: Estado = `RENTED`                                   | La lista se actualiza para mostrar únicamente el artículo con estado RENTED. El otro artículo se oculta.                             | RN-ART-26                       |
 | **P-03: Bloqueo de edición alquilado** | El usuario hace clic en "Editar" sobre el artículo que está `RENTED`.                                             | El sistema desactiva el botón o muestra un error indicando que un artículo alquilado no puede ser editado ni eliminado.              | RN-ART-15, RN-ART-16            |
 
-
-## 5. Pruebas de Rendimiento 
-
-El objetivo de este apartado es definir la estrategia para evaluar el comportamiento, la estabilidad y la escalabilidad del sistema bajo diferentes niveles de demanda. Para ello, se utilizará la herramienta de simulación **Locust**, la cual nos permitirá generar tráfico de usuarios y evaluar el rendimiento del backend de la aplicación.
-### 5.1. Test de Carga
-
-- **Objetivo:** Validar que el sistema funciona correctamente y mantiene tiempos de respuesta aceptables bajo el volumen de tráfico esperado (menos de 200 usuarios)
-    
-- **Descripción:** Se probará el sistema **incrementando el número de usuarios concurrentes gradualmente** para observar la evolución del rendimiento de la aplicación. 
-    
-- **Criterios de Éxito:** El sistema debe superar estabilizando los tiempos de respuesta por debajo de los 2 segundos (2000 ms) y manteniendo una tasa de error inferior al 1%.
-    
-### 5.2. Test de Estrés
-
-- **Objetivo:** Identificar el punto de ruptura de la infraestructura y del software.
-    
-- **Descripción:** A diferencia del test de carga, aquí se inyectará una cantidad extrema de tráfico que superará con creces las expectativas de uso normal. El propósito es **saber el número máximo absoluto de usuarios concurrentes** que la aplicación y la base de datos pueden soportar antes de colapsar, bloquearse o empezar a devolver errores constantes.
-    
-- **Criterios de Éxito:** Más que evitar la caída , el éxito reside en conocer el límite exacto del sistema actual, observar cómo se degrada el rendimiento y comprobar si el sistema es capaz de recuperarse adecuadamente una vez que cesa el ataque de estrés.
-
-
-## 6. Procedimiento de Reporte y Gestión de Bugs
+## 7. Procedimiento de Reporte y Gestión de Bugs
 
 Este apartado define el ciclo de vida de un bug desde que es detectado durante las pruebas hasta que es resuelto e integrado en la aplicación. 
 Este procedimiento solo aplica a bugs de funcionalidades fusionadas a ramas comunes (develop, main)
 
-### 6.1. Identificación y Creación de la Issue
+### 7.1. Identificación y Creación de la Issue
 
 Cuando un desarrollador un comportamiento anómalo que no cumple con los Criterios de Aceptación, debe crear una _Issue_ en el repositorio. La Issue debe contener como mínimo:
 
@@ -150,16 +171,16 @@ Cuando un desarrollador un comportamiento anómalo que no cumple con los Criteri
     
 - **Etiquetas:** Clasificación del tipo de issue (ej. `bug`, `frontend`, `backend`, `alta-prioridad`).
 
-### 6.1. Comunicación y asignación del responsable
+### 7.2. Comunicación y asignación del responsable
 
 Un vez creada la issue y documentada la información de error, se informará por los sistemas de comunicaciones del proyecto del error encontrado y en función de la prioridad estimada para la resolución del error se decidirá el encargado de resolverlo.
 
-### 6.3. Resolución y Política de Ramas
+### 7.3. Resolución y Política de Ramas
 
 La rama a crear y los commits de cambios se realizarán siguiendo el documento de politica-commits-ramas-archivos.md subido al repositorio.
 El desarrollador asignado creará una nueva rama partiendo de la rama principal y corregirá el defecto en el código actualizando o creando nuevas pruebas unitarias para asegurar que el bug no vuelva a ocurrir, en caso de que sea necesario.
 
-### 6.4. Verificación y Cierre
+### 7.4. Verificación y Cierre
 
 1. **Pull Request (PR):** Una vez solucionado, se abrirá un PR hacia la rama principal.
     
@@ -171,14 +192,15 @@ El desarrollador asignado creará una nueva rama partiendo de la rama principal 
 
 ---
 
-## 7. Historial de versiones
+## 8. Historial de versiones
 
 | Versión | Fecha       | Descripción                                   | Autor(es)               |
 |---------|-------------|-----------------------------------------------|-------------------------|
 | 1.0.0   | 10/03/2026  | Primera versión del documento de Plan de Pruebas | Guillermo García León |
+| 1.1.0 | 23/03/2026 | Inclusión de módulos, orden de ejecución y frameworks | Ismael Carrasco Mkhazni |
 
 ---
 
 **Redactado por:** Guillermo García León
 **Fecha de redacción:** 10/03/2026
-**Versión:** 1.0.0
+**Versión:** 1.1.0

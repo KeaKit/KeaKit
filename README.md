@@ -55,6 +55,7 @@ Documentación del primer sprint de desarrollo.
   - **[6-S1-deliverable.pdf](docs/Sprint%201/PDFs%20Entrega/6-S1-deliverable.pdf)**: Información sobre el entregable del Sprint 1.
   - **[6-S1-dedication.xlsx](docs/Sprint%201/PDFs%20Entrega/6-S1-dedication.xlsx)**: Reporte de tiempo-esfuerzo para cada miembro del grupo.
   - **[6-S1-software-review-guidelines.pdf](docs/Sprint%201/PDFs%20Entrega/6-S1-software-review-guidelines.pdf)**: Información sobre revisión de software.
+  - **[6-S1-time-report.pdf](docs/Sprint%201/PDFs%20Entrega/6-S1-time-report.pdf)**: Documento con el enlace al time report del Sprint 1.
 
 #### 📂 `docs/plantillas/`
 Plantillas reutilizables para documentos del proyecto.
@@ -67,8 +68,7 @@ Información y gestión de usuarios piloto del proyecto.
 
 - **[analisis-propuesta-de-cuestionario-usuarios-piloto.md](docs/usuarios%20pilotos/analisis-propuesta-de-cuestionario-usuarios-piloto.md)**: Análisis y propuesta del cuestionario para usuarios piloto.
 - **[analisis-respuestas-formulario-usuarios-piloto.md](docs/usuarios%20pilotos/analisis-respuestas-formulario-usuarios-piloto.md)**: Análisis de las respuestas recibidas del formulario de usuarios piloto.
-- **[estrategia-incentivos-arrendadores.md](docs/usuarios%20pilotos/estrategia-incentivos-arrendadores.md)**: Estrategia de incentivos para usuarios arrendadores.
-- **[estrategia-incentivos-arrendatarios.md](docs/usuarios%20pilotos/estrategia-incentivos-arrendatarios.md)**: Estrategia de incentivos para usuarios arrendatarios.
+- **[estrategia-incentivos.md](docs/usuarios%20pilotos/estrategia-incentivos.md)**: Estrategia de incentivos para usuarios piloto.
 - **[estudiante-erasmus.md](docs/usuarios%20pilotos/estudiante-erasmus.md)**: Perfil de usuario piloto: estudiante Erasmus.
 - **[listado-usuarios-piloto.md](docs/usuarios%20pilotos/listado-usuarios-piloto.md)**: Listado completo de usuarios piloto del proyecto.
 - **[nomada-digital.md](docs/usuarios%20pilotos/nomada-digital.md)**: Perfil de usuario piloto: nómada digital.
@@ -76,6 +76,7 @@ Información y gestión de usuarios piloto del proyecto.
 - **[persona-comun.md](docs/usuarios%20pilotos/persona-comun.md)**: Perfil de usuario piloto: persona común.
 - **[persona-con-hijos.md](docs/usuarios%20pilotos/persona-con-hijos.md)**: Perfil de usuario piloto: persona con hijos.
 - **[persona-en-practicas.md](docs/usuarios%20pilotos/persona-en-practicas.md)**: Perfil de usuario piloto: persona en prácticas.
+- **[plan-beneficiacion-usuarios-pilotos.md](docs/usuarios%20pilotos/plan-beneficiacion-usuarios-pilotos.md)**: Plan de beneficiación para usuarios piloto.
 
 
 ## Instalación del devcontainer

@@ -42,6 +42,7 @@ const KitDetailScreen: React.FC = () => {
   const [actionModalTitle, setActionModalTitle] = useState('');
   const [actionModalMessage, setActionModalMessage] = useState('');
   const [onActionConfirm, setOnActionConfirm] = useState<() => void>(() => () => {});
+  const [ratedItems, setRatedItems] = useState<{ [key: number]: boolean }>({});
 
 
   useEffect(() => {
@@ -59,6 +60,20 @@ const KitDetailScreen: React.FC = () => {
         if (!response.ok) throw new Error('Error al obtener kit');
         const data = await response.json();
         setKit(data);
+
+        if (data && data.items?.length > 0 && user?.id) {
+          const itemIds = data.items.map((item: any) => item.itemId);
+          fetch(`${API_ROUTES.HAS_REVIEWED_ITEMS}?reviewerId=${user.id}&kitId=${kitId}&itemIds=${itemIds.join(',')}`, {
+            headers: user?.token
+              ? { Authorization: `Bearer ${user.token}` }
+              : undefined,
+          })
+            .then(res => res.json())
+            .then((res: { [key: number]: boolean }) => {
+              setRatedItems(res);
+            })
+            .catch(err => console.error("Error al obtener items valorados", err));
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -66,6 +81,7 @@ const KitDetailScreen: React.FC = () => {
       }
     };
     if (kitId) fetchKitDetail();
+    
   }, [kitId, user?.token]);
 
 const handleConfirmKit = async () => {
@@ -147,6 +163,21 @@ const handleConfirmKit = async () => {
 
   if (!kit) return null;
 
+  const navigateToUserReviews = (ownerId: number, ownerName: string) => {
+    navigation.navigate('UserRatings', {
+      userId: ownerId,
+      userName: ownerName,
+    });
+  };
+
+  const createReview = (kitId: number, revieweeId: number, revieweeName: string) => {
+    navigation.navigate('CreateRating', {
+      kitId: kitId,
+      revieweeId: revieweeId,
+      revieweeName: revieweeName
+    });
+  };
+
   return (
     <SafeAreaView style={commonStyles.container}>
 
@@ -194,15 +225,44 @@ const handleConfirmKit = async () => {
 
         <Text style={styles.sectionTitle}>Productos Incluidos</Text>
         <View style={styles.itemsContainer}>
-          {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => (
+          {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => {
+            const alreadyRated = ratedItems[item.itemId];
+
+            return (
             <View key={item.itemId} style={styles.itemCard}>
+              
               <View style={styles.itemInfo}>
                 <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemMeta}>{item.category} • {item.pricePerMonth}€/mes</Text>
+
+                <Text style={styles.itemMeta}>
+                  {item.ownerName ? (
+                    <Text
+                      style={{ color: "#007AFF" }}
+                      onPress={() => navigateToUserReviews(item.ownerId, item.ownerName)}
+                    >
+                      {item.ownerName}
+                    </Text>
+                  ) : ""} • {item.category} • {item.pricePerMonth}€/mes
+                </Text>
               </View>
+
+              {kit.status === "FINISHED" && (
+                <TouchableOpacity
+                  style={[styles.itemButton, alreadyRated && { opacity: 0.5 }]}
+                  onPress={() => !alreadyRated && createReview(kitId, item.ownerId, item.ownerName)}
+                  disabled={alreadyRated}
+                >
+                  <Ionicons name="star-outline" size={18} color="#666" />
+                  <Text style={styles.itemButtonText}>
+                    {alreadyRated ? "Valorado" : "Valorar"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
               <Ionicons name="cube-outline" size={20} color="#DDD" />
             </View>
-          ))}
+            );
+          })}
 
           {kit.items && kit.items.length > 3 && (
             <TouchableOpacity 
@@ -429,6 +489,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
+  itemButton: { marginLeft: 20, flexDirection: "column", alignItems: "center", padding: 6 },
+  itemButtonText: { fontSize: 12, color: "#666", fontWeight: "600" },
 });
 
 export default KitDetailScreen;

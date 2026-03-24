@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ratings")
@@ -56,5 +57,15 @@ public class RatingController {
         String email = authService.getAuthenticatedUserEmail();
         ratingService.deleteById(id, email);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/has-reviewed")
+    public ResponseEntity<Map<Long, Boolean>> hasReviewedItems(
+            @RequestParam Long reviewerId,
+            @RequestParam Long kitId,
+            @RequestParam List<Long> itemIds
+    ) {
+        Map<Long, Boolean> result = ratingService.hasReviewedItems(reviewerId, kitId, itemIds);
+        return ResponseEntity.ok(result);
     }
 }
