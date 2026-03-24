@@ -46,6 +46,7 @@ import EditServiceScreen from '../screens/service/EditServiceScreen';
 import KitTrackingScreen from '../screens/kit/KitTrackingScreen';
 import { TrackingNotificationsProvider } from '../context/TrackingNotificationContext';
 import TrackingNotificationsScreen from '../screens/notifications/TrackingNotificationsScreen';
+import ActivityNotificationsScreen from '../screens/notifications/ActivityNotificationsScreen';
 import AssignedKitsScreen from '../screens/kit/AssignedKitsScreen';
 import CouriersScreen from '../screens/admin/CouriersScreen';
 import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
@@ -238,6 +239,7 @@ const AppNavigator: React.FC = () => {
 
                 <Stack.Screen name="Tracking" component={KitTrackingScreen} />
                 <Stack.Screen name="TrackingNotifications" component={TrackingNotificationsScreen} />
+                <Stack.Screen name="ActivityNotifications" component={ActivityNotificationsScreen} />
                 <Stack.Screen name="AssignedKits" component={AssignedKitsScreen} />
                 <Stack.Screen name="CourierDetail" component={CourierDetailScreen} />
               </>
