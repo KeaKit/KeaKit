@@ -47,28 +47,35 @@
 | [#144](https://github.com/KeaKit/KeaKit/issues/144)  |  HU-ARRENDATARIO-39: Indicar que el objeto no cumple con lo prometido |  Mid  | 3  | In Progress   | Alejandro González Macías 
 | [#145](https://github.com/KeaKit/KeaKit/issues/145)  | HU-ARRENDATARIO-41 - Recibir una notificación cuando se procese la devolución de mi depósito | Mid  |  2  | Done |   Adrián Chabrera Rubio  |
 | [#235](https://github.com/KeaKit/KeaKit/issues/235)  | CU-GENERAL-03 - Testing | Mid |  3  | Done | Marta De la Calle González |
-| [#101](https://github.com/KeaKit/KeaKit/issues/101)  | CU-ARRENDATARIO-10 - Ampliación de búsqueda geográfica| Mid |  8  | In Progress |  Rafael Harana Mancilla  |
+| [#342](https://github.com/KeaKit/KeaKit/issues/101)  | CU-ARRENDATARIO-10 - Ampliación de búsqueda geográfica (Crear mapa de objetos)| Mid |  4  | Done |  Rafael Harana Mancilla, Guillermo Ciria González  |
+| [#347](https://github.com/KeaKit/KeaKit/issues/101)  | CU-ARRENDATARIO-10 - Ampliación de búsqueda geográfica (Añadir selección de objeto por mapa) | Mid |  4  | Done |  Rafael Harana Mancilla  |
 
 ## 4. Sprint Backlog - Semana 3
 
 | ID Issue | Descripción | Prioridad | Estimación (SP) | Estado | Responsable |
 |----------|-------------|-----------|-----------------|--------|-------------|
-| [#97](https://github.com/KeaKit/KeaKit/issues/97)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto | Mid |  6 (Pendiente de desglosar)  | In Progress |  Adrián Chabrera Rubio, Alejandro González Macías  |
-| [#335](https://github.com/KeaKit/KeaKit/issues/335)  | Implementar fotos de perfil de usuarios | Low | 4 | In Progress | Guillermo Ciria González |
-| [#336](https://github.com/KeaKit/KeaKit/issues/336)  | Combinar pantallas de perfil y valoraciones | Low | 1 | In Progress | Por asignar |
-| [#337](https://github.com/KeaKit/KeaKit/issues/337)  | Crear pantalla de perfil de otros usuarios | Low | 2 | In Progress | Por asignar |
+| [#373](https://github.com/KeaKit/KeaKit/issues/373)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Backend) | Mid |  2  | Done |  Adrián Chabrera Rubio  |
+| [#374](https://github.com/KeaKit/KeaKit/issues/374)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Frontend) | Mid |  3  | In Progress | Alejandro González Macías  |
+| [#375](https://github.com/KeaKit/KeaKit/issues/375)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Testing) | Mid |  2   | In Progress | Alejandro González Macías  |
+| [#335](https://github.com/KeaKit/KeaKit/issues/335)  | Implementar fotos de perfil de usuarios | Low | 4 | In Progress | Marta De la Calle González |
+| [#336](https://github.com/KeaKit/KeaKit/issues/336)  | Combinar pantallas de perfil y valoraciones | Low | 1 | In Progress | Guillermo Ciria González |
+| [#337](https://github.com/KeaKit/KeaKit/issues/337)  | Crear pantalla de perfil de otros usuarios | Low | 2 | In Progress | Rafael Harana Mancilla |
+| [#345](https://github.com/KeaKit/KeaKit/issues/345)  | Seeder de ciudades europeas por medio de api externa | High | 3 | Done | Adrián Chabrera Rubio |
+| [#346](https://github.com/KeaKit/KeaKit/issues/346)  | Endpoints backend para ciudades y países | High | 2 | Done | Adrián Chabrera Rubio |
 
 
 ## 5. Resumen carga de trabajo
 
 | Responsable       | SP - Semana 1|  SP - Semana 2|  SP - Semana 3| **TOTAL** |
 |-------------------|------------------------|------------------------|------------------------|------------------------|
-| Adrián Chabrera Rubio | 5 SP | 4 SP |  3 SP  |                                        
-| Alejandro González Macías | 2 SP |  7 SP |  3 SP  |                  
-| Guillermo Ciria González | 2 SP | 0 SP |  4 SP  |                  
-| Marta De la Calle González | 6 SP | 3 SP |  0 SP  |                  
-| Rafael Harana Mancilla | 0 SP | 8 SP |  0 SP  |                  
-| **TOTAL EQUIPO**   | **15 SP**        |  **22 SP**  |  **10 SP**  |     | 
+| Adrián Chabrera Rubio | 5 SP | 4 SP |  8 SP  | 17 SP                                       
+| Alejandro González Macías | 2 SP |  7 SP |  4 SP  | 13 SP                 
+| Guillermo Ciria González * | 2 SP | 2 SP |  1 SP  |  5 SP                
+| Marta De la Calle González | 6 SP | 3 SP |  4 SP  |  13 SP                
+| Rafael Harana Mancilla | 0 SP | 6 SP |  2 SP  | 8 SP                 
+| **TOTAL EQUIPO**   | **15 SP**        |  **22 SP**  |  **19 SP**  |     | 
+
+\* Encargado de tareas de despliegue y presentaciones externas a este Sprint Backlog. Diferencia de SP justificada.
 
 ## 6. Historial de versiones
 
@@ -76,6 +83,7 @@
 |---------|-------------|--------------------------------|----------------------------|
 | 1.0.0   | 18/03/2026  |  Sprint Backlog Semanas 1 y 2              | Adrián Chabrera Rubio |
 | 2.0.0   | 21/03/2026  |  Sprint Backlog inicial Semana 3 | Adrián Chabrera Rubio
+| 2.0.1 | 24/03/2026 | Tareas añadidas semana 3 | Adrián Chabrera Rubio
 
 
 ---
@@ -83,4 +91,4 @@
 
 **Fecha de redacción:** 18/03/2026  
 
-**Versión:** 2.0.0
+**Versión:** 2.0.1
