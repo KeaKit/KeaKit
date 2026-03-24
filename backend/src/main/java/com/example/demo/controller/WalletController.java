@@ -30,13 +30,9 @@ public class WalletController {
     @GetMapping("/my-wallet")
     public ResponseEntity<?> getLogedUserWallet() throws ResourceNotFoundException, UnauthorizedException {
         Long userId = authService.getAuthenticatedUserId();
-        if (userId == null) {
-            throw new UnauthorizedException("Usuario no autenticado");
-        }
+
         Wallet wallet = walletService.getWalletByUserId(userId);
-        if (wallet == null) {
-            throw new ResourceNotFoundException("Wallet no encontrada para el usuario");
-        }
+
         WalletDTO walletDTO = toDTO(wallet);
 
         return ResponseEntity.ok(walletDTO);
@@ -48,9 +44,8 @@ public class WalletController {
         Long userId = authService.getAuthenticatedUserId();
 
         List<Transaction> transactions = walletService.getTransactionsForUser(userId);
-
-        List<TransactionDTO> transactionDTOs = transactions.stream() // Si no hay transacciones, devuelve una lista
-                                                                     // vacía
+        // Si no hay transacciones, devuelve una lista vacía
+        List<TransactionDTO> transactionDTOs = transactions.stream()
                 .map(this::toDTO)
                 .toList();
 
