@@ -58,6 +58,9 @@ public class KitService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private PromoCodeService promoCodeService;
+
     // TODO: Obtener la garantía de la configuración hecha por el admin
     private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2;
 
@@ -150,7 +153,7 @@ public class KitService {
         return savedKit;
     }
 
-    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+    public KitPaymentDTO getKitPayment(KitCreateRequest request, String promoCode, String userEmail) {
         double subtotalPrice = request.itemSelections().stream()
                 .mapToDouble(item -> item.pricePerMonth() * item.quantity())
                 .sum();
@@ -159,16 +162,30 @@ public class KitService {
         if (request.deliveryMethod() == DeliveryMethod.COURIER) {
             courierPrice = PLATFORM_COURIER_PRICE;
         }
-        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        double discount = 0.0;
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validate(promoCode, userEmail);
+            if (validation.isValid()) {
+                discount = subtotalPrice * validation.getDiscountRate();
+            }
+        }
+
+        double totalPrice = subtotalPrice + guarantee + courierPrice - discount;
 
         return new KitPaymentDTO(
                 toCents(totalPrice),
                 toCents(subtotalPrice),
                 toCents(guarantee),
-                toCents(courierPrice));
+                toCents(courierPrice),
+                toCents(discount));
     }
 
-    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException {
+    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+        return getKitPayment(request, null, null);
+    }
+
+    public KitPaymentDTO getKitPayment(Long kitId, String promoCode, String userEmail) throws ResourceNotFoundException {
         Kit kit = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
 
@@ -177,13 +194,27 @@ public class KitService {
                 .sum();
         double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
         double courierPrice = kit.getDeliveryMethod() == DeliveryMethod.COURIER ? PLATFORM_COURIER_PRICE : 0.0;
-        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        double discount = 0.0;
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validate(promoCode, userEmail);
+            if (validation.isValid()) {
+                discount = subtotalPrice * validation.getDiscountRate();
+            }
+        }
+
+        double totalPrice = subtotalPrice + guarantee + courierPrice - discount;
 
         return new KitPaymentDTO(
                 toCents(totalPrice),
                 toCents(subtotalPrice),
                 toCents(guarantee),
-                toCents(courierPrice));
+                toCents(courierPrice),
+                toCents(discount));
+    }
+
+    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException {
+        return getKitPayment(kitId, null, null);
     }
 
     private Integer toCents(Double amount) {

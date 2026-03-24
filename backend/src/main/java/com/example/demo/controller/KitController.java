@@ -81,9 +81,9 @@ public class KitController {
     }
 
     @GetMapping("/payment/{kitId}")
-    public ResponseEntity<?> getKitPayment(@PathVariable Long kitId) {
+    public ResponseEntity<?> getKitPayment(@PathVariable Long kitId, @RequestParam(required = false) String promoCode, @RequestParam(required = false) String email) {
         try {
-            KitPaymentDTO response = kitService.getKitPayment(kitId);
+            KitPaymentDTO response = kitService.getKitPayment(kitId, promoCode, email);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

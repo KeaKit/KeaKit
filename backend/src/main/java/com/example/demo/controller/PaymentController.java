@@ -39,11 +39,14 @@ public class PaymentController {
     }
 
     @PostMapping("/process/stripe/{kitId}")
-    public ResponseEntity<String> processPayment(@PathVariable Long kitId, @RequestBody String paymentIntentStatus) {
+    public ResponseEntity<String> processPayment(@PathVariable Long kitId,
+        @RequestBody String paymentIntentStatus,
+        @RequestParam(required = false) String promoCode,
+        @RequestParam(required = false) String email) {
 
         if (paymentIntentStatus.replace("\"", "").equals("succeeded")) {
             try {
-                paymentService.processPayment(kitId, false); // El pago se hizo a través de Stripe, no con wallet
+                paymentService.processPayment(kitId, false, promoCode, email); // El pago se hizo a través de Stripe, no con wallet
                 return ResponseEntity.ok("Pago procesado correctamente");
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -55,13 +58,15 @@ public class PaymentController {
     }
 
     @PostMapping("/process/wallet/{kitId}")
-    public ResponseEntity<String> processWalletPayment(@PathVariable Long kitId) {
+    public ResponseEntity<String> processWalletPayment(
+            @PathVariable Long kitId,
+            @RequestParam(required = false) String promoCode,
+            @RequestParam(required = false) String email) {
         try {
-            paymentService.processPayment(kitId, true); // El pago se hizo con wallet
+            paymentService.processPayment(kitId, true, promoCode, email); // El pago se hizo con wallet
             return ResponseEntity.ok("Pago con billetera procesado correctamente");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al procesar el pago con billetera: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
