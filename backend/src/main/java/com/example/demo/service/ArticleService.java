@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
+import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.User;
 import com.example.demo.model.Wallet;
 import com.example.demo.model.Category;
@@ -260,21 +262,31 @@ public class ArticleService {
         return articleRepository.save(article);
     }
 
-    public List<UserArticle> findArticlesByUserId(Long userId) {
-        List<Article> articles = articleRepository.findByOwnerId(userId);
-        return articles.stream().map(article -> {
-            boolean isRented = article.getStatus() != null &&
-                               "RENTED".equalsIgnoreCase(article.getStatus().name());
-            LocalDate rentedUntil = isRented ? article.getAvailableUntil() : null;
-            return new UserArticle(
+    public List<UserArticle> findArticlesByUserId(Long userId, Long categoryId, String condition, LocalDate purchaseDate) {
+        Specification<Article> spec = Specification.where(ArticleFilter.hasOwnerId(userId))
+            .and(ArticleFilter.hasCategoryId(categoryId))
+            .and(ArticleFilter.hasCondition(condition))
+            .and(ArticleFilter.hasPurchaseDate(purchaseDate));
+        List<Article> articles = articleRepository.findAll(spec);
+
+        return articles.stream()
+            .map(this::convertToUserArticle)
+            .collect(Collectors.toList());
+    }
+
+    private UserArticle convertToUserArticle(Article article) {
+        boolean isRented = article.getStatus() != null &&
+                "RENTED".equalsIgnoreCase(article.getStatus().name());
+        LocalDate rentedUntil = isRented ? article.getAvailableUntil() : null;
+        
+        return new UserArticle(
                 article.getId(),
                 article.getTitle(),
                 article.getImageUrl(),
                 article.getPricePerMonth(),
                 article.getStatus() != null ? article.getStatus().name() : "UNKNOWN",
                 rentedUntil
-            );
-        }).collect(Collectors.toList());
+        );
     }
 
     @Transactional

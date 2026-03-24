@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -614,9 +615,10 @@ class ArticleServiceTest {
         rented.setStatus(ArticleStatus.RENTED);
         rented.setAvailableUntil(UNTIL);
 
-        when(articleRepository.findByOwnerId(1L)).thenReturn(List.of(article, rented));
+        when(articleRepository.findAll(any(Specification.class)))
+            .thenReturn(List.of(article, rented));
 
-        var result = articleService.findArticlesByUserId(1L);
+        var result = articleService.findArticlesByUserId(1L, null, null, null);
 
         assertThat(result).hasSize(2);
 
@@ -638,10 +640,10 @@ class ArticleServiceTest {
         LocalDate rentalEndDate = LocalDate.now().plusDays(10);
         articleRented.setAvailableUntil(rentalEndDate);
 
-        when(articleRepository.findByOwnerId(owner.getId()))
-            .thenReturn(List.of(articleAvailable, articleRented));
+        when(articleRepository.findAll(any(Specification.class)))
+        .thenReturn(List.of(articleAvailable, articleRented));
 
-        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null);
 
         assertThat(result).hasSize(2);
 
@@ -658,17 +660,17 @@ class ArticleServiceTest {
 
     @Test
     void findArticlesByUserId_emptyList_returnsEmpty() {
-        when(articleRepository.findByOwnerId(99L)).thenReturn(List.of());
+        when(articleRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        var result = articleService.findArticlesByUserId(99L);
+        var result = articleService.findArticlesByUserId(99L, null, null, null);
         assertThat(result).isEmpty();
     }
 
     @Test
     void findArticlesByUserId_whenUserHasNoArticles_returnsEmptyAndNotNull() {
-        when(articleRepository.findByOwnerId(owner.getId())).thenReturn(List.of());
+        when(articleRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null);
 
         assertThat(result).isNotNull();
         assertThat(result).isEmpty();

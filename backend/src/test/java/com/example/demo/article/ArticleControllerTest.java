@@ -302,7 +302,7 @@ class ArticleControllerTest {
         UserArticle dto1 = new UserArticle(10L, "Taladro", "url1", 15.0, "AVAILABLE", null);
         UserArticle dto2 = new UserArticle(11L, "Bicicleta", "url2", 30.0, "RENTED", LocalDate.of(2026, 12, 31));
 
-        when(articleService.findArticlesByUserId(1L)).thenReturn(List.of(dto1, dto2));
+        when(articleService.findArticlesByUserId(eq(1L), any(), any(), any())).thenReturn(List.of(dto1, dto2));
 
         mockMvc.perform(get("/api/article/my-articles/1"))
             .andExpect(status().isOk())
@@ -318,7 +318,7 @@ class ArticleControllerTest {
 
     @Test
     void getMyArticles_emptyList_returnsOk() throws Exception {
-        when(articleService.findArticlesByUserId(2L)).thenReturn(List.of());
+        when(articleService.findArticlesByUserId(eq(2L), any(), any(), any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/article/my-articles/2"))
             .andExpect(status().isOk())
@@ -327,7 +327,7 @@ class ArticleControllerTest {
 
     @Test
     void getMyArticles_serviceThrows_returnsInternalServerError() throws Exception {
-        when(articleService.findArticlesByUserId(3L)).thenThrow(new RuntimeException("Error fetching articles"));
+        when(articleService.findArticlesByUserId(eq(3L), any(), any(), any())).thenThrow(new RuntimeException("Error fetching articles"));
 
         mockMvc.perform(get("/api/article/my-articles/3"))
             .andExpect(status().isInternalServerError())
