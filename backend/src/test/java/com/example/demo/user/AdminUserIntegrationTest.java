@@ -34,7 +34,7 @@ class AdminUserIntegrationTest {
 
     // Test de integración completo: listado, actualización y eliminación de un usuario
     
-        @Test
+    @Test
     void list_update_and_delete_user_flow() throws Exception {
         // Insert user directly into repository (set required fields)
         User u = new User();
@@ -68,16 +68,38 @@ class AdminUserIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("UpdatedName")); // Ojo, he puesto $.name que es más estándar
+                .andExpect(jsonPath("$.name").value("UpdatedName"));
 
         // Verify repository updated
         var after = userRepository.findById(saved.getId()).orElseThrow();
         assertThat(after.getName()).isEqualTo("UpdatedName");
 
-        // Delete user via controller
         mockMvc.perform(delete("/api/admin/users/" + saved.getId()))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Usuario eliminado correctamente"));
 
         assertThat(userRepository.existsById(saved.getId())).isFalse();
+    }
+
+    // Test específico para verificar que no se puede eliminar un usuario con alquileres activos
+    @Test
+    void deleteUser_withActiveRentals_returnsError() throws Exception {
+        // Crear un usuario
+        User u = new User();
+        u.setEmail("rental@user.com");
+        u.setPassword("encoded");
+        u.setName("Rental User");
+        u.setRole(UserRole.USER);
+        u.setPhone("+34111111111");
+        u.setAddress("Address");
+        u.setCity("City");
+        u.setCountry("Country");
+
+        User saved = userRepository.save(u);
+        
+        mockMvc.perform(delete("/api/admin/users/" + saved.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 }

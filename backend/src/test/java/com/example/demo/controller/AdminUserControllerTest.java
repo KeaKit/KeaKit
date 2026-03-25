@@ -4,6 +4,7 @@ import com.example.demo.dto.AdminUserRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.model.UserRole;
 import com.example.demo.service.AdminUserService;
+import com.example.demo.service.AdminUserDeletionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -27,6 +29,9 @@ class AdminUserControllerTest {
 
     @Mock
     private AdminUserService adminUserService;
+
+    @Mock
+    private AdminUserDeletionService adminUserDeletionService;
 
     @InjectMocks
     private AdminUserController adminUserController;
@@ -133,11 +138,13 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath(".name").value("Updated"));
     }
 
-    // Verifica que el endpoint DELETE /api/admin/users/{id} elimina un usuario y devuelve status 204 (No Content)
-    
     @Test
-    void deleteUser_returnsNoContent() throws Exception {
+    void deleteUser_returnsOk() throws Exception {
+        doNothing().when(adminUserDeletionService).deleteUserWithItems(2L);
+
         mockMvc.perform(delete("/api/admin/users/2"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Usuario eliminado correctamente"));
     }
 }
