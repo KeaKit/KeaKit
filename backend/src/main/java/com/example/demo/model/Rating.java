@@ -3,6 +3,8 @@ package com.example.demo.model;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
@@ -36,10 +38,12 @@ public class Rating {
     
     @ManyToOne
     @JoinColumn(name = "reviewer_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User reviewer;
 
     @ManyToOne
     @JoinColumn(name = "reviewee_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User reviewee;
 
     @ManyToOne

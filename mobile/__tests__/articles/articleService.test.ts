@@ -11,6 +11,16 @@ interface ReturnResponse {
   message: string;
 }
 
+interface ArticleRecordDTO {
+  articleId: number;
+  tenantName: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  city: string;
+  country: string;
+}
+
 const BASE_URL = 'http://localhost:8080';
 
 function processReturnUrl(id: number, ownerId: number): string {
@@ -44,6 +54,23 @@ async function processReturn(
     throw new Error(errorMessage);
   }
   return res.json() as Promise<ReturnResponse>;
+}
+
+async function getArticleRecordLogic(articleId: number, token: string): Promise<ArticleRecordDTO[]> {
+  const url = `${BASE_URL}/api/article/record/${articleId}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('No se pudo obtener el historial del artículo');
+  }
+
+  return await response.json();
 }
 
 (globalThis as any).fetch = jest.fn();
@@ -198,3 +225,37 @@ describe('articleService – processReturn (Gestión de fin de alquiler)', () =>
     ).rejects.toThrow('Condición no válida');
   });
 });
+
+describe('getArticleRecordLogic', () => {
+    it('obtiene el historial correctamente con los headers de seguridad', async () => {
+      const mockData: ArticleRecordDTO[] = [{
+        articleId: 1, tenantName: "Juan", status: "FINISHED",
+        startDate: "2024-01-01", endDate: "2024-01-10", city: "Sevilla", country: "España"
+      }];
+
+      ((globalThis as any).fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockData,
+      });
+
+      const result = await getArticleRecordLogic(1, 'my-token');
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/article/record/1'),
+        expect.objectContaining({
+          headers: {
+            'Authorization': 'Bearer my-token',
+            'Content-Type': 'application/json'
+          }
+        })
+      );
+      expect(result).toEqual(mockData);
+    });
+
+    it('lanza error genérico si la respuesta no es OK', async () => {
+      ((globalThis as any).fetch as jest.Mock).mockResolvedValueOnce({ ok: false });
+
+      await expect(getArticleRecordLogic(1, 'token'))
+        .rejects.toThrow('No se pudo obtener el historial del artículo');
+    });
+  });

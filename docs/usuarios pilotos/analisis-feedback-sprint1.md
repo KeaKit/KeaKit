@@ -64,7 +64,7 @@
       - [Posibles respuestas y votos totales](#posibles-respuestas-y-votos-totales-4)
       - [Comentario](#comentario-15)
 - [Tabla de priorización de errores y tareas (MoSCoW)](#tabla-de-priorización-de-errores-y-tareas-moscow)
-
+- [Resultados del plan de acción tomado](#resultados-del-plan-de-acción-tomado)
 
 ## Funcionalidades a probar por los usuarios piloto
 
@@ -497,4 +497,7 @@ El hecho de que 3 usuarios no hayan tenido problemas confirma que los fallos son
 
 | **WON’T (por ahora)** | Cambios estéticos menores no reportados por usuarios | Se revisarán en fases posteriores |
 
+# Resultados del plan de acción tomado
+
+Ver en el documento [resultados-de-plan-de-acción-ante-feedback-sprint1](../Sprint%202/resultados-de-plan-de-acción-ante-feedback-sprint1.md)
 

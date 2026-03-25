@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.DefaultKitCreateRequest;
+import com.example.demo.dto.DefaultKitResponse;
 import com.example.demo.model.DefaultKit;
 import com.example.demo.service.DefaultKitService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,5 +44,10 @@ public class DefaultKitController {
     public ResponseEntity<Void> deleteDefaultKit(@PathVariable Long id) {
         defaultKitService.deleteDefaultKit(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/catalog")
+    public ResponseEntity<List<DefaultKitResponse>> getDefaultKitsCatalog() {
+        return ResponseEntity.ok(defaultKitService.getDefaultKitsCatalog());
     }
 }

@@ -4,6 +4,7 @@ import com.example.demo.dto.AdminUserRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.model.UserRole;
 import com.example.demo.service.AdminUserService;
+import com.example.demo.service.AdminUserDeletionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -27,6 +29,9 @@ class AdminUserControllerTest {
 
     @Mock
     private AdminUserService adminUserService;
+
+    @Mock
+    private AdminUserDeletionService adminUserDeletionService;
 
     @InjectMocks
     private AdminUserController adminUserController;
@@ -70,9 +75,14 @@ class AdminUserControllerTest {
     void createUser_returnsOk() throws Exception {
         AdminUserRequest req = new AdminUserRequest();
         req.setEmail("c@d.com");
-        req.setPassword("p");
-        req.setName("C");
+        req.setPassword("pppppp");
+        req.setName("Carlos");
         req.setRole(UserRole.USER);
+
+        req.setPhone("123456789"); // Entre 9 y 15 caracteres
+        req.setAddress("Calle Falsa 123"); // Más de 5 caracteres
+        req.setCity("Madrid"); // Sin números
+        req.setCountry("Espana");
 
     var user = new com.example.demo.model.User();
     user.setEmail("c@d.com");
@@ -99,7 +109,13 @@ class AdminUserControllerTest {
     @Test
     void updateUser_returnsOk() throws Exception {
         AdminUserRequest req = new AdminUserRequest();
-        req.setName("Updated");
+        req.setName("UpdatedNombre");
+        req.setEmail("correo@actualizado.com");
+        req.setRole(UserRole.USER);
+        req.setPhone("987654321");
+        req.setAddress("Avenida Siempre Viva 742");
+        req.setCity("Barcelona");
+        req.setCountry("Espana");
 
     var user2 = new com.example.demo.model.User();
     user2.setName("Updated");
@@ -122,11 +138,13 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath(".name").value("Updated"));
     }
 
-    // Verifica que el endpoint DELETE /api/admin/users/{id} elimina un usuario y devuelve status 204 (No Content)
-    
     @Test
-    void deleteUser_returnsNoContent() throws Exception {
+    void deleteUser_returnsOk() throws Exception {
+        doNothing().when(adminUserDeletionService).deleteUserWithItems(2L);
+
         mockMvc.perform(delete("/api/admin/users/2"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Usuario eliminado correctamente"));
     }
 }
