@@ -75,7 +75,7 @@ public class SecurityConfig {
         
         configuration.setAllowedOrigins(Arrays.asList("https://keakitv2.web.app", "http://localhost:8081")); 
         
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(false);
 
