@@ -229,22 +229,41 @@ public class DatabaseSeeder {
             kitRepo.save(pendingPaidKit);
 
             // ==========================================
-            // NUEVO: 7.2 Kit Predeterminado para el Catálogo
+            // 7.2 Kit Predeterminado para el Catálogo (FIX REAL)
             // ==========================================
+
+            // ⚠️ NO usar laptop ni setupService directamente
+
+            Article laptopRef = new Article();
+            laptopRef.setId(laptop.getId()); // solo referencia por ID
+
+            ServiceItem serviceRef = new ServiceItem();
+            serviceRef.setId(setupService.getId());
+
+            // 💰 precio base
             Double basePrice = laptop.getPricePerMonth() + setupService.getPricePerMonth();
+
+            // 🧠 kit
             DefaultKit defaultKit = new DefaultKit(
                 "Pack Trabajo Remoto",
                 "Kit listo para usar, incluye un MacBook Pro y el servicio de instalación de software.",
                 basePrice
             );
 
-            DefaultKitItem dki1 = new DefaultKitItem(defaultKit, laptop);
-            DefaultKitItem dki2 = new DefaultKitItem(defaultKit, setupService);
+            // ⚠️ asegurar lista
+            if (defaultKit.getItems() == null) {
+                defaultKit.setItems(new java.util.ArrayList<>());
+            }
+
+            // 🔗 items SIN cargar entidad completa
+            DefaultKitItem dki1 = new DefaultKitItem(defaultKit, laptopRef);
+            DefaultKitItem dki2 = new DefaultKitItem(defaultKit, serviceRef);
 
             defaultKit.getItems().add(dki1);
             defaultKit.getItems().add(dki2);
 
-            defaultKitRepo.save(defaultKit); // Esto guardará el DefaultKit y sus DefaultKitItems en cascada
+            // 💾 guardar
+            defaultKitRepo.save(defaultKit);
 
 
             // 8. Rating
