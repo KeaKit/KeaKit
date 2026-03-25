@@ -1,5 +1,8 @@
 package com.example.demo.model;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +15,7 @@ public class ItemMemento {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "kit_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Kit kit;
 
     @Column(nullable = false)
@@ -28,6 +32,7 @@ public class ItemMemento {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User ownerAtRental;
 
     @Enumerated(EnumType.STRING)
