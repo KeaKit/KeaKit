@@ -35,7 +35,7 @@ public class AdminUserController {
 
     // CREAR usuario
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestBody AdminUserRequest request) {
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody AdminUserRequest request) {
         return ResponseEntity.ok(adminUserService.createUser(request));
     }
 
