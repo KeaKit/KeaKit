@@ -14,7 +14,7 @@ Este documento detalla las incidencias detectadas en la plataforma, divididas se
 - **modificar correo:** Cuando modificas un correo por uno invalido ej w@g.com por w, no sale un error controlado y explicativo, sale un error de jpa transaction. (solucionado, PR en revision)
 
 
-### 2. Gestión de categorías
+### 2. Gestión de categorías - SOLUCIONADO, ESPERANDO REVISIÓN
 - **precio de categoria:** limitar los digitos a 2, porque puedes poner de precio 12.1212121212121, no se si convendria poner un tope de precio porque tambien puedes poner como 10 mil millones. - Solucionado, esperando revisión.
 - **pantalla de categorias:** solo se ve desde el frontend la categoría creada en el seeder, por mucho que edites o crees nuevas categorias, estas no salen por pantalla, sin embargo si que existen en la base de datos. - Solucionado (poner categoría en modo activo pulsando en la palabra Borrador que aparece en naranja)
 
@@ -39,13 +39,13 @@ Este documento detalla las incidencias detectadas en la plataforma, divididas se
 
 ## 👤 Problemas en Casos de Uso: Usuarios Normales
 
-### 8. Registro de usuario
+### 8. Registro de usuario - PENDIENTE DE ARREGLAR LA PR
 - **Nombre:** Poner un max length de 255, porque como pongas mas letras te salta un error de sql.
 
 ### 9. Editar perfil de usuario
 - **Fecha:** Si en el componente de poner fecha precionas el lapiz te deja poner la fecha de forma manual, solo que si lo haces no sirve.
 
-### 10. Subir artículos / servicios
+### 10. Subir artículos / servicios - TRABAJANDO EN ELLO - GCIRIA
 - **Poner validacion de max length:** si pones mas de 255 letras en el titulo te da un error sql.
 
 ### 11. Creación de un kit
