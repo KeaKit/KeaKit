@@ -55,8 +55,8 @@
 | ID Issue | Descripción | Prioridad | Estimación (SP) | Estado | Responsable |
 |----------|-------------|-----------|-----------------|--------|-------------|
 | [#373](https://github.com/KeaKit/KeaKit/issues/373)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Backend) | Mid |  2  | Done |  Adrián Chabrera Rubio  |
-| [#374](https://github.com/KeaKit/KeaKit/issues/374)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Frontend) | Mid |  3  | In Progress | Alejandro González Macías  |
-| [#375](https://github.com/KeaKit/KeaKit/issues/375)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Testing) | Mid |  2   | In Progress | Alejandro González Macías  |
+| [#374](https://github.com/KeaKit/KeaKit/issues/374)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Frontend) | Mid |  3  | Done | Alejandro González Macías  |
+| [#375](https://github.com/KeaKit/KeaKit/issues/375)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Testing) | Mid |  2   | Done | Alejandro González Macías  |
 | [#335](https://github.com/KeaKit/KeaKit/issues/335)  | Implementar fotos de perfil de usuarios | Low | 4 | In Progress | Marta De la Calle González |
 | [#336](https://github.com/KeaKit/KeaKit/issues/336)  | Combinar pantallas de perfil y valoraciones | Low | 1 | In Progress | Guillermo Ciria González |
 | [#337](https://github.com/KeaKit/KeaKit/issues/337)  | Crear pantalla de perfil de otros usuarios | Low | 2 | In Progress | Rafael Harana Mancilla |
