@@ -773,6 +773,7 @@ const CreateKitScreen: React.FC = () => {
             onDismiss={() => setShowDateRangePicker(false)}
             startDate={startDate || undefined}
             endDate={endDate || undefined}
+            allowEditing={false}
             // Busca el DatePickerModal y reemplaza el onConfirm:
             onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
               setShowDateRangePicker(false);

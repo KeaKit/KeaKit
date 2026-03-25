@@ -42,7 +42,7 @@ Este documento detalla las incidencias detectadas en la plataforma, divididas se
 ### 8. Registro de usuario - SOLUCIONADO
 - **Nombre:** Poner un max length de 255, porque como pongas mas letras te salta un error de sql.
 
-### 9. Editar perfil de usuario
+### 9. Añadir fechas en la creación de kit - SOLUCIONADO
 - **Fecha:** Si en el componente de poner fecha precionas el lapiz te deja poner la fecha de forma manual, solo que si lo haces no sirve.
 
 ### 10. Subir artículos / servicios - SOLUCIONADO
