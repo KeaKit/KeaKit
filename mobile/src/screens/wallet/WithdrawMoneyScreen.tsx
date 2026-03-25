@@ -73,8 +73,12 @@ export default function WithdrawMoneyScreen() {
       normalizedMessage.includes("Required:") ||
       normalizedMessage.includes("Available:")
     ) {
-      const requiredMatch = normalizedMessage.match(/Required:\s*([0-9]+(?:\.[0-9]+)?)/i);
-      const availableMatch = normalizedMessage.match(/Available:\s*([0-9]+(?:\.[0-9]+)?)/i);
+      const requiredMatch = normalizedMessage.match(
+        /Required:\s*([0-9]+(?:\.[0-9]+)?)/i,
+      );
+      const availableMatch = normalizedMessage.match(
+        /Available:\s*([0-9]+(?:\.[0-9]+)?)/i,
+      );
 
       const required = requiredMatch?.[1];
       const available = availableMatch?.[1];
@@ -153,7 +157,10 @@ export default function WithdrawMoneyScreen() {
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Cuenta bancaria</Text>
             <TextInput
-              style={[commonStyles.input, errors.bankAccount && commonStyles.inputError]}
+              style={[
+                commonStyles.input,
+                errors.bankAccount && commonStyles.inputError,
+              ]}
               value={bankAccount}
               onChangeText={(value) => {
                 setBankAccount(value);
@@ -175,7 +182,10 @@ export default function WithdrawMoneyScreen() {
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Cantidad</Text>
             <TextInput
-              style={[commonStyles.input, errors.amount && commonStyles.inputError]}
+              style={[
+                commonStyles.input,
+                errors.amount && commonStyles.inputError,
+              ]}
               value={amount}
               onChangeText={(value) => {
                 setAmount(value);
