@@ -78,6 +78,10 @@ export const API_ROUTES = {
     return `${BASE_URL}/api/kits/unassigned?${params.toString()}`;
   },
 
+  // Notifications (arrendador)
+  USER_NOTIFICATIONS: (userId: number) => `${BASE_URL}/api/notifications/user/${userId}`,
+  MARK_NOTIFICATION_READ: (notificationId: number) => `${BASE_URL}/api/notifications/${notificationId}/read`,
+
 
   // Payments
   CREATE_PAYMENT_INTENT:     `${BASE_URL}/api/payments/create`,
