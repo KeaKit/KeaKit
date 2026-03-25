@@ -12,6 +12,14 @@ type AdminUserPayload = {
   country: string;
 };
 
+// Nueva interfaz para la respuesta de delete
+export interface DeleteUserResponse {
+  success: boolean;
+  message: string;
+  code?: string;
+  resolution?: string;
+}
+
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
 // Normaliza errores del backend
@@ -19,6 +27,8 @@ const normalizeErrorMessage = (raw: string): string => {
   const lower = raw.toLowerCase();
   if (lower.includes('email already')) return 'El correo ya está registrado.';
   if (lower.includes('not found')) return 'Usuario no encontrado.';
+  if (lower.includes('alquileres activos')) return raw;
+  if (lower.includes('está en un alquiler')) return raw;
   return raw;
 };
 
@@ -31,6 +41,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
       const contentType = res.headers.get('content-type');
       if (contentType?.includes('application/json')) {
         const errorData = await res.json();
+        // Para errores, el backend ahora devuelve { success: false, message, ... }
         errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
       } else {
         errorMessage = await res.text();
@@ -76,14 +87,15 @@ export async function getAdminUsers(token: string): Promise<UserResponse[]> {
   return handleResponse<UserResponse[]>(res);
 }
 
-
-// Eliminar usuario
-export async function deleteUser(id: number, token: string): Promise<void> {
+// Eliminar usuario - MODIFICADO: ahora devuelve DeleteUserResponse
+export async function deleteUser(id: number, token: string): Promise<DeleteUserResponse> {
   const res = await fetch(API_ROUTES.DELETE_USER(id), {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
-  await handleResponse<void>(res); // manejar 204
+  
+  // Para DELETE, la respuesta ahora es siempre JSON con { success, message, ... }
+  return handleResponse<DeleteUserResponse>(res);
 }
 
 export async function createUser(
