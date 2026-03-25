@@ -25,6 +25,7 @@
     "expo-linear-gradient": "^55.0.8",
     "expo-status-bar": "~3.0.9",
     "is-plain-obj": "^4.1.0",
+    "lucide-react-native": "^1.0.1",
     "leaflet": "^1.9.4",
     "lucide-react-native": "^1.0.1",
     "react": "19.1.0",
