@@ -186,6 +186,11 @@ const HomeScreen: React.FC = () => {
   };
 
   const gridColumns = getGridColumns();
+  const gridCardWidth = gridColumns === 1
+    ? '100%'
+    : gridColumns === 2
+    ? '48%'
+    : '32%';
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
@@ -327,14 +332,69 @@ const HomeScreen: React.FC = () => {
             { 
               flexDirection: gridColumns === 1 ? 'column' : 'row',
               flexWrap: gridColumns > 1 ? 'wrap' : 'nowrap',
+              justifyContent: gridColumns === 1 ? 'center' : 'flex-start', // Cambiado a flex-start por si hay 4 tarjetas
+              alignItems: 'stretch',
               marginBottom: isMobile ? 16 : 20,
-              gap: isMobile ? 12 : 16,
+              gap: isMobile ? 12 : 16, // Usamos gap genérico para simplificar el espaciado
             }
           ]}>
-            {/* Create kit card */}
+            
+            {/* NUEVO: Catálogo de Kits Predeterminados */}
             <View style={[
               styles.gridCardWrapper,
-              { width: gridColumns === 1 ? '100%' : `${100 / gridColumns - 2}%` }
+              { width: gridCardWidth, maxWidth: gridCardWidth }
+            ]}>
+              <View style={[styles.card, styles.gridCard, { backgroundColor: '#E0F2FE' }]}>
+                <View style={[
+                  styles.circleGraphic, 
+                  { 
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                    width: isMobile ? 50 : 60,
+                    height: isMobile ? 50 : 60,
+                    borderRadius: isMobile ? 25 : 30,
+                  }
+                ]}>
+                  <Ionicons 
+                    name="flash" 
+                    size={isMobile ? 24 : 28} 
+                    color={Colors.primaryHome} 
+                  />
+                </View>
+                <View style={styles.gridCardContent}>
+                  <Text style={[
+                    styles.gridCardValueDark,
+                    { fontSize: getResponsiveFontSize(18, 20, 22) }
+                  ]}>
+                    Kits Express
+                  </Text>
+                  <Text style={[
+                    styles.gridCardLabelDark,
+                    { fontSize: getResponsiveFontSize(11, 12, 12) }
+                  ]}>
+                    Listos para usar
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={[
+                    styles.pillButtonPrimary,
+                    { paddingVertical: isMobile ? 8 : 10 }
+                  ]} 
+                  onPress={() => navigation.navigate('PurchaseDefaultKit')}
+                >
+                  <Text style={[
+                    styles.pillButtonTextLight,
+                    { fontSize: getResponsiveFontSize(12, 14, 14) }
+                  ]}>
+                    Ver catálogo
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Create kit card (Personalizado) */}
+            <View style={[
+              styles.gridCardWrapper,
+              { width: gridCardWidth, maxWidth: gridCardWidth }
             ]}>
               <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryBlue }]}>
                 <View style={[
@@ -357,13 +417,13 @@ const HomeScreen: React.FC = () => {
                     styles.gridCardValueDark,
                     { fontSize: getResponsiveFontSize(18, 20, 22) }
                   ]}>
-                    Kit
+                    Kit a medida
                   </Text>
                   <Text style={[
                     styles.gridCardLabelDark,
                     { fontSize: getResponsiveFontSize(11, 12, 12) }
                   ]}>
-                    Alquila tu propio kit
+                    Crea el tuyo propio
                   </Text>
                 </View>
                 <TouchableOpacity 
@@ -377,7 +437,7 @@ const HomeScreen: React.FC = () => {
                     styles.pillButtonTextLight,
                     { fontSize: getResponsiveFontSize(12, 14, 14) }
                   ]}>
-                    Crear kit
+                    Crear desde cero
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -386,7 +446,7 @@ const HomeScreen: React.FC = () => {
             {/* Upload Article card */}
             <View style={[
               styles.gridCardWrapper,
-              { width: gridColumns === 1 ? '100%' : `${100 / gridColumns - 2}%` }
+              { width: gridCardWidth, maxWidth: gridCardWidth }
             ]}>
               <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryMint }]}>
                 <View style={[
@@ -439,7 +499,7 @@ const HomeScreen: React.FC = () => {
             {user?.role === 'USER' && (
               <View style={[
                 styles.gridCardWrapper,
-                { width: gridColumns === 1 ? '100%' : `${100 / gridColumns - 2}%` }
+                { width: gridCardWidth, maxWidth: gridCardWidth }
               ]}>
                 <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryCoral }]}>
                   <View style={[

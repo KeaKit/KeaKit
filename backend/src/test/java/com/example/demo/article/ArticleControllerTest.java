@@ -8,6 +8,8 @@ import com.example.demo.model.Category;
 import com.example.demo.model.User;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.service.ArticleService;
+import com.example.demo.service.AuthService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,9 @@ class ArticleControllerTest {
 
     @MockitoBean
     private com.example.demo.repository.CategoryRepository categoryRepository;
+
+    @MockitoBean
+    private AuthService authService;
 
     @MockitoBean
     private JwtUtil jwtUtil;
@@ -365,5 +370,47 @@ class ArticleControllerTest {
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].title").value("Taladro de prueba"))
             .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
+    }
+
+    @Test
+    void getArticleRecord_success() throws Exception {
+        sample.setOwner(owner);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+        when(articleService.findById(1L)).thenReturn(sample);
+        when(articleService.findArticleRecord(1L)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void getArticleRecord_notFound() throws Exception {
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+        when(articleService.findById(1L)).thenReturn(null);
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getArticleRecord_unauthorized() throws Exception {
+        User other = new User();
+        other.setId(2L);
+        sample.setOwner(other);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+        when(articleService.findById(1L)).thenReturn(sample);
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getArticleRecord_internalError() throws Exception {
+        when(authService.getAuthenticatedUserId()).thenThrow(new RuntimeException());
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isInternalServerError());
     }
 }

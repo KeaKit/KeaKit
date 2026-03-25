@@ -805,4 +805,65 @@ class ArticleServiceTest {
         assertThat(a.getAvailableUntil()).isNull();
         verify(articleRepository).save(a);
     }
+
+    // ------------ findArticleRecord ------------
+
+    @Test
+    void findArticleRecord_returnsMappedAndFilteredDtos() {
+        User tenant = new User();
+        tenant.setId(2L);
+        tenant.setName("Inquilino Test");
+
+        Kit activeKit = new Kit();
+        activeKit.setId(10L);
+        activeKit.setStatus(KitStatus.ACTIVE);
+        activeKit.setTenant(tenant);
+        activeKit.setStartDate(LocalDate.now().minusDays(5));
+        activeKit.setEndDate(LocalDate.now().plusDays(5));
+        activeKit.setCity("Barcelona");
+        activeKit.setCountry("España");
+
+        Kit draftKit = new Kit();
+        draftKit.setStatus(KitStatus.DRAFT);
+
+        Kit cancelledKit = new Kit();
+        cancelledKit.setStatus(KitStatus.CANCELLED);
+
+        when(articleRepository.findAllKitsWhereArticleHasBeen(1L))
+                .thenReturn(List.of(activeKit, draftKit, cancelledKit));
+
+        List<com.example.demo.dto.ArticleRecordDTO> result = articleService.findArticleRecord(1L);
+
+        assertThat(result).hasSize(1);
+        var dto = result.get(0);
+        assertThat(dto.getTenantId()).isEqualTo(2L);
+        assertThat(dto.getTenantName()).isEqualTo("Inquilino Test");
+        assertThat(dto.getCity()).isEqualTo("Barcelona");
+        assertThat(dto.getStatus()).isEqualTo(KitStatus.ACTIVE);
+        assertThat(dto.getStartDate()).isEqualTo(activeKit.getStartDate());
+        
+        verify(articleRepository).findAllKitsWhereArticleHasBeen(1L);
+    }
+
+    @Test
+    void findArticleRecord_whenNoKitsFound_returnsEmptyList() {
+        when(articleRepository.findAllKitsWhereArticleHasBeen(99L)).thenReturn(List.of());
+
+        List<com.example.demo.dto.ArticleRecordDTO> result = articleService.findArticleRecord(99L);
+
+        assertThat(result).isEmpty();
+        assertThat(result).isNotNull();
+    }
+
+    @Test
+    void findArticleRecord_filtersAllKitsIfAllAreDraftOrCancelled() {
+        Kit draft = new Kit(); draft.setStatus(KitStatus.DRAFT);
+        Kit cancelled = new Kit(); cancelled.setStatus(KitStatus.CANCELLED);
+        
+        when(articleRepository.findAllKitsWhereArticleHasBeen(1L)).thenReturn(List.of(draft, cancelled));
+
+        List<com.example.demo.dto.ArticleRecordDTO> result = articleService.findArticleRecord(1L);
+
+        assertThat(result).isEmpty();
+    }
 }

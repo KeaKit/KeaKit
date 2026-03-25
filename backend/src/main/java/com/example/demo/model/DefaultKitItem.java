@@ -16,8 +16,9 @@ public class DefaultKitItem {
     @JsonIgnore // Evita bucles infinitos al serializar a JSON
     private DefaultKit defaultKit;
 
-    @ManyToOne(fetch = FetchType.EAGER) 
+    @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "item_id", nullable = false) // Ahora apunta a item_id
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     private Item item;
 
     // Constructores

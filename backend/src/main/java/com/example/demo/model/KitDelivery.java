@@ -2,6 +2,9 @@ package com.example.demo.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -27,6 +30,7 @@ public class KitDelivery {
 
     @ManyToOne
     @JoinColumn(name = "courier_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User assignedCourier;
 
     public KitDelivery() {}

@@ -3,7 +3,9 @@ package com.example.demo.payment;
 import com.example.demo.BaseControllerTest;
 
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -18,10 +20,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.http.MediaType;
 import static org.hamcrest.Matchers.containsString;
 import com.stripe.exception.ApiException;
+import com.example.demo.exception.NotEnoughBalanceException;
 
 import com.example.demo.controller.PaymentController;
 import com.example.demo.service.PaymentService;
 import com.stripe.model.PaymentIntent;
+
+import java.util.Map;
 
 
 @WebMvcTest(PaymentController.class)
@@ -130,7 +135,59 @@ public class PaymentControllerTest extends BaseControllerTest {
                 .andExpect(content().string(containsString("Error al procesar el pago: " + errorMsg)));
     }
 
-    //TODO: Agregar test para el endpoint de withdraw
+    @Test
+    void withdraw_ShouldReturnOk_WhenSuccessful() throws Exception {
+        Double amount = 50.0;
+        Long userId = 2L;
+        String bankAccount = "ES9121000418450200051332";
+
+        when(authService.getAuthenticatedUserId()).thenReturn(userId);
+
+        mockMvc.perform(post(BASE_URL + "/withdraw")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of(
+                        "amount", amount,
+                        "bankAccount", bankAccount))))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Retirada realizada correctamente"));
+
+        verify(paymentService).withdrawToBank(userId, amount, bankAccount);
+    }
+
+    @Test
+    void withdraw_ShouldReturnPaymentRequired_WhenServiceThrowsNotEnoughBalance() throws Exception {
+        Double amount = 50.0;
+        Long userId = 2L;
+        String bankAccount = "ES9121000418450200051332";
+
+        when(authService.getAuthenticatedUserId()).thenReturn(userId);
+        doThrow(new NotEnoughBalanceException("Saldo insuficiente"))
+                .when(paymentService).withdrawToBank(userId, amount, bankAccount);
+
+        mockMvc.perform(post(BASE_URL + "/withdraw")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of(
+                        "amount", amount,
+                        "bankAccount", bankAccount))))
+                .andExpect(status().isPaymentRequired())
+                .andExpect(jsonPath("$.message").value("Saldo insuficiente"));
+    }
+
+    @Test
+    void withdraw_ShouldReturnBadRequest_WhenRequestIsInvalid() throws Exception {
+        Long userId = 2L;
+
+        when(authService.getAuthenticatedUserId()).thenReturn(userId);
+
+        mockMvc.perform(post(BASE_URL + "/withdraw")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of(
+                        "amount", 0,
+                        "bankAccount", "123"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.amount").value("La cantidad debe ser mayor que 0"))
+                .andExpect(jsonPath("$.bankAccount").value("La cuenta bancaria debe tener un formato IBAN valido"));
+
+        verify(paymentService, never()).withdrawToBank(anyLong(), anyDouble(), anyString());
+    }
 }
-
-

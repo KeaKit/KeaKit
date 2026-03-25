@@ -393,6 +393,7 @@ const EditServiceScreen: React.FC = () => {
               onDismiss={() => setShowDateRangePicker(false)}
               startDate={startDate}
               endDate={endDate}
+              allowEditing={false}
               onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
                 setShowDateRangePicker(false);
                 if (params.startDate && params.endDate) {
