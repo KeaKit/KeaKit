@@ -39,7 +39,7 @@ public class DatabaseSeeder {
             owner.setEmail("owner@example.com");
             owner.setPassword(passwordEncoder.encode("password123"));
             owner.setRole(UserRole.USER);
-            owner.setCountry("España");
+            owner.setCountry("Spain");
             owner.setCity("Sevilla");
             owner.setAddress("Calle 123 matame otra vez");
             owner.setPhone("123456789");
@@ -50,7 +50,7 @@ public class DatabaseSeeder {
             tenant.setEmail("tenant@example.com");
             tenant.setPassword(passwordEncoder.encode("password123"));
             tenant.setRole(UserRole.USER);
-            tenant.setCountry("España");
+            tenant.setCountry("Spain");
             tenant.setCity("Sevilla");
             tenant.setAddress("Calle 123 matame otra vez");
             tenant.setPhone("223456789");

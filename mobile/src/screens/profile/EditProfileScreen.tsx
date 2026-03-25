@@ -42,6 +42,8 @@ const parseBackendError = (err: unknown): FieldErrors => {
     return { phone: 'Número de teléfono no válido.' };
   if (message.includes('address'))
     return { address: 'El tamaño de la dirección debe estar entre 5 y 255 caracteres.'}
+  if (message.includes('name'))
+    return { name: 'El nombre debe estar entre 2 y 100 caracteres.'}
   return { general: err.message || 'Error al actualizar el perfil.' };
 };
 
@@ -97,7 +99,7 @@ const EditProfileScreen: React.FC = () => {
       setLoading(true);
       const updatedUser = await updateProfile(profileUser!.id, {
         name:    form.name.trim(),
-        phone:   form.phone.trim(),
+        phone:   form.phone.trim().replace(/\s/g, ''),
         address: form.address.trim(),
         city:    selectedCity,
         country: selectedCountry,
