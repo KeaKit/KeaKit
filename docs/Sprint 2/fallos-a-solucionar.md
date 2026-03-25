@@ -45,10 +45,10 @@ Este documento detalla las incidencias detectadas en la plataforma, divididas se
 ### 9. Editar perfil de usuario
 - **Fecha:** Si en el componente de poner fecha precionas el lapiz te deja poner la fecha de forma manual, solo que si lo haces no sirve.
 
-### 10. Subir artículos / servicios - TRABAJANDO EN ELLO - GCIRIA
+### 10. Subir artículos / servicios - SOLUCIONADO
 - **Poner validacion de max length:** si pones mas de 255 letras en el titulo te da un error sql.
 
-### 11. Creación de un kit
+### 11. Creación de un kit - TRABAJANDO EN ELLO - GCIRIA
 - **Funcionalidad faltante:** No existe la opción de seleccionar un kit predeterminado existente.
 - **Error de lógica de negocio:** Si un usuario selecciona un artículo para una fecha y lugar específicos y, tras añadirlo al carrito, cambia los datos de reserva (fecha/lugar), el sistema permite proceder al pago del artículo original sin validar la disponibilidad para los nuevos parámetros. - Solucionado, pendiente de revisión y merge
 
