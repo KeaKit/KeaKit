@@ -22,6 +22,22 @@ import { useTrackingNotifications } from '../context/TrackingNotificationContext
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
 
+const getLogoSize = () => {
+  if (width < 480) {
+    // Móviles pequeños
+    return { width: 70, height: 22 };
+  } else if (width < 768) {
+    // Móviles medianos y grandes
+    return { width: 85, height: 27 };
+  } else if (width < 1024) {
+    // Tablets
+    return { width: 100, height: 32 };
+  } else {
+    // Desktop
+    return { width: 120, height: 38 };
+  }
+};
+
 interface HeaderNavbarProps {
   user: AuthUser | null;
 }
@@ -50,7 +66,15 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(width);
   const bellAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setScreenWidth(window.width);
+    });
+    return () => subscription?.remove();
+  }, []);
 
   // Cerrar dropdown cuando se hace click fuera (solo web)
   useEffect(() => {
@@ -417,8 +441,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 120,
-    height: 36,
+    width: getLogoSize().width,
+    height: getLogoSize().height,
+    maxWidth: '100%',
   },
   navItems: {
     flexDirection: 'row',
@@ -530,7 +555,7 @@ const styles = StyleSheet.create({
   // Mobile
   mobileHeader: {
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -572,8 +597,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalLogo: {
-    width: 120,
-    height: 36,
+    width: getLogoSize().width,
+    height: getLogoSize().height,
+    maxWidth: '100%',
   },
   modalScroll: {
     marginBottom: 12,
