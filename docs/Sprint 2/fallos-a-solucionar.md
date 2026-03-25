@@ -16,7 +16,7 @@ Este documento detalla las incidencias detectadas en la plataforma, divididas se
 
 ### 2. Gestión de categorías
 - **precio de categoria:** limitar los digitos a 2, porque puedes poner de precio 12.1212121212121, no se si convendria poner un tope de precio porque tambien puedes poner como 10 mil millones.
-- **pantalla de categorias:** solo se ve desde el frontend la categoría creada en el seeder, por mucho que edites o crees nuevas categorias, estas no salen por pantalla, sin embargo si que existen en la base de datos.
+- **pantalla de categorias:** solo se ve desde el frontend la categoría creada en el seeder, por mucho que edites o crees nuevas categorias, estas no salen por pantalla, sin embargo si que existen en la base de datos. - Solucionado (poner categoría en modo activo pulsando en la palabra Borrador que aparece en naranja)
 
 ### 3. Establecer comisión de la plataforma
 - *(Sin incidencias reportadas)*.
@@ -50,7 +50,7 @@ Este documento detalla las incidencias detectadas en la plataforma, divididas se
 
 ### 11. Creación de un kit
 - **Funcionalidad faltante:** No existe la opción de seleccionar un kit predeterminado existente.
-- **Error de lógica de negocio:** Si un usuario selecciona un artículo para una fecha y lugar específicos y, tras añadirlo al carrito, cambia los datos de reserva (fecha/lugar), el sistema permite proceder al pago del artículo original sin validar la disponibilidad para los nuevos parámetros.
+- **Error de lógica de negocio:** Si un usuario selecciona un artículo para una fecha y lugar específicos y, tras añadirlo al carrito, cambia los datos de reserva (fecha/lugar), el sistema permite proceder al pago del artículo original sin validar la disponibilidad para los nuevos parámetros. - Solucionado, pendiente de revisión y merge
 
 ### 12. Wallet
 - **Error de UI/UX:** El botón de "Retirar dinero" se encuentra inactivo o no ejecuta ninguna función al ser pulsado.
