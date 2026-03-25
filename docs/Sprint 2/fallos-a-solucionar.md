@@ -7,11 +7,11 @@ Este documento detalla las incidencias detectadas en la plataforma, divididas se
 ## 🛠️ Problemas en Casos de Uso: Administrador
 
 ### 1. Gestión de usuarios
-- **Campo faltante:** No se ha incluido el campo `address` (dirección) en los formularios de creación ni de edición de usuarios.
+- **Campo faltante:** No se ha incluido el campo `address` (dirección) en los formularios de creación ni de edición de usuarios. (solucionado, PR en revision)
 - **borrar usuarios:**	Intenté borrar un usuario vacío que creé y saltó un error grave.
-- **borrar usuarios2:** Aparece como usuario a borrar y modificar el administrador, no deberias poder eliminarte a ti mismo, ni quitarte el rol de admin porque si no te quedas sin administrador en la apliacion-
-- **Contraseña:** Se puede modificar la contraseña de un usuario y dejarla vacia, impidiendo que el usuario pueda ingresar porque aparece "contraseña obligatoria". Poner las mismas restricciones para modificar contraseña que cuando se crea.
-- **modificar correo:** Cuando modificas un correo por uno invalido ej w@g.com por w, no sale un error controlado y explicativo, sale un error de jpa transaction.
+- **borrar usuarios2:** Aparece como usuario a borrar y modificar el administrador, no deberias poder eliminarte a ti mismo, ni quitarte el rol de admin porque si no te quedas sin administrador en la apliacio. (solucionado, PR en revision)
+- **Contraseña:** Se puede modificar la contraseña de un usuario y dejarla vacia, impidiendo que el usuario pueda ingresar porque aparece "contraseña obligatoria". Poner las mismas restricciones para modificar contraseña que cuando se crea. (esta en vacio para garantizar la privacidad, si no la tocas, no se modifica en la base de datos)
+- **modificar correo:** Cuando modificas un correo por uno invalido ej w@g.com por w, no sale un error controlado y explicativo, sale un error de jpa transaction. (solucionado, PR en revision)
 
 
 ### 2. Gestión de categorías
