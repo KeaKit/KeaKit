@@ -66,17 +66,17 @@ public class DatabaseSeeder {
             // 3. Transacciones
             Transaction initialDeposit = new Transaction();
             initialDeposit.setAmount(500.0);
-            initialDeposit.setType(TransactionType.PAYOUT);
+            initialDeposit.setType(TransactionType.TOP_UP);
             initialDeposit.setDestinationWallet(ownerWallet);
             transactionRepo.save(initialDeposit);
             Transaction tenantDeposit = new Transaction();
             tenantDeposit.setAmount(200.0);
-            tenantDeposit.setType(TransactionType.PAYOUT);
+            tenantDeposit.setType(TransactionType.TOP_UP);
             tenantDeposit.setDestinationWallet(tenantWallet);
             transactionRepo.save(tenantDeposit);
             Transaction tenantDeposit2 = new Transaction();
             tenantDeposit2.setAmount(2.5);
-            tenantDeposit2.setType(TransactionType.PAYOUT);
+            tenantDeposit2.setType(TransactionType.TOP_UP);
             tenantDeposit2.setDestinationWallet(tenantWallet);
             transactionRepo.save(tenantDeposit2);
             

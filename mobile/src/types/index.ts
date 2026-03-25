@@ -104,7 +104,7 @@ export interface KitCreateRequest {
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
   tenantId: number;
-  itemSelections: ItemSelectionRequest[]; 
+  itemSelections: ItemSelectionRequest[];
 }
 
 export interface KitPaymentDTO {
@@ -115,7 +115,7 @@ export interface KitPaymentDTO {
   courierPrice: number;
 }
 
-export type ArticleCondition = 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN';
+export type ArticleCondition = "NEW" | "LIGHTLY_USED" | "USED" | "WORN";
 
 export interface Article {
   id: number;
@@ -262,8 +262,8 @@ export interface DefaultKitCreateRequest {
   itemsIds?: number[];
 }
 
-export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
-export type IncidentStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+export type IncidentType = "GENERAL" | "DAMAGED_ITEM";
+export type IncidentStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
 
 export interface IncidentResponse {
   id: number;
@@ -320,39 +320,39 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
-export type NavbarScreen = 
-  | 'Home'
-  | 'Profile'
-  | 'MyArticles'
-  | 'MyKits'
-  | 'MyServices'
-  | 'MyIncidents'
-  | 'AdminIncidents'
-  | 'Wallet'
-  | 'MyKitsHistory'
-  | 'UserRatings'
-  | 'AdminUsers'
-  | 'Categories';
+export type NavbarScreen =
+  | "Home"
+  | "Profile"
+  | "MyArticles"
+  | "MyKits"
+  | "MyServices"
+  | "MyIncidents"
+  | "AdminIncidents"
+  | "Wallet"
+  | "MyKitsHistory"
+  | "UserRatings"
+  | "AdminUsers"
+  | "Categories";
 
-export type NavbarHeaderScreen = 
-  | 'Home'
-  | 'Profile'
-  | 'MyArticles'
-  | 'MyKits'
-  | 'MyServices'
-  | 'MyIncidents'
-  | 'AdminIncidents'
-  | 'Wallet'
-  | 'MyKitsHistory'
-  | 'UserRatings'
-  | 'AdminUsers'
-  | 'Categories'
-  | 'Commission'
-  | 'DefaultKits'
-  | 'Login'
-  | 'Register'
-  | 'TrackingNotifications'
-  | 'ActivityNotifications';
+export type NavbarHeaderScreen =
+  | "Home"
+  | "Profile"
+  | "MyArticles"
+  | "MyKits"
+  | "MyServices"
+  | "MyIncidents"
+  | "AdminIncidents"
+  | "Wallet"
+  | "MyKitsHistory"
+  | "UserRatings"
+  | "AdminUsers"
+  | "Categories"
+  | "Commission"
+  | "DefaultKits"
+  | "Login"
+  | "Register"
+  | "TrackingNotifications"
+  | "ActivityNotifications";
 
 export interface NavbarHeaderItem {
   name: string;
@@ -385,7 +385,7 @@ export type RootStackParamList = {
   ActivityNotifications: undefined;
   CreateKit: undefined;
   PurchaseDefaultKit: undefined;
-  Checkout: {kitId: number};
+  Checkout: { kitId: number };
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
@@ -412,12 +412,13 @@ export type RootStackParamList = {
   DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
   Commission: undefined;
   Wallet: undefined;
+  WithdrawMoney: undefined;
   Tracking: { kitId: number };
   TrackingNotifications: undefined;
   AssignedKits: undefined;
   Couriers: undefined;
-  CourierDetail: { courier: UserResponse, isBusy?: boolean };
-  ArticleRentals: { articleId: number, articleTitle: string };
+  CourierDetail: { courier: UserResponse; isBusy?: boolean };
+  ArticleRentals: { articleId: number; articleTitle: string };
 };
 
 export interface ProfileData {
@@ -428,7 +429,7 @@ export interface ProfileData {
   country: string;
 }
 
-export type ServiceStatus = 'DRAFT' | 'ACTIVE' | 'UNAVAILABLE';
+export type ServiceStatus = "DRAFT" | "ACTIVE" | "UNAVAILABLE";
 
 export interface Service {
   id: number;
@@ -472,6 +473,11 @@ export interface Wallet {
   createdAt: string; // ISO String para emular LocalDateTime
 }
 
+export interface WithdrawRequest {
+  bankAccount: string;
+  amount: number;
+}
+
 export interface Transaction {
   id: number;
   amount: number;
@@ -481,11 +487,12 @@ export interface Transaction {
 }
 
 export enum TransactionType {
-  PAYOUT = 'PAYOUT',
-  FEE = 'FEE',
-  GUARANTEE_DEPOSIT = 'GUARANTEE_DEPOSIT',
-  GUARANTEE_REFUND = 'GUARANTEE_REFUND',
-  REFUND = 'REFUND'
+  TOP_UP = "TOP_UP",
+  PAYOUT = "PAYOUT",
+  FEE = "FEE",
+  GUARANTEE_DEPOSIT = "GUARANTEE_DEPOSIT",
+  GUARANTEE_REFUND = "GUARANTEE_REFUND",
+  REFUND = "REFUND",
 }
 
 export type DeliveryStatus =
@@ -544,7 +551,7 @@ export interface ArticleNearby {
   totalUnits: number | null;
   ownerId: number | null;
   ownerName: string | null;
-  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE' | null;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | null;
   imageUrl: string | null;
   cityLat: number;
   cityLng: number;

@@ -88,6 +88,7 @@ export const API_ROUTES = {
   CREATE_PAYMENT_INTENT:     `${BASE_URL}/api/payments/create`,
   PROCESS_PAYMENT_STRIPE:    (kitId: number) => `${BASE_URL}/api/payments/process/stripe/${kitId}`,
   PROCESS_PAYMENT_WALLET:    (kitId: number) => `${BASE_URL}/api/payments/process/wallet/${kitId}`,
+  WITHDRAW_TO_BANK:          `${BASE_URL}/api/payments/withdraw`,
   GET_KIT_PAYMENT_BY_ID:     (kitId: number) => `${BASE_URL}/api/kits/payment/${kitId}`,
   SIMULATE_PAYMENT:           `${BASE_URL}/api/payments/pay-kit`,
 

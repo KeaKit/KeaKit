@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { StyleSheet, View, Text, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -9,7 +9,7 @@ import {
   KeakitButton,
 } from "../../components";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { RootStackParamList, Wallet, Transaction } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -20,6 +20,22 @@ import { Colors, commonStyles, FontSizes, FontWeights } from "../../styles";
 import { ActivityIndicator } from "react-native-paper";
 
 type WalletNav = NativeStackNavigationProp<RootStackParamList, "Wallet">;
+
+const transactionTypeLabels: Record<string, string> = {
+  TOP_UP: "Ingreso",
+  FEE: "Comision",
+  GUARANTEE_DEPOSIT: "Deposito de fianza",
+  GUARANTEE_REFUND: "Devolucion de fianza",
+  REFUND: "Reembolso",
+};
+
+const getTransactionLabel = (transaction: Transaction) => {
+  if (transaction.type === "PAYOUT") {
+    return transaction.amount < 0 ? "Payout" : "Ingreso";
+  }
+
+  return transactionTypeLabels[transaction.type] ?? transaction.type.replaceAll("_", " ");
+};
 
 const TransactionItem = ({
   item,
@@ -36,10 +52,10 @@ const TransactionItem = ({
 
   return (
     <FadeInItem delay={calculatedDelay}>
-      <View style={styles.transactionCard}>
+        <View style={styles.transactionCard}>
         <View>
           <Text style={[commonStyles.body, { fontWeight: FontWeights.bold }]}>
-            {item.type.replace("_", " ")}
+            {getTransactionLabel(item)}
           </Text>
           <Text style={commonStyles.caption}>
             {new Date(item.createdAt).toLocaleDateString()}
@@ -70,44 +86,45 @@ export default function WalletScreen() {
   const [error, setError] = useState<string | null>(null);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
 
-  useEffect(() => {
-    const fetchWallet = async () => {
-      try {
-        setLoadingWallet(true);
-        const walletData = await getLoggedUserWallet(user?.token ?? "");
-        setWallet(walletData);
-      } catch (error) {
-        console.error("Error al obtener la wallet:", error);
-        setError("No se pudo cargar tu wallet. " + (error as Error).message);
-        setErrorModalVisible(true);
-      } finally {
-        setLoadingWallet(false);
-      }
-    };
-    const fetchTransactions = async () => {
-      try {
-        setLoadingTransactions(true);
-        const transactionsData = await getLoggedUserTransactions(
-          user?.token ?? "",
-        );
-        setTransactions(transactionsData);
-      } catch (error) {
-        console.error("Error al obtener las transacciones:", error);
-        setError(
-          "No se pudo cargar el historial de transacciones. " +
-            (error as Error).message,
-        );
-        setErrorModalVisible(true);
-      } finally {
-        setLoadingTransactions(false);
-      }
-    };
-
-    if (user?.token) {
-      fetchWallet();
-      fetchTransactions();
+  const fetchWalletData = async () => {
+    try {
+      setLoadingWallet(true);
+      const walletData = await getLoggedUserWallet(user?.token ?? "");
+      setWallet(walletData);
+    } catch (error) {
+      console.error("Error al obtener la wallet:", error);
+      setError("No se pudo cargar tu wallet. " + (error as Error).message);
+      setErrorModalVisible(true);
+    } finally {
+      setLoadingWallet(false);
     }
-  }, [user?.token]);
+  };
+
+  const fetchTransactionsData = async () => {
+    try {
+      setLoadingTransactions(true);
+      const transactionsData = await getLoggedUserTransactions(user?.token ?? "");
+      setTransactions(transactionsData);
+    } catch (error) {
+      console.error("Error al obtener las transacciones:", error);
+      setError(
+        "No se pudo cargar el historial de transacciones. " +
+          (error as Error).message,
+      );
+      setErrorModalVisible(true);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user?.token) {
+        fetchWalletData();
+        fetchTransactionsData();
+      }
+    }, [user?.token]),
+  );
 
   return (
     <SafeAreaView style={commonStyles.container}>
@@ -166,7 +183,7 @@ export default function WalletScreen() {
             <FadeInItem delay={50}>
             <KeakitButton
             title="Retirar dinero"
-            onPress={() => console.log("Navegar a formulario de retiro")}
+            onPress={() => navigation.navigate("WithdrawMoney")}
         /></FadeInItem>
         </View>
         
