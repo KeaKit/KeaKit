@@ -116,6 +116,7 @@ const ActivityNotificationsScreen: React.FC = () => {
 
   const renderItem = ({ item }: { item: ActivityNotification }) => (
     <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
+      {!item.read && <View style={styles.unreadIndicator} />}
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
@@ -219,9 +220,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     padding: Spacing.base,
+    position: 'relative',
   },
   cardUnread: {
     borderColor: Colors.primary,
+  },
+  unreadIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FF4444',
   },
   cardRead: {
     borderColor: Colors.border,

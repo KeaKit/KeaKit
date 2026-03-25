@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,14 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../styles/theme';
 import { RootStackParamList, NavbarHeaderScreen, AuthUser, NavbarHeaderItem } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useTrackingNotifications } from '../context/TrackingNotificationContext';
+import { getUserNotifications } from '../services/notificationService';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
@@ -50,6 +51,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
+  const [activityUnreadCount, setActivityUnreadCount] = useState(0);
   const bellAnim = useRef(new Animated.Value(1)).current;
 
   // Cerrar dropdown cuando se hace click fuera (solo web)
@@ -84,6 +86,25 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
       ]).start();
     }
   }, [unreadCount]);
+
+  // Cargar notificaciones de actividad sin leer
+  useFocusEffect(
+    useCallback(() => {
+      const loadActivityNotifications = async () => {
+        if (user?.id && user?.token) {
+          try {
+            const notifications = await getUserNotifications(user.id, user.token);
+            const unreadCount = notifications.filter(n => !n.read).length;
+            setActivityUnreadCount(unreadCount);
+          } catch (err) {
+            console.error('Error loading activity notifications:', err);
+          }
+        }
+      };
+
+      loadActivityNotifications();
+    }, [user])
+  );
 
   // Items para usuarios normales
   const userNavItems: NavbarHeaderItem[] = [
@@ -142,8 +163,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           items: [
             { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
             { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
-            { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications' },
-            { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications' },
+            { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications', badge: activityUnreadCount > 0 ? String(activityUnreadCount) : undefined },
+            { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications', badge: unreadCount > 0 ? String(unreadCount) : undefined },
           ]
         },
         {
@@ -179,8 +200,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         items: [
           { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
           { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
-          { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications' },
-          { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications' },
+          { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications', badge: activityUnreadCount > 0 ? String(activityUnreadCount) : undefined },
+          { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications', badge: unreadCount > 0 ? String(unreadCount) : undefined },
         ]
       },
       {
