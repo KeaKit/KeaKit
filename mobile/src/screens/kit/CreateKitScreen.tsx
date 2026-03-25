@@ -53,7 +53,7 @@ import {
 } from "./createKitSelection";
 import { styles } from "../../styles/uploadArticleScreenStyles";
 
-const COMISION = 0.2; // 20% de comisión sobre el precio total del kit
+const COMISION = 0; // todos son usuarios pilotos y no se cobra comision
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
 const PLATFORM_COURIER_PRICE = 9.99;
 
@@ -309,7 +309,7 @@ const CreateKitScreen: React.FC = () => {
   const courierPrice = deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
   const kitPayment = useMemo(() => {
-    const subtotal = Math.round(totalPrice * 100); // convertir a centavos
+    const subtotal = Math.round(totalPrice * 100); 
     const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
     const platformfee = Math.round(subtotal * COMISION);
     const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
@@ -459,32 +459,76 @@ const CreateKitScreen: React.FC = () => {
     changeSelectedQuantity(id, current - 1, product.totalUnits);
   };
 
-  const validate = (): {
+  const checkItemsAvailability = (start: Date, end: Date): string[] => {
+    const invalidTitles: string[] = [];
+
+    const kitStartNum = start.getFullYear() * 10000 + (start.getMonth() + 1) * 100 + start.getDate();
+    const kitEndNum = end.getFullYear() * 10000 + (end.getMonth() + 1) * 100 + end.getDate();
+
+    selectedProducts.forEach((product) => {
+      if (!product.availableFrom || !product.availableUntil) return;
+
+      const rawFrom = product.availableFrom.split('T')[0];
+      const rawUntil = product.availableUntil.split('T')[0];
+
+      const fromParts = rawFrom.split('-');
+      const untilParts = rawUntil.split('-');
+
+      const pStartNum = parseInt(fromParts[0]) * 10000 + parseInt(fromParts[1]) * 100 + parseInt(fromParts[2]);
+      const pEndNum = parseInt(untilParts[0]) * 10000 + parseInt(untilParts[1]) * 100 + parseInt(untilParts[2]);
+
+      const isAvailable = (kitStartNum >= pStartNum) && (kitEndNum <= pEndNum);
+
+      if (!isAvailable) {
+        invalidTitles.push(product.title);
+      }
+    });
+
+    return invalidTitles;
+  };
+
+
+  const validate = (isDraft: boolean = false): {
     valid: boolean;
     payloadDates?: { startIso: string; endIso: string };
   } => {
     const nextErrors: FormErrors = {};
 
     if (!name.trim()) nextErrors.name = "El nombre del kit es obligatorio.";
-    else if (name.trim().length < 3)
-      nextErrors.name = "El nombre debe tener al menos 3 caracteres.";
-
-    if (!country.trim()) nextErrors.country = "El país es obligatorio.";
-    if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
-    if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
-      nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
-    }
-    if (deliveryMethod === "COURIER" && !courierAddress.trim()) {
-      nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
-    }
-
     if (!startDate) nextErrors.startDate = "Debes seleccionar una fecha inicial.";
     if (!endDate) nextErrors.endDate = "Debes seleccionar una fecha final.";
 
-    if (selectedItemsCount === 0) nextErrors.items = "Debes añadir al menos un producto.";
+    if (!isDraft) {
+      if (!country.trim()) nextErrors.country = "El país es obligatorio.";
+      if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
+      
+      if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
+        nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
+      }
+      if (deliveryMethod === "COURIER" && !courierAddress.trim()) {
+        nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
+      }
 
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || !startDate || !endDate) return { valid: false };
+      if (selectedItemsCount === 0) {
+        nextErrors.items = "Debes añadir al menos un producto.";
+      } else if (startDate && endDate) {
+        const invalidItems = checkItemsAvailability(startDate, endDate);
+        if (invalidItems.length > 0) {
+          nextErrors.items = "No puedes realizar el pedido: hay productos no disponibles.";
+        }
+      }
+    } else {
+      if (startDate && endDate) {
+        const invalidItems = checkItemsAvailability(startDate, endDate);
+        if (invalidItems.length > 0) {
+          setErrors(prev => ({...prev, items: `Aviso: Algunos artículos no están disponibles en estas fechas.`}));
+        }
+      }
+    }
+    setErrors(prev => ({ ...prev, ...nextErrors }));
+    
+    if (Object.keys(nextErrors).length > 0 || !startDate || !endDate)
+      return { valid: false };
 
     const startIso = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}`;
     const endIso = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`;
@@ -717,7 +761,7 @@ const CreateKitScreen: React.FC = () => {
                   ).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(
                     2,
                     "0",
-                  )}}/${endDate.getFullYear()}`
+                  )}/${endDate.getFullYear()}`
                 : "Selecciona rango de fechas del alquiler"}
             </Text>
             <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
@@ -729,17 +773,29 @@ const CreateKitScreen: React.FC = () => {
             onDismiss={() => setShowDateRangePicker(false)}
             startDate={startDate || undefined}
             endDate={endDate || undefined}
+            // Busca el DatePickerModal y reemplaza el onConfirm:
             onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
               setShowDateRangePicker(false);
               if (params.startDate && params.endDate) {
+                const invalidItems = checkItemsAvailability(params.startDate, params.endDate);
+                
+                if (invalidItems.length > 0) {
+                  // Seteamos el error para que se vea el texto, pero el validate(true) lo ignorará
+                  setErrors((prev) => ({
+                    ...prev,
+                    items: `Atención: Algunos productos no están disponibles en estas fechas: ${invalidItems.join(", ")}`,
+                  }));
+                } else {
+                  clearFieldError("items");
+                }
+
                 setStartDate(params.startDate);
                 setEndDate(params.endDate);
                 clearFieldError("startDate");
                 clearFieldError("endDate");
               }
             }}
-            validRange={{ startDate: new Date() }}
-          />
+        />
           {errors.startDate ? (
             <Text style={commonStyles.errorText}>{errors.startDate}</Text>
           ) : null}
@@ -894,7 +950,7 @@ const CreateKitScreen: React.FC = () => {
             <Text style={commonStyles.errorText}>{errors.general}</Text>
           ) : null}
         </ScrollView>
-
+          
         <View style={createKitStyles.footerRow}>
           {/* Resumen de precios */}
           <View style={{ flex: 1 }}>
@@ -949,7 +1005,7 @@ const CreateKitScreen: React.FC = () => {
                   return;
                 }
 
-                const validation = validate();
+                const validation = validate(true);
                 if (!validation.valid || !validation.payloadDates) return;
 
                 const payload: KitCreateRequest = {

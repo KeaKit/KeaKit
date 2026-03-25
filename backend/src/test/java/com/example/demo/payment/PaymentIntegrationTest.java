@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -96,6 +97,9 @@ public class PaymentIntegrationTest {
 		Article savedArticle = articleRepository.saveAndFlush(article);
 
 		kit = new Kit();
+		// define a 1-month rental period so payment calculations work with the service
+		kit.setStartDate(LocalDate.now());
+		kit.setEndDate(LocalDate.now().plusMonths(1));
 		kit.setTenant(tenant);
 		kit.setStatus(KitStatus.DRAFT);
 		kit.setAppliedCommissionRate(0.10);
