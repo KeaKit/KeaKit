@@ -22,6 +22,7 @@ public class User {
     private String password;
 
     @Column(nullable = false)
+    @Size(min = 2, max = 100, message = "Name size must be between 2 and 100")
     private String name;
 
     @Column(nullable = false)
