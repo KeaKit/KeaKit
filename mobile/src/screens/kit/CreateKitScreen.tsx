@@ -8,13 +8,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SelectPicker } from '../../components/SelectPicker';
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
 import { es, registerTranslation } from "react-native-paper-dates";
-import { useLocationPicker } from '../../hooks/useLocationPicker';
+import { useLocationPicker } from "../../hooks/useLocationPicker";
 import {
   Provider as PaperProvider,
   MD3LightTheme,
@@ -27,13 +26,26 @@ registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
 import { createKit } from "../../services/kitService";
-import { getNearbyArticles, getArticlesForMap } from "../../services/articleService";
+import {
+  getNearbyArticles,
+  getArticlesForMap,
+} from "../../services/articleService";
 import { getCityCoordinates } from "../../services/cityService";
+import { processPaymentWithWallet } from "../../services";
 import { API_ROUTES } from "../../config/api";
-import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus, ArticleNearby } from "../../types";
+import {
+  RootStackParamList,
+  KitCreateRequest,
+  KitStatus,
+  ArticleNearby,
+} from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
+
+// Componentes
+import { SelectPicker } from "../../components/SelectPicker";
 import KitItemComponent from "../../components/KitItemComponent";
+import { KitPaymentResumeComponent } from "../../components/KitPaymentResumeComponent";
 import { ProductSelectionModal } from "../../components/ProductSelectionModal";
 import {
   removeSelectedQuantity,
@@ -41,7 +53,7 @@ import {
 } from "./createKitSelection";
 import { styles } from "../../styles/uploadArticleScreenStyles";
 
-const COMISION = 0.2; // 20% de comisión sobre el precio total del kit
+const COMISION = 0; // todos son usuarios pilotos y no se cobra comision
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
 const PLATFORM_COURIER_PRICE = 9.99;
 
@@ -82,30 +94,6 @@ type CatalogProduct = {
   cityLng?: number;
 };
 
-const toIsoDate = (raw: string): string | null => {
-  const value = raw.trim();
-
-  const dmyFormat = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-  const match = value.match(dmyFormat);
-  if (!match) return null;
-
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
-
-  const parsed = new Date(Date.UTC(year, month - 1, day));
-  const valid =
-    parsed.getUTCFullYear() === year &&
-    parsed.getUTCMonth() === month - 1 &&
-    parsed.getUTCDate() === day;
-
-  if (!valid) return null;
-
-  const mm = String(month).padStart(2, "0");
-  const dd = String(day).padStart(2, "0");
-  return `${year}-${mm}-${dd}`;
-};
-
 function calculateMonthsBetween(start: Date, end: Date): number {
   const years = end.getUTCFullYear() - start.getUTCFullYear();
   const months = end.getUTCMonth() - start.getUTCMonth();
@@ -119,42 +107,33 @@ function calculateMonthsBetween(start: Date, end: Date): number {
   return totalMonths + monthFraction;
 }
 
-const toUtcDateOnly = (isoDate: string): Date =>
-  new Date(`${isoDate}T00:00:00.000Z`);
-
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
   const { user } = useAuth();
 
-    const {
-      selectedCountry,
-      selectedCity,
-      setSelectedCity,
-      cities,
-      countries,
-      loadingCities,
-      onCountryChange,
-    } = useLocationPicker();
+  const {
+    selectedCountry,
+    selectedCity,
+    setSelectedCity,
+    cities,
+    countries,
+    loadingCities,
+    onCountryChange,
+  } = useLocationPicker();
+
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [deliveryMethod, setDeliveryMethod] =
-    useState<DeliveryMethod>("COURIER");
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("COURIER");
   const [meetingPoint, setMeetingPoint] = useState("");
   const [courierAddress, setCourierAddress] = useState("");
 
-  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
-    [],
-  );
-  const [selectedQuantities, setSelectedQuantities] = useState<
-    Record<number, number>
-  >({});
-  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<
-    Record<number, number>
-  >({});
+  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>([]);
+  const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
+  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
 
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
@@ -165,12 +144,16 @@ const CreateKitScreen: React.FC = () => {
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [payment, setPayment] = useState<KitPaymentDTO | null>(null);
+  
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [expandedSearch, setExpandedSearch] = useState(false);
   const [nearbyProducts, setNearbyProducts] = useState<ArticleNearby[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
   const [targetCityCoords, setTargetCityCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
+
+  // Estado para saber si pagamos con wallet o con stripe
+  const [paymentType, setPaymentType] = useState<"WALLET" | "NORMAL">("NORMAL");
 
   useEffect(() => {
     if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
@@ -183,28 +166,29 @@ const CreateKitScreen: React.FC = () => {
     Promise.all([
       getNearbyArticles(city.trim(), country.trim(), user.token),
       getCityCoordinates(city.trim(), country.trim()),
-    ]).then(([results, coords]) => {
-      if (!cancelled) {
-        setNearbyProducts(results);
-        setTargetCityCoords(coords);
-      }
-    }).catch(() => {
-      if (!cancelled) setNearbyProducts([]);
-    }).finally(() => {
-      if (!cancelled) setLoadingNearby(false);
-    });
-    return () => { cancelled = true; };
+    ])
+      .then(([results, coords]) => {
+        if (!cancelled) {
+          setNearbyProducts(results);
+          setTargetCityCoords(coords);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setNearbyProducts([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingNearby(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [expandedSearch, city, country, user?.token]);
 
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
 
     const start = new Date(
-      Date.UTC(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        startDate.getDate(),
-      ),
+      Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()),
     );
     const end = new Date(
       Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()),
@@ -254,11 +238,8 @@ const CreateKitScreen: React.FC = () => {
         itemType: String(p.itemType ?? "ARTICLE"),
         title: p.title ?? "Sin título",
         pricePerMonth: Number(p.pricePerMonth ?? 0),
-        status: String(p.status ?? "AVAILABLE"), // para SERVICE llega null, lo normalizamos
-        category:
-          typeof p.category === "string"
-            ? p.category
-            : (p.category?.name ?? ""),
+        status: String(p.status ?? "AVAILABLE"),
+        category: typeof p.category === "string" ? p.category : p.category?.name ?? "",
         city: p.city ?? "",
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
@@ -269,23 +250,38 @@ const CreateKitScreen: React.FC = () => {
       }));
 
       setAvailableProducts(mapped);
-
       setErrors((prev) => ({ ...prev, general: undefined }));
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "No se pudo cargar el catálogo.";
+      const message = error instanceof Error ? error.message : "No se pudo cargar el catálogo.";
       setErrors((prev) => ({ ...prev, general: message }));
       setAvailableProducts([]);
     } finally {
       setLoadingCatalog(false);
     }
-  }, [user?.token]);
+  }, [user?.token, user?.id]);
 
   useEffect(() => {
     loadCatalog();
-  }, [loadCatalog]);
+    const fetchWalletBalance = async () => {
+      if (user?.token && user?.id) {
+        try {
+          const res = await fetch(API_ROUTES.GET_WALLET_BY_USER_ID(user.id), {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${user.token}`,
+            },
+          });
+          const data = await res.json();
+          setWalletBalance(data.balance);
+        } catch (error) {
+          console.error("Error al obtener el saldo de la cartera:", error);
+        }
+      }
+    };
+
+    fetchWalletBalance();
+  }, [loadCatalog, user?.token, user?.id]);
 
   const selectedIds = useMemo(
     () => Object.keys(selectedQuantities).map((id) => Number(id)),
@@ -293,11 +289,7 @@ const CreateKitScreen: React.FC = () => {
   );
 
   const selectedItemsCount = useMemo(
-    () =>
-      Object.values(selectedQuantities).reduce(
-        (sum, quantity) => sum + quantity,
-        0,
-      ),
+    () => Object.values(selectedQuantities).reduce((sum, quantity) => sum + quantity, 0),
     [selectedQuantities],
   );
 
@@ -309,20 +301,38 @@ const CreateKitScreen: React.FC = () => {
   const totalPrice = useMemo(() => {
     if (monthsBetween === null) return 0;
     return selectedProducts.reduce(
-      (sum, p) =>
-        sum + p.pricePerMonth * (selectedQuantities[p.id] ?? 1) * monthsBetween,
+      (sum, p) => sum + p.pricePerMonth * (selectedQuantities[p.id] ?? 1) * monthsBetween,
       0,
     );
   }, [selectedProducts, monthsBetween, selectedQuantities]);
 
-  const courierPrice =
-    deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
+  const courierPrice = deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
+
+  const kitPayment = useMemo(() => {
+    const subtotal = Math.round(totalPrice * 100); 
+    const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
+    const platformfee = Math.round(subtotal * COMISION);
+    const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
+    const total = subtotal + guarantee + platformfee + courier;
+
+    return {
+      subtotalPrice: subtotal,
+      guarantee: guarantee,
+      platformfee: platformfee,
+      courierPrice: courier,
+      totalPrice: total,
+    };
+  }, [totalPrice, deliveryMethod]);
+
+  const finalPrice = useMemo(() => {
+    const guarantee = totalPrice * GUARANTEE_PERCENTAGE;
+    const commission = totalPrice * COMISION;
+    return totalPrice + guarantee + commission + courierPrice;
+  }, [totalPrice, courierPrice]);
 
   const categories = useMemo(() => {
     const set = new Set(
-      availableProducts
-        .map((p) => p.category?.trim())
-        .filter((c): c is string => Boolean(c)),
+      availableProducts.map((p) => p.category?.trim()).filter((c): c is string => Boolean(c)),
     );
     return ["ALL", ...Array.from(set)];
   }, [availableProducts]);
@@ -332,12 +342,8 @@ const CreateKitScreen: React.FC = () => {
 
     const local = availableProducts.filter((p) => {
       const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
-      const byCategory =
-        categoryFilter === "ALL" || p.category === categoryFilter;
-      const byCity =
-        !showOnlyMyCity ||
-        !city.trim() ||
-        (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
+      const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
+      const byCity = !showOnlyMyCity || !city.trim() || (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
       const bySearch =
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
@@ -381,7 +387,15 @@ const CreateKitScreen: React.FC = () => {
       }));
 
     return [...local, ...nearby];
-  }, [availableProducts, nearbyProducts, searchText, categoryFilter, showOnlyMyCity, city, expandedSearch]);
+  }, [
+    availableProducts,
+    nearbyProducts,
+    searchText,
+    categoryFilter,
+    showOnlyMyCity,
+    city,
+    expandedSearch,
+  ]);
 
   const openAddProductModal = async () => {
     await loadCatalog();
@@ -411,15 +425,9 @@ const CreateKitScreen: React.FC = () => {
     });
   };
 
-  const changeTempQuantity = (
-    id: number,
-    nextQuantity: number,
-    maxQuantity: number,
-  ) => {
+  const changeTempQuantity = (id: number, nextQuantity: number, maxQuantity: number) => {
     const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
-    setTempSelectedQuantities((prev) =>
-      upsertSelectedQuantity(prev, id, safeQuantity),
-    );
+    setTempSelectedQuantities((prev) => upsertSelectedQuantity(prev, id, safeQuantity));
   };
 
   const confirmSelection = () => {
@@ -432,15 +440,9 @@ const CreateKitScreen: React.FC = () => {
     setSelectedQuantities((prev) => removeSelectedQuantity(prev, id));
   };
 
-  const changeSelectedQuantity = (
-    id: number,
-    nextQuantity: number,
-    maxQuantity: number,
-  ) => {
+  const changeSelectedQuantity = (id: number, nextQuantity: number, maxQuantity: number) => {
     const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
-    setSelectedQuantities((prev) =>
-      upsertSelectedQuantity(prev, id, safeQuantity),
-    );
+    setSelectedQuantities((prev) => upsertSelectedQuantity(prev, id, safeQuantity));
   };
 
   const incrementSelectedQuantity = (id: number) => {
@@ -457,33 +459,74 @@ const CreateKitScreen: React.FC = () => {
     changeSelectedQuantity(id, current - 1, product.totalUnits);
   };
 
-  const validate = (): {
+  const checkItemsAvailability = (start: Date, end: Date): string[] => {
+    const invalidTitles: string[] = [];
+
+    const kitStartNum = start.getFullYear() * 10000 + (start.getMonth() + 1) * 100 + start.getDate();
+    const kitEndNum = end.getFullYear() * 10000 + (end.getMonth() + 1) * 100 + end.getDate();
+
+    selectedProducts.forEach((product) => {
+      if (!product.availableFrom || !product.availableUntil) return;
+
+      const rawFrom = product.availableFrom.split('T')[0];
+      const rawUntil = product.availableUntil.split('T')[0];
+
+      const fromParts = rawFrom.split('-');
+      const untilParts = rawUntil.split('-');
+
+      const pStartNum = parseInt(fromParts[0]) * 10000 + parseInt(fromParts[1]) * 100 + parseInt(fromParts[2]);
+      const pEndNum = parseInt(untilParts[0]) * 10000 + parseInt(untilParts[1]) * 100 + parseInt(untilParts[2]);
+
+      const isAvailable = (kitStartNum >= pStartNum) && (kitEndNum <= pEndNum);
+
+      if (!isAvailable) {
+        invalidTitles.push(product.title);
+      }
+    });
+
+    return invalidTitles;
+  };
+
+
+  const validate = (isDraft: boolean = false): {
     valid: boolean;
     payloadDates?: { startIso: string; endIso: string };
   } => {
     const nextErrors: FormErrors = {};
 
     if (!name.trim()) nextErrors.name = "El nombre del kit es obligatorio.";
-    else if (name.trim().length < 3)
-      nextErrors.name = "El nombre debe tener al menos 3 caracteres.";
-
-    if (!country.trim()) nextErrors.country = "El país es obligatorio.";
-    if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
-    if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
-      nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
-    }
-    if (deliveryMethod === "COURIER" && !courierAddress.trim()) {
-      nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
-    }
-
-    if (!startDate)
-      nextErrors.startDate = "Debes seleccionar una fecha inicial.";
+    if (!startDate) nextErrors.startDate = "Debes seleccionar una fecha inicial.";
     if (!endDate) nextErrors.endDate = "Debes seleccionar una fecha final.";
 
-    if (selectedItemsCount === 0)
-      nextErrors.items = "Debes añadir al menos un producto.";
+    if (!isDraft) {
+      if (!country.trim()) nextErrors.country = "El país es obligatorio.";
+      if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
+      
+      if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
+        nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
+      }
+      if (deliveryMethod === "COURIER" && !courierAddress.trim()) {
+        nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
+      }
 
-    setErrors(nextErrors);
+      if (selectedItemsCount === 0) {
+        nextErrors.items = "Debes añadir al menos un producto.";
+      } else if (startDate && endDate) {
+        const invalidItems = checkItemsAvailability(startDate, endDate);
+        if (invalidItems.length > 0) {
+          nextErrors.items = "No puedes realizar el pedido: hay productos no disponibles.";
+        }
+      }
+    } else {
+      if (startDate && endDate) {
+        const invalidItems = checkItemsAvailability(startDate, endDate);
+        if (invalidItems.length > 0) {
+          setErrors(prev => ({...prev, items: `Aviso: Algunos artículos no están disponibles en estas fechas.`}));
+        }
+      }
+    }
+    setErrors(prev => ({ ...prev, ...nextErrors }));
+    
     if (Object.keys(nextErrors).length > 0 || !startDate || !endDate)
       return { valid: false };
 
@@ -512,10 +555,9 @@ const CreateKitScreen: React.FC = () => {
       meetingPoint:
         deliveryMethod === "MEETING_POINT"
           ? meetingPoint.trim()
-          : deliveryMethod === "COURIER"
-            ? courierAddress.trim()
-            : undefined,
+          : courierAddress.trim(),
       tenantId: user.id,
+      status: KitStatus.DRAFT, // SIEMPRE LO CREAMOS COMO DRAFT INICIALMENTE
       itemSelections: selectedProducts.map((p) => ({
         itemId: p.id,
         quantity: selectedQuantities[p.id] ?? 1,
@@ -523,28 +565,36 @@ const CreateKitScreen: React.FC = () => {
       })),
     };
 
-    const handleCreateKit = async () => {
-      try {
-        setSubmitting(true);
-        const response = await createKit(payload, user.token);
-        return response;
-      } catch (error) {
-        console.error("🔥 ERROR al crear kit:", error);
-        return null;
-      } finally {
-        setSubmitting(false);
+    try {
+      setSubmitting(true);
+      
+      const createdKit = await createKit(payload, user.token);
+      if (!createdKit) {
+        throw new Error("No se pudo crear el kit.");
       }
-    };
-    const createdKit = await handleCreateKit();
-    if (!createdKit) {
-      console.error("🔥 ERROR: No se pudo crear el kit.");
-      return;
+
+      if (paymentType === "WALLET") {
+        // Multiplicamos por 100 para pasarlo a céntimos
+        const amountInCents = Math.round(finalPrice * 100);
+
+        await processPaymentWithWallet(
+          createdKit.id,
+          user.token,
+          amountInCents
+        );
+        
+        navigation.navigate("MyKits");
+      } else {
+        navigation.navigate("Checkout", { kitId: createdKit.id });
+      }
+
+    } catch (error) {
+      console.error("🔥 ERROR al procesar la creación/pago del kit:", error);
+      setErrors({ general: "Ha ocurrido un error al procesar el kit o el pago." });
+    } finally {
+      setSubmitting(false);
     }
-    console.log("Created kit:", createdKit);
-
-    navigation.navigate("Checkout", { kitId: createdKit.id });
   };
-
 
   const customTheme = {
     ...MD3LightTheme,
@@ -579,9 +629,7 @@ const CreateKitScreen: React.FC = () => {
               <Ionicons name="arrow-back" size={24} color={Colors.primary} />
             </TouchableOpacity>
 
-            <Text
-              style={[commonStyles.headerTitle, createKitStyles.headerTitle]}
-            >
+            <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
               Crea un Kit
             </Text>
 
@@ -606,60 +654,81 @@ const CreateKitScreen: React.FC = () => {
             <Text style={commonStyles.errorText}>{errors.name}</Text>
           ) : null}
 
-            {/* País */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>País</Text>
-              <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
-                <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+          {/* País */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>País</Text>
+            <View
+              style={[
+                styles.pickerWrapper,
+                errors.country ? styles.pickerWrapperError : null,
+              ]}
+            >
+              <Ionicons
+                name="earth-outline"
+                size={18}
+                color={Colors.textSecondary}
+                style={styles.pickerIcon}
+              />
+              <SelectPicker
+                options={countries}
+                selectedValue={selectedCountry}
+                placeholder="Selecciona un país"
+                onValueChange={(value: string) => {
+                  onCountryChange(value);
+                  clearFieldError("country");
+                  clearFieldError("city");
+                  setCountry(value);
+                }}
+              />
+            </View>
+            {!!errors.country && (
+              <View style={commonStyles.errorContainer}>
+                <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                <Text style={commonStyles.errorText}>{errors.country}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Ciudad */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Ciudad</Text>
+            <View
+              style={[
+                styles.pickerWrapper,
+                errors.city ? styles.pickerWrapperError : null,
+              ]}
+            >
+              <Ionicons
+                name="location-outline"
+                size={18}
+                color={Colors.textSecondary}
+                style={styles.pickerIcon}
+              />
+              {loadingCities ? (
+                <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
+              ) : (
                 <SelectPicker
-                  options={countries}
-                  selectedValue={selectedCountry}
-                  placeholder="Selecciona un país"
+                  options={cities.map((c) => ({ label: c, value: c }))}
+                  selectedValue={selectedCity}
+                  placeholder={
+                    selectedCountry ? "Selecciona una ciudad" : "Primero elige un país"
+                  }
+                  disabled={cities.length === 0}
                   onValueChange={(value: string) => {
-                    onCountryChange(value);
-                    clearFieldError('country');
-                    clearFieldError('city');
-                    setCountry(value);
+                    setSelectedCity(value);
+                    setCity(value);
+                    clearFieldError("city");
                   }}
                 />
-              </View>
-              {!!errors.country && (
-                <View style={commonStyles.errorContainer}>
-                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
-                  <Text style={commonStyles.errorText}>{errors.country}</Text>
-                </View>
               )}
             </View>
-
-            {/* Ciudad */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Ciudad</Text>
-              <View style={[styles.pickerWrapper, errors.city ? styles.pickerWrapperError : null]}>
-                <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
-                {loadingCities ? (
-                  <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
-                ) : (
-                  <SelectPicker
-                    options={cities.map(c => ({ label: c, value: c }))}
-                    selectedValue={selectedCity}
-                    placeholder={selectedCountry ? 'Selecciona una ciudad' : 'Primero elige un país'}
-                    disabled={cities.length === 0}
-                    onValueChange={(value: string) => {
-                      setSelectedCity(value);
-                      setCity(value);
-                      clearFieldError('city');
-                    }}
-                  />
-                )}
+            {!!errors.city && (
+              <View style={commonStyles.errorContainer}>
+                <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                <Text style={commonStyles.errorText}>{errors.city}</Text>
               </View>
-              {!!errors.city && (
-                <View style={commonStyles.errorContainer}>
-                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
-                  <Text style={commonStyles.errorText}>{errors.city}</Text>
-                </View>
-              )}
-            </View>
-
+            )}
+          </View>
 
           <TouchableOpacity
             style={[
@@ -685,14 +754,17 @@ const CreateKitScreen: React.FC = () => {
               ]}
             >
               {startDate && endDate
-                ? `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${startDate.getFullYear()} - ${String(endDate.getDate()).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${endDate.getFullYear()}`
+                ? `${String(startDate.getDate()).padStart(2, "0")}/${String(
+                    startDate.getMonth() + 1,
+                  ).padStart(2, "0")}/${startDate.getFullYear()} - ${String(
+                    endDate.getDate(),
+                  ).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(
+                    2,
+                    "0",
+                  )}/${endDate.getFullYear()}`
                 : "Selecciona rango de fechas del alquiler"}
             </Text>
-            <Ionicons
-              name="calendar-outline"
-              size={20}
-              color={Colors.primary}
-            />
+            <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
           </TouchableOpacity>
           <DatePickerModal
             locale="es"
@@ -701,17 +773,29 @@ const CreateKitScreen: React.FC = () => {
             onDismiss={() => setShowDateRangePicker(false)}
             startDate={startDate || undefined}
             endDate={endDate || undefined}
+            // Busca el DatePickerModal y reemplaza el onConfirm:
             onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
               setShowDateRangePicker(false);
               if (params.startDate && params.endDate) {
+                const invalidItems = checkItemsAvailability(params.startDate, params.endDate);
+                
+                if (invalidItems.length > 0) {
+                  // Seteamos el error para que se vea el texto, pero el validate(true) lo ignorará
+                  setErrors((prev) => ({
+                    ...prev,
+                    items: `Atención: Algunos productos no están disponibles en estas fechas: ${invalidItems.join(", ")}`,
+                  }));
+                } else {
+                  clearFieldError("items");
+                }
+
                 setStartDate(params.startDate);
                 setEndDate(params.endDate);
                 clearFieldError("startDate");
                 clearFieldError("endDate");
               }
             }}
-            validRange={{ startDate: new Date() }}
-          />
+        />
           {errors.startDate ? (
             <Text style={commonStyles.errorText}>{errors.startDate}</Text>
           ) : null}
@@ -729,9 +813,7 @@ const CreateKitScreen: React.FC = () => {
           )}
 
           <View style={createKitStyles.deliverySection}>
-            <Text
-              style={[commonStyles.subtitle, createKitStyles.productsTitle]}
-            >
+            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
               Método de entrega
             </Text>
 
@@ -778,9 +860,7 @@ const CreateKitScreen: React.FC = () => {
                   multiline
                 />
                 {errors.meetingPoint ? (
-                  <Text style={commonStyles.errorText}>
-                    {errors.meetingPoint}
-                  </Text>
+                  <Text style={commonStyles.errorText}>{errors.meetingPoint}</Text>
                 ) : null}
               </>
             ) : null}
@@ -805,9 +885,7 @@ const CreateKitScreen: React.FC = () => {
                   multiline
                 />
                 {errors.courierAddress ? (
-                  <Text style={commonStyles.errorText}>
-                    {errors.courierAddress}
-                  </Text>
+                  <Text style={commonStyles.errorText}>{errors.courierAddress}</Text>
                 ) : null}
               </>
             ) : null}
@@ -821,9 +899,7 @@ const CreateKitScreen: React.FC = () => {
           </View>
 
           <View style={createKitStyles.productsHeader}>
-            <Text
-              style={[commonStyles.subtitle, createKitStyles.productsTitle]}
-            >
+            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
               Tus Productos
             </Text>
             <Button
@@ -874,94 +950,52 @@ const CreateKitScreen: React.FC = () => {
             <Text style={commonStyles.errorText}>{errors.general}</Text>
           ) : null}
         </ScrollView>
-
+          
         <View style={createKitStyles.footerRow}>
           {/* Resumen de precios */}
           <View style={{ flex: 1 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 8,
-              }}
-            >
-              <Text style={commonStyles.caption}>Subtotal productos</Text>
-              <Text style={commonStyles.caption}>{totalPrice.toFixed(2)}€</Text>
-            </View>
+            
+            {/* Componente del Resumen que reemplaza la vista manual antigua */}
+            <KitPaymentResumeComponent kitPrices={kitPayment} />
 
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Garantía (20%)</Text>
-              <Text style={commonStyles.caption}>
-                {(totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Comisión (20%)</Text>
-              <Text style={commonStyles.caption}>
-                {(totalPrice * COMISION).toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
-              <Text style={commonStyles.caption}>
-                {courierPrice.toFixed(2)}€
-              </Text>
-            </View>
-
+            {/* Vista con el saldo de la cartera */}
             <View
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                borderTopWidth: 1,
-                borderTopColor: Colors.border,
-                paddingTop: 12,
+                backgroundColor: Colors.backgroundCard,
+                padding: 12,
+                borderRadius: 8,
                 marginBottom: 16,
               }}
             >
-              <Text
-                style={[
-                  commonStyles.caption,
-                  { color: Colors.primary, fontWeight: "600", fontSize: 16 },
-                ]}
-              >
-                Total a pagar
-              </Text>
-              <Text
-                style={[
-                  createKitStyles.productTitle,
-                  { fontSize: 20, color: Colors.primary },
-                ]}
-              >
-                {(
-                  totalPrice +
-                  totalPrice * GUARANTEE_PERCENTAGE +
-                  +totalPrice * COMISION +
-                  courierPrice
-                ).toFixed(2)}
-                €
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Ionicons name="wallet-outline" size={20} color={Colors.primary} />
+                <Text style={commonStyles.bodyPrimary}>Saldo en cartera</Text>
+              </View>
+              <Text style={[commonStyles.bodyPrimary, { fontWeight: "bold" }]}>
+                {walletBalance.toFixed(2)}€
               </Text>
             </View>
+
+            {/* Botones de acción */}
+            <Button
+              mode="contained"
+              buttonColor={Colors.primary}
+              disabled={submitting || walletBalance < finalPrice || finalPrice === 0}
+              onPress={() => {
+                setPaymentType("WALLET");
+                setConfirmVisible(true);
+              }}
+              icon="wallet"
+              style={{ borderRadius: 8, marginBottom: 8 }}
+              contentStyle={{ paddingVertical: 8 }}
+            >
+              {walletBalance >= finalPrice
+                ? "Pagar con Cartera"
+                : "Saldo insuficiente en cartera"}
+            </Button>
 
             <Button
               mode="outlined"
@@ -971,7 +1005,7 @@ const CreateKitScreen: React.FC = () => {
                   return;
                 }
 
-                const validation = validate();
+                const validation = validate(true);
                 if (!validation.valid || !validation.payloadDates) return;
 
                 const payload: KitCreateRequest = {
@@ -984,9 +1018,7 @@ const CreateKitScreen: React.FC = () => {
                   meetingPoint:
                     deliveryMethod === "MEETING_POINT"
                       ? meetingPoint.trim()
-                      : deliveryMethod === "COURIER"
-                        ? courierAddress.trim()
-                        : undefined,
+                      : courierAddress.trim(),
                   tenantId: user.id,
                   itemSelections: selectedProducts.map((p) => ({
                     itemId: p.id,
@@ -1013,10 +1045,12 @@ const CreateKitScreen: React.FC = () => {
               Guardar para pagar más tarde
             </Button>
 
-
             <Button
               mode="contained"
-              onPress={() => setConfirmVisible(true)}
+              onPress={() => {
+                setConfirmVisible(true);
+                setPaymentType("NORMAL");
+              }}
               disabled={submitting}
               loading={submitting}
               icon="cart-outline"
@@ -1101,10 +1135,7 @@ const CreateKitScreen: React.FC = () => {
                   gap: 10,
                 }}
               >
-                <Button
-                  mode="outlined"
-                  onPress={() => setConfirmVisible(false)}
-                >
+                <Button mode="outlined" onPress={() => setConfirmVisible(false)}>
                   Cancelar
                 </Button>
 
