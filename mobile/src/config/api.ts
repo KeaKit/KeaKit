@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'https://keakitv2api.duckdns.org';
 
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
@@ -6,6 +6,7 @@ export const API_ROUTES = {
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
+  GET_ADMIN_ALL_USERS: `${BASE_URL}/api/admin/users/no-self`,
   DELETE_USER: (id: number) => `${BASE_URL}/api/admin/users/${id}`,
   CREATE_USER: `${BASE_URL}/api/admin/users`,       // POST
   UPDATE_USER: (id: number) => `${BASE_URL}/api/admin/users/${id}`, // PUT
@@ -15,6 +16,7 @@ export const API_ROUTES = {
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   HAS_REVIEWED_ITEMS: `${BASE_URL}/api/ratings/has-reviewed`,
+  HAS_REVIEWED_ITEM_IN_KITS: `${BASE_URL}/api/ratings/has-reviewed-kit`,
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
   GET_KITS: `${BASE_URL}/api/kits`,
   GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,
@@ -77,6 +79,10 @@ export const API_ROUTES = {
     return `${BASE_URL}/api/kits/unassigned?${params.toString()}`;
   },
 
+  // Notifications (arrendador)
+  USER_NOTIFICATIONS: (userId: number) => `${BASE_URL}/api/notifications/user/${userId}`,
+  MARK_NOTIFICATION_READ: (notificationId: number) => `${BASE_URL}/api/notifications/${notificationId}/read`,
+
 
   // Payments
   CREATE_PAYMENT_INTENT:     `${BASE_URL}/api/payments/create`,
@@ -105,10 +111,23 @@ export const API_ROUTES = {
   DEFAULT_KITS: `${BASE_URL}/api/default-kits`,
   DEFAULT_KIT_BY_ID: (id: number) => `${BASE_URL}/api/default-kits/${id}`,
 
+  // Geographic search (CU-ARRENDATARIO-10)
+  ARTICLE_NEARBY: (city: string, country: string, radiusKm = 150) =>
+    `${BASE_URL}/api/article/nearby?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&radiusKm=${radiusKm}`,
+
+  ARTICLE_MAP: (country?: string) =>
+    country
+      ? `${BASE_URL}/api/article/map?country=${encodeURIComponent(country)}`
+      : `${BASE_URL}/api/article/map`,
+
   // Ciudades
   GET_CITIES: `${BASE_URL}/api/cities`,
   GET_COUNTRIES: `${BASE_URL}/api/countries`,
+  CITY_COORDINATES: (city: string, country: string) =>
+    `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`,
 
+  // Article history
+  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`
 
 } as const;
 

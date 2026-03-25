@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -23,6 +25,7 @@ public class Wallet {
 
     @OneToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @OneToMany(mappedBy = "destinationWallet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

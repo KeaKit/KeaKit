@@ -70,9 +70,14 @@ class AdminUserControllerTest {
     void createUser_returnsOk() throws Exception {
         AdminUserRequest req = new AdminUserRequest();
         req.setEmail("c@d.com");
-        req.setPassword("p");
-        req.setName("C");
+        req.setPassword("pppppp");
+        req.setName("Carlos");
         req.setRole(UserRole.USER);
+
+        req.setPhone("123456789"); // Entre 9 y 15 caracteres
+        req.setAddress("Calle Falsa 123"); // Más de 5 caracteres
+        req.setCity("Madrid"); // Sin números
+        req.setCountry("Espana");
 
     var user = new com.example.demo.model.User();
     user.setEmail("c@d.com");
@@ -99,7 +104,13 @@ class AdminUserControllerTest {
     @Test
     void updateUser_returnsOk() throws Exception {
         AdminUserRequest req = new AdminUserRequest();
-        req.setName("Updated");
+        req.setName("UpdatedNombre");
+        req.setEmail("correo@actualizado.com");
+        req.setRole(UserRole.USER);
+        req.setPhone("987654321");
+        req.setAddress("Avenida Siempre Viva 742");
+        req.setCity("Barcelona");
+        req.setCountry("Espana");
 
     var user2 = new com.example.demo.model.User();
     user2.setName("Updated");

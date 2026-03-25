@@ -30,6 +30,7 @@ type NotificationItem = {
   title: string;
   message: string;
   dateLabel: string;
+  read?: boolean;
 };
 
 const formatDateTime = (value: string): string => {
@@ -53,12 +54,14 @@ const TrackingNotificationsScreen: React.FC = () => {
     title: `Kit ${n.kitName}`,
     message: n.message,
     dateLabel: formatDateTime(n.createdAt),
+    read: n.read,
   }));
 
   const renderItem = ({ item }: { item: NotificationItem }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, !item.read && styles.cardUnread]}>
+      {!item.read && <View style={styles.unreadIndicator} />}
       <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>{item.title}</Text>
         <View style={styles.cardHeaderRight}>
           {item.dateLabel ? (
             <Text style={styles.cardDate}>{item.dateLabel}</Text>
@@ -147,6 +150,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     padding: Spacing.base,
+    position: 'relative',
+  },
+  cardUnread: {
+    borderColor: Colors.primary,
+  },
+  unreadIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FF4444',
+  },
+  cardTitleUnread: {
+    color: Colors.primary,
+    fontWeight: FontWeights.bold,
   },
   cardHeader: {
     flexDirection: "row",

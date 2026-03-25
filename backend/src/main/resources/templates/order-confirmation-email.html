@@ -5,16 +5,153 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Confirmación de pedido</title>
 </head>
-<body style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
-  <h2>¡Pedido confirmado!</h2>
-  <p>Hola {{tenantName}},</p>
-  <p>Tu pedido ha sido confirmado correctamente.</p>
-  <ul>
-    <li><strong>ID del pedido:</strong> {{kitId}}</li>
-    <li><strong>Nombre del kit:</strong> {{kitName}}</li>
-    <li><strong>Destino:</strong> {{kitCity}}, {{kitCountry}}</li>
-    <li><strong>Fechas:</strong> {{kitStartDate}} - {{kitEndDate}}</li>
-  </ul>
-  <p>Gracias por confiar en KeaKit.</p>
+<body style="margin: 0; padding: 0; background-color: #fcfff5; font-family: 'Segoe UI', Arial, sans-serif; color: #595959; line-height: 1.5;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #fcfff5; margin: 0; padding: 24px 0; width: 100%;">
+    <tr>
+      <td align="center">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 640px; width: 100%;">
+          <tr>
+            <td style="padding: 0 20px 20px 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background: linear-gradient(135deg, #2d6e91 0%, #1e526e 100%); background-color: #2d6e91; border-radius: 24px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 32px 32px 28px 32px; color: #ffffff;">
+                    <div style="display: inline-block; padding: 7px 12px; border-radius: 999px; background-color: rgba(255, 255, 255, 0.18); color: #ffffff; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">
+                      KeaKit
+                    </div>
+                    <h1 style="margin: 18px 0 10px 0; font-size: 30px; line-height: 1.15; font-weight: 800; color: #ffffff;">Pedido confirmado</h1>
+                    <p style="margin: 0; font-size: 16px; color: rgba(255, 255, 255, 0.86);">
+                      Hola {{tenantName}}, tu kit ya está confirmado y preparado con los datos más recientes del pedido.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 0 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #ffffff; border-radius: 20px; border: 1px solid #e8ecf1; box-shadow: 0 8px 24px rgba(45, 110, 145, 0.08);">
+                <tr>
+                  <td style="padding: 28px 28px 12px 28px;">
+                    <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #2d6e91;">Resumen del pedido</p>
+                    <h2 style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 800; color: #2d6e91;">{{kitName}}</h2>
+miKIt
+
+                    <p style="margin: 8px 0 0 0; font-size: 14px; color: #7a7a7a;">Registrado el {{orderDate}}</p>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding: 12px 28px 8px 28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr>
+                        <td style="padding: 0 8px 12px 0; width: 50%; vertical-align: top;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #d6d0f8; border-radius: 16px;">
+                            <tr>
+                              <td style="padding: 18px;">
+                                <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #2d6e91;">Artículos</p>
+                                <p style="margin: 0; font-size: 28px; font-weight: 800; line-height: 1; color: #2d6e91;">{{totalItems}}</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td style="padding: 0 0 12px 8px; width: 50%; vertical-align: top;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #c3f1d1; border-radius: 16px;">
+                            <tr>
+                              <td style="padding: 18px;">
+                                <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #2d6e91;">Total estimado</p>
+                                <p style="margin: 0; font-size: 28px; font-weight: 800; line-height: 1; color: #2d6e91;">{{totalPrice}}</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Desglose de artículos -->
+                <tr>
+                  <td style="padding: 8px 28px 0 28px;">
+                    <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: #7a7a7a;">Desglose del pedido</p>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse;">
+                      {{itemsRows}}
+                    </table>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding: 4px 28px 28px 28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse;">
+                      <tr>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; color: #7a7a7a; width: 42%;">Destino</td>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; font-weight: 700; color: #2d6e91;">{{kitCity}}, {{kitCountry}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; color: #7a7a7a; width: 42%;">Periodo de alquiler</td>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; font-weight: 700; color: #2d6e91;">{{kitStartDate}} - {{kitEndDate}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; color: #7a7a7a; width: 42%;">Método de entrega</td>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; font-weight: 700; color: #2d6e91;">{{deliveryMethod}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; color: #7a7a7a; width: 42%;">Punto de encuentro</td>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; font-weight: 700; color: #2d6e91;">{{meetingPoint}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; color: #7a7a7a; width: 42%;">Coste de envío</td>
+                        <td style="padding: 14px 0; border-bottom: 1px solid #e8ecf1; font-size: 14px; font-weight: 700; color: #2d6e91;">{{courierPrice}}</td>
+                      </tr>
+                    </table>
+                    <!-- Breakdown financiero -->
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:12px; border-collapse: collapse;">
+                      <tr>
+                        <td style="padding: 8px 0; font-size: 14px; color: #7a7a7a; width: 60%;">Subtotal productos</td>
+                        <td style="padding: 8px 0; font-size: 14px; font-weight:700; color:#2d6e91; text-align:right;">{{subtotalPrice}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; font-size: 14px; color: #7a7a7a;">Garantía ({{guaranteePercent}})</td>
+                        <td style="padding: 8px 0; font-size: 14px; font-weight:700; color:#2d6e91; text-align:right;">{{guaranteePrice}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; font-size: 14px; color: #7a7a7a;">Comisión ({{comissionPercent}})</td>
+                        <td style="padding: 8px 0; font-size: 14px; font-weight:700; color:#2d6e91; text-align:right;">{{platformFee}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; font-size: 14px; color: #7a7a7a;">Tarifa de mensajería</td>
+                        <td style="padding: 8px 0; font-size: 14px; font-weight:700; color:#2d6e91; text-align:right;">{{courierPrice}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 20px 20px 0 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #8ec2db; border-radius: 18px;">
+                <tr>
+                  <td style="padding: 20px 24px;">
+                    <p style="margin: 0 0 8px 0; font-size: 17px; font-weight: 800; color: #1a3a52;">Todo listo para tu próxima experiencia</p>
+                    <p style="margin: 0; font-size: 14px; color: #1a3a52;">
+                      Conserva este correo como referencia rápida del pedido. Si el método de entrega requiere coordinación adicional, podrás usar estos datos para validar los detalles acordados.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 18px 32px 0 32px; text-align: center;">
+              <p style="margin: 0; font-size: 13px; color: #7a7a7a;">Gracias por confiar en <span style="font-weight: 700; color: #2d6e91;">KeaKit</span>.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>

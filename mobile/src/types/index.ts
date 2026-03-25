@@ -60,6 +60,17 @@ export interface RatingResponse {
   createdAt: string;
 }
 
+export interface ArticleRecordDTO {
+  tenantName: string;
+  tenantId: number;
+  startDate: string;
+  endDate: string;
+  status: KitStatus;
+  city: string;
+  country: string;
+  kitId: number;
+}
+
 export interface UserArticle {
   id: number;
   title: string;
@@ -68,6 +79,7 @@ export interface UserArticle {
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
   totalUnits?: number;
+  rentals?: ArticleRecordDTO[];
 }
 
 export interface KitItemSelection {
@@ -315,6 +327,7 @@ export type NavbarScreen =
   | 'MyKits'
   | 'MyServices'
   | 'MyIncidents'
+  | 'AdminIncidents'
   | 'Wallet'
   | 'MyKitsHistory'
   | 'UserRatings'
@@ -328,6 +341,7 @@ export type NavbarHeaderScreen =
   | 'MyKits'
   | 'MyServices'
   | 'MyIncidents'
+  | 'AdminIncidents'
   | 'Wallet'
   | 'MyKitsHistory'
   | 'UserRatings'
@@ -337,7 +351,8 @@ export type NavbarHeaderScreen =
   | 'DefaultKits'
   | 'Login'
   | 'Register'
-  | 'TrackingNotifications';;
+  | 'TrackingNotifications'
+  | 'ActivityNotifications';
 
 export interface NavbarHeaderItem {
   name: string;
@@ -367,12 +382,14 @@ export type RootStackParamList = {
   Home: undefined;
   Profile: undefined;
   Notifications: undefined;
+  ActivityNotifications: undefined;
   CreateKit: undefined;
   Checkout: {kitId: number};
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
   MyIncidents: undefined;
+  AdminIncidents: undefined;
   CreateIncident: undefined;
   IncidentDetail: { incidentId: number; isReceived: boolean };
   MyArticles: undefined;
@@ -400,6 +417,7 @@ export type RootStackParamList = {
   AssignedKits: undefined;
   Couriers: undefined;
   CourierDetail: { courier: UserResponse, isBusy?: boolean };
+  ArticleRentals: { articleId: number, articleTitle: string };
 };
 
 export interface ProfileData {
@@ -506,4 +524,35 @@ export interface TrackingNotification {
   message: string;
   createdAt: string;
   read: boolean;
+}
+
+export type ActivityNotificationType = "ITEM_RENTED" | "RETURN_REMINDER";
+
+export interface ActivityNotification {
+  id: number;
+  message: string;
+  createdAt: string;
+  read: boolean;
+  type: ActivityNotificationType;
+  relatedKitId: number | null;
+}
+
+export interface ArticleNearby {
+  id: number;
+  itemType: string;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string | null;
+  availableUntil: string | null;
+  category: string | null;
+  totalUnits: number | null;
+  ownerId: number | null;
+  ownerName: string | null;
+  status: 'AVAILABLE' | 'RENTED' | 'INACTIVE' | null;
+  imageUrl: string | null;
+  cityLat: number;
+  cityLng: number;
+  distanceKm: number;
 }

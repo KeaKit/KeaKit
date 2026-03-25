@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
-import { getAllUsers, deleteUser } from '../../services/adminService';
+import {getAdminUsers, deleteUser } from '../../services/adminService';
 import { UserResponse, RootStackParamList } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 
@@ -51,7 +51,7 @@ const AdminUsersScreen: React.FC = () => {
           setLoading(true);
           setError(null);
           console.log('[AdminUsersScreen] Cargando usuarios...');
-          const data = await getAllUsers(user.token);
+          const data = await getAdminUsers(user.token);
           console.log('[AdminUsersScreen] Usuarios cargados:', data);
           setUsers(data);
         } catch (err) {

@@ -1,6 +1,17 @@
 import { API_ROUTES } from '../config/api';
 import { UserResponse } from '../types';
 
+type AdminUserPayload = {
+  name: string;
+  email: string;
+  password?: string;
+  role?: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+};
+
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
 // Normaliza errores del backend
@@ -57,6 +68,15 @@ export async function getAllUsers(token: string): Promise<UserResponse[]> {
   return handleResponse<UserResponse[]>(res);
 }
 
+export async function getAdminUsers(token: string): Promise<UserResponse[]> {
+  const res = await fetch(API_ROUTES.GET_ADMIN_ALL_USERS, {
+    method: 'GET',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<UserResponse[]>(res);
+}
+
+
 // Eliminar usuario
 export async function deleteUser(id: number, token: string): Promise<void> {
   const res = await fetch(API_ROUTES.DELETE_USER(id), {
@@ -67,21 +87,20 @@ export async function deleteUser(id: number, token: string): Promise<void> {
 }
 
 export async function createUser(
-  data: { name: string; email: string; password: string; role?: string },
+  data: AdminUserPayload,
   token: string
 ): Promise<UserResponse> {
-  const payload = { ...data, role: data.role || 'USER' }; // role obligatorio
   const res = await fetch(API_ROUTES.CREATE_USER, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(data),
   });
   return handleResponse<UserResponse>(res);
 }
 
 export async function updateUser(
   id: number,
-  data: { name?: string; email?: string; password?: string; role?: string },
+  data: Partial<AdminUserPayload>,
   token: string
 ): Promise<UserResponse> {
   const res = await fetch(API_ROUTES.UPDATE_USER(id), {

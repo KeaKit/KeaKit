@@ -1,5 +1,8 @@
 package com.example.demo.model;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -27,24 +30,31 @@ public class Incident {
     // El usuario que crea la incidencia
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     // El objeto reportado
     @ManyToOne(optional = true)
     @JoinColumn(name = "related_item_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Item relatedItem;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "related_kit_id")
+    private Kit relatedKit;
 
     public Incident() {
         this.status = IncidentStatus.OPEN;
     }
 
-    public Incident(String title, String description, IncidentType type, User user, Item relatedItem) {
+    public Incident(String title, String description, IncidentType type, User user, Item relatedItem, Kit relatedKit) {
         this.title = title;
         this.description = description;
         this.type = type;
         this.status = IncidentStatus.OPEN;
         this.user = user;
         this.relatedItem = relatedItem;
+        this.relatedKit = relatedKit;
     }
 
     public Long getId() { return id; }
@@ -67,4 +77,7 @@ public class Incident {
 
     public Item getRelatedItem() { return relatedItem; }
     public void setRelatedItem(Item relatedItem) { this.relatedItem = relatedItem; }
+
+    public Kit getRelatedKit() { return relatedKit; }
+    public void setRelatedKit(Kit relatedKit) { this.relatedKit = relatedKit; }
 }

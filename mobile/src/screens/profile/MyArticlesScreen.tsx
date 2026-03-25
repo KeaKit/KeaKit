@@ -9,12 +9,15 @@ import {
   TouchableOpacity,
   Pressable,
   Image,
+  LayoutAnimation,
+  Platform,
+  UIManager
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { getMyArticles, deleteArticle, getArticleById } from '../../services/articleService';
+import { getMyArticles, deleteArticle, getArticleById, getArticleRecord } from '../../services/articleService';
 import { RootStackParamList, UserArticle } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { useNotification } from '../../components/NotificationContext'; // 👈 Importar notificaciones
@@ -22,6 +25,10 @@ import { ConfirmModal } from '../../components/ConfirmModal'; // 👈 Importar m
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
 type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const MyArticlesScreen: React.FC = () => {
   const { user } = useAuth();
@@ -39,8 +46,38 @@ const MyArticlesScreen: React.FC = () => {
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<UserArticle | null>(null);
 
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const toggleExpand = async (id: number) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+
+    const article = articles.find(a => a.id === id);
+
+    if (article && (!article.rentals || article.rentals.length === 0)) {
+      try {
+        const record = await getArticleRecord(id, user!.token);
+        
+        const updatedArticles = articles.map(a => 
+          a.id === id ? { ...a, rentals: record } : a
+        );
+        
+        setArticles(updatedArticles);
+        setFilteredArticles(applyFilter(filter, updatedArticles));
+      } catch (err) {
+        showNotification('Error al cargar el historial', 'error');
+      }
+    }
+
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedId(id);
+  };
+
   useFocusEffect(
     useCallback(() => {
+      setExpandedId(null);
       const loadArticles = async () => {
         if (!user) {
           setError('Debes iniciar sesión para ver tus artículos');
@@ -127,6 +164,13 @@ const MyArticlesScreen: React.FC = () => {
     setArticleToDelete(null);
   };
 
+  const navigateToUserReviews = (tenantId: number, tenantName: string) => {
+    navigation.navigate('UserRatings', {
+      userId: tenantId,
+      userName: tenantName,
+    });
+  };
+
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return '-';
     try {
@@ -150,6 +194,9 @@ const MyArticlesScreen: React.FC = () => {
       case 'AVAILABLE': return 'Disponible';
       case 'RENTED':    return 'Alquilado';
       case 'INACTIVE':  return 'Inactivo';
+      case 'ACTIVE':    return 'Activo';
+      case 'PAID':      return 'Pagado';
+      case 'FINISHED':  return 'Finalizado';
       default:          return status;
     }
   };
@@ -162,65 +209,124 @@ const MyArticlesScreen: React.FC = () => {
     }
   };
 
+  const renderRentalHistory = (item: UserArticle) => {
+    if (!item.rentals || item.rentals.length === 0) {
+      return <Text style={styles.noRentalsText}>Sin historial de alquileres todavía.</Text>;
+    }
+
+    const lastThree = [...item.rentals].reverse().slice(0, 3);
+
+    return (
+      <View style={styles.rentalsWrapper}>
+        <Text style={styles.rentalsTitle}>Últimos Alquileres:</Text>
+        {lastThree.map((rental, index) => (
+          <View key={index} style={styles.rentalItem}>
+            <View style={styles.rentalMainInfo}>
+              <Text
+                style={{ color: "#007AFF" }}
+                onPress={() => navigateToUserReviews(rental.tenantId, rental.tenantName)}
+              >
+                {rental.tenantName}
+              </Text>
+              <Text style={styles.rentalCity}>{`${rental.city ?? ""}, ${rental.country ?? ""}`}</Text>
+            </View>
+            <View style={styles.rentalDateStatus}>
+              <Text style={styles.rentalDates}>
+                {`${formatDate(rental.startDate)} - ${formatDate(rental.endDate)}`}
+              </Text>
+              <Text style={[styles.miniStatus, { color: getStatusColor(rental.status) }]}>
+                {translateStatus(rental.status)}
+              </Text>
+            </View>
+          </View>
+        ))}
+
+        <TouchableOpacity 
+          style={styles.viewMoreButton}
+          onPress={() => navigation.navigate("ArticleRentals", { articleId: item.id, articleTitle: item.title })}
+        >
+          <Text style={styles.viewMoreText}>Ver historial completo ({item.rentals.length})</Text>
+          <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const renderArticle = ({ item }: { item: UserArticle }) => {
     const isDeleting = deletingId === item.id;
-    return (
-      <View style={styles.articleCard}>
-        <TouchableOpacity
-          style={styles.cardPressable}
-          onPress={() => handleEdit(item)}
-          activeOpacity={0.85}
-        >
-          <View style={styles.imageContainer}>
-            {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
-            ) : (
-              <View style={styles.noImagePlaceholder}>
-                <Ionicons name="image-outline" size={40} color="#ccc" />
-              </View>
-            )}
-          </View>
+    const isExpanded = expandedId === item.id;
 
-          <View style={styles.articleInfo}>
-            <Text style={styles.articleTitle} numberOfLines={2}>{item.title}</Text>
-            <View style={styles.priceRow}>
-              <Ionicons name="cash-outline" size={16} color={Colors.primary} />
-              <Text style={styles.articlePrice}>{`€${item.pricePerMonth.toFixed(2)}/mes`}</Text>
+    return (
+      <View style={styles.cardContainer}>
+        <View style={styles.articleCard}>
+          <TouchableOpacity
+            style={styles.cardPressable}
+            onPress={() => handleEdit(item)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.imageContainer}>
+              {item.imageUrl ? (
+                <Image source={{ uri: item.imageUrl }} style={styles.articleImage} resizeMode="cover" />
+              ) : (
+                <View style={styles.noImagePlaceholder}>
+                  <Ionicons name="image-outline" size={40} color="#ccc" />
+                </View>
+              )}
             </View>
-            <View style={styles.statusRow}>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+
+            <View style={styles.articleInfo}>
+              <Text style={styles.articleTitle} numberOfLines={2}>{item.title}</Text>
+              <View style={styles.priceRow}>
+                <Ionicons name="cash-outline" size={16} color={Colors.primary} />
+                <Text style={styles.articlePrice}>{`€${item.pricePerMonth.toFixed(2)}/mes`}</Text>
+              </View>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status), alignSelf: 'flex-start' }]}>
                 <Text style={styles.statusText}>{translateStatus(item.status)}</Text>
               </View>
             </View>
-            {item.status === 'RENTED' && item.rentedUntil && (
-              <View style={styles.dateRow}>
-                <Ionicons name="calendar-outline" size={16} color="#666" />
-                <Text style={styles.dateText}>{`Hasta: ${formatDate(item.rentedUntil)}`}</Text>
-              </View>
-            )}
+          </TouchableOpacity>
+
+          <View style={styles.actionsContainer}>
+            <Pressable
+              style={styles.editButton}
+              onPress={() => handleEdit(item)}
+              disabled={isDeleting}
+            >
+              <Ionicons name="pencil-outline" size={18} color={Colors.primary} />
+            </Pressable>
+
+            <Pressable
+              style={styles.deleteButton}
+              onPress={() => handleDeletePress(item)}
+              disabled={isDeleting}
+            >
+              {isDeleting
+                ? <ActivityIndicator size="small" color="#d9534f" />
+                : <Ionicons name="trash-outline" size={18} color="#d9534f" />
+              }
+            </Pressable>
           </View>
-        </TouchableOpacity>
-
-        <View style={styles.actionsContainer}>
-          <Pressable
-            style={styles.editButton}
-            onPress={() => handleEdit(item)}
-            disabled={isDeleting}
-          >
-            <Ionicons name="pencil-outline" size={20} color={Colors.primary} />
-          </Pressable>
-
-          <Pressable
-            style={styles.deleteButton}
-            onPress={() => handleDeletePress(item)}
-            disabled={isDeleting}
-          >
-            {isDeleting
-              ? <ActivityIndicator size="small" color="#d9534f" />
-              : <Ionicons name="trash-outline" size={20} color="#d9534f" />
-            }
-          </Pressable>
         </View>
+
+        <Pressable 
+          style={styles.expandButton} 
+          onPress={() => toggleExpand(item.id)}
+        >
+          <Text style={styles.expandText}>
+            {isExpanded ? 'Ocultar historial' : 'Ver alquileres más recientes'}
+          </Text>
+          <Ionicons 
+            name={isExpanded ? "chevron-up" : "chevron-down"} 
+            size={20} 
+            color="#999" 
+          />
+        </Pressable>
+
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            {renderRentalHistory(item)}
+          </View>
+        )}
       </View>
     );
   };
@@ -387,11 +493,25 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     paddingBottom: 100,
   },
+  expandButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f9f9f9',
+    backgroundColor: '#fff',
+  },
+  expandText: {
+    fontSize: 12,
+    color: '#999',
+    marginRight: 4,
+    fontWeight: '500',
+  },
   articleCard: {
     flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 12,
-    marginBottom: Spacing.md,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -515,6 +635,90 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
+  },
+  cardContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: Spacing.md,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  expandedContent: {
+    backgroundColor: '#f9f9f9',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    padding: Spacing.md,
+  },
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rentalsTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#444',
+    marginBottom: 8,
+  },
+  rentalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  tenantName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  rentalCity: {
+    fontSize: 12,
+    color: '#888',
+  },
+  rentalDates: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
+  },
+  miniStatus: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'right',
+    textTransform: 'uppercase',
+  },
+  viewMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingVertical: 8,
+  },
+  viewMoreText: {
+    color: Colors.primary,
+    fontWeight: '600',
+    fontSize: 13,
+    marginRight: 4,
+  },
+  noRentalsText: {
+    fontStyle: 'italic',
+    color: '#999',
+    textAlign: 'center',
+  },
+  rentalsWrapper: {
+    marginTop: 5,
+  },
+  rentalMainInfo: {
+    flex: 1,
+  },
+  rentalDateStatus: {
+    alignItems: 'flex-end',
   },
 });
 

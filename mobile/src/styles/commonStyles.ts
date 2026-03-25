@@ -166,6 +166,11 @@ export const commonStyles = StyleSheet.create({
     marginBottom: 15
   },
 
+  bodyPrimary: {
+    fontSize: FontSizes.base,
+    color: Colors.textPrimary,
+  },
+
   body: {
     fontSize: FontSizes.base,
     color: Colors.textPrimary,

@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,6 +36,9 @@ public abstract class Item {
     @Size(max = 120)
     protected String city;
 
+    @Size(max = 120)
+    protected String country;
+
     @NotNull
     @Positive
     protected Double pricePerMonth;
@@ -60,6 +66,7 @@ public abstract class Item {
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     protected User owner;
 
     public Item() {}
@@ -105,6 +112,14 @@ public abstract class Item {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 
     public Double getPricePerMonth() {

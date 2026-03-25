@@ -21,6 +21,7 @@ import MyServicesScreen from '../screens/service/MyServicesScreen';
 import MyIncidentsScreen from '../screens/incidents/MyIncidentsScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
 import WithdrawMoneyScreen from '../screens/wallet/WithdrawMoneyScreen';
+import AdminIncidentsScreen from '../screens/admin/AdminIncidentsScreen';
 import CategoriesScreen from '../screens/category/CategoriesScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import MyKitsHistoryScreen from '../screens/kit/MyKitsHistoryScreen';
@@ -47,11 +48,13 @@ import EditServiceScreen from '../screens/service/EditServiceScreen';
 import KitTrackingScreen from '../screens/kit/KitTrackingScreen';
 import { TrackingNotificationsProvider } from '../context/TrackingNotificationContext';
 import TrackingNotificationsScreen from '../screens/notifications/TrackingNotificationsScreen';
+import ActivityNotificationsScreen from '../screens/notifications/ActivityNotificationsScreen';
 import AssignedKitsScreen from '../screens/kit/AssignedKitsScreen';
 import CouriersScreen from '../screens/admin/CouriersScreen';
 import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
 
 import { RootStackParamList } from '../types';
+import ArticleRentalsScreen from '../screens/article/ArticleRentalsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -98,6 +101,14 @@ const AppNavigator: React.FC = () => {
                   {() => (
                     <MainLayout>
                       <MyArticlesScreen />
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="ArticleRentals">
+                  {() => (
+                    <MainLayout>
+                      <ArticleRentalsScreen />
                     </MainLayout>
                   )}
                 </Stack.Screen>
@@ -192,6 +203,14 @@ const AppNavigator: React.FC = () => {
                         </MainLayout>
                       )}
                     </Stack.Screen>
+
+                    <Stack.Screen name="AdminIncidents">
+                      {() => (
+                        <MainLayout>
+                          <AdminIncidentsScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
                   </>
                 )}
 
@@ -231,6 +250,7 @@ const AppNavigator: React.FC = () => {
 
                 <Stack.Screen name="Tracking" component={KitTrackingScreen} />
                 <Stack.Screen name="TrackingNotifications" component={TrackingNotificationsScreen} />
+                <Stack.Screen name="ActivityNotifications" component={ActivityNotificationsScreen} />
                 <Stack.Screen name="AssignedKits" component={AssignedKitsScreen} />
                 <Stack.Screen name="CourierDetail" component={CourierDetailScreen} />
               </>

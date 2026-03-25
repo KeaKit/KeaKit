@@ -39,7 +39,7 @@ public class DatabaseSeeder {
             owner.setEmail("owner@example.com");
             owner.setPassword(passwordEncoder.encode("password123"));
             owner.setRole(UserRole.USER);
-            owner.setCountry("España");
+            owner.setCountry("Spain");
             owner.setCity("Sevilla");
             owner.setAddress("Calle 123 matame otra vez");
             owner.setPhone("123456789");
@@ -50,7 +50,7 @@ public class DatabaseSeeder {
             tenant.setEmail("tenant@example.com");
             tenant.setPassword(passwordEncoder.encode("password123"));
             tenant.setRole(UserRole.USER);
-            tenant.setCountry("España");
+            tenant.setCountry("Spain");
             tenant.setCity("Sevilla");
             tenant.setAddress("Calle 123 matame otra vez");
             tenant.setPhone("223456789");
@@ -95,6 +95,7 @@ public class DatabaseSeeder {
             laptop.setDescription("16 pulgadas, M2");
             laptop.setCategory(catTech);
             laptop.setCity("Sevilla");
+            laptop.setCountry("Spain");
             laptop.setOwner(owner);
             laptop.setPricePerMonth(150.0);
             laptop.setTotalUnits(1);
@@ -104,8 +105,72 @@ public class DatabaseSeeder {
             laptop.setAvailableUntil(LocalDate.now().plusMonths(36));
             laptop.setImageUrl("https://i.imgur.com/bY7sIB3.png");
 
-            // Al guardar el ArticleRepository, JPA gestiona la tabla 'items' y 'articles'
             articleRepo.save(laptop);
+
+            // Artículos en ciudades cercanas a Sevilla (para búsqueda geográfica ampliada y mapa)
+            Article camara = new Article();
+            camara.setTitle("Cámara Sony A7III");
+            camara.setDescription("Full frame, 24MP, ideal para fotografía profesional");
+            camara.setCategory(catTech);
+            camara.setCity("Huelva");
+            camara.setCountry("Spain");
+            camara.setOwner(owner);
+            camara.setPricePerMonth(80.0);
+            camara.setTotalUnits(2);
+            camara.setStatus(ArticleStatus.AVAILABLE);
+            camara.setPurchaseDate(LocalDate.now().minusMonths(12));
+            camara.setAvailableFrom(LocalDate.now());
+            camara.setAvailableUntil(LocalDate.now().plusMonths(36));
+            camara.setImageUrl("https://i.imgur.com/0y8Ftya.png");
+            articleRepo.save(camara);
+
+            Article dron = new Article();
+            dron.setTitle("DJI Mini 3 Pro");
+            dron.setDescription("Dron con cámara 4K y 34 min de autonomía");
+            dron.setCategory(catTech);
+            dron.setCity("Cadiz");
+            dron.setCountry("Spain");
+            dron.setOwner(owner);
+            dron.setPricePerMonth(120.0);
+            dron.setTotalUnits(1);
+            dron.setStatus(ArticleStatus.AVAILABLE);
+            dron.setPurchaseDate(LocalDate.now().minusMonths(8));
+            dron.setAvailableFrom(LocalDate.now());
+            dron.setAvailableUntil(LocalDate.now().plusMonths(36));
+            dron.setImageUrl("https://i.imgur.com/6xfBrN3.png");
+            articleRepo.save(dron);
+
+            Article proyector = new Article();
+            proyector.setTitle("Proyector Epson 4K");
+            proyector.setDescription("3000 lúmenes, ideal para presentaciones y cine en casa");
+            proyector.setCategory(catTech);
+            proyector.setCity("Cordoba");
+            proyector.setCountry("Spain");
+            proyector.setOwner(owner);
+            proyector.setPricePerMonth(60.0);
+            proyector.setTotalUnits(3);
+            proyector.setStatus(ArticleStatus.AVAILABLE);
+            proyector.setPurchaseDate(LocalDate.now().minusMonths(4));
+            proyector.setAvailableFrom(LocalDate.now());
+            proyector.setAvailableUntil(LocalDate.now().plusMonths(36));
+            proyector.setImageUrl("https://i.imgur.com/8bvkR1s.png");
+            articleRepo.save(proyector);
+
+            Article impresora = new Article();
+            impresora.setTitle("Impresora 3D Bambu Lab");
+            impresora.setDescription("Impresora FDM de alta velocidad con multi-color");
+            impresora.setCategory(catTech);
+            impresora.setCity("Jerez de la Frontera");
+            impresora.setCountry("Spain");
+            impresora.setOwner(owner);
+            impresora.setPricePerMonth(45.0);
+            impresora.setTotalUnits(1);
+            impresora.setStatus(ArticleStatus.AVAILABLE);
+            impresora.setPurchaseDate(LocalDate.now().minusMonths(3));
+            impresora.setAvailableFrom(LocalDate.now());
+            impresora.setAvailableUntil(LocalDate.now().plusMonths(36));
+            impresora.setImageUrl("https://i.imgur.com/3n9fIYP.png");
+            articleRepo.save(impresora);
 
             // 6. Servicio (Herencia de Item)
             ServiceItem setupService = new ServiceItem();
@@ -128,6 +193,8 @@ public class DatabaseSeeder {
             myKit.setDeliveryMethod(DeliveryMethod.COURIER);
             myKit.setStartDate(LocalDate.now());
             myKit.setEndDate(LocalDate.now().plusMonths(1));
+            myKit.setCountry("Spain");
+            myKit.setCity("Sevilla");
             kitRepo.save(myKit);
 
             Kit pendingPaidKit = new Kit();

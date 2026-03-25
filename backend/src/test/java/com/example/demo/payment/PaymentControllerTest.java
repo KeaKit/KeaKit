@@ -130,7 +130,37 @@ public class PaymentControllerTest extends BaseControllerTest {
                 .andExpect(content().string(containsString("Error al procesar el pago: " + errorMsg)));
     }
 
-    //TODO: Agregar test para el endpoint de withdraw
+    @Test
+    void withdraw_ShouldReturnOk_WhenSuccessful() throws Exception {
+        Double amount = 50.0;
+        Long userId = 2L;
+
+        when(authService.getAuthenticatedUserId()).thenReturn(userId);
+
+        mockMvc.perform(post(BASE_URL + "/withdraw")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(amount)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Retirada realizada correctamente"));
+
+        verify(paymentService).withdrawToBank(userId, amount);
+    }
+
+    @Test
+    void withdraw_ShouldReturnError_WhenServiceThrowsException() throws Exception {
+        Double amount = 50.0;
+        Long userId = 2L;
+
+        when(authService.getAuthenticatedUserId()).thenReturn(userId);
+        doThrow(new RuntimeException("Saldo insuficiente"))
+                .when(paymentService).withdrawToBank(userId, amount);
+
+        mockMvc.perform(post(BASE_URL + "/withdraw")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(amount)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("Error en retirada: Saldo insuficiente")));
+    }
 }
 
 
