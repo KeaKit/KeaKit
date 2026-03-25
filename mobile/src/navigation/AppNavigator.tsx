@@ -20,6 +20,7 @@ import MyKitsScreen from '../screens/profile/MyKitsScreen';
 import MyServicesScreen from '../screens/service/MyServicesScreen';
 import MyIncidentsScreen from '../screens/incidents/MyIncidentsScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
+import WithdrawMoneyScreen from '../screens/wallet/WithdrawMoneyScreen';
 import CategoriesScreen from '../screens/category/CategoriesScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import MyKitsHistoryScreen from '../screens/kit/MyKitsHistoryScreen';
@@ -224,6 +225,7 @@ const AppNavigator: React.FC = () => {
                 {/* Administración */}
                 <Stack.Screen name="AdminUserForm" component={AdminUserFormScreen} />
                 <Stack.Screen name="CategoryForm" component={CategoryFormScreen} />
+                <Stack.Screen name="WithdrawMoney" component={WithdrawMoneyScreen} />
 
                 {/*Tracking - Delivery*/ }
 
