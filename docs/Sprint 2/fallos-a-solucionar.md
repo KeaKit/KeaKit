@@ -39,7 +39,7 @@ Este documento detalla las incidencias detectadas en la plataforma, divididas se
 
 ## 👤 Problemas en Casos de Uso: Usuarios Normales
 
-### 8. Registro de usuario - PENDIENTE DE ARREGLAR LA PR
+### 8. Registro de usuario - SOLUCIONADO
 - **Nombre:** Poner un max length de 255, porque como pongas mas letras te salta un error de sql.
 
 ### 9. Editar perfil de usuario
