@@ -245,7 +245,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           <TouchableOpacity onPress={() => navigateToScreen('Home')}>
             <Image 
               source={require('../../assets/logo.png')} 
-              style={styles.logo}
+              style={styles.mobileLogo}
               resizeMode="contain"
             />
           </TouchableOpacity>
@@ -443,7 +443,11 @@ const styles = StyleSheet.create({
   logo: {
     width: getLogoSize().width,
     height: getLogoSize().height,
-    maxWidth: '100%',
+    maxWidth: '500%',
+  },
+  mobileLogo: {
+    width: 40,
+    height: 40,
   },
   navItems: {
     flexDirection: 'row',
@@ -597,9 +601,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalLogo: {
-    width: getLogoSize().width,
-    height: getLogoSize().height,
-    maxWidth: '100%',
+    width: 50,
+    height: 50,
   },
   modalScroll: {
     marginBottom: 12,
