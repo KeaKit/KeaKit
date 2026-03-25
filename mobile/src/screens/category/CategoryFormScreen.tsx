@@ -76,6 +76,27 @@ const CategoryFormScreen: React.FC = () => {
     return 'Crear categoría';
   };
 
+  const handlePriceChange = (text: string, setPrice: (value: string) => void) => {
+      let val = text.replace(',', '.');
+      val = val.replace(/[^0-9.]/g, '');
+      const parts = val.split('.');
+      if (parts.length > 2) {
+        val = parts[0] + '.' + parts.slice(1).join('').replace(/\./g, '');
+      }
+      if (val.includes('.')) {
+        const [integerPart, decimalPart] = val.split('.');
+        if (decimalPart.length > 2) {
+          val = `${integerPart}.${decimalPart.slice(0, 2)}`;
+        }
+      }
+      const numericValue = parseFloat(val);
+      if (!isNaN(numericValue) && numericValue > 1000000) {
+        val = '1000000';
+      }
+
+      setPrice(val);
+    };
+
   const handleSave = async () => {
     if (!name || !description || !minPrice || !maxPrice) {
       const msg = 'Error: Por favor rellena todos los campos.';
@@ -201,7 +222,7 @@ const CategoryFormScreen: React.FC = () => {
               keyboardType="numeric"
               placeholder="Mín"
               value={minPrice}
-              onChangeText={setMinPrice}
+              onChangeText={(text) => handlePriceChange(text, setMinPrice)}
               editable={isEditable}
             />
             <Text style={priceSeparator}>€  -  </Text>
@@ -210,7 +231,7 @@ const CategoryFormScreen: React.FC = () => {
               keyboardType="numeric"
               placeholder="Máx"
               value={maxPrice}
-              onChangeText={setMaxPrice}
+              onChangeText={(text) => handlePriceChange(text, setMaxPrice)}
               editable={isEditable}
             />
             <Text style={priceSeparator}>€</Text>
