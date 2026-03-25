@@ -205,6 +205,17 @@ public class DatabaseSeeder {
             pendingPaidKit.setEndDate(LocalDate.now().plusMonths(1));
             kitRepo.save(pendingPaidKit);
 
+            Kit audiovisualKit = new Kit();
+            audiovisualKit.setName("Pack Audiovisual");
+            audiovisualKit.setTenant(tenant);
+            audiovisualKit.setStatus(KitStatus.FINISHED);
+            audiovisualKit.setDeliveryMethod(DeliveryMethod.COURIER);
+            audiovisualKit.setStartDate(LocalDate.now());
+            audiovisualKit.setEndDate(LocalDate.now().plusMonths(1));
+            audiovisualKit.setCountry("Spain");
+            audiovisualKit.setCity("Sevilla");
+            kitRepo.save(audiovisualKit);
+
             // 7.1 ItemMemento
             ItemMemento snap1 = laptop.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint());
             snap1.setKit(myKit);
@@ -227,6 +238,36 @@ public class DatabaseSeeder {
 
             pendingPaidKit.setSnapshots(List.of(snap3, snap4));
             kitRepo.save(pendingPaidKit);
+
+            ItemMemento snapAv1 = camara.createSnapshot(
+                1,
+                audiovisualKit.getDeliveryMethod(),
+                audiovisualKit.getCourierPrice(),
+                audiovisualKit.getMeetingPoint()
+            );
+            snapAv1.setKit(audiovisualKit);
+            snapAv1.setPriceAtRental(camara.getPricePerMonth());
+
+            ItemMemento snapAv2 = dron.createSnapshot(
+                1,
+                audiovisualKit.getDeliveryMethod(),
+                audiovisualKit.getCourierPrice(),
+                audiovisualKit.getMeetingPoint()
+            );
+            snapAv2.setKit(audiovisualKit);
+            snapAv2.setPriceAtRental(dron.getPricePerMonth());
+
+            ItemMemento snapAv3 = proyector.createSnapshot(
+                1,
+                audiovisualKit.getDeliveryMethod(),
+                audiovisualKit.getCourierPrice(),
+                audiovisualKit.getMeetingPoint()
+            );
+            snapAv3.setKit(audiovisualKit);
+            snapAv3.setPriceAtRental(proyector.getPricePerMonth());
+
+            audiovisualKit.setSnapshots(List.of(snapAv1, snapAv2, snapAv3));
+            kitRepo.save(audiovisualKit);
 
             // ==========================================
             // 7.2 Kit Predeterminado para el Catálogo (FIX REAL)
