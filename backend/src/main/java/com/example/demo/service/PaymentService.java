@@ -87,10 +87,14 @@ public class PaymentService {
                                         PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
                                 .build())
                 .build();
-        PaymentIntent intent = PaymentIntent.create(params);
+        PaymentIntent intent = createStripePaymentIntent(params);
         System.out.println(intent.getId());
         System.out.println(intent.getClientSecret());
         return intent;
+    }
+
+    public PaymentIntent createStripePaymentIntent(PaymentIntentCreateParams params) throws StripeException {
+        return PaymentIntent.create(params);
     }
 
     @Transactional
@@ -246,9 +250,13 @@ public class PaymentService {
         params.put("amount", amountInCents);
         params.put("currency", "eur");
         params.put("destination", "btok_fr");
-        Payout payout = Payout.create(params);
+        Payout payout = createStripePayout(params);
 
         return payout;
+    }
+
+    public Payout createStripePayout(Map<String, Object> params) throws StripeException {
+        return Payout.create(params);
     }
 
     private boolean isValidIban(String iban) {
