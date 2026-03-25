@@ -27,6 +27,7 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
+            DefaultKitRepository defaultKitRepo, // <-- AÑADIDO: Repositorio para los kits predeterminados
             RatingRepository ratingRepo,
             CountryRepository countryRepo,
             CityRepository cityRepo,
@@ -89,7 +90,6 @@ public class DatabaseSeeder {
             catRepo.save(catTech);
 
             // 5. Artículo (Herencia de Item)
-            // Según tus logs: id de article referencia a id de item
             Article laptop = new Article();
             laptop.setTitle("MacBook Pro");
             laptop.setDescription("16 pulgadas, M2");
@@ -104,10 +104,9 @@ public class DatabaseSeeder {
             laptop.setAvailableFrom(LocalDate.now());
             laptop.setAvailableUntil(LocalDate.now().plusMonths(36));
             laptop.setImageUrl("https://i.imgur.com/bY7sIB3.png");
-
             articleRepo.save(laptop);
 
-            // Artículos en ciudades cercanas a Sevilla (para búsqueda geográfica ampliada y mapa)
+            // Artículos en ciudades cercanas a Sevilla
             Article camara = new Article();
             camara.setTitle("Cámara Sony A7III");
             camara.setDescription("Full frame, 24MP, ideal para fotografía profesional");
@@ -229,6 +228,24 @@ public class DatabaseSeeder {
             pendingPaidKit.setSnapshots(List.of(snap3, snap4));
             kitRepo.save(pendingPaidKit);
 
+            // ==========================================
+            // NUEVO: 7.2 Kit Predeterminado para el Catálogo
+            // ==========================================
+            Double basePrice = laptop.getPricePerMonth() + setupService.getPricePerMonth();
+            DefaultKit defaultKit = new DefaultKit(
+                "Pack Trabajo Remoto",
+                "Kit listo para usar, incluye un MacBook Pro y el servicio de instalación de software.",
+                basePrice
+            );
+
+            DefaultKitItem dki1 = new DefaultKitItem(defaultKit, laptop);
+            DefaultKitItem dki2 = new DefaultKitItem(defaultKit, setupService);
+
+            defaultKit.getItems().add(dki1);
+            defaultKit.getItems().add(dki2);
+
+            defaultKitRepo.save(defaultKit); // Esto guardará el DefaultKit y sus DefaultKitItems en cascada
+
 
             // 8. Rating
             Rating feedback = new Rating();
@@ -244,7 +261,7 @@ public class DatabaseSeeder {
             // 9. Países Y ciudades       
             CityLoader.loadFromJson(countryRepo, cityRepo);          
 
-            System.out.println("✅ Seeder finalizado: Datos cargados en los 10 repositorios.");
+            System.out.println("✅ Seeder finalizado: Datos cargados en los repositorios.");
 
         };
     }

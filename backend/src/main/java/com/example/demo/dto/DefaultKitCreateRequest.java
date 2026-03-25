@@ -5,7 +5,7 @@ import java.util.List;
 public class DefaultKitCreateRequest {
     private String name;
     private String description;
-    private List<Long> itemIds;
+    private List<Long> itemsIds;
 
     // Constructores
     public DefaultKitCreateRequest() {
@@ -14,7 +14,7 @@ public class DefaultKitCreateRequest {
     public DefaultKitCreateRequest(String name, String description, List<Long> itemIds) {
         this.name = name;
         this.description = description;
-        this.itemIds = itemIds;
+        this.itemsIds = itemIds;
     }
 
     // Getters y Setters
@@ -35,10 +35,10 @@ public class DefaultKitCreateRequest {
     }
 
     public List<Long> getItemsIds() {
-        return itemIds;
+        return itemsIds;
     }
 
     public void setItemsIds(List<Long> itemIds) {
-        this.itemIds = itemIds;
+        this.itemsIds = itemIds;
     }
 }

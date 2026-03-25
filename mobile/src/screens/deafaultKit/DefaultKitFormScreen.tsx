@@ -235,15 +235,18 @@ const DefaultKitFormScreen: React.FC = () => {
     try {
       setSubmitting(true);
 
+      // Convertimos el objeto de cantidades {itemId: cantidad} en una lista plana de IDs [1, 1, 2]
       const itemIds: number[] = [];
       Object.entries(selectedQuantities).forEach(([id, qty]) => {
-        for (let i = 0; i < qty; i++) itemIds.push(Number(id));
+        for (let i = 0; i < qty; i++) {
+          itemIds.push(Number(id));
+        }
       });
 
-      const payload: Partial<DefaultKitCreateRequest> = { 
+      const payload: DefaultKitCreateRequest = { 
         name, 
         description, 
-        itemsIds: itemIds 
+        itemsIds: itemIds // Asegúrate de que el nombre coincida con el DTO (itemsIds)
       };
       
       const successMessage = formMode === 'edit' ? 'Kit predeterminado actualizado' : 'Kit predeterminado creado';
