@@ -55,6 +55,7 @@ import CourierDetailScreen from "../screens/admin/CourierDetailScreen";
 
 import { RootStackParamList } from "../types";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
+import PurchaseDefaultKitScreen from '../screens/deafaultKit/PurchaseDefaultKitScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -257,6 +258,7 @@ const AppNavigator: React.FC = () => {
                   name="DefaultKitForm"
                   component={DefaultKitFormScreen}
                 />
+                <Stack.Screen name="PurchaseDefaultKit" component={PurchaseDefaultKitScreen} options={{ headerShown: false }} />
 
                 {/* Valoraciones */}
                 <Stack.Screen

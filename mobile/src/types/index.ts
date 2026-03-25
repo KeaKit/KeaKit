@@ -384,6 +384,7 @@ export type RootStackParamList = {
   Notifications: undefined;
   ActivityNotifications: undefined;
   CreateKit: undefined;
+  PurchaseDefaultKit: undefined;
   Checkout: { kitId: number };
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };

@@ -451,6 +451,7 @@ const EditArticleScreen: React.FC = () => {
               onDismiss={() => setShowDateRangePicker(false)}
               startDate={startDate}
               endDate={endDate}
+              allowEditing={false}
               onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
                 setShowDateRangePicker(false);
                 if (params.startDate && params.endDate) {
@@ -532,6 +533,7 @@ const EditArticleScreen: React.FC = () => {
                 visible={showPurchaseDatePicker}
                 onDismiss={() => setShowPurchaseDatePicker(false)}
                 date={purchaseDateObj}
+                allowEditing={false}
                 onConfirm={(params: { date?: Date }) => {
                   setShowPurchaseDatePicker(false);
                   if (params.date) {

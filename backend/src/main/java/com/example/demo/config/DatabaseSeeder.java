@@ -27,6 +27,7 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
+            DefaultKitRepository defaultKitRepo, // <-- AÑADIDO: Repositorio para los kits predeterminados
             RatingRepository ratingRepo,
             CountryRepository countryRepo,
             CityRepository cityRepo,
@@ -89,7 +90,6 @@ public class DatabaseSeeder {
             catRepo.save(catTech);
 
             // 5. Artículo (Herencia de Item)
-            // Según tus logs: id de article referencia a id de item
             Article laptop = new Article();
             laptop.setTitle("MacBook Pro");
             laptop.setDescription("16 pulgadas, M2");
@@ -104,10 +104,9 @@ public class DatabaseSeeder {
             laptop.setAvailableFrom(LocalDate.now());
             laptop.setAvailableUntil(LocalDate.now().plusMonths(36));
             laptop.setImageUrl("https://i.imgur.com/bY7sIB3.png");
-
             articleRepo.save(laptop);
 
-            // Artículos en ciudades cercanas a Sevilla (para búsqueda geográfica ampliada y mapa)
+            // Artículos en ciudades cercanas a Sevilla
             Article camara = new Article();
             camara.setTitle("Cámara Sony A7III");
             camara.setDescription("Full frame, 24MP, ideal para fotografía profesional");
@@ -229,6 +228,43 @@ public class DatabaseSeeder {
             pendingPaidKit.setSnapshots(List.of(snap3, snap4));
             kitRepo.save(pendingPaidKit);
 
+            // ==========================================
+            // 7.2 Kit Predeterminado para el Catálogo (FIX REAL)
+            // ==========================================
+
+            // ⚠️ NO usar laptop ni setupService directamente
+
+            Article laptopRef = new Article();
+            laptopRef.setId(laptop.getId()); // solo referencia por ID
+
+            ServiceItem serviceRef = new ServiceItem();
+            serviceRef.setId(setupService.getId());
+
+            // 💰 precio base
+            Double basePrice = laptop.getPricePerMonth() + setupService.getPricePerMonth();
+
+            // 🧠 kit
+            DefaultKit defaultKit = new DefaultKit(
+                "Pack Trabajo Remoto",
+                "Kit listo para usar, incluye un MacBook Pro y el servicio de instalación de software.",
+                basePrice
+            );
+
+            // ⚠️ asegurar lista
+            if (defaultKit.getItems() == null) {
+                defaultKit.setItems(new java.util.ArrayList<>());
+            }
+
+            // 🔗 items SIN cargar entidad completa
+            DefaultKitItem dki1 = new DefaultKitItem(defaultKit, laptopRef);
+            DefaultKitItem dki2 = new DefaultKitItem(defaultKit, serviceRef);
+
+            defaultKit.getItems().add(dki1);
+            defaultKit.getItems().add(dki2);
+
+            // 💾 guardar
+            defaultKitRepo.save(defaultKit);
+
 
             // 8. Rating
             Rating feedback = new Rating();
@@ -244,7 +280,7 @@ public class DatabaseSeeder {
             // 9. Países Y ciudades       
             CityLoader.loadFromJson(countryRepo, cityRepo);          
 
-            System.out.println("✅ Seeder finalizado: Datos cargados en los 10 repositorios.");
+            System.out.println("✅ Seeder finalizado: Datos cargados en los repositorios.");
 
         };
     }
