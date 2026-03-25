@@ -67,11 +67,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
-<<<<<<< feat/frontend-cu-arrendador-08
   const [activityUnreadCount, setActivityUnreadCount] = useState(0);
-=======
   const [screenWidth, setScreenWidth] = useState(width);
->>>>>>> develop
   const bellAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
