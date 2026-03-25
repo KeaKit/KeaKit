@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'https://keakitv2api.duckdns.org';
 
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
@@ -78,6 +78,10 @@ export const API_ROUTES = {
     if (city) params.append("city", city);
     return `${BASE_URL}/api/kits/unassigned?${params.toString()}`;
   },
+
+  // Notifications (arrendador)
+  USER_NOTIFICATIONS: (userId: number) => `${BASE_URL}/api/notifications/user/${userId}`,
+  MARK_NOTIFICATION_READ: (notificationId: number) => `${BASE_URL}/api/notifications/${notificationId}/read`,
 
 
   // Payments

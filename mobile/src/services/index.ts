@@ -5,6 +5,7 @@ export * from "./categoryService";
 export * from "./cityService";
 export * from "./incidentService";
 export * from "./kitService";
+export * from "./notificationService";
 export * from "./paymentService";
 export * from "./ratingService";
 export * from "./servicesService";

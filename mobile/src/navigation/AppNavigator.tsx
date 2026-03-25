@@ -19,6 +19,7 @@ import MyArticlesScreen from '../screens/profile/MyArticlesScreen';
 import MyKitsScreen from '../screens/profile/MyKitsScreen';
 import MyServicesScreen from '../screens/service/MyServicesScreen';
 import MyIncidentsScreen from '../screens/incidents/MyIncidentsScreen';
+import AdminIncidentsScreen from '../screens/admin/AdminIncidentsScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
 import CategoriesScreen from '../screens/category/CategoriesScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
@@ -46,6 +47,7 @@ import EditServiceScreen from '../screens/service/EditServiceScreen';
 import KitTrackingScreen from '../screens/kit/KitTrackingScreen';
 import { TrackingNotificationsProvider } from '../context/TrackingNotificationContext';
 import TrackingNotificationsScreen from '../screens/notifications/TrackingNotificationsScreen';
+import ActivityNotificationsScreen from '../screens/notifications/ActivityNotificationsScreen';
 import AssignedKitsScreen from '../screens/kit/AssignedKitsScreen';
 import CouriersScreen from '../screens/admin/CouriersScreen';
 import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
@@ -200,6 +202,14 @@ const AppNavigator: React.FC = () => {
                         </MainLayout>
                       )}
                     </Stack.Screen>
+
+                    <Stack.Screen name="AdminIncidents">
+                      {() => (
+                        <MainLayout>
+                          <AdminIncidentsScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
                   </>
                 )}
 
@@ -238,6 +248,7 @@ const AppNavigator: React.FC = () => {
 
                 <Stack.Screen name="Tracking" component={KitTrackingScreen} />
                 <Stack.Screen name="TrackingNotifications" component={TrackingNotificationsScreen} />
+                <Stack.Screen name="ActivityNotifications" component={ActivityNotificationsScreen} />
                 <Stack.Screen name="AssignedKits" component={AssignedKitsScreen} />
                 <Stack.Screen name="CourierDetail" component={CourierDetailScreen} />
               </>
