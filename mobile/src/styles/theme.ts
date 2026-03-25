@@ -1,44 +1,50 @@
 /**
- * Sistema de diseño de KeaKit
- * Basado en los mockups de la aplicación
+ * Sistema de diseño
+ * Basado en la paleta oficial de la marca
  */
 
 export const Colors = {
-  // Colores primarios
-  primary: '#1A3A52',           // Azul oscuro principal
-  primaryLight: '#2C5F7C',      // Azul secundario
-  primaryDark: '#0F2534',       // Azul muy oscuro
+  primary: '#1A3A52', 
+  primaryLight: '#2C5F7C',     
+  primaryDark: '#0F2534',  
 
-  // Colores del logo/brand
+  primaryHome: '#2d6e91',
+  primaryHomeOpacity: 'rgba(45, 110, 145, 0.15)',      
+  backgroundHome: '#fcfff5',        
+  textPrimaryHome: '#595959', 
+
   brandBeige: '#F5EFE7',        // Fondo logo
   brandBorder: '#D4C5B9',       // Borde logo
   brandIcon: '#8B7355',         // Color icono logo
 
-  // Colores de fondo
-  background: '#F5F7FA',        // Fondo principal
-  backgroundWhite: '#FFFFFF',   // Fondo blanco
-  backgroundCard: '#FFFFFF',    // Fondo de tarjetas
+  secondaryLavender: '#d6d0f8',
+  secondaryBlue: '#8ec2db',
+  secondaryMint: '#c3f1d1',
+  secondaryCoral: '#FFD6C0',
 
-  // Colores de texto
-  textPrimary: '#1A3A52',       // Texto principal
-  textSecondary: '#6B7280',     // Texto secundario
-  textLight: '#9CA3AF',         // Texto claro
-  textWhite: '#FFFFFF',         // Texto blanco
-  textMuted: '#D1D5DB',         // Texto apagado
+  backgroundWhite: '#FFFFFF',
+  backgroundGray: '#f0f4ff',   
+  backgroundCard: '#FFFFFF',    
 
-  // Colores de borde
-  border: '#E8ECF1',            // Borde principal
-  borderLight: '#F3F4F6',       // Borde claro
+  textPrimary: '#1A1A1A',
+  textSecondary: '#7A7A7A',
+  textLight: '#9CA3AF', 
+  textWhite: '#FFFFFF', 
+  textMuted: '#D1D5DB', 
 
-  // Colores de estado
-  success: '#4CAF50',           // Verde éxito
-  error: '#FF6B6B',             // Rojo error
-  warning: '#F59E0B',           // Amarillo advertencia
-  info: '#3B82F6',              // Azul información
+  border: '#E8ECF1',            
+  borderLight: '#F3F4F6',
+  borderPrimary: 'rgba(45, 110, 145, 0.15)',
 
-  // Colores de overlay/sombra
-  overlay: 'rgba(0, 0, 0, 0.5)',
-  shadowColor: '#000000',
+  white: '#FFFFFF',
+  success: '#10B981',     
+  error: '#EF4444',           
+  warning: '#F59E0B',       
+  info: '#3B82F6',  
+
+  overlay: 'rgba(45, 110, 145, 0.4)',
+  shadowColor: '#2d6e91',
+  transparent: 'rgba(0, 0, 0, 0)',  
 } as const;
 
 export const Spacing = {
@@ -86,22 +92,22 @@ export const Shadows = {
   small: {
     shadowColor: Colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
   medium: {
     shadowColor: Colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 4,
   },
   large: {
     shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
     elevation: 8,
   },
 } as const;

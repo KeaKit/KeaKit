@@ -2,17 +2,15 @@ package com.example.demo.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "kits")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Kit {
 
     @Id
@@ -38,13 +36,17 @@ public class Kit {
 
     private Double courierPrice;
 
+    private Double appliedCommissionRate;
+
+    private Double appliedGuaranteeRate;
+
     @ManyToOne
     @JoinColumn(name = "tenant_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User tenant;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "kit", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<KitItem> kitItems = new ArrayList<>();
+    private List<ItemMemento> snapshots = new ArrayList<>();
 
     public Kit() {}
 
@@ -146,6 +148,22 @@ public class Kit {
         this.courierPrice = courierPrice;
     }
 
+    public Double getAppliedCommissionRate() {
+        return appliedCommissionRate;
+    }
+
+    public void setAppliedCommissionRate(Double appliedCommissionRate) {
+        this.appliedCommissionRate = appliedCommissionRate;
+    }
+
+    public Double getAppliedGuaranteeRate() {
+        return appliedGuaranteeRate;
+    }
+
+    public void setAppliedGuaranteeRate(Double appliedGuaranteeRate) {
+        this.appliedGuaranteeRate = appliedGuaranteeRate;
+    }
+
     public User getTenant() {
         return tenant;
     }
@@ -154,73 +172,64 @@ public class Kit {
         this.tenant = tenant;
     }
 
-    public List<Item> getItems() {
-        List<Item> items = new ArrayList<>();
-        for (KitItem kitItem : kitItems) {
-            Item item = kitItem.getItem();
-            int quantity = kitItem.getQuantity() != null ? kitItem.getQuantity() : 0;
-            for (int i = 0; i < quantity; i++) {
-                items.add(item);
-            }
-        }
-        return items;
+    public List<ItemMemento> getSnapshots() {
+        return snapshots;
     }
 
-    public void setItems(List<Item> items) {
-        Map<Long, Integer> quantitiesByItemId = new LinkedHashMap<>();
-        Map<Long, Item> itemById = new LinkedHashMap<>();
-
-        if (items != null) {
-            for (Item item : items) {
-                if (item == null || item.getId() == null) {
-                    continue;
-                }
-                quantitiesByItemId.put(item.getId(), quantitiesByItemId.getOrDefault(item.getId(), 0) + 1);
-                itemById.putIfAbsent(item.getId(), item);
-            }
-        }
-
-        List<KitItem> nextKitItems = new ArrayList<>();
-        for (Map.Entry<Long, Integer> entry : quantitiesByItemId.entrySet()) {
-            KitItem kitItem = new KitItem();
-            kitItem.setItem(itemById.get(entry.getKey()));
-            kitItem.setQuantity(entry.getValue());
-            kitItem.setKit(this);
-            nextKitItems.add(kitItem);
-        }
-        this.kitItems = nextKitItems;
-    }
-
-    public List<KitItem> getKitItems() {
-        return kitItems;
-    }
-
-    public void setKitItems(List<KitItem> kitItems) {
-        this.kitItems.clear();
-        if (kitItems == null) {
+    public void setSnapshots(List<ItemMemento> snapshots) {
+        this.snapshots.clear();
+        if (snapshots == null) {
             return;
         }
-        for (KitItem kitItem : kitItems) {
-            if (kitItem == null) {
+        for (ItemMemento snapshot : snapshots) {
+            if (snapshot == null) {
                 continue;
             }
-            kitItem.setKit(this);
-            this.kitItems.add(kitItem);
+            snapshot.setKit(this);
+            this.snapshots.add(snapshot);
         }
     }
 
-@Transient
-public Double getTotalPrice() {
-    if (this.kitItems == null || this.kitItems.isEmpty()) {
-        return 0.0;
+    @Transient
+    public Double calculateSubtotal() {
+        if (this.snapshots == null || this.snapshots.isEmpty()) {
+            return 0.0;
+        }
+        return this.snapshots.stream()
+                .filter(s -> s.getPriceAtRental() != null && s.getSelectedUnits() != null)
+                .mapToDouble(s -> s.getPriceAtRental() * s.getSelectedUnits())
+                .sum();
     }
-    return this.kitItems.stream()
-            .filter(ki -> ki.getItem() != null && ki.getItem().getPricePerMonth() != null)
-            .mapToDouble(ki -> {
-                int qty = ki.getQuantity() != null ? ki.getQuantity() : 0;
-                return ki.getItem().getPricePerMonth() * qty;
-            })
-            .sum();
-}
 
+    @Transient
+    public Double calculateTotalGuarantee() {
+        double rate = this.appliedGuaranteeRate != null ? this.appliedGuaranteeRate : 0.0;
+        return calculateSubtotal() * rate;
+    }
+
+    @Transient
+    public Double calculatePlatformFee() {
+        double rate = this.appliedCommissionRate != null ? this.appliedCommissionRate : 0.0;
+        return calculateSubtotal() * rate;
+    }
+
+    @Transient
+    public Double calculateTotal() {
+        double courier = this.courierPrice != null ? this.courierPrice : 0.0;
+        return calculateSubtotal() + calculateTotalGuarantee() + courier;
+    }
+
+    @Transient
+    public Double calculateOwnerPayout(ItemMemento snapshot) {
+        if (snapshot == null || snapshot.getPriceAtRental() == null || snapshot.getSelectedUnits() == null) {
+            return 0.0;
+        }
+        double rate = this.appliedCommissionRate != null ? this.appliedCommissionRate : 0.0;
+        double gross = snapshot.getPriceAtRental() * snapshot.getSelectedUnits();
+        return gross * (1.0 - rate);
+    }
+
+    public void processPayments() {
+        // Payments are handled by KitService to keep side effects out of the entity.
+    }
 }

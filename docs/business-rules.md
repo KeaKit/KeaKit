@@ -102,10 +102,13 @@
 
 | ID | Regla de Negocio |
 |----|------------------|
-| RN-SRV-01 | Un servicio es un subtipo de ítem (Item) que representa un servicio ofrecido por un propietario. |
-| RN-SRV-02 | Un servicio comparte las mismas reglas de validación base que un ítem: título obligatorio, descripción obligatoria, categoría obligatoria y propietario obligatorio. |
-| RN-SRV-03 | Un servicio no tiene estado de alquiler (`AVAILABLE`/`RENTED`/`INACTIVE`) como los artículos; el estado se trata como `null` y se normaliza a `"AVAILABLE"` en el catálogo. |
-| RN-SRV-04 | Los servicios no tienen imagen asociada. |
+| RN-SRV-01 | Un servicio (ServiceItem) es un subtipo de ítem (Item) que representa un servicio ofrecido por un propietario. |
+| RN-SRV-02 | Un servicio comparte las mismas reglas de validación base que un ítem: título obligatorio, descripción obligatoria, categoría obligatoria y propietario obligatorio. Además para crear o actualizar un servicio, son obligatorios: Título, Ciudad, Precio Mensual (debe ser positivo) y un rango de fechas (availableFrom / availableUntil).|
+| RN-SRV-03 | Los servicios utilizan el enumerado ServiceStatus con tres estados: `DRAFT (Borrador)`, `ACTIVE (Disponible)` y `UNAVAILABLE (Alquilado)`. |
+| RN-SRV-04 | Un servicio no puede ser modificado ni eliminado si su estado es UNAVAILABLE (está actualmente alquilado). |
+|RN-SRV-05|Si la fecha actual supera a availableUntil, el servicio cambia automáticamente a estado DRAFT (vía proceso programado).|
+|RN-SRV-06|Al solicitar un servicio, el estado cambia a UNAVAILABLE. Al liberarlo, vuelve a ACTIVE (o DRAFT si ya expiró por fecha).|
+|RN-SRV-07|Solo el propietario autenticado del servicio tiene permisos para realizar operaciones de creación, actualización y eliminación.|
 
 ### 1.5 Kits (Proceso de Alquiler)
 
@@ -119,16 +122,16 @@
 | RN-KIT-06 | La fecha de fin del alquiler (`endDate`) es obligatoria. |
 | RN-KIT-07 | La fecha de fin no puede ser anterior a la fecha de inicio. |
 | RN-KIT-08 | La fecha de inicio del alquiler no puede ser anterior a la fecha actual. |
-| RN-KIT-09 | Los estados posibles de un kit son: `PENDING`, `PAID`, `PENDING_VALIDATION`, `ACTIVE`, `COMPLETED`, `CANCELLED`, `UPCOMING` y `FINISHED`. |
+| RN-KIT-09 | Los estados posibles de un kit son: `DRAFT`, `PAID`, `ACTIVE`, `CANCELLED` y `FINISHED`. |
 | RN-KIT-10 | Un kit se crea en estado `PAID` por defecto (se crea en el momento del pago). |
-| RN-KIT-11 | Un kit debe tener al menos un ítem seleccionado. |
+| RN-KIT-11 | Un kit debe tener al menos un ítem seleccionado, excepto si está en estado `DRAFT`. |
 | RN-KIT-12 | Cada selección de ítem debe incluir un ID de ítem válido y existente. |
 | RN-KIT-13 | La cantidad solicitada de cada ítem debe ser al menos 1. |
 | RN-KIT-14 | La cantidad solicitada de un ítem no puede superar las unidades totales disponibles (`totalUnits`) de dicho ítem. |
 | RN-KIT-15 | Un kit debe estar asociado a un arrendatario (tenant). |
 | RN-KIT-16 | Un arrendatario puede tener múltiples kits activos simultáneamente. |
 | RN-KIT-17 | El seguimiento de un kit solo puede ser consultado por el arrendatario al que pertenece. |
-| RN-KIT-18 | Un kit solo puede pasar a estado `ACTIVE` si su estado actual es `PENDING_VALIDATION`. |
+| RN-KIT-18 | Un kit solo puede pasar a estado `ACTIVE` si su estado actual es `PAID`. |
 | RN-KIT-19 | Al confirmar un kit (transición a `ACTIVE`), se envía un email de confirmación al arrendatario. |
 | RN-KIT-20 | Un arrendatario puede ver todos sus kits en la sección "Mis Kits". |
 | RN-KIT-21 | Un arrendatario puede ver la fecha de devolución de cada kit para no olvidarse. |
@@ -141,6 +144,7 @@
 | RN-KIT-28 | El arrendatario puede ver el precio, estado, fotos y descripción de cada artículo antes de seleccionarlo. |
 | RN-KIT-29 | El arrendatario puede cambiar un artículo elegido por otro del mismo tipo antes de pagar. |
 | RN-KIT-30 | La duración del alquiler se calcula en meses entre la fecha de inicio y la fecha de fin, incluyendo fracciones de mes (cada día equivale a 1/30 de mes). |
+| RN-KIT-31 | Un arrendatario no puede seleccionar ítems de su propia propiedad al crear un kit. |
 
 ### 1.6 Precios, Comisiones y Garantías
 
@@ -994,10 +998,13 @@ La siguiente matriz relaciona cada Regla de Negocio con las Historias de Usuario
 | RN-ART-25 | HU-ARRENDADOR-04, HU-ARRENDADOR-19 |
 | RN-ART-26 | HU-ARRENDADOR-04, HU-ARRENDADOR-20 |
 | RN-ART-27 | HU-ARRENDADOR-04, HU-ARRENDADOR-21 |
-| RN-SRV-01 | HU-ARRENDADOR-01 |
-| RN-SRV-02 | HU-ARRENDADOR-01 |
-| RN-SRV-03 | HU-ARRENDADOR-01 |
-| RN-SRV-04 | HU-ARRENDADOR-01 |
+| RN-SRV-01 | HU-ARRENDADOR-01, HU-ARRENDADOR-11 |
+| RN-SRV-02 | HU-ARRENDADOR-11, HU-ARRENDADOR-17 |
+| RN-SRV-03 | HU-ARRENDADOR-20, HU-ARRENDATARIO-06, HU-ARRENDATARIO-26 |
+| RN-SRV-04 | HU-ARRENDADOR-07, HU-ARRENDADOR-08 |
+| RN-SRV-05 | HU-ARRENDADOR-18, HU-ARRENDADOR-19|
+| RN-SRV-06	| HU-ARRENDATARIO-07, HU-ARRENDATARIO-17, HU-ARRENDATARIO-31 |
+| RN-SRV-07	| HU-ARRENDADOR-07, HU-ARRENDADOR-08, HU-ARRENDADOR-11|
 | RN-KIT-01 | HU-ARRENDATARIO-04 |
 | RN-KIT-02 | HU-ARRENDATARIO-04 |
 | RN-KIT-03 | HU-ARRENDATARIO-04, HU-ARRENDATARIO-05 |
@@ -1140,9 +1147,9 @@ La siguiente matriz relaciona cada Regla de Negocio con las Historias de Usuario
 | Versión | Fecha       | Descripción                                   | Autor(es)               |
 |---------|-------------|-----------------------------------------------|-------------------------|
 | 1.0.0   | 06/03/2026  | Primera versión del documento de Reglas de Negocio | Samuel Tamayo Balogh |
-
+| 1.1.0   | 11/03/2026  | Actualización de reglas de Servicios (RN-SRV) y sincronización de la Matriz de Trazabilidad | Paula Rosa González Páez |
 ---
 
-**Redactado por:** Samuel Tamayo Balogh  
-**Fecha de redacción:** 06/03/2026  
+**Redactado por:** Samuel Tamayo Balogh, Paula Rosa González Páez  
+**Fecha de redacción:** 11/03/2026  
 **Versión:** 1.0.0

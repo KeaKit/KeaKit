@@ -1,16 +1,19 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, SafeAreaView, TouchableOpacity, Platform,
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  SafeAreaView,
+  TouchableOpacity,
 } from "react-native";
-import { 
-  ArrowLeft, 
-  Briefcase, 
-  MapPin, 
-  Inbox 
-} from "lucide-react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { KitResponse, KitStatus, RootStackParamList } from "../../types";
+import { API_ROUTES } from "../../config/api";
 import { Colors, Spacing, commonStyles } from "../../styles";
 
 type MyKitsNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
@@ -25,25 +28,28 @@ const MyKitsScreen: React.FC = () => {
 
   const loadKits = useCallback(async () => {
     console.log('[MyKits] loadKits called — user:', user?.id, 'authLoading:', authLoading);
-    if (!user) {
-      console.log('[MyKits] no user, stopping loader');
+    if (!user?.token) {
+      console.log('[MyKits] no user or token, stopping loader');
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
       setError(null);
-      const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
-      const url = `https://backend-service-907955565973.europe-southwest1.run.app/api/kits/my-kits/${user.id}`;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
+      const response = await fetch(API_ROUTES.MY_KITS(user.id), {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "Content-Type": "application/json",
+        },
       });
-    clearTimeout(timeout);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       const data = await response.json();
-      setKits(data);
+      // Filtramos los cancelados para no mostrarlos en la pantalla principal
+      setKits(data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED));
     } catch (err) {
       console.log('[MyKits] error:', err);
       setError("Error al cargar alquileres");
@@ -76,19 +82,16 @@ const MyKitsScreen: React.FC = () => {
 
   const getStatusInfo = (status: KitStatus) => {
     switch (status) {
-      case KitStatus.PENDING:
-        return { label: "Pendiente de pago", color: "#fd7e14" };
+      case KitStatus.DRAFT:
+        return { label: "Modo borrador", color: "#14fdfdff" };
       case KitStatus.PAID:
         return { label: "Pagado", color: "#17a2b8" };
-      case KitStatus.PENDING_VALIDATION:
-        return { label: "Pendiente de validación", color: "#ffc107" };
       case KitStatus.ACTIVE:
         return { label: "Activo", color: "#28a745" };
-      case KitStatus.COMPLETED:
-        return { label: "Completado", color: "#6c757d" };
       case KitStatus.CANCELLED:
         return { label: "Cancelado", color: "#dc3545" };
-
+      case KitStatus.FINISHED:
+        return { label: "Finalizado", color: "#6c757d" };
       default:
         return { label: status, color: "#999" };
     }
@@ -106,10 +109,7 @@ const MyKitsScreen: React.FC = () => {
       >
         <View style={styles.imageContainer}>
           <View style={styles.kitImagePlaceholder}>
-            <Briefcase
-              size={30}
-              color={Colors.primary}
-            />
+            <Ionicons name="briefcase-outline" size={30} color={Colors.primary} />
           </View>
         </View>
 
@@ -124,7 +124,7 @@ const MyKitsScreen: React.FC = () => {
           </View>
 
           <Text style={styles.locationText}>
-            <MapPin size={13} color="#888" />{" "}
+            <Ionicons name="location-outline" size={13} color="#888" />{" "}
             {item.city}, {item.country}
           </Text>
 
@@ -172,15 +172,28 @@ const MyKitsScreen: React.FC = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <ArrowLeft size={24} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mis Alquileres</Text>
-        <View style={styles.headerRight} />
+        <TouchableOpacity
+          style={styles.historyButton}
+          onPress={() => navigation.navigate("MyKitsHistory")}
+        >
+          <Ionicons name="time-outline" size={24} color={Colors.primary} />
+        </TouchableOpacity>
       </View>
 
-      {kits.length === 0 ? (
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={50} color="#dc3545" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadKits}>
+            <Text style={styles.retryButtonText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      ) : kits.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Inbox size={80} color="#ccc" />
+          <Ionicons name="file-tray-full-outline" size={80} color="#ccc" />
           <Text style={styles.emptyText}>No tienes alquileres vigentes</Text>
           <Text style={styles.emptySubtext}>
             Explora el catálogo para alquilar tu primer kit de artículos
@@ -206,11 +219,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: Spacing.lg,
   },
-  loadingText: { marginTop: Spacing.md, fontSize: 16, color: "#666" },
-  backButton: { padding: Spacing.sm },
-  headerTitle: { fontSize: 20, fontWeight: "700", color: Colors.textPrimary },
-  headerRight: { width: 40 },
-  listContent: { padding: Spacing.md },
+  loadingText: { 
+    marginTop: Spacing.md, 
+    fontSize: 16, 
+    color: "#666" 
+  },
+  backButton: { 
+    padding: Spacing.sm 
+  },
+  historyButton: { 
+    padding: Spacing.sm 
+  },
+  headerTitle: { 
+    fontSize: 20, 
+    fontWeight: "700", 
+    color: Colors.textPrimary 
+  },
+  headerRight: { 
+    width: 40 
+  },
+  listContent: { 
+    padding: Spacing.md 
+  },
   kitCard: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -235,7 +265,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  kitInfo: { flex: 1, marginLeft: Spacing.md, justifyContent: "center" },
+  kitInfo: { 
+    flex: 1, 
+    marginLeft: Spacing.md, 
+    justifyContent: "center" 
+  },
   titleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -248,8 +282,16 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 4,
   },
-  priceTag: { fontSize: 14, fontWeight: "bold", color: Colors.primary },
-  locationText: { fontSize: 12, color: "#888", marginVertical: 4 },
+  priceTag: { 
+    fontSize: 14, 
+    fontWeight: "bold", 
+    color: Colors.primary 
+  },
+  locationText: { 
+    fontSize: 12, 
+    color: "#888", 
+    marginVertical: 4 
+  },
   deliveryNoticeText: {
     fontSize: 12,
     color: Colors.primary,
@@ -263,16 +305,29 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 8,
   },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  statusBadge: { 
+    paddingHorizontal: 8, 
+    paddingVertical: 3, 
+    borderRadius: 6 
+  },
   statusText: {
     fontSize: 10,
     fontWeight: "700",
     color: "#fff",
     textTransform: "uppercase",
   },
-  dateContainer: { alignItems: "flex-end" },
-  dateLabel: { fontSize: 10, color: "#999" },
-  dateValue: { fontSize: 12, fontWeight: "600", color: Colors.textPrimary },
+  dateContainer: { 
+    alignItems: "flex-end" 
+  },
+  dateLabel: { 
+    fontSize: 10, 
+    color: "#999" 
+  },
+  dateValue: { 
+    fontSize: 12, 
+    fontWeight: "600", 
+    color: Colors.textPrimary 
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
@@ -291,6 +346,30 @@ const styles = StyleSheet.create({
     color: "#999",
     marginTop: Spacing.sm,
     textAlign: "center",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.xl,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#dc3545",
+    textAlign: "center",
+    marginTop: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

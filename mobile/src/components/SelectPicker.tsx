@@ -8,7 +8,7 @@ import {
   StyleSheet,
   TextInput,
 } from 'react-native';
-import { ChevronDown, Search, XCircle, Check } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 type Option = { label: string; value: string };
 
@@ -55,7 +55,7 @@ export const SelectPicker: React.FC<Props> = ({
         <Text style={[styles.triggerText, !selectedLabel && styles.placeholder]}>
           {selectedLabel ?? placeholder}
         </Text>
-        <ChevronDown size={18} color="#999" />
+        <Ionicons name="chevron-down-outline" size={18} color="#999" />
       </TouchableOpacity>
 
       <Modal visible={visible} transparent animationType="fade">
@@ -67,7 +67,7 @@ export const SelectPicker: React.FC<Props> = ({
           <TouchableOpacity activeOpacity={1} style={styles.sheet}>
             {isSearchable && (
               <View style={styles.searchContainer}>
-                <Search size={18} color="#999" />
+                <Ionicons name="search-outline" size={18} color="#999" />
                 <TextInput
                   ref={searchRef}
                   style={styles.searchInput}
@@ -80,7 +80,7 @@ export const SelectPicker: React.FC<Props> = ({
                 />
                 {query.length > 0 && (
                   <TouchableOpacity onPress={() => setQuery('')}>
-                    <XCircle size={18} color="#999" />
+                    <Ionicons name="close-circle" size={18} color="#999" />
                   </TouchableOpacity>
                 )}
               </View>
@@ -110,7 +110,7 @@ export const SelectPicker: React.FC<Props> = ({
                     {item.label}
                   </Text>
                   {item.value === selectedValue && (
-                    <Check size={18} color="#103a57" />
+                    <Ionicons name="checkmark-outline" size={18} color="#103a57" />
                   )}
                 </TouchableOpacity>
               )}
@@ -142,6 +142,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#333',
     ...(({ outlineWidth: 0, outlineStyle: 'none' } as any)),
+
   },
   emptyText: {
     textAlign: 'center',

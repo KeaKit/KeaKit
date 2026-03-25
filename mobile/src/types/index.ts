@@ -1,3 +1,5 @@
+import Ionicons from "@expo/vector-icons/build/Ionicons";
+
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -17,7 +19,7 @@ export interface UserResponse {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "COURIER";
   phone: string;
   address: string;
   city: string;
@@ -29,7 +31,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "COURIER";
   phone: string;
   address: string;
   city: string;
@@ -58,6 +60,17 @@ export interface RatingResponse {
   createdAt: string;
 }
 
+export interface ArticleRecordDTO {
+  tenantName: string;
+  tenantId: number;
+  startDate: string;
+  endDate: string;
+  status: KitStatus;
+  city: string;
+  country: string;
+  kitId: number;
+}
+
 export interface UserArticle {
   id: number;
   title: string;
@@ -66,11 +79,19 @@ export interface UserArticle {
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
   totalUnits?: number;
+  rentals?: ArticleRecordDTO[];
 }
 
 export interface KitItemSelection {
   itemId: number;
   quantity: number;
+  pricePerMonth: number;
+}
+
+export interface ItemSelectionRequest {
+  itemId: number;
+  quantity: number;
+  pricePerMonth: number;
 }
 
 export interface KitCreateRequest {
@@ -79,34 +100,22 @@ export interface KitCreateRequest {
   city: string;
   startDate: string;
   endDate: string;
+  status?: KitStatus;
   deliveryMethod: "COURIER" | "MEETING_POINT";
   meetingPoint?: string;
-  courierAddress?: string;
   tenantId: number;
-  itemIds?: number[];
-  itemSelections?: KitItemSelection[];
+  itemSelections: ItemSelectionRequest[];
 }
 
-export interface RatingCreateRequest {
-  revieweeId: number;
-  kitId: number;
-  score: number;
-  comment?: string;
+export interface KitPaymentDTO {
+  totalPrice: number;
+  subtotalPrice: number;
+  guarantee: number;
+  platformfee: number;
+  courierPrice: number;
 }
 
-export interface RatingResponse {
-  id: number;
-  reviewerId: number;
-  reviewerName: string;
-  revieweeId: number;
-  revieweeName: string;
-  kitId: number;
-  kitName: string;
-  score: number;
-  comment: string;
-  type: string;
-  createdAt: string;
-}
+export type ArticleCondition = "NEW" | "LIGHTLY_USED" | "USED" | "WORN";
 
 export interface Article {
   id: number;
@@ -122,6 +131,7 @@ export interface Article {
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
   totalUnits?: number;
+  condition: ArticleCondition | null;
 }
 
 export interface ArticlePayload {
@@ -136,6 +146,7 @@ export interface ArticlePayload {
   imageUrl?: string;
   purchaseDate?: string;
   totalUnits?: number;
+  condition?: ArticleCondition;
 }
 
 export interface Item {
@@ -144,15 +155,59 @@ export interface Item {
   description: string;
   pricePerMonth: number;
   category: string;
+  quantity?: number;
 }
 
 export enum KitStatus {
-  PENDING = "PENDING",
+  DRAFT = "DRAFT",
   PAID = "PAID",
-  PENDING_VALIDATION = "PENDING VALIDATION",
   ACTIVE = "ACTIVE",
-  COMPLETED = "COMPLETED",
   CANCELLED = "CANCELLED",
+  FINISHED = "FINISHED",
+}
+
+export interface Kit {
+  id: number;
+  name: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  orderDate?: string;
+  status: KitStatus;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint?: string;
+  courierPrice?: number;
+  tenant: {
+    id: number;
+    email: string;
+    password: string;
+    name: string;
+    role: "ADMIN" | "USER";
+    phone: string;
+    address: string;
+    city: string;
+    country: string;
+  };
+  kitItems: {
+    id: number;
+    item: Item;
+    quantity: number;
+    pricePerMonth: number;
+  }[];
+  items?: Item[];
+  totalPrice?: number;
+}
+
+export interface KitItemResponse {
+  itemId: number;
+  quantity: number;
+  pricePerMonth: number;
+  name: string;
+  category: string;
+  imageUrl: string;
+  ownerId: number;
+  ownerName: string;
 }
 
 export interface KitResponse {
@@ -160,22 +215,25 @@ export interface KitResponse {
   name: string;
   country: string;
   city: string;
-  orderDate?: string;
+  orderDate: string; // LocalDate -> ISO String
   startDate: string;
   endDate: string;
-  estimatedDeliveryDate?: string;
-  deliveryNotification?: string;
-  status?: KitStatus;
-  tenantId: number;
-  items?: Item[];
-  itemIds?: number[];
-  totalPrice?: number;
-  deliveryMethod?: "COURIER" | "MEETING_POINT";
-  meetingPoint?: string;
+  estimatedDeliveryDate: string;
+  deliveryNotification: string;
+  status: KitStatus;
+  deliveryMethod: "COURIER" | "MEETING_POINT";
+  meetingPoint: string;
   courierPrice?: number;
-  itemSelections?: KitItemSelection[];
-  totalSelectedItems?: number;
+  tenantId: number;
+  itemIds: number[];
+  items: KitItemResponse[];
+  totalSelectedItems: number;
+  subtotalPrice: number;
+  guaranteePrice: number;
+  platformFee: number;
+  totalPrice: number;
 }
+
 export interface Category {
   id: number;
   name: string;
@@ -185,10 +243,27 @@ export interface Category {
   maxPrice: number;
 }
 
-// === Incidents ===
+export interface DefaultKitItem {
+  id: number;
+  item: Article;
+}
 
-export type IncidentType = 'GENERAL' | 'DAMAGED_ITEM';
-export type IncidentStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+export interface DefaultKit {
+  id: number;
+  name: string;
+  description: string;
+  basePrice: number;
+  items: DefaultKitItem[];
+}
+
+export interface DefaultKitCreateRequest {
+  name: string;
+  description: string;
+  itemsIds?: number[];
+}
+
+export type IncidentType = "GENERAL" | "DAMAGED_ITEM";
+export type IncidentStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
 
 export interface IncidentResponse {
   id: number;
@@ -245,46 +320,105 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
+export type NavbarScreen =
+  | "Home"
+  | "Profile"
+  | "MyArticles"
+  | "MyKits"
+  | "MyServices"
+  | "MyIncidents"
+  | "AdminIncidents"
+  | "Wallet"
+  | "MyKitsHistory"
+  | "UserRatings"
+  | "AdminUsers"
+  | "Categories";
+
+export type NavbarHeaderScreen =
+  | "Home"
+  | "Profile"
+  | "MyArticles"
+  | "MyKits"
+  | "MyServices"
+  | "MyIncidents"
+  | "AdminIncidents"
+  | "Wallet"
+  | "MyKitsHistory"
+  | "UserRatings"
+  | "AdminUsers"
+  | "Categories"
+  | "Commission"
+  | "DefaultKits"
+  | "Login"
+  | "Register"
+  | "TrackingNotifications"
+  | "ActivityNotifications";
+
+export interface NavbarHeaderItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen: NavbarHeaderScreen;
+  requiresAuth?: boolean;
+  requiresAdmin?: boolean;
+}
+
+export interface HeaderMenuItem {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen?: keyof RootStackParamList;
+  onPress?: () => void;
+  danger?: boolean;
+  badge?: string;
+}
+
+export interface HeaderMenuSection {
+  title?: string;
+  items: HeaderMenuItem[];
+}
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
   Profile: undefined;
   Notifications: undefined;
+  ActivityNotifications: undefined;
   CreateKit: undefined;
-  Checkout: {
-  kitData: {
-    name: string;
-    country: string;
-    city: string;
-    startDate: string;
-    endDate: string;
-    deliveryMethod: "COURIER" | "MEETING_POINT";
-    meetingPoint?: string;
-    courierAddress?: string;
-    items: {
-      id: number;
-      quantity: number;
-      pricePerMonth: number;
-      ownerId: number;
-    }[];
-  };
-};
+  PurchaseDefaultKit: undefined;
+  Checkout: { kitId: number };
   EditProfile: { user: AuthUser };
   CreateRating: { kitId: number; revieweeId: number; revieweeName: string };
   UserRatings: { userId: number; userName: string };
   MyIncidents: undefined;
+  AdminIncidents: undefined;
   CreateIncident: undefined;
   IncidentDetail: { incidentId: number; isReceived: boolean };
   MyArticles: undefined;
   MyKits: undefined;
+  MyKitsHistory: undefined;
   KitDetail: { kitId: number };
+  DefaultKits: undefined;
+  EditDefaultKit: { kitId: number };
   UploadArticle: undefined;
   AdminUsers: undefined;
   AdminUserForm: { userId?: number };
   EditArticle: { article: Article };
   Categories: undefined;
   CategoryForm: { category?: Category; mode: "view" | "edit" | "create" };
+  MyServices: undefined;
+  PromoteService: undefined;
+  EditService: { service: Service };
+  ServiceDetail: { serviceId: number };
+  DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
+  Commission: undefined;
+  Wallet: undefined;
+  WithdrawMoney: undefined;
+  Tracking: { kitId: number };
+  TrackingNotifications: undefined;
+  AssignedKits: undefined;
+  Couriers: undefined;
+  CourierDetail: { courier: UserResponse; isBusy?: boolean };
+  ArticleRentals: { articleId: number; articleTitle: string };
 };
 
 export interface ProfileData {
@@ -295,56 +429,131 @@ export interface ProfileData {
   country: string;
 }
 
-export const EUROPEAN_COUNTRIES = [
-  { value: "Albania", label: "Albania" },
-  { value: "Andorra", label: "Andorra" },
-  { value: "Armenia", label: "Armenia" },
-  { value: "Austria", label: "Austria" },
-  { value: "Azerbaijan", label: "Azerbaiyán" },
-  { value: "Belarus", label: "Bielorrusia" },
-  { value: "Belgium", label: "Bélgica" },
-  { value: "Bosnia and Herzegovina", label: "Bosnia y Herzegovina" },
-  { value: "Bulgaria", label: "Bulgaria" },
-  { value: "Croatia", label: "Croacia" },
-  { value: "Cyprus", label: "Chipre" },
-  { value: "Czech Republic", label: "República Checa" },
-  { value: "Denmark", label: "Dinamarca" },
-  { value: "Estonia", label: "Estonia" },
-  { value: "Finland", label: "Finlandia" },
-  { value: "France", label: "Francia" },
-  { value: "Georgia", label: "Georgia" },
-  { value: "Germany", label: "Alemania" },
-  { value: "Greece", label: "Grecia" },
-  { value: "Hungary", label: "Hungría" },
-  { value: "Iceland", label: "Islandia" },
-  { value: "Ireland", label: "Irlanda" },
-  { value: "Italy", label: "Italia" },
-  { value: "Kazakhstan", label: "Kazajistán" },
-  { value: "Kosovo", label: "Kosovo" },
-  { value: "Latvia", label: "Letonia" },
-  { value: "Liechtenstein", label: "Liechtenstein" },
-  { value: "Lithuania", label: "Lituania" },
-  { value: "Luxembourg", label: "Luxemburgo" },
-  { value: "Malta", label: "Malta" },
-  { value: "Moldova", label: "Moldavia" },
-  { value: "Monaco", label: "Mónaco" },
-  { value: "Montenegro", label: "Montenegro" },
-  { value: "Netherlands", label: "Países Bajos" },
-  { value: "North Macedonia", label: "Macedonia del Norte" },
-  { value: "Norway", label: "Noruega" },
-  { value: "Poland", label: "Polonia" },
-  { value: "Portugal", label: "Portugal" },
-  { value: "Romania", label: "Rumanía" },
-  { value: "Russia", label: "Rusia" },
-  { value: "San Marino", label: "San Marino" },
-  { value: "Serbia", label: "Serbia" },
-  { value: "Slovakia", label: "Eslovaquia" },
-  { value: "Slovenia", label: "Eslovenia" },
-  { value: "Spain", label: "España" },
-  { value: "Sweden", label: "Suecia" },
-  { value: "Switzerland", label: "Suiza" },
-  { value: "Turkey", label: "Turquía" },
-  { value: "Ukraine", label: "Ucrania" },
-  { value: "United Kingdom", label: "Reino Unido" },
-  { value: "Vatican City", label: "Ciudad del Vaticano" }
-];
+export type ServiceStatus = "DRAFT" | "ACTIVE" | "UNAVAILABLE";
+
+export interface Service {
+  id: number;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: Category;
+  status: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface ServicePayload {
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string;
+  availableUntil: string;
+  category: { id: number };
+  status?: ServiceStatus;
+  totalUnits?: number;
+}
+
+export interface UserService {
+  id: number;
+  title: string;
+  pricePerMonth: number;
+  status: ServiceStatus;
+  rentedUntil: string | null;
+  city: string;
+  categoryName: string;
+}
+
+export interface Wallet {
+  id: number;
+  balance: number;
+  userId: number;
+  createdAt: string; // ISO String para emular LocalDateTime
+}
+
+export interface WithdrawRequest {
+  bankAccount: string;
+  amount: number;
+}
+
+export interface Transaction {
+  id: number;
+  amount: number;
+  type: TransactionType;
+  walletId: number;
+  createdAt: string;
+}
+
+export enum TransactionType {
+  TOP_UP = "TOP_UP",
+  PAYOUT = "PAYOUT",
+  FEE = "FEE",
+  GUARANTEE_DEPOSIT = "GUARANTEE_DEPOSIT",
+  GUARANTEE_REFUND = "GUARANTEE_REFUND",
+  REFUND = "REFUND",
+}
+
+export type DeliveryStatus =
+  | "PICKED_UP"
+  | "IN_TRANSIT"
+  | "NEARBY"
+  | "DELIVERED";
+
+export interface KitDeliveryResponse {
+  kitId: number;
+  status: DeliveryStatus | null;
+  estimatedArrival: string | null;
+  lastLocation: string | null;
+  lastUpdate: string | null;
+  courierId: number | null;
+  courierName: string | null;
+}
+
+export interface UpdateDeliveryRequest {
+  status?: DeliveryStatus;
+  estimatedArrival?: string;
+  lastLocation?: string;
+}
+
+export interface TrackingNotification {
+  id: string;
+  kitId: number;
+  kitName: string;
+  status: DeliveryStatus;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export type ActivityNotificationType = "ITEM_RENTED" | "RETURN_REMINDER";
+
+export interface ActivityNotification {
+  id: number;
+  message: string;
+  createdAt: string;
+  read: boolean;
+  type: ActivityNotificationType;
+  relatedKitId: number | null;
+}
+
+export interface ArticleNearby {
+  id: number;
+  itemType: string;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: string | null;
+  availableUntil: string | null;
+  category: string | null;
+  totalUnits: number | null;
+  ownerId: number | null;
+  ownerName: string | null;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | null;
+  imageUrl: string | null;
+  cityLat: number;
+  cityLng: number;
+  distanceKm: number;
+}

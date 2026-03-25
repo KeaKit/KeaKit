@@ -73,7 +73,6 @@ export async function createCategory(
   payload: Partial<Category>, 
   token: string
 ): Promise<Category> {
-  // Usamos la ruta base para el POST
   const res = await fetchWithTimeout(API_ROUTES.CATEGORIES, {
     method: 'POST',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },

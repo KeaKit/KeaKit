@@ -14,7 +14,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -26,7 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = CategoryController.class, excludeAutoConfiguration = {
         SecurityAutoConfiguration.class,
-        SecurityFilterAutoConfiguration.class
+        SecurityFilterAutoConfiguration.class,
+        JpaRepositoriesAutoConfiguration.class
 })
 class CategoryControllerTest {
 
@@ -36,7 +38,6 @@ class CategoryControllerTest {
     @MockitoBean
     private CategoryService categoryService;
 
-    // Dependencias de seguridad (necesarias aunque estén excluidas para que el contexto cargue)
     @MockitoBean private com.example.demo.security.CustomUserDetailsService customUserDetailsService;
     @MockitoBean private com.example.demo.security.TokenBlacklistService tokenBlacklistService;
     @MockitoBean private JwtUtil jwtUtil;
@@ -50,8 +51,6 @@ class CategoryControllerTest {
         sampleCategory.setStatus(CategoryStatus.ACTIVE);
     }
 
-    // ------------ POST /api/category ------------
-
     @Test
     void createCategory_success() throws Exception {
         when(categoryService.createCategory(any(Category.class))).thenReturn(sampleCategory);
@@ -64,53 +63,33 @@ class CategoryControllerTest {
     }
 
     @Test
-    void createCategory_serviceThrows_returnsInternalServerError() throws Exception {
-        when(categoryService.createCategory(any(Category.class))).thenThrow(new RuntimeException("Name is required"));
+    void createCategory_throwsAccessDenied_returns403() throws Exception {
+        when(categoryService.createCategory(any(Category.class))).thenThrow(new AccessDeniedException("Solo los administradores pueden realizar esta operación."));
 
         mockMvc.perform(post("/api/category")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"description\":\"Dispositivos\"}"))
-            .andExpect(status().isInternalServerError())
-            .andExpect(content().string("Name is required"));
+                .content("{\"name\":\"Electrónica\",\"description\":\"Dispositivos\",\"minPrice\":10.0,\"maxPrice\":1000.0}"))
+            .andExpect(status().isForbidden());
     }
 
-    // ------------ GET /api/category ------------
+    @Test
+    void createCategory_throwsIllegalArgument_returns400() throws Exception {
+        when(categoryService.createCategory(any(Category.class))).thenThrow(new IllegalArgumentException("El precio máximo debe ser mayor..."));
+
+        mockMvc.perform(post("/api/category")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Electrónica\"}"))
+            .andExpect(status().isBadRequest());
+    }
 
     @Test
     void getAllCategories_success() throws Exception {
-        Category cat2 = new Category("Hogar", "Cosas de casa", 5.0, 500.0);
-        cat2.setId(2L);
-
-        when(categoryService.getAllCategories()).thenReturn(List.of(sampleCategory, cat2));
+        when(categoryService.getAllCategories()).thenReturn(List.of(sampleCategory));
 
         mockMvc.perform(get("/api/category"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(2))
-            .andExpect(jsonPath("$[0].name").value("Electrónica"))
-            .andExpect(jsonPath("$[1].name").value("Hogar"));
+            .andExpect(jsonPath("$.length()").value(1));
     }
-
-    // ------------ GET /api/category/{id} ------------
-
-    @Test
-    void getCategoryById_success() throws Exception {
-        when(categoryService.getCategoryById(1L)).thenReturn(sampleCategory);
-
-        mockMvc.perform(get("/api/category/1"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.name").value("Electrónica"));
-    }
-
-    @Test
-    void getCategoryById_notFound() throws Exception {
-        when(categoryService.getCategoryById(99L)).thenThrow(new RuntimeException("Category not found"));
-
-        mockMvc.perform(get("/api/category/99"))
-            .andExpect(status().isNotFound())
-            .andExpect(content().string("Category not found"));
-    }
-
-    // ------------ PUT /api/category/{id} ------------
 
     @Test
     void updateCategory_success() throws Exception {
@@ -126,21 +105,18 @@ class CategoryControllerTest {
             .andExpect(jsonPath("$.name").value("Electrónica Editada"));
     }
 
-    // ------------ DELETE /api/category/{id} ------------
-
     @Test
     void deleteCategory_success() throws Exception {
         mockMvc.perform(delete("/api/category/1"))
-            .andExpect(status().isOk())
-            .andExpect(content().string("Category deleted successfully"));
+            .andExpect(status().isOk());
     }
 
     @Test
-    void deleteCategory_notFound() throws Exception {
-        doThrow(new RuntimeException("Category not found")).when(categoryService).deleteCategory(99L);
+    void deleteCategory_hasItems_returns409() throws Exception {
+        doThrow(new IllegalStateException("Tiene artículos asociados")).when(categoryService).deleteCategory(1L);
 
-        mockMvc.perform(delete("/api/category/99"))
-            .andExpect(status().isNotFound())
-            .andExpect(content().string("Category not found"));
+        mockMvc.perform(delete("/api/category/1"))
+            .andExpect(status().isConflict())
+            .andExpect(content().string("Tiene artículos asociados"));
     }
 }

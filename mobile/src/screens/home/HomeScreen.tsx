@@ -1,339 +1,945 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
-  Modal,
-  Pressable,
-  ActivityIndicator,
+  ScrollView,
+  RefreshControl,
+  Animated,
+  useWindowDimensions,
+  Platform,
 } from 'react-native';
-import { 
-  Package, 
-  UserCircle, 
-  PlusCircle, 
-  Box, 
-  User, 
-  Star, 
-  Users, 
-  LayoutGrid, 
-  AlertCircle, 
-  LogOut, 
-  LogIn, 
-  UserPlus 
-} from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../types';
-import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
-import { getWalletByUserId } from '../../services/walletService';
+import { RootStackParamList, RentedItemResponse, Article, DeliveryStatus, KitResponse } from '../../types';
+import { Colors } from '../../styles';
+import { getLoggedUserWallet, getRentedItems, getMyArticles } from '../../services';
+import { SkeletonPulse, FadeInItem } from '../../components';
+import ProfileMenuModal from './ProfileMenuModal';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
+import { getMyKits, getKitTracking } from "../../services/kitService";
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
+// Status ENUM for item status
+const STATUS_CONFIG: Record<string, { label: string; dot: string }> = {
+  AVAILABLE: { label: 'Disponible', dot: '#10B981' }, 
+  RENTED:    { label: 'Alquilado',  dot: '#F59E0B' }, 
+  DEFAULT:   { label: 'Inactivo',   dot: '#9CA3AF' }, 
+};
+
+const LAST_UPDATES_KEY = "@tracking_last_updates";
+
+// Main Component
 const HomeScreen: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigation = useNavigation<HomeNav>();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [availableBalance, setAvailableBalance] = useState<number | null>(null);
+  const { width } = useWindowDimensions();
+  
+  // Determinar si es móvil, tablet o desktop
+  const isMobile = width < 600;
+  const isTablet = width >= 600 && width < 1024;
+  const isDesktop = width >= 1024;
+
+  const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [rentedItems, setRentedItems] = useState<RentedItemResponse[]>([]);
+  const [loadingRentals, setLoadingRentals] = useState(false);
+  const [myArticles, setMyArticles] = useState<Article[]>([]);
+  const [loadingArticles, setLoadingArticles] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { unreadCount, addNotification } = useTrackingNotifications();
+  const bellAnim = useRef(new Animated.Value(1)).current;
+  const [showBadge, setShowBadge] = useState(false);
 
   useEffect(() => {
-    const fetchBalance = async () => {
-      if (user?.id && user?.token) {
-        setLoadingBalance(true);
-        try {
-          const wallet = await getWalletByUserId(user.id, user.token);
-          setAvailableBalance(wallet.availableBalance);
-        } catch (error) {
-          console.error('Error al cargar el saldo:', error);
-          setAvailableBalance(null);
-        } finally {
-          setLoadingBalance(false);
-        }
-      }
-    };
+    if (unreadCount > 0) {
+      setShowBadge(true);
+      const t = setTimeout(() => setShowBadge(false), 4000); // deaparece tras 4 segundos
+      return () => clearTimeout(t);
+    }
+  }, [unreadCount]);
 
-    fetchBalance();
-  }, [user?.id, user?.token]);
 
-  const handleLogout = async () => {
-    setShowProfileMenu(false);
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+  const headerAnim = useRef(new Animated.Value(0)).current;
+
+  const statusLabel = (status?: DeliveryStatus | null) => {
+    switch (status) {
+      case "PICKED_UP": return "ha sido recogido por el repartidor";
+      case "IN_TRANSIT": return "está en camino";
+      case "NEARBY": return "está cerca del domicilio";
+      case "DELIVERED": return "ha sido entregado";
+      default: return "actualizado";
     }
   };
 
-  const handleCreateKit = () => {
-    navigation.navigate('CreateKit');
+    
+  const checkTrackingUpdates = async () => {
+    if (!user?.id || !user?.token) return;
+    if (user.role !== "USER") return;
+
+    const stored = await AsyncStorage.getItem(LAST_UPDATES_KEY);
+    const lastUpdates: Record<string, string> = stored ? JSON.parse(stored) : {};
+
+    const kits = await getMyKits(user.id, user.token);
+
+    for (const kit of kits) {
+      try {
+        const tracking = await getKitTracking(kit.id, user.token);
+        const lastUpdate = tracking.lastUpdate ?? "";
+        const prevUpdate = lastUpdates[String(kit.id)] ?? "";
+
+        if (lastUpdate && lastUpdate !== prevUpdate && tracking.status) {
+          await addNotification({
+            id: `${kit.id}-${lastUpdate}`,
+            kitId: kit.id,
+            kitName: kit.name,
+            status: tracking.status,
+            message: `Tu kit "${kit.name}" ${statusLabel(tracking.status)}.`,
+            createdAt: new Date().toISOString(),
+            read: false,
+          });
+          lastUpdates[String(kit.id)] = lastUpdate;
+        }
+      } catch {
+      }
+    }
+
+    await AsyncStorage.setItem(LAST_UPDATES_KEY, JSON.stringify(lastUpdates));
   };
 
-  const handleRentItems = () => {
-    navigation.navigate('UploadArticle');
+
+  const fetchData = async () => {
+    if (!user?.id || !user?.token) return;
+    setLoadingBalance(true);
+    try {
+      const wallet = await getLoggedUserWallet(user.token);
+      setBalance(wallet.balance);
+    } catch {
+      setBalance(null);
+    } finally {
+      setLoadingBalance(false);
+    }
+    setLoadingRentals(true);
+    try {
+      setRentedItems(await getRentedItems(user.id, user.token));
+    } catch {
+      setRentedItems([]);
+    } finally {
+      setLoadingRentals(false);
+    }
+    setLoadingArticles(true);
+    try {
+      setMyArticles(await getMyArticles(user.id, user.token));
+    } catch {
+      setMyArticles([]);
+    } finally {
+      setLoadingArticles(false);
+    }
+    await checkTrackingUpdates();
   };
+
+  useEffect(() => {
+    Animated.timing(headerAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+    fetchData()
+  }, [user?.id, user?.token]);
+  
+  useFocusEffect(React.useCallback(() => { fetchData(); }, [user?.id, user?.token]));
+
+  useEffect(() => {
+    if (unreadCount > 0) {
+      Animated.sequence([
+        Animated.timing(bellAnim, { toValue: 1.15, duration: 200, useNativeDriver: true }),
+        Animated.timing(bellAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [unreadCount]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  const activeRentals = rentedItems.filter(i => new Date(i.endDate) > new Date());
+
+  // Función para obtener tamaños de fuente responsivos
+  const getResponsiveFontSize = (mobile: number, tablet: number, desktop: number) => {
+    if (isMobile) return mobile;
+    if (isTablet) return tablet;
+    return desktop;
+  };
+
+  // Función para determinar cuántas tarjetas mostrar en el grid
+  const getGridColumns = () => {
+    if (isMobile) return 1; // En móvil, 1 columna (stack vertical)
+    if (isTablet) return 2; // En tablet, 2 columnas
+    return 3; // En desktop, 3 columnas
+  };
+
+  const gridColumns = getGridColumns();
+  const gridCardWidth = gridColumns === 1
+    ? '100%'
+    : gridColumns === 2
+    ? '48%'
+    : '32%';
 
   return (
-    <SafeAreaView style={commonStyles.container}>
-      <View style={commonStyles.header}>
-        <View style={styles.headerLeft} />
-
-        <View style={commonStyles.logoContainer}>
-          <View style={commonStyles.logoBox}>
-            <Package size={32} color={Colors.brandIcon} />
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={componentStyles.iconButton}
-          onPress={() => setShowProfileMenu(true)}
-        >
-          <UserCircle
-            size={32}
-            color={Colors.primary}
-            strokeWidth={user ? 2.5 : 1.5}
-          />
-        </TouchableOpacity>
-      </View>
-
-      <View style={commonStyles.screenPadding}>
-        <View style={commonStyles.welcomeSection}>
-          <Text style={commonStyles.welcomeTitle}>
-            {user ? `¡Hola de nuevo ${user.name}!` : '¡Bienvenido a KeaKit!'}
-          </Text>
-          <Text style={commonStyles.welcomeSubtitle}>
-            {user
-              ? 'Gestiona tus kits y alquileres'
-              : 'Crea kits y alquila objetos fácilmente'}
-          </Text>
-          
-          {user && (
-            <View style={styles.balanceContainer}>
-              <Text style={styles.balanceLabel}>Saldo disponible:</Text>
-              {loadingBalance ? (
-                <ActivityIndicator size="small" color={Colors.primary} />
-              ) : (
-                <Text style={styles.balanceAmount}>
-                  {availableBalance !== null ? `${availableBalance.toFixed(2)}€` : 'No disponible'}
-                </Text>
-              )}
-            </View>
-          )}
-        </View>
-
-        <View style={commonStyles.gapLg}>
-          <TouchableOpacity
-            style={componentStyles.actionButton}
-            onPress={handleCreateKit}
-            activeOpacity={0.8}
-          >
-            <View style={componentStyles.actionIconContainer}>
-              <PlusCircle size={48} color={Colors.textWhite} />
-            </View>
-            <Text style={componentStyles.actionButtonText}>Crear Kits</Text>
-            <Text style={componentStyles.actionButtonSubtext}>
-              Agrupa productos relacionados
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[componentStyles.actionButton, componentStyles.actionButtonSecondary]}
-            onPress={handleRentItems}
-            activeOpacity={0.8}
-          >
-            <View style={componentStyles.actionIconContainer}>
-              <Box size={48} color={Colors.textWhite} />
-            </View>
-            <Text style={componentStyles.actionButtonText}>Alquilar Objetos</Text>
-            <Text style={componentStyles.actionButtonSubtext}>
-              Pon tus productos en alquiler
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <Modal
-        visible={showProfileMenu}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowProfileMenu(false)}
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+      
+      {/* Main scrollable container */}
+      <ScrollView
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingHorizontal: isMobile ? 16 : isTablet ? 24 : 32 }
+        ]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryHome} />
+        }
       >
-        <Pressable
-          style={componentStyles.modalOverlay}
-          onPress={() => setShowProfileMenu(false)}
-        >
-          <View style={componentStyles.profileMenu}>
-            {user ? (
-              <>
-                <View style={componentStyles.modalHeader}>
-                  <UserCircle size={48} color={Colors.primary} />
-                  <Text style={componentStyles.menuUserName}>{user.name}</Text>
-                  <Text style={componentStyles.menuUserEmail}>{user.email}</Text>
+
+        {/* Wallet - Tarjeta ancha */}
+        <FadeInItem delay={50}>
+          <TouchableOpacity 
+            activeOpacity={0.8} 
+            onPress={() => navigation.navigate('Wallet')}
+          >
+            <LinearGradient
+              colors={[Colors.primaryHome, '#1e526e']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.card, 
+                styles.cardPrimary, 
+                styles.touchableCardLayout,
+                { marginBottom: isMobile ? 16 : 20 }
+              ]}
+            >
+              <View style={styles.walletContentWrapper}>
+                <View style={styles.cardHeaderFlex}>
+                  <Text style={[
+                    styles.cardTitleLight,
+                    { fontSize: getResponsiveFontSize(16, 18, 20) }
+                  ]}>
+                    Mi Wallet
+                  </Text>
+                  <View style={[styles.iconRingLight, { borderColor: Colors.backgroundWhite }]}>
+                    <Ionicons name="wallet" size={isMobile ? 16 : 18} color="#FFFFFF" />
+                  </View>
                 </View>
-
-                <View style={componentStyles.modalDivider} />
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('Profile');
-                  }}
-                >
-                  <User size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Ver Perfil</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    if (user) {
-                      navigation.navigate('UserRatings', {
-                        userId: user.id,
-                        userName: user.name,
-                      });
-                    }
-                  }}
-                >
-                  <Star size={24} color={Colors.warning} />
-                  <Text style={componentStyles.menuItemText}>Mis Valoraciones</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('MyArticles');
-                  }}
-                >
-                  <Box size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Mis Artículos</Text>
-                </TouchableOpacity>
-
-                {user?.role === 'ADMIN' && (
-                  <TouchableOpacity
-                    style={componentStyles.menuItem}
-                    onPress={() => {
-                      setShowProfileMenu(false);
-                      navigation.navigate('AdminUsers');
-                    }}
-                  >
-                    <Users size={24} color={Colors.primary} />
-                    <Text style={componentStyles.menuItemText}>
-                      Gestión de usuarios
-                    </Text>
-                  </TouchableOpacity>
+                {loadingBalance ? (
+                  <SkeletonPulse width={isMobile ? 100 : 120} height={isMobile ? 32 : 38} radius={8} dark />
+                ) : (
+                  <Text style={[
+                    styles.hugeValueLight,
+                    { fontSize: getResponsiveFontSize(28, 32, 36) }
+                  ]}>
+                    {balance !== null ? `${balance.toLocaleString("es-ES", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} €` : '0,00 €'}
+                  </Text>
                 )}
+                <Text style={[
+                  styles.cardSubtitleLight,
+                  { fontSize: getResponsiveFontSize(12, 14, 14) }
+                ]}>
+                  balance disponible
+                </Text>
+              </View>
+              <Ionicons 
+                name="chevron-forward" 
+                size={isMobile ? 20 : 24} 
+                color={Colors.white} 
+                style={styles.walletChevron} 
+              />
+            </LinearGradient>
+          </TouchableOpacity>
+        </FadeInItem>
 
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('MyKits');
-                  }}
-                >
-                  <Package size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Mis Kits</Text>
-                </TouchableOpacity>
+        {/* Item rented now card - Versión mejorada */}
+        {user && (
+          <FadeInItem delay={150}>
+            <TouchableOpacity 
+              style={[
+                styles.card, 
+                styles.cardHorizontal, 
+                { 
+                  backgroundColor: Colors.secondaryLavender,
+                  marginBottom: isMobile ? 16 : 20,
+                  paddingVertical: isMobile ? 20 : 24,
+                }
+              ]} 
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('MyKits')}
+            >
+              <View style={[
+                styles.largeCircleGraphic, 
+                { 
+                  backgroundColor: 'rgba(255,255,255,0.7)',
+                  width: isMobile ? 60 : 76,
+                  height: isMobile ? 60 : 76,
+                  borderRadius: isMobile ? 30 : 38,
+                  marginRight: isMobile ? 12 : 16,
+                }
+              ]}>
+                <Ionicons 
+                  name="layers" 
+                  size={isMobile ? 28 : 32} 
+                  color={Colors.primaryHome} 
+                />
+              </View>
+              <View style={styles.cardHorizontalText}>
+                {loadingRentals ? (
+                  <SkeletonPulse width={isMobile ? 40 : 60} height={isMobile ? 24 : 28} />
+                ) : (
+                  <Text style={[
+                    styles.hugeValueDark,
+                    { fontSize: getResponsiveFontSize(28, 32, 36) }
+                  ]}>
+                    {activeRentals.length}
+                  </Text>
+                )}
+                <Text style={[
+                  styles.cardSubtitleDark,
+                  { fontSize: getResponsiveFontSize(12, 14, 14) }
+                ]}>
+                  artículos en uso
+                </Text>
+              </View>
+              <Ionicons 
+                name="chevron-forward" 
+                size={isMobile ? 20 : 24} 
+                color={Colors.primaryHome} 
+              />
+            </TouchableOpacity>
+          </FadeInItem>
+        )}
 
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('Categories');
-                  }}
+        {/* Create kit and upload Article Cards - Grid Responsive */}
+        <FadeInItem delay={250}>
+          <View style={[
+            styles.gridContainer,
+            { 
+              flexDirection: gridColumns === 1 ? 'column' : 'row',
+              flexWrap: gridColumns > 1 ? 'wrap' : 'nowrap',
+              justifyContent: gridColumns === 1 ? 'center' : 'flex-start', // Cambiado a flex-start por si hay 4 tarjetas
+              alignItems: 'stretch',
+              marginBottom: isMobile ? 16 : 20,
+              gap: isMobile ? 12 : 16, // Usamos gap genérico para simplificar el espaciado
+            }
+          ]}>
+            
+            {/* NUEVO: Catálogo de Kits Predeterminados */}
+            <View style={[
+              styles.gridCardWrapper,
+              { width: gridCardWidth, maxWidth: gridCardWidth }
+            ]}>
+              <View style={[styles.card, styles.gridCard, { backgroundColor: '#E0F2FE' }]}>
+                <View style={[
+                  styles.circleGraphic, 
+                  { 
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                    width: isMobile ? 50 : 60,
+                    height: isMobile ? 50 : 60,
+                    borderRadius: isMobile ? 25 : 30,
+                  }
+                ]}>
+                  <Ionicons 
+                    name="flash" 
+                    size={isMobile ? 24 : 28} 
+                    color={Colors.primaryHome} 
+                  />
+                </View>
+                <View style={styles.gridCardContent}>
+                  <Text style={[
+                    styles.gridCardValueDark,
+                    { fontSize: getResponsiveFontSize(18, 20, 22) }
+                  ]}>
+                    Kits Express
+                  </Text>
+                  <Text style={[
+                    styles.gridCardLabelDark,
+                    { fontSize: getResponsiveFontSize(11, 12, 12) }
+                  ]}>
+                    Listos para usar
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={[
+                    styles.pillButtonPrimary,
+                    { paddingVertical: isMobile ? 8 : 10 }
+                  ]} 
+                  onPress={() => navigation.navigate('PurchaseDefaultKit')}
                 >
-                  <LayoutGrid size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Categorías</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('MyIncidents');
-                  }}
-                >
-                  <AlertCircle size={24} color={Colors.info} />
-                  <Text style={componentStyles.menuItemText}>Mis Incidencias</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={handleLogout}
-                >
-                  <LogOut size={24} color={Colors.error} />
-                  <Text style={[componentStyles.menuItemText, componentStyles.menuItemDanger]}>
-                    Cerrar Sesión
+                  <Text style={[
+                    styles.pillButtonTextLight,
+                    { fontSize: getResponsiveFontSize(12, 14, 14) }
+                  ]}>
+                    Ver catálogo
                   </Text>
                 </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <View style={componentStyles.modalHeader}>
-                  <UserCircle size={48} color={Colors.primary} />
-                  <Text style={componentStyles.modalTitle}>Accede a tu cuenta</Text>
+              </View>
+            </View>
+
+            {/* Create kit card (Personalizado) */}
+            <View style={[
+              styles.gridCardWrapper,
+              { width: gridCardWidth, maxWidth: gridCardWidth }
+            ]}>
+              <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryBlue }]}>
+                <View style={[
+                  styles.circleGraphic, 
+                  { 
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                    width: isMobile ? 50 : 60,
+                    height: isMobile ? 50 : 60,
+                    borderRadius: isMobile ? 25 : 30,
+                  }
+                ]}>
+                  <Ionicons 
+                    name="cube" 
+                    size={isMobile ? 24 : 28} 
+                    color={Colors.primaryHome} 
+                  />
                 </View>
-
-                <View style={componentStyles.modalDivider} />
-
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('Login');
-                  }}
+                <View style={styles.gridCardContent}>
+                  <Text style={[
+                    styles.gridCardValueDark,
+                    { fontSize: getResponsiveFontSize(18, 20, 22) }
+                  ]}>
+                    Kit a medida
+                  </Text>
+                  <Text style={[
+                    styles.gridCardLabelDark,
+                    { fontSize: getResponsiveFontSize(11, 12, 12) }
+                  ]}>
+                    Crea el tuyo propio
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={[
+                    styles.pillButtonPrimary,
+                    { paddingVertical: isMobile ? 8 : 10 }
+                  ]} 
+                  onPress={() => navigation.navigate('CreateKit')}
                 >
-                  <LogIn size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Iniciar Sesión</Text>
+                  <Text style={[
+                    styles.pillButtonTextLight,
+                    { fontSize: getResponsiveFontSize(12, 14, 14) }
+                  ]}>
+                    Crear desde cero
+                  </Text>
                 </TouchableOpacity>
+              </View>
+            </View>
 
-                <TouchableOpacity
-                  style={componentStyles.menuItem}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    navigation.navigate('Register');
-                  }}
+            {/* Upload Article card */}
+            <View style={[
+              styles.gridCardWrapper,
+              { width: gridCardWidth, maxWidth: gridCardWidth }
+            ]}>
+              <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryMint }]}>
+                <View style={[
+                  styles.circleGraphic, 
+                  { 
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                    width: isMobile ? 50 : 60,
+                    height: isMobile ? 50 : 60,
+                    borderRadius: isMobile ? 25 : 30,
+                  }
+                ]}>
+                  <Ionicons 
+                    name="bag" 
+                    size={isMobile ? 24 : 28} 
+                    color={Colors.primaryHome} 
+                  />
+                </View>
+                <View style={styles.gridCardContent}>
+                  <Text style={[
+                    styles.gridCardValueDark,
+                    { fontSize: getResponsiveFontSize(18, 20, 22) }
+                  ]}>
+                    Artículo
+                  </Text>
+                  <Text style={[
+                    styles.gridCardLabelDark,
+                    { fontSize: getResponsiveFontSize(11, 12, 12) }
+                  ]}>
+                    Pon a alquilar tus objetos
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={[
+                    styles.pillButtonPrimary,
+                    { paddingVertical: isMobile ? 8 : 10 }
+                  ]} 
+                  onPress={() => navigation.navigate('UploadArticle')}
                 >
-                  <UserPlus size={24} color={Colors.primary} />
-                  <Text style={componentStyles.menuItemText}>Registrarse</Text>
+                  <Text style={[
+                    styles.pillButtonTextLight,
+                    { fontSize: getResponsiveFontSize(12, 14, 14) }
+                  ]}>
+                    Subir artículo
+                  </Text>
                 </TouchableOpacity>
-              </>
+              </View>
+            </View>
+
+            {/* Upload Service card - Solo para USER */}
+            {user?.role === 'USER' && (
+              <View style={[
+                styles.gridCardWrapper,
+                { width: gridCardWidth, maxWidth: gridCardWidth }
+              ]}>
+                <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryCoral }]}>
+                  <View style={[
+                    styles.circleGraphic, 
+                    { 
+                      backgroundColor: 'rgba(255,255,255,0.7)',
+                      width: isMobile ? 50 : 60,
+                      height: isMobile ? 50 : 60,
+                      borderRadius: isMobile ? 25 : 30,
+                    }
+                  ]}>
+                    <Ionicons 
+                      name="construct-outline" 
+                      size={isMobile ? 24 : 28} 
+                      color={Colors.primaryHome} 
+                    />
+                  </View>
+                  <View style={styles.gridCardContent}>
+                    <Text style={[
+                      styles.gridCardValueDark,
+                      { fontSize: getResponsiveFontSize(18, 20, 22) }
+                    ]}>
+                      Servicio
+                    </Text>
+                    <Text style={[
+                      styles.gridCardLabelDark,
+                      { fontSize: getResponsiveFontSize(11, 12, 12) }
+                    ]}>
+                      Ofrece servicios
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={[
+                      styles.pillButtonPrimary,
+                      { paddingVertical: isMobile ? 8 : 10 }
+                    ]} 
+                    onPress={() => navigation.navigate('PromoteService')}
+                  >
+                    <Text style={[
+                      styles.pillButtonTextLight,
+                      { fontSize: getResponsiveFontSize(12, 14, 14) }
+                    ]}>
+                      Publicar servicio
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             )}
           </View>
-        </Pressable>
-      </Modal>
+        </FadeInItem>
+
+        {/* Article list */}
+        {user && (
+          <FadeInItem delay={350}>
+            <View style={[
+              styles.card, 
+              styles.cardWhite, 
+              Shadows.medium,
+              { marginBottom: isMobile ? 16 : 20 }
+            ]}>
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: 12 
+              }}>
+                <Text style={[
+                  styles.cardTitleDark,
+                  { fontSize: getResponsiveFontSize(16, 18, 18) }
+                ]}>
+                  Mis artículos publicados
+                </Text>
+                {!loadingArticles && myArticles.length > 0 && (
+                  <TouchableOpacity onPress={() => navigation.navigate('MyArticles')}>
+                    <Text style={styles.seeAllText}>Ver todos</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              
+              <View style={styles.listContainer}>
+                {loadingArticles ? (
+                  Array.from({ length: 3 }).map((_, i) => <CompactSkeletonRow key={i} isMobile={isMobile} />)
+                ) : myArticles.length === 0 ? (
+                  <EmptyTrayMessage icon="pricetags-outline" message="No tienes artículos publicados" />
+                ) : (
+                  myArticles.slice(0, 3).map((article, idx) => {
+                    const cfg = STATUS_CONFIG[article.status] ?? STATUS_CONFIG.DEFAULT;
+                    return (
+                      <CompactRow
+                        key={article.id}
+                        isLast={idx === Math.min(myArticles.length, 3) - 1}
+                        title={article.title}
+                        subtitle={cfg.label}
+                        price={`${article.pricePerMonth}€`}
+                        dotColor={cfg.dot}
+                        isMobile={isMobile}
+                      />
+                    );
+                  })
+                )}
+              </View>
+              
+              {!loadingArticles && myArticles.length > 3 && (
+                <TouchableOpacity 
+                  style={[
+                    styles.moreBtnPrimary,
+                    { marginTop: 12 }
+                  ]} 
+                  onPress={() => navigation.navigate('MyArticles')}
+                >
+                  <Text style={[
+                    styles.moreBtnTextLabelLight,
+                    { fontSize: getResponsiveFontSize(13, 14, 14) }
+                  ]}>
+                    Ver todos los artículos →
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </FadeInItem>
+        )}
+      </ScrollView>
+
     </SafeAreaView>
   );
 };
 
-// Estilos locales específicos de esta pantalla (solo lo que no se puede reutilizar)
-const styles = StyleSheet.create({
-  headerLeft: {
-    width: 32, // Espaciador para centrar el logo
+// ─── Sub-components mejorados ──────────────────────────────────
+const CompactRow: React.FC<{
+  title: string;
+  subtitle: string;
+  price: string;
+  dotColor: string;
+  isLast?: boolean;
+  isMobile: boolean;
+}> = ({ title, subtitle, price, dotColor, isLast, isMobile }) => (
+  <View style={[styles.compactRow, isLast && styles.compactRowLast]}>
+    <View style={styles.compactRowLeft}>
+      <Text 
+        style={[
+          styles.compactRowTitle,
+          { fontSize: isMobile ? 14 : 15 }
+        ]} 
+        numberOfLines={1}
+      >
+        {title}
+      </Text>
+      <Text 
+        style={[
+          styles.compactRowSubtitle,
+          { fontSize: isMobile ? 12 : 13 }
+        ]}
+      >
+        {subtitle}
+      </Text>
+    </View>
+    <View style={styles.compactRowRight}>
+      <Text 
+        style={[
+          styles.compactRowPrice,
+          { fontSize: isMobile ? 14 : 15 }
+        ]}
+      >
+        {price}
+      </Text>
+      <View style={[styles.compactRowDot, { backgroundColor: dotColor }]} />
+    </View>
+  </View>
+);
+
+const CompactSkeletonRow: React.FC<{ isMobile: boolean }> = ({ isMobile }) => (
+  <View style={styles.compactRow}>
+    <View style={styles.compactRowLeft}>
+      <SkeletonPulse width="80%" height={isMobile ? 12 : 14} />
+      <SkeletonPulse width="50%" height={isMobile ? 10 : 12} radius={4} />
+    </View>
+    <SkeletonPulse width={isMobile ? 35 : 40} height={isMobile ? 14 : 16} radius={6} />
+  </View>
+);
+
+const EmptyTrayMessage: React.FC<{ icon: any; message: string }> = ({ icon, message }) => (
+  <View style={styles.emptyTrayContent}>
+    <Ionicons name={icon} size={32} color="#D1D5DB" />
+    <Text style={styles.emptyTrayMessage}>{message}</Text>
+  </View>
+);
+
+const Shadows = {
+  medium: {
+    shadowColor: '#2d6e91',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  balanceContainer: {
+};
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#FFFFFF', 
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    paddingVertical: 12,
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    backgroundColor: '#FFFFFF',
+  },
+  headerGreeting: {
+    fontWeight: '800',
+    color: Colors.primaryHome,
+    letterSpacing: -0.5,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  bellButton: {
+    position: "relative",
+    padding: 6,
+  },
+  badge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    backgroundColor: "#ff3b30",
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  avatarBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryHome, // Círculo azul oscuro
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Scroll
+  scroll: {
     paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingBottom: 40,
+    gap: 16,
+  },
+
+  // Base Card
+  card: {
+    borderRadius: 16,
+    padding: 20,
+  },
+  cardWhite: {
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(0,0,0,0.02)',
   },
-  balanceLabel: {
+  cardPrimary: {},
+  touchableCardLayout: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  walletContentWrapper: {
+    flex: 1,
+  },
+  walletChevron: {
+    marginLeft: 12,
+  },
+  cardHeaderFlex: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  cardTitleLight: {
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+  },
+  iconRingLight: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hugeValueLight: {
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -1,
+    marginBottom: 2,
+  },
+  cardSubtitleLight: {
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '500',
+  },
+  hugeValueDark: {
+    fontWeight: '800',
+    color: Colors.primaryHome,
+    letterSpacing: -1,
+    marginBottom: 2,
+  },
+  cardTitleDark: {
+    fontWeight: '800',
+    color: Colors.primaryHome,
+    letterSpacing: -0.3,
+  },
+  cardSubtitleDark: {
+    color: Colors.textPrimaryHome,
+    fontWeight: '500',
+  },
+  cardHorizontal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  largeCircleGraphic: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardHorizontalText: {
+    flex: 1,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+  },
+  gridCardWrapper: {
+    marginBottom: 0,
+  },
+  gridCard: {
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 20,
+    height: '100%',
+  },
+  circleGraphic: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  gridCardContent: {
+    alignItems: 'center',
+    flex: 1,
+    marginBottom: 20,
+  },
+  gridCardValueDark: {
+    fontWeight: '800',
+    color: Colors.primaryHome,
+    marginBottom: 2,
+  },
+  gridCardLabelDark: {
+    color: Colors.textPrimaryHome,
+    textAlign: 'center',
+    paddingHorizontal: 4,
+  },
+  pillButtonPrimary: {
+    width: '100%',
+    borderRadius: 999,
+    backgroundColor: Colors.primaryHome,
+    alignItems: 'center',
+  },
+  pillButtonTextLight: {
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  listContainer: {
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  compactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  compactRowLast: {
+    borderBottomWidth: 0,
+  },
+  compactRowLeft: {
+    flex: 1,
+    gap: 4,
+  },
+  compactRowTitle: {
+    fontWeight: '600',
+    color: Colors.primaryHome,
+  },
+  compactRowSubtitle: {
+    color: Colors.textPrimaryHome,
+  },
+  compactRowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  compactRowPrice: {
+    fontWeight: '800',
+    color: Colors.primaryHome,
+  },
+  compactRowDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  emptyTrayContent: {
+    alignItems: 'center',
+    paddingVertical: 30,
+    gap: 8,
+  },
+  emptyTrayMessage: {
     fontSize: 14,
-    color: Colors.textSecondary,
-    marginRight: 8,
+    color: '#9CA3AF',
   },
-  balanceAmount: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.primary,
+  moreBtnPrimary: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryHome,
+    alignItems: 'center',
+  },
+  moreBtnTextLabelLight: {
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  seeAllText: {
+    color: Colors.primaryHome,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

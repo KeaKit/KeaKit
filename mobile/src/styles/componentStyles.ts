@@ -275,4 +275,20 @@ export const componentStyles = StyleSheet.create({
     color: Colors.textPrimary,
     marginLeft: Spacing.sm,
   },
+
+  menuBadge: {
+    marginLeft: "auto",
+    backgroundColor: "#ff3b30",
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  menuBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
 });

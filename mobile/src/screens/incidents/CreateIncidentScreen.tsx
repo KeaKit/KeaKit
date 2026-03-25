@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
   ActivityIndicator,
   StyleSheet,
   ScrollView,
@@ -14,20 +13,7 @@ import {
   FlatList,
   Animated,
 } from 'react-native';
-import { 
-  ChevronLeft, 
-  Info, 
-  Hammer, 
-  Package, 
-  User, 
-  Calendar, 
-  AlertCircle, 
-  Search, 
-  X, 
-  XCircle, 
-  AlertTriangle, 
-  Send 
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, IncidentType, RentedItemResponse } from '../../types';
@@ -45,17 +31,17 @@ type FieldErrors = {
   general?: string;
 };
 
-const INCIDENT_TYPES: { value: IncidentType; label: string; icon: any; description: string }[] = [
+const INCIDENT_TYPES: { value: IncidentType; label: string; icon: keyof typeof Ionicons.glyphMap; description: string }[] = [
   {
     value: 'GENERAL',
     label: 'General',
-    icon: Info,
+    icon: 'information-circle',
     description: 'Incidencia general sobre el servicio',
   },
   {
     value: 'DAMAGED_ITEM',
     label: 'Objeto dañado',
-    icon: Hammer,
+    icon: 'hammer',
     description: 'El objeto alquilado está dañado',
   },
 ];
@@ -187,20 +173,20 @@ const CreateIncidentScreen: React.FC = () => {
       activeOpacity={0.7}
     >
       <View style={styles.dropdownItemHeader}>
-        <Package size={18} color={Colors.primary} />
+        <Ionicons name="cube" size={18} color={Colors.primary} />
         <Text style={styles.dropdownItemTitle} numberOfLines={1}>
           {item.itemTitle}
         </Text>
       </View>
       <View style={styles.dropdownItemDetails}>
         <View style={styles.dropdownDetailRow}>
-          <User size={12} color={Colors.textSecondary} />
+          <Ionicons name="person" size={12} color={Colors.textSecondary} />
           <Text style={styles.dropdownDetailText}>
             Propietario: {item.ownerName}
           </Text>
         </View>
         <View style={styles.dropdownDetailRow}>
-          <Calendar size={12} color={Colors.textSecondary} />
+          <Ionicons name="calendar" size={12} color={Colors.textSecondary} />
           <Text style={styles.dropdownDetailText}>
             {formatDate(item.startDate)} — {formatDate(item.endDate)}
           </Text>
@@ -213,7 +199,7 @@ const CreateIncidentScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.container}>
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ChevronLeft size={24} color={Colors.primary} />
+          <Ionicons name="chevron-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Nueva Incidencia</Text>
         <View style={{ width: 24 }} />
@@ -244,7 +230,7 @@ const CreateIncidentScreen: React.FC = () => {
             />
             {errors.title && (
               <View style={styles.errorRow}>
-                <AlertCircle size={14} color={Colors.error} />
+                <Ionicons name="alert-circle" size={14} color={Colors.error} />
                 <Text style={styles.errorText}>{errors.title}</Text>
               </View>
             )}
@@ -268,7 +254,8 @@ const CreateIncidentScreen: React.FC = () => {
                   activeOpacity={0.7}
                 >
                   <View style={styles.typeIconRow}>
-                    <t.icon
+                    <Ionicons
+                      name={t.icon}
                       size={24}
                       color={type === t.value ? Colors.textWhite : Colors.primary}
                     />
@@ -294,7 +281,7 @@ const CreateIncidentScreen: React.FC = () => {
             </View>
             {errors.type && (
               <View style={styles.errorRow}>
-                <AlertCircle size={14} color={Colors.error} />
+                <Ionicons name="alert-circle" size={14} color={Colors.error} />
                 <Text style={styles.errorText}>{errors.type}</Text>
               </View>
             )}
@@ -322,7 +309,7 @@ const CreateIncidentScreen: React.FC = () => {
                   <View style={styles.selectedItemCard}>
                     <View style={styles.selectedItemInfo}>
                       <View style={styles.selectedItemHeader}>
-                        <Package size={18} color={Colors.primary} />
+                        <Ionicons name="cube" size={18} color={Colors.primary} />
                         <Text style={styles.selectedItemTitle} numberOfLines={1}>
                           {selectedItem.itemTitle}
                         </Text>
@@ -338,13 +325,13 @@ const CreateIncidentScreen: React.FC = () => {
                       style={styles.clearItemButton}
                       onPress={handleClearItem}
                     >
-                      <XCircle size={24} color={Colors.textLight} />
+                      <Ionicons name="close-circle" size={24} color={Colors.textLight} />
                     </TouchableOpacity>
                   </View>
                 ) : (
                   <View>
                     <View style={styles.searchInputContainer}>
-                      <Search size={18} color={Colors.textLight} style={styles.searchIcon} />
+                      <Ionicons name="search" size={18} color={Colors.textLight} style={styles.searchIcon} />
                       <TextInput
                         style={[
                           commonStyles.input,
@@ -369,7 +356,7 @@ const CreateIncidentScreen: React.FC = () => {
                             setDropdownOpen(true);
                           }}
                         >
-                          <X size={18} color={Colors.textLight} />
+                          <Ionicons name="close" size={18} color={Colors.textLight} />
                         </TouchableOpacity>
                       )}
                     </View>
@@ -383,7 +370,7 @@ const CreateIncidentScreen: React.FC = () => {
                           </View>
                         ) : filteredItems.length === 0 ? (
                           <View style={styles.dropdownEmpty}>
-                            <Package size={24} color={Colors.textLight} />
+                            <Ionicons name="cube" size={24} color={Colors.textLight} />
                             <Text style={styles.dropdownEmptyText}>
                               {searchText.trim()
                                 ? 'No se encontraron objetos'
@@ -407,7 +394,7 @@ const CreateIncidentScreen: React.FC = () => {
 
                 {errors.relatedItem && (
                   <View style={styles.errorRow}>
-                    <AlertCircle size={14} color={Colors.error} />
+                    <Ionicons name="alert-circle" size={14} color={Colors.error} />
                     <Text style={styles.errorText}>{errors.relatedItem}</Text>
                   </View>
                 )}
@@ -446,7 +433,7 @@ const CreateIncidentScreen: React.FC = () => {
             </Text>
             {errors.description && (
               <View style={styles.errorRow}>
-                <AlertCircle size={14} color={Colors.error} />
+                <Ionicons name="alert-circle" size={14} color={Colors.error} />
                 <Text style={styles.errorText}>{errors.description}</Text>
               </View>
             )}
@@ -455,7 +442,7 @@ const CreateIncidentScreen: React.FC = () => {
           {/* Error general */}
           {errors.general && (
             <View style={styles.generalError}>
-              <AlertTriangle size={16} color={Colors.error} />
+              <Ionicons name="warning" size={16} color={Colors.error} />
               <Text style={styles.generalErrorText}>{errors.general}</Text>
             </View>
           )}
@@ -471,7 +458,7 @@ const CreateIncidentScreen: React.FC = () => {
               <ActivityIndicator color={Colors.textWhite} />
             ) : (
               <View style={styles.submitContent}>
-                <Send size={20} color={Colors.textWhite} />
+                <Ionicons name="send" size={20} color={Colors.textWhite} />
                 <Text style={commonStyles.primaryButtonText}>Enviar Incidencia</Text>
               </View>
             )}

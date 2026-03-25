@@ -3,7 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
-import com.example.demo.model.User;
+import com.example.demo.dto.UserUpdateData;
 import com.example.demo.service.UserService;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.security.TokenBlacklistService;
@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -30,6 +32,11 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    private String getAuthenticatedEmail(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
+    }
+
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         UserResponse response = userService.register(request);
@@ -44,12 +51,25 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
+        String authenticatedEmail = getAuthenticatedEmail();
+
         UserResponse response = userService.getUserById(id);
+        if (!authenticatedEmail.equals(response.getEmail())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody User updateData) {
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateData updateData) {
+        String authenticatedEmail = getAuthenticatedEmail();
+
+        UserResponse userToUpdate = userService.getUserById(id);
+        if (!authenticatedEmail.equals(userToUpdate.getEmail())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         UserResponse response = userService.updateUser(id, updateData);
         return ResponseEntity.ok(response);
     }
@@ -58,12 +78,12 @@ public class UserController {
     public ResponseEntity<Map<String, String>> logout(@RequestHeader("Authorization") String authorizationHeader) {
         Map<String, String> response = new HashMap<>();
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        String token = jwtUtil.extractTokenFromAuthHeader(authorizationHeader);
+
+        if (token == null) {
             response.put("message", "Invalid token format");
             return ResponseEntity.badRequest().body(response);
         }
-
-        String token = authorizationHeader.substring(7);
 
         try {
             // Verificar que el token sea válido antes de invalidarlo

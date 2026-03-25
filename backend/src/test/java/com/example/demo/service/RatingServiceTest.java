@@ -60,12 +60,22 @@ class RatingServiceTest {
         article.setDescription("Test description");
         article.setOwner(owner);
 
-        List<Item> items = new ArrayList<>();
-        items.add(article);
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(article.getId());
+        snapshot.setNameAtRental(article.getTitle());
+        snapshot.setPriceAtRental(50.0);
+        snapshot.setOwnerAtRental(owner);
+        snapshot.setSelectedUnits(1);
+        snapshot.setCategoryAtRental(article.getCategory());
+
+        List<ItemMemento> snapshots = new ArrayList<>();
+        snapshots.add(snapshot);
 
         kit = new Kit("Test Kit", "Spain", "Madrid", LocalDate.now(), LocalDate.now().plusDays(7), tenant, KitStatus.ACTIVE);
         kit.setId(1L);
-        kit.setItems(items);
+        kit.setSnapshots(snapshots);
+        kit.setStatus(KitStatus.FINISHED);
+
     }
 
     @Test

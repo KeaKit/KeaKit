@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -23,11 +24,15 @@ public class KitItem {
     @Column
     private Integer quantity = 1;
 
+    @Column
+    private Double pricePerMonth;
+
     public KitItem() {}
 
-    public KitItem(Item item, Integer quantity) {
+    public KitItem(Item item, Integer quantity, Double pricePerMonth) {
         this.item = item;
         this.quantity = quantity;
+        this.pricePerMonth = pricePerMonth;
     }
 
     public Long getId() {
@@ -60,5 +65,11 @@ public class KitItem {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+    public Double getPricePerMonth() {
+        return pricePerMonth;
+    }
+    public void setPricePerMonth(Double pricePerMonth) {
+        this.pricePerMonth = pricePerMonth;
     }
 }

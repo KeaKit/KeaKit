@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,35 +10,27 @@ import {
   Image,
   Alert,
   Modal,
-  Platform,
 } from 'react-native';
-import { 
-  ArrowLeft, 
-  Flag, 
-  Briefcase, 
-  Box, 
-  ChevronDown, 
-  ChevronUp, 
-  CheckCircle2, 
-  Trash2 
-} from 'lucide-react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, KitResponse, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { useAuth } from '../../context/AuthContext';
+import { API_ROUTES } from "../../config/api";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { deleteKit } from '../../services/kitService';
 
 type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
 
 const KitDetailScreen: React.FC = () => {
   const route = useRoute<KitDetailRouteProp>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "KitDetail">>();
   const { user } = useAuth();
-  const host = Platform.OS === 'web' ? 'localhost' : '10.0.2.2';
-  const BASE = `http://${host}:8080`;
   
   const kitId = route.params?.kitId;
 
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [kit, setKit] = useState<KitResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
@@ -46,92 +38,89 @@ const KitDetailScreen: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [actionModalVisible, setActionModalVisible] = useState(false);
+  const [actionModalTitle, setActionModalTitle] = useState('');
+  const [actionModalMessage, setActionModalMessage] = useState('');
+  const [onActionConfirm, setOnActionConfirm] = useState<() => void>(() => () => {});
+  const [ratedItems, setRatedItems] = useState<{ [key: number]: boolean }>({});
 
-  useEffect(() => {
-    const fetchKitDetail = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${BASE}/api/kits/${kitId}`);
-        if (!response.ok) throw new Error('Error al obtener kit');
-        const data = await response.json();
-        setKit(data);
-      } catch (e) {
-        console.error(e);
-        Alert.alert("Error", "No se pudo conectar con el servidor.");
-      } finally {
-        setLoading(false);
+
+  const fetchKitDetail = useCallback(async () => {
+    if (!kitId) return;
+    
+    try {
+      setLoading(true);
+      const response = await fetch(API_ROUTES.GET_KIT(kitId), {
+        headers: user?.token
+          ? {
+              Authorization: `Bearer ${user.token}`,
+              "Content-Type": "application/json",
+            }
+          : undefined,
+      });
+      
+      if (!response.ok) throw new Error('Error al obtener kit');
+      const data = await response.json();
+      setKit(data);
+
+      if (data && data.items?.length > 0 && user?.id) {
+        const itemIds = data.items.map((item: any) => item.itemId);
+        
+        fetch(`${API_ROUTES.HAS_REVIEWED_ITEMS}?reviewerId=${user.id}&kitId=${kitId}&itemIds=${itemIds.join(',')}`, {
+          headers: user?.token ? { Authorization: `Bearer ${user.token}` } : undefined,
+        })
+          .then(res => res.json())
+          .then((res: { [key: number]: boolean }) => {
+            setRatedItems(res);
+          })
+          .catch(err => console.error("Error al obtener items valorados", err));
       }
-    };
-    if (kitId) fetchKitDetail();
-  }, [kitId]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [kitId, user?.token, user?.id]);
 
-  const handleConfirmKit = () => {
-    Alert.alert(
-      "Confirmar Alquiler",
-      "¿Estás seguro de que deseas confirmar la recepción de este kit? Esta acción implica que todos los productos coinciden con la descripción, imágenes y estado prometido.",
-      [
-        { text: "No, mantener", style: "cancel" },
-        {
-          text: "Sí, confirmar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setConfirming(true);
-              
-              const response = await fetch(`${BASE}/api/kits/confirm/${kitId}`, {
-                method: 'PATCH',
-              });
+  useFocusEffect(
+    useCallback(() => {
+      fetchKitDetail();
+    }, [fetchKitDetail])
+  );
 
-              if (response.ok) {
-                Alert.alert("Éxito", "El kit ha sido confirmado correctamente.");
-                navigation.goBack();
-              } else {
-                throw new Error("Error en el servidor");
-              }
-            } catch (error) {
-              Alert.alert("Aviso", "No se pudo procesar la confirmación en el servidor real.");
-            } finally {
-              setConfirming(false);
-            }
+const handleConfirmKit = async () => {
+  try {
+    setConfirming(true);
+
+    const response = await fetch(API_ROUTES.CONFIRM_KIT(kitId), {
+      method: 'PATCH',
+      headers: user?.token
+        ? {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
           }
-        }
-      ]
-    );
-  };
+        : undefined,
+    });
 
-  const handleCancelKit = () => {
-    Alert.alert(
-      "Cancelar Alquiler",
-      "¿Estás seguro de que deseas eliminar este kit? Esta acción es irreversible.",
-      [
-        { text: "No, mantener", style: "cancel" },
-        {
-          text: "Sí, eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setDeleting(true);
-              
-              const response = await fetch(`${BASE}/api/kits/${kitId}`, {
-                method: 'DELETE',
-              });
+    if (response.ok) {
+      navigation.goBack();
+    } else {
+      console.error("Error en el servidor al confirmar el kit");
+    }
+  } catch (error) {
+    console.error("No se pudo procesar la confirmación:", error);
+  } finally {
+    setConfirming(false);
+  }
+};
 
-              if (response.ok) {
-                Alert.alert("Éxito", "El kit ha sido cancelado correctamente.");
-                navigation.goBack();
-              } else {
-                throw new Error("Error en el servidor");
-              }
-            } catch (error) {
-              Alert.alert("Aviso", "No se pudo procesar el borrado en el servidor real.");
-            } finally {
-              setDeleting(false);
-            }
-          }
-        }
-      ]
-    );
-  };
+  const openActionModal = (title: string, message: string, onConfirm: () => void) => {
+  setActionModalTitle(title);
+  setActionModalMessage(message);
+  setOnActionConfirm(() => onConfirm);
+  setActionModalVisible(true);
+};  
+
 
   const handleReportProblem = () => {
     setReportModalVisible(true);
@@ -147,13 +136,13 @@ const KitDetailScreen: React.FC = () => {
 
   const handleSubmitReport = () => {
     if (selectedItems.length === 0) {
-      Alert.alert("Selecciona al menos un producto");
+      console.log("Selecciona al menos un producto");
       return;
     }
 
     console.log("Productos reportados:", selectedItems);
 
-    Alert.alert("Reporte enviado correctamente");
+    console.log("Reporte enviado correctamente");
     setReportModalVisible(false);
     setSelectedItems([]);
   };
@@ -178,32 +167,45 @@ const KitDetailScreen: React.FC = () => {
 
   if (!kit) return null;
 
+  const navigateToUserReviews = (ownerId: number, ownerName: string) => {
+    navigation.navigate('UserRatings', {
+      userId: ownerId,
+      userName: ownerName,
+    });
+  };
+
+  const createReview = (kitId: number, revieweeId: number, revieweeName: string) => {
+    navigation.navigate('CreateRating', {
+      kitId: kitId,
+      revieweeId: revieweeId,
+      revieweeName: revieweeName
+    });
+  };
+
   return (
     <SafeAreaView style={commonStyles.container}>
 
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft size={24} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle del Kit</Text>
-        {kit.status === KitStatus.PENDING_VALIDATION && (
+        {false && (
         <TouchableOpacity 
           onPress={handleReportProblem} 
           style={styles.reportButton}
         >
-          <Flag size={22} color="#FF3B30" />
+          <Ionicons name="flag-outline" size={22} color="#FF3B30" />
         </TouchableOpacity>
         )}
-        {kit.status !== KitStatus.PENDING_VALIDATION && (
-          <View style={{ width: 40 }} />
-        )}
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
         <View style={styles.mainCard}>
           <View style={styles.iconCircle}>
-            <Briefcase size={40} color={Colors.primary} />
+            <Ionicons name="briefcase" size={40} color={Colors.primary} />
           </View>
           <Text style={styles.kitNameText}>{kit.name}</Text>
           <View style={styles.statusBadge}>
@@ -225,15 +227,44 @@ const KitDetailScreen: React.FC = () => {
 
         <Text style={styles.sectionTitle}>Productos Incluidos</Text>
         <View style={styles.itemsContainer}>
-          {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => (
-            <View key={item.id} style={styles.itemCard}>
+          {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => {
+            const alreadyRated = ratedItems[item.itemId];
+
+            return (
+            <View key={item.itemId} style={styles.itemCard}>
+              
               <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.title}</Text>
-                <Text style={styles.itemMeta}>{item.category} • {item.pricePerMonth}€/mes</Text>
+                <Text style={styles.itemName}>{item.name}</Text>
+
+                <Text style={styles.itemMeta}>
+                  {item.ownerName ? (
+                    <Text
+                      style={{ color: "#007AFF" }}
+                      onPress={() => navigateToUserReviews(item.ownerId, item.ownerName)}
+                    >
+                      {item.ownerName}
+                    </Text>
+                  ) : ""} • {item.category} • {item.pricePerMonth}€/mes
+                </Text>
               </View>
-              <Box size={20} color="#DDD" />
+
+              {kit.status === "FINISHED" && (
+                <TouchableOpacity
+                  style={[styles.itemButton, alreadyRated && { opacity: 0.5 }]}
+                  onPress={() => !alreadyRated && createReview(kitId, item.ownerId, item.ownerName)}
+                  disabled={alreadyRated}
+                >
+                  <Ionicons name="star-outline" size={18} color="#666" />
+                  <Text style={styles.itemButtonText}>
+                    {alreadyRated ? "Valorado" : "Valorar"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              <Ionicons name="cube-outline" size={20} color="#DDD" />
             </View>
-          ))}
+            );
+          })}
 
           {kit.items && kit.items.length > 3 && (
             <TouchableOpacity 
@@ -243,30 +274,103 @@ const KitDetailScreen: React.FC = () => {
               <Text style={styles.verMasText}>
                 {expanded ? "Ver menos" : `Ver ${kit.items.length - 3} más...`}
               </Text>
-              {expanded ? <ChevronUp size={16} color="#666" /> : <ChevronDown size={16} color="#666" />}
+              <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color="#666" />
             </TouchableOpacity>
           )}
         </View>
 
         <View style={styles.priceContainer}>
-          <Text style={styles.totalLabel}>TOTAL MENSUAL ESTIMADO</Text>
+          <Text style={styles.totalLabel}>TOTAL</Text>
           <Text style={styles.totalValue}>{kit.totalPrice?.toLocaleString('es-ES')} €</Text>
         </View>
 
-        {kit.status === KitStatus.PENDING_VALIDATION && (
-          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmKit}>
-            <CheckCircle2 size={20} color="#04ac20" />
+        <TouchableOpacity
+          style={styles.trackingButton}
+          onPress={() => navigation.navigate("Tracking", { kitId: kit.id })}
+        >
+          <Ionicons name="navigate-outline" size={18} color={Colors.primary} />
+          <Text style={styles.trackingButtonText}>Ver seguimiento</Text>
+        </TouchableOpacity>
+
+
+        {kit.status === KitStatus.DRAFT && (
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={() => navigation.navigate("Checkout", { kitId: kit.id })}
+          >
+            <Text style={styles.confirmButtonText}>Realizar pedido</Text>
+          </TouchableOpacity>
+        )}
+        {kit.status === KitStatus.DRAFT && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => openActionModal(
+              'Eliminar Kit',
+              '¿Estás seguro de que deseas eliminar este kit? Esta acción no se puede deshacer.',
+              async () => {
+                try {
+                  setDeleting(true);
+                  await deleteKit(kitId, user?.token ?? "");
+                  navigation.navigate("MyKits");
+                } catch (error) {
+                  console.error('Error', 'No se pudo eliminar el kit.', error);
+                } finally {
+                  setDeleting(false);
+                  setActionModalVisible(false);
+                }
+              }
+            )}
+          >
+            <Text style={styles.deleteButtonText}>Eliminar kit</Text>
+          </TouchableOpacity>
+        )}
+
+
+        {kit.status === KitStatus.PAID && user?.role === "USER" &&(
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={() => openActionModal(
+              'Confirmar Recepción',
+              '¿Deseas confirmar la recepción de este kit?',
+              handleConfirmKit
+            )}
+          >
+            <Ionicons name="checkmark-done-outline" size={20} color="#04ac20" />
             <Text style={styles.confirmButtonText}>Confirmar recepción</Text>
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.deleteButton} onPress={handleCancelKit}>
-          <Trash2 size={20} color="#FF3B30" />
-          <Text style={styles.deleteButtonText}>Cancelar este alquiler</Text>
-        </TouchableOpacity>
-
       </ScrollView>
 
+      <Modal
+          visible={actionModalVisible}
+          transparent
+          animationType="fade"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>{actionModalTitle}</Text>
+              <Text style={styles.modalSubtitle}>{actionModalMessage}</Text>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setActionModalVisible(false)}
+                >
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalSubmitButton}
+                  onPress={onActionConfirm}
+                >
+                  <Text style={styles.modalSubmitText}>Aceptar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      
       <Modal
         visible={reportModalVisible}
         transparent
@@ -280,20 +384,20 @@ const KitDetailScreen: React.FC = () => {
 
             <ScrollView style={{ maxHeight: 300 }}>
               {kit.items?.map((item) => {
-                const isSelected = selectedItems.includes(item.id);
+                const isSelected = selectedItems.includes(item.itemId);
 
                 return (
                   <TouchableOpacity
-                    key={item.id}
+                    key={item.itemId}
                     style={[
                       styles.modalItem,
                       isSelected && styles.modalItemSelected
                     ]}
-                    onPress={() => toggleItemSelection(item.id)}
+                    onPress={() => toggleItemSelection(item.itemId)}
                   >
-                    <Text style={styles.modalItemText}>{item.title}</Text>
+                    <Text style={styles.modalItemText}>{item.name}</Text>
                     {isSelected && (
-                      <CheckCircle2 size={20} color={Colors.primary} />
+                      <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
                     )}
                   </TouchableOpacity>
                 );
@@ -369,6 +473,26 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#666', fontWeight: '600', },
   modalSubmitButton: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: Colors.primary, alignItems: 'center' },
   modalSubmitText: { color: '#FFF', fontWeight: 'bold' },
+    trackingButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    backgroundColor: "#FFF",
+    gap: 8,
+  },
+  trackingButtonText: {
+    color: Colors.primary,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+
+  itemButton: { marginLeft: 20, flexDirection: "column", alignItems: "center", padding: 6 },
+  itemButtonText: { fontSize: 12, color: "#666", fontWeight: "600" },
 });
 
 export default KitDetailScreen;

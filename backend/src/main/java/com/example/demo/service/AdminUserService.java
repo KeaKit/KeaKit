@@ -5,11 +5,16 @@ import com.example.demo.dto.UserResponse;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.User;
+import com.example.demo.model.UserRole;
+import com.example.demo.model.Wallet;
 import com.example.demo.repository.UserRepository;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.example.demo.repository.WalletRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,9 +28,22 @@ public class AdminUserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private WalletRepository walletRepository; // 👈 AÑADIR
+
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
                 .stream()
+                .map(UserResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserResponse> getUsersAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserEmail = authentication != null ? authentication.getName() : "";
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> !user.getEmail().equals(currentUserEmail))
                 .map(UserResponse::new)
                 .collect(Collectors.toList());
     }
@@ -36,17 +54,22 @@ public class AdminUserService {
             throw new UserAlreadyExistsException("Email already exists");
         }
 
-        User user = new User();
-
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setName(request.getName());
-        user.setRole(request.getRole());
-        user.setPhone(request.getPhone());
-        user.setAddress(request.getAddress());
-        user.setCity(request.getCity());
+        User user = new User(
+                request.getEmail(),
+                passwordEncoder.encode(request.getPassword()),
+                request.getName(),
+                request.getRole() != null ? request.getRole() : UserRole.USER, // 👈 fallback
+                request.getPhone(),
+                request.getAddress(),
+                request.getCity(),
+                request.getCountry() // 👈 IMPORTANTE
+        );
 
         User savedUser = userRepository.save(user);
+
+        // 👇 Crear wallet como en UserService
+        Wallet wallet = new Wallet(savedUser);
+        walletRepository.save(wallet);
 
         return new UserResponse(savedUser);
     }
@@ -84,17 +107,26 @@ public class AdminUserService {
             user.setCity(request.getCity());
         }
 
+        if (request.getCountry() != null) { // 👈 IMPORTANTE
+            user.setCountry(request.getCountry());
+        }
+
         User updatedUser = userRepository.save(user);
 
         return new UserResponse(updatedUser);
     }
 
+    @Transactional
     public void deleteUser(Long id) {
 
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException("User not found");
         }
 
+        // 1. borrar wallet primero
+        walletRepository.deleteByUserId(id);
+
+        // 2. borrar usuario
         userRepository.deleteById(id);
     }
 }

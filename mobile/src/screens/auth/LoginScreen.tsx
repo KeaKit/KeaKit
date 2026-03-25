@@ -10,15 +10,7 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { 
-  ArrowLeft, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
-  TriangleAlert 
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import Divider from '../../components/Divider';
@@ -77,9 +69,11 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <ArrowLeft size={24} color="#103a57" />
-      </TouchableOpacity>
+      {navigation.canGoBack() && (
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#103a57" />
+        </TouchableOpacity>
+      )}
 
       <Image
         source={require('../../../assets/logo.png')}
@@ -87,7 +81,7 @@ const LoginScreen: React.FC = () => {
       />
 
       <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-        <Mail size={20} color="#999" style={styles.fieldIcon} />
+        <Ionicons name="mail-outline" size={20} color="#999" style={styles.fieldIcon} />
         <TextInput
           style={styles.input}
           placeholder="Correo electrónico"
@@ -100,13 +94,13 @@ const LoginScreen: React.FC = () => {
       </View>
       {errors.email && (
         <View style={styles.errorRow}>
-          <AlertCircle size={14} color="#d9534f" />
+          <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
           <Text style={styles.errorText}>{errors.email}</Text>
         </View>
       )}
 
       <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-        <Lock size={20} color="#999" style={styles.fieldIcon} />
+        <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.fieldIcon} />
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
@@ -116,19 +110,19 @@ const LoginScreen: React.FC = () => {
           onChangeText={(v) => { setPassword(v); clearErrors(); }}
         />
         <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)} activeOpacity={0.7}>
-          {showPassword ? <EyeOff size={20} color="#999" /> : <Eye size={20} color="#999" />}
+          <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
         </TouchableOpacity>
       </View>
       {errors.password && (
         <View style={styles.errorRow}>
-          <AlertCircle size={14} color="#d9534f" />
+          <Ionicons name="alert-circle-outline" size={14} color="#d9534f" />
           <Text style={styles.errorText}>{errors.password}</Text>
         </View>
       )}
 
       {errors.general && (
         <View style={styles.generalError}>
-          <TriangleAlert size={16} color="#d9534f" />
+          <Ionicons name="warning-outline" size={16} color="#d9534f" />
           <Text style={styles.generalErrorText}>{errors.general}</Text>
         </View>
       )}

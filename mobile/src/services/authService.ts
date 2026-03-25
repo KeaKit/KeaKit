@@ -9,6 +9,8 @@ const normalizeErrorMessage = (raw: string): string => {
   const lower = raw.toLowerCase();
   if (lower.includes('email should be valid'))    return 'El formato del correo no es válido.';
   if (lower.includes('password must be at least')) return 'La contraseña es demasiado débil (mínimo 6 caracteres).';
+  if (lower.includes('address') && lower.includes('size')) return 'El tamaño de la dirección debe estar entre 5 y 255 caracteres.'
+  if (lower.includes('name') && lower.includes('size')) return 'El tamaño del nombre debe estar entre 2 y 100 caracteres.'
   return raw;
 };
 

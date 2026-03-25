@@ -1,9 +1,9 @@
 package com.example.demo.dto;
 
-import com.example.demo.model.Kit;
-import com.example.demo.model.KitItem;
-import com.example.demo.model.KitStatus;
 import com.example.demo.model.DeliveryMethod;
+import com.example.demo.model.ItemMemento;
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,21 +13,67 @@ import java.util.stream.Collectors;
 public class KitResponse {
     private static final int DELIVERY_LEAD_DAYS = 7;
 
-    public static class KitItemSelectionResponse {
+    public static class KitItemResponse {
         private Long itemId;
+        private Long ownerId;
         private Integer quantity;
+        private Double pricePerMonth;
+        private String name;
+        private String category;
+        private String imageUrl;
+        private String ownerName;
 
-        public KitItemSelectionResponse(Long itemId, Integer quantity) {
+        public KitItemResponse(
+            Long itemId,
+            Long ownerId,
+            Integer quantity,
+            Double pricePerMonth,
+            String name,
+            String category,
+            String imageUrl,
+            String ownerName
+        ) {
             this.itemId = itemId;
+            this.ownerId = ownerId;
             this.quantity = quantity;
+            this.pricePerMonth = pricePerMonth;
+            this.name = name;
+            this.category = category;
+            this.imageUrl = imageUrl;
+            this.ownerId = ownerId;
+            this.ownerName = ownerName;
         }
 
         public Long getItemId() {
             return itemId;
         }
 
+        public Long getOwnerId() {
+            return ownerId;
+        }
+
         public Integer getQuantity() {
             return quantity;
+        }
+
+        public Double getPricePerMonth() {
+            return pricePerMonth;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public String getOwnerName() {
+            return ownerName;
         }
     }
 
@@ -45,9 +91,17 @@ public class KitResponse {
     private String meetingPoint;
     private Double courierPrice;
     private Long tenantId;
+    private String tenantName;
+    private String tenantEmail;
     private List<Long> itemIds;
-    private List<KitItemSelectionResponse> itemSelections;
+    private List<KitItemResponse> items;
     private Integer totalSelectedItems;
+    private Double subtotalPrice;
+    private Double guaranteePrice;
+    private Double platformFee;
+    private Double totalPrice;
+    private Double appliedCommissionRate;
+    private Double appliedGuaranteeRate;
 
     public KitResponse(Kit kit) {
         this.id = kit.getId();
@@ -64,48 +118,67 @@ public class KitResponse {
         this.meetingPoint = kit.getMeetingPoint();
         this.courierPrice = kit.getCourierPrice();
         this.tenantId = kit.getTenant() != null ? kit.getTenant().getId() : null;
-        List<KitItem> kitItems = kit.getKitItems() != null ? kit.getKitItems() : List.of();
+    this.tenantName = kit.getTenant() != null ? kit.getTenant().getName() : null;
+    this.tenantEmail = kit.getTenant() != null ? kit.getTenant().getEmail() : null;
 
-        this.itemSelections = kitItems.stream()
-            .filter(kitItem -> kitItem.getItem() != null && kitItem.getItem().getId() != null)
-            .map(kitItem -> new KitItemSelectionResponse(kitItem.getItem().getId(), kitItem.getQuantity()))
+        List<ItemMemento> snapshots = kit.getSnapshots() != null ? kit.getSnapshots() : List.of();
+
+        this.items = snapshots.stream()
+            .map(s -> new KitItemResponse(
+                s.getOriginalItemId(),
+                s.getOwnerAtRental() != null ? s.getOwnerAtRental().getId() : null,
+                s.getSelectedUnits(),
+                s.getPriceAtRental(),
+                s.getNameAtRental(),
+                s.getCategoryAtRental() != null ? s.getCategoryAtRental().getName() : null,
+                s.getImageUrlAtRental(),
+                s.getOwnerAtRental() != null ? s.getOwnerAtRental().getName() : null
+            ))
             .collect(Collectors.toList());
 
-        this.totalSelectedItems = this.itemSelections.stream()
+        this.totalSelectedItems = this.items.stream()
             .map(selection -> selection.getQuantity() != null ? selection.getQuantity() : 0)
             .reduce(0, Integer::sum);
 
-        this.itemIds = this.itemSelections.stream()
-            .map(KitItemSelectionResponse::getItemId)
+        this.itemIds = this.items.stream()
+            .map(KitItemResponse::getItemId)
             .distinct()
             .collect(Collectors.toCollection(ArrayList::new));
+
+        this.subtotalPrice = kit.calculateSubtotal();
+        this.guaranteePrice = kit.calculateTotalGuarantee();
+        this.platformFee = kit.calculatePlatformFee();
+        this.totalPrice = kit.calculateTotal();
+        this.appliedCommissionRate = kit.getAppliedCommissionRate();
+        this.appliedGuaranteeRate = kit.getAppliedGuaranteeRate();
     }
 
     public Long getId() {
-        return id; 
-    }
-    public String getName() { 
-        return name; 
+        return id;
     }
 
-    public String getCountry() { 
-        return country; 
+    public String getName() {
+        return name;
     }
 
-    public String getCity() { 
-        return city; 
+    public String getCountry() {
+        return country;
+    }
+
+    public String getCity() {
+        return city;
     }
 
     public LocalDate getOrderDate() {
         return orderDate;
     }
 
-    public LocalDate getStartDate() { 
-        return startDate; 
+    public LocalDate getStartDate() {
+        return startDate;
     }
-    
-    public LocalDate getEndDate() { 
-        return endDate; 
+
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
     public LocalDate getEstimatedDeliveryDate() {
@@ -115,7 +188,7 @@ public class KitResponse {
     public String getDeliveryNotification() {
         return deliveryNotification;
     }
-    
+
     public KitStatus getStatus() {
         return status;
     }
@@ -132,20 +205,52 @@ public class KitResponse {
         return courierPrice;
     }
 
-    public List<Long> getItemIds() { 
-        return itemIds; 
+    public List<Long> getItemIds() {
+        return itemIds;
     }
 
-    public List<KitItemSelectionResponse> getItemSelections() {
-        return itemSelections;
+    public List<KitItemResponse> getItems() {
+        return items;
     }
 
     public Integer getTotalSelectedItems() {
         return totalSelectedItems;
     }
 
-    public Long getTenantId() { 
-        return tenantId; 
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public String getTenantName() {
+        return tenantName;
+    }
+
+    public String getTenantEmail() {
+        return tenantEmail;
+    }
+
+    public Double getSubtotalPrice() {
+        return subtotalPrice;
+    }
+
+    public Double getGuaranteePrice() {
+        return guaranteePrice;
+    }
+
+    public Double getPlatformFee() {
+        return platformFee;
+    }
+
+    public Double getTotalPrice() {
+        return totalPrice;
+    }
+
+    public Double getAppliedCommissionRate() {
+        return appliedCommissionRate;
+    }
+
+    public Double getAppliedGuaranteeRate() {
+        return appliedGuaranteeRate;
     }
 
     private LocalDate calculateEstimatedDeliveryDate(LocalDate orderDate, LocalDate startDate) {
@@ -186,5 +291,4 @@ public class KitResponse {
         }
         return prefix + " llegará el " + estimatedDeliveryDate;
     }
-
 }

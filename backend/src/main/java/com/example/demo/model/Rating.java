@@ -2,7 +2,13 @@ package com.example.demo.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 @Entity
 @Table(name = "ratings", uniqueConstraints = {
@@ -14,19 +20,9 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "reviewer_id", nullable = false)
-    private User reviewer;
-
-    @ManyToOne
-    @JoinColumn(name = "reviewee_id", nullable = false)
-    private User reviewee;
-
-    @ManyToOne
-    @JoinColumn(name = "kit_id", nullable = false)
-    private Kit kit;
-
     @Column(nullable = false)
+    @Min(1)
+    @Max(5)
     private Integer score;
 
     @Column(length = 1000)
@@ -36,8 +32,23 @@ public class Rating {
     @Column(nullable = false)
     private RatingType type;
 
-    @Column(nullable = false)
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+    
+    @ManyToOne
+    @JoinColumn(name = "reviewer_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private User reviewer;
+
+    @ManyToOne
+    @JoinColumn(name = "reviewee_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private User reviewee;
+
+    @ManyToOne
+    @JoinColumn(name = "kit_id", nullable = false)
+    private Kit kit;
 
     public Rating() {}
 

@@ -9,11 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { 
-  ArrowLeft, 
-  Star, 
-  AlertCircle 
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
@@ -37,7 +33,7 @@ const CreateRatingScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (score === 0) {
-      setError('Por favor selecciona una puntuación');
+      setError('Por favor, selecciona una puntuación');
       return;
     }
 
@@ -56,9 +52,7 @@ const CreateRatingScreen: React.FC = () => {
         },
         user.token,
       );
-      Alert.alert('Valoración enviada', 'Tu valoración se ha registrado correctamente', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      navigation.goBack();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al enviar la valoración');
     } finally {
@@ -70,7 +64,7 @@ const CreateRatingScreen: React.FC = () => {
     <SafeAreaView style={commonStyles.container}>
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Valorar</Text>
         <View style={{ width: 24 }} />
@@ -83,10 +77,10 @@ const CreateRatingScreen: React.FC = () => {
         <View style={styles.starsContainer}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity key={star} onPress={() => setScore(star)}>
-              <Star
+              <Ionicons
+                name={star <= score ? 'star' : 'star-outline'}
                 size={40}
                 color={Colors.warning}
-                fill={star <= score ? Colors.warning : 'transparent'}
               />
             </TouchableOpacity>
           ))}
@@ -105,7 +99,7 @@ const CreateRatingScreen: React.FC = () => {
 
         {error ? (
           <View style={commonStyles.errorContainer}>
-            <AlertCircle size={16} color={Colors.error} />
+            <Ionicons name="alert-circle" size={16} color={Colors.error} />
             <Text style={commonStyles.errorText}>{error}</Text>
           </View>
         ) : null}

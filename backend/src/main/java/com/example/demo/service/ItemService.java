@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Item;
 import com.example.demo.repository.ItemRepository;
 import org.springframework.stereotype.Service;
@@ -10,18 +11,26 @@ import java.util.List;
 public class ItemService {
 
     private final ItemRepository itemRepository;
+    private final DefaultKitService defaultKitService;
 
-    public ItemService(ItemRepository itemRepository) {
+    public ItemService(ItemRepository itemRepository, DefaultKitService defaultKitService) {
         this.itemRepository = itemRepository;
+        this.defaultKitService = defaultKitService;
     }
 
     public List<Item> findAll() {
         return itemRepository.findAll();
     }
 
-    public Item findById(Long id) {
+    public List<Item> findItemsForRent(Long ownerId) {
+        List<Item> allItemsForRent = itemRepository.findAll()
+            .stream().filter(x-> x.getOwner().getId() != ownerId).toList();
+        return allItemsForRent;
+    }
+
+    public Item findById(Long id) throws ResourceNotFoundException {
         return itemRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Item not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
     }
 
     public Item save(Item item) {
@@ -54,6 +63,7 @@ public class ItemService {
         if (!itemRepository.existsById(id)) {
             throw new RuntimeException("Item not found");
         }
+        defaultKitService.removeItemFromAllDefaultKits(id);
         itemRepository.deleteById(id);
     }
 }

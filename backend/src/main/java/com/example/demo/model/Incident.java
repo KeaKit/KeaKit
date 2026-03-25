@@ -1,5 +1,8 @@
 package com.example.demo.model;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -27,11 +30,13 @@ public class Incident {
     // El usuario que crea la incidencia
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     // El objeto reportado
     @ManyToOne(optional = true)
     @JoinColumn(name = "related_item_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Item relatedItem;
 
     @ManyToOne(optional = true)

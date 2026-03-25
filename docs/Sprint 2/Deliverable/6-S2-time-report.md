@@ -1,0 +1,2 @@
+# Enlace a la carpeta con todos los informes de tiempo, así como el informe de tiempo global.:
+[6-S2-time-report](https://1drv.ms/f/c/5bc9c682e277b0a5/IgAwj03zAiF3QrU5oguyogFTAVx4bPoM29WIguWXii54rwA?e=hrFHcQ)

@@ -1,11 +1,12 @@
 package com.example.demo.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "users")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     @Id
@@ -13,12 +14,15 @@ public class User {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @Email
     private String email;
 
     @Column(nullable = false)
+    @Size(min = 6)
     private String password;
 
     @Column(nullable = false)
+    @Size(min = 2, max = 100, message = "Name size must be between 2 and 100")
     private String name;
 
     @Column(nullable = false)
@@ -26,9 +30,11 @@ public class User {
     private UserRole role;
 
     @Column(nullable = false)
+    @Pattern(regexp = "^(\\+\\d{1,3})?\\d{8,12}$", message = "Phone number must be valid")
     private String phone;
 
     @Column(nullable = false)
+    @Size(min = 5, max = 255, message = "Address size must be between 5 and 255")
     private String address;
 
     @Column(nullable = false)
@@ -36,6 +42,10 @@ public class User {
 
     @Column(nullable = false)
     private String country;
+
+    @Column(nullable = false)
+    private boolean isPilotUser = false;
+
 
     public User() {}
 

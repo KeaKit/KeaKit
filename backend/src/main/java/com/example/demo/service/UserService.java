@@ -3,14 +3,16 @@ package com.example.demo.service;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
+import com.example.demo.dto.UserUpdateData;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.model.Wallet;
+import com.example.demo.repository.WalletRepository;
 import com.example.demo.exception.InvalidCredentialsException;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.WalletRepository;
 import com.example.demo.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,7 +32,7 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
-   @Autowired
+    @Autowired
     private WalletRepository walletRepository;
 
     public UserResponse register(RegisterRequest request) {
@@ -41,22 +43,29 @@ public class UserService {
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
         User user = new User(
-            request.getEmail(),
-            hashedPassword,
-            request.getName(),
-            UserRole.USER,
-            request.getPhone(),
-            request.getAddress(),
-            request.getCity(),
-            request.getCountry()
-        );
+                request.getEmail(),
+                hashedPassword,
+                request.getName(),
+                UserRole.USER,
+                request.getPhone(),
+                request.getAddress(),
+                request.getCity(),
+                request.getCountry());
 
         User savedUser = userRepository.save(user);
-        Wallet wallet = new Wallet(savedUser);
-        walletRepository.save(wallet);
+        this.createWalletForUser(savedUser);
 
-        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole());
+        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId(), savedUser.getRole());
         return new UserResponse(savedUser, token);
+    }
+
+    private void createWalletForUser(User user) {
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found. Cannot create wallet.");
+        }
+        Wallet wallet = new Wallet(user);
+
+        walletRepository.save(wallet);
     }
 
     public UserResponse login(LoginRequest request) {
@@ -72,13 +81,13 @@ public class UserService {
             throw new InvalidCredentialsException("Invalid password");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getRole());
         return new UserResponse(user, token);
     }
 
-    public UserResponse updateUser(Long id, User updateData) {
+    public UserResponse updateUser(Long id, UserUpdateData updateData) {
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (updateData.getName() != null) {
             user.setName(updateData.getName());
@@ -102,7 +111,13 @@ public class UserService {
 
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return new UserResponse(user);
+    }
+
+    public UserResponse getUserByEmail(String email) throws UserNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         return new UserResponse(user);
     }
 }

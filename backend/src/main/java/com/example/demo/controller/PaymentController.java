@@ -1,41 +1,80 @@
 package com.example.demo.controller;
 
-import com.stripe.Stripe;
+import com.example.demo.dto.WithdrawRequest;
+import com.example.demo.service.AuthService;
+import com.example.demo.service.PaymentService;
+
 import com.stripe.model.PaymentIntent;
-import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.exception.StripeException;
+
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
 
-    private final String stripeSecretKey;
+    @Autowired
+    private PaymentService paymentService;
 
-    public PaymentController(@Value("${STRIPE_SECRET_KEY:}") String stripeSecretKey) {
-        this.stripeSecretKey = stripeSecretKey;
-        if (this.stripeSecretKey == null || this.stripeSecretKey.isEmpty()) {
-            throw new IllegalStateException("La variable de entorno STRIPE_SECRET_KEY no está definida");
+    @Autowired
+    private AuthService authService;
+
+    @Value("${stripe.api.key}")
+    private String endpointSecret;
+
+    @PostMapping("/create")
+    public Map<String, String> createPaymentIntent(@RequestBody Long amount) throws StripeException {
+        // El monto debe ser siempre en la unidad más pequeña de la moneda
+        try {
+            PaymentIntent intent = paymentService.createPaymentIntent(amount);
+            return Map.of("clientSecret", intent.getClientSecret());
+        } catch (StripeException e) {
+            return Map.of("error", "Error al crear el PaymentIntent: " + e.getMessage());
         }
-        Stripe.apiKey = this.stripeSecretKey;
     }
 
-    @PostMapping("/create-payment-intent")
-    public Map<String, Object> createPaymentIntent(@RequestBody Map<String, Object> data) throws Exception {
-        long amount = ((Number) data.get("amount")).longValue(); // monto en centavos
+    @PostMapping("/process/stripe/{kitId}")
+    public ResponseEntity<String> processPayment(@PathVariable Long kitId, @RequestBody String paymentIntentStatus) {
 
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount(amount)
-                .setCurrency("usd")
-                .build();
-
-        PaymentIntent intent = PaymentIntent.create(params);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("clientSecret", intent.getClientSecret());
-        return response;
+        if (paymentIntentStatus.replace("\"", "").equals("succeeded")) {
+            try {
+                paymentService.processPayment(kitId, false); // El pago se hizo a través de Stripe, no con wallet
+                return ResponseEntity.ok("Pago procesado correctamente");
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Error al procesar el pago: " + e.getMessage());
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Se esperaba un estado de pago succeeded, pero se recibió: " + paymentIntentStatus);
+        }
     }
+
+    @PostMapping("/process/wallet/{kitId}")
+    public ResponseEntity<String> processWalletPayment(@PathVariable Long kitId) {
+        try {
+            paymentService.processPayment(kitId, true); // El pago se hizo con wallet
+            return ResponseEntity.ok("Pago con billetera procesado correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al procesar el pago con billetera: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<String> withdraw(@Valid @RequestBody WithdrawRequest request) throws StripeException {
+
+        Long userId = authService.getAuthenticatedUserId();
+
+        paymentService.withdrawToBank(userId, request.getAmount(), request.getBankAccount());
+
+        return ResponseEntity.ok("Retirada realizada correctamente");
+    }
+
 }

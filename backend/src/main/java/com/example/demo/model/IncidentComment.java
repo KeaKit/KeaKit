@@ -2,6 +2,9 @@ package com.example.demo.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -17,10 +20,12 @@ public class IncidentComment {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "author_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User author;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "incident_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Incident incident;
 
     @Column(nullable = false)

@@ -1,24 +1,46 @@
-import BASE_URL from '../config/api';
+import { API_ROUTES } from "../config/api";
+import { Wallet, Transaction, WithdrawRequest } from "../types";
+import { handleResponse, fetchWithTimeout, jsonHeaders } from "./utils";
 
-export interface Wallet {
-  id: number;
-  availableBalance: number;
-  pendingBalance: number;
-  currency: string;
-}
-
-export const getWalletByUserId = async (userId: number, token: string): Promise<Wallet> => {
-  const response = await fetch(`${BASE_URL}/api/wallet/user/${userId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
+export const getWalletByUserId = async (
+  userId: number,
+  token: string,
+): Promise<Wallet> => {
+  const res = await fetchWithTimeout(API_ROUTES.GET_WALLET_BY_USER_ID(userId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
 
-  if (!response.ok) {
-    throw new Error('Error al obtener la wallet del usuario');
-  }
+  return handleResponse<Wallet>(res);
+};
 
-  return response.json();
+export const getLoggedUserWallet = async (token: string): Promise<Wallet> => {
+  const res = await fetchWithTimeout(API_ROUTES.GET_MY_WALLET, {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<Wallet>(res);
+};
+
+export const getLoggedUserTransactions = async (token: string): Promise<Transaction[]> => {
+  const res = await fetchWithTimeout(API_ROUTES.GET_MY_TRANSACTIONS, {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  return handleResponse<Transaction[]>(res);
+};
+
+export const withdrawToBank = async (
+  token: string,
+  payload: WithdrawRequest,
+): Promise<string> => {
+  const res = await fetchWithTimeout(API_ROUTES.WITHDRAW_TO_BANK, {
+    method: "POST",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<string>(res);
 };

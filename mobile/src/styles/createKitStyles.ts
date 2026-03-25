@@ -123,8 +123,8 @@ export const createKitStyles = StyleSheet.create({
   },
 
   productRowSelected: {
-    borderColor: Colors.success,
-    backgroundColor: "#F1FFF5",
+    borderColor: Colors.border,
+    backgroundColor: "#FAFAFA",
   },
 
   productThumb: {
@@ -253,10 +253,6 @@ export const createKitStyles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
-  },
-  modalRowChecked: {
-    borderColor: Colors.success,
-    backgroundColor: "#F1FFF5",
   },
   modalActions: {
     flexDirection: "row",

@@ -8,6 +8,8 @@ import com.example.demo.model.Category;
 import com.example.demo.model.User;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.service.ArticleService;
+import com.example.demo.service.AuthService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = ArticleController.class, excludeAutoConfiguration = {
         SecurityAutoConfiguration.class,
         SecurityFilterAutoConfiguration.class
-    })
+})
 class ArticleControllerTest {
 
     @Autowired
@@ -54,6 +56,9 @@ class ArticleControllerTest {
     private com.example.demo.repository.CategoryRepository categoryRepository;
 
     @MockitoBean
+    private AuthService authService;
+
+    @MockitoBean
     private JwtUtil jwtUtil;
 
     private Article sample;
@@ -65,6 +70,7 @@ class ArticleControllerTest {
         owner.setId(1L);
         owner.setName("Test Owner");
         when(categoryRepository.findById(any())).thenReturn(Optional.of(new Category()));
+
         sample = new Article();
         sample.setId(1L);
         sample.setTitle("t");
@@ -72,11 +78,10 @@ class ArticleControllerTest {
         sample.setCity("c");
         sample.setPricePerMonth(10.0);
         sample.setStatus(ArticleStatus.AVAILABLE);
-        sample.setAvailableFrom(LocalDate.now());
-        sample.setAvailableUntil(LocalDate.now().plusDays(1));
+        sample.setAvailableFrom(LocalDate.now().plusDays(1));   
+        sample.setAvailableUntil(LocalDate.now().plusDays(10));
     }
 
-    // ------------ POST /api/article/upload ------------
 
     @Test
     void uploadArticle_success() throws Exception {
@@ -119,7 +124,37 @@ class ArticleControllerTest {
             .andExpect(content().string("Title is required"));
     }
 
-    // ------------ GET /api/article/all ------------
+    @Test
+    void uploadArticle_descriptionTooLong_returnsBadRequest() throws Exception {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(articleService.save(any(Article.class)))
+            .thenThrow(new RuntimeException("Description cannot exceed 1000 characters"));
+
+        String longDesc = "a".repeat(1001);
+        mockMvc.perform(post("/api/article/upload")
+                .param("ownerId", "1")
+                .param("categoryId", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"t\",\"description\":\"" + longDesc + "\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Description cannot exceed 1000 characters"));
+    }
+
+    @Test
+    void uploadArticle_priceOutOfCategoryRange_returnsBadRequest() throws Exception {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(articleService.save(any(Article.class)))
+            .thenThrow(new RuntimeException("pricePerMonth must be between 5.0 and 500.0 for this category"));
+
+        mockMvc.perform(post("/api/article/upload")
+                .param("ownerId", "1")
+                .param("categoryId", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"t\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":9999.0}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("pricePerMonth must be between 5.0 and 500.0 for this category"));
+    }
+
 
     @Test
     void getAllArticles_success() throws Exception {
@@ -154,7 +189,6 @@ class ArticleControllerTest {
             .andExpect(content().string("DB error"));
     }
 
-    // ------------ PUT /api/article/{id} ------------
 
     @Test
     void updateArticle_success() throws Exception {
@@ -186,7 +220,33 @@ class ArticleControllerTest {
             .andExpect(content().string("bad"));
     }
 
-    // ------------ DELETE /api/article/{id} ------------
+    @Test
+    void updateArticle_descriptionTooLong_returnsBadRequest() throws Exception {
+        when(articleService.update(eq(1L), eq(100L), any(Article.class)))
+            .thenThrow(new RuntimeException("Description cannot exceed 1000 characters"));
+
+        String longDesc = "a".repeat(1001);
+        mockMvc.perform(put("/api/article/1")
+                .param("ownerId", "100")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"description\":\"" + longDesc + "\"}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Description cannot exceed 1000 characters"));
+    }
+
+    @Test
+    void updateArticle_cannotChangeStatus_returnsBadRequest() throws Exception {
+        when(articleService.update(eq(1L), eq(100L), any(Article.class)))
+            .thenThrow(new RuntimeException("Cannot change status via update; use toggleRent endpoint"));
+
+        mockMvc.perform(put("/api/article/1")
+                .param("ownerId", "100")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"status\":\"RENTED\"}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Cannot change status via update; use toggleRent endpoint"));
+    }
+
 
     @Test
     void deleteArticle_success() throws Exception {
@@ -197,7 +257,6 @@ class ArticleControllerTest {
 
     @Test
     void deleteArticle_failureReturnsBadRequest() throws Exception {
-        // Si deleteById es void, usa esta sintaxis:
         doThrow(new RuntimeException("oops"))
             .when(articleService).deleteById(3L, 300L);
 
@@ -207,7 +266,6 @@ class ArticleControllerTest {
             .andExpect(content().string("oops"));
     }
 
-    // ------------ POST /api/article/{id}/toggle-rent ------------
 
     @Test
     void toggleRent_success() throws Exception {
@@ -225,22 +283,29 @@ class ArticleControllerTest {
     @Test
     void toggleRent_failure() throws Exception {
         when(articleService.toggleRent(6L, 600L)).thenThrow(new RuntimeException("nope"));
+
         mockMvc.perform(post("/api/article/6/toggle-rent")
                 .param("ownerId", "600"))
             .andExpect(status().isBadRequest())
             .andExpect(content().string("nope"));
     }
 
-    // ------------ GET /api/article/my-articles/{userId} ------------
+    @Test
+    void toggleRent_inactiveArticle_returnsBadRequest() throws Exception {
+        when(articleService.toggleRent(7L, 700L))
+            .thenThrow(new RuntimeException("Inactive articles cannot be rented"));
+
+        mockMvc.perform(post("/api/article/7/toggle-rent")
+                .param("ownerId", "700"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Inactive articles cannot be rented"));
+    }
+
 
     @Test
     void getMyArticles_success() throws Exception {
-        UserArticle dto1 = new UserArticle(
-                10L, "Taladro", "url1", 15.0, "AVAILABLE", null
-        );
-        UserArticle dto2 = new UserArticle(
-                11L, "Bicicleta", "url2", 30.0, "RENTED", LocalDate.of(2026, 12, 31)
-        );
+        UserArticle dto1 = new UserArticle(10L, "Taladro", "url1", 15.0, "AVAILABLE", null);
+        UserArticle dto2 = new UserArticle(11L, "Bicicleta", "url2", 30.0, "RENTED", LocalDate.of(2026, 12, 31));
 
         when(articleService.findArticlesByUserId(1L)).thenReturn(List.of(dto1, dto2));
 
@@ -264,9 +329,9 @@ class ArticleControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
     }
-    
+
     @Test
-    void getMyArticles_serviceThrows_returnsBadRequest() throws Exception {
+    void getMyArticles_serviceThrows_returnsInternalServerError() throws Exception {
         when(articleService.findArticlesByUserId(3L)).thenThrow(new RuntimeException("Error fetching articles"));
 
         mockMvc.perform(get("/api/article/my-articles/3"))
@@ -274,8 +339,6 @@ class ArticleControllerTest {
             .andExpect(jsonPath("$.message").value("Error fetching articles"))
             .andExpect(jsonPath("$.status").value(500));
     }
-    
-    // ------------ GET /api/article/category/{categoryId}/count ------------
 
     @Test
     void getArticleCountByCategory_success() throws Exception {
@@ -295,7 +358,6 @@ class ArticleControllerTest {
             .andExpect(content().string("0"));
     }
 
-    // ------------ GET /api/article/category/{categoryId}/latest ------------
 
     @Test
     void getLatestArticlesByCategory_success() throws Exception {
@@ -308,5 +370,47 @@ class ArticleControllerTest {
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].title").value("Taladro de prueba"))
             .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
+    }
+
+    @Test
+    void getArticleRecord_success() throws Exception {
+        sample.setOwner(owner);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+        when(articleService.findById(1L)).thenReturn(sample);
+        when(articleService.findArticleRecord(1L)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void getArticleRecord_notFound() throws Exception {
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+        when(articleService.findById(1L)).thenReturn(null);
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getArticleRecord_unauthorized() throws Exception {
+        User other = new User();
+        other.setId(2L);
+        sample.setOwner(other);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+        when(articleService.findById(1L)).thenReturn(sample);
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getArticleRecord_internalError() throws Exception {
+        when(authService.getAuthenticatedUserId()).thenThrow(new RuntimeException());
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isInternalServerError());
     }
 }

@@ -1,0 +1,105 @@
+package com.example.demo.user;
+
+import com.example.demo.dto.AdminUserRequest;
+import com.example.demo.model.User;
+import com.example.demo.model.UserRole;
+import com.example.demo.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false)
+@Transactional
+@ActiveProfiles("test")
+class AdminUserIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    // Test de integración completo: listado, actualización y eliminación de un usuario
+    
+    @Test
+    void list_update_and_delete_user_flow() throws Exception {
+        // Insert user directly into repository (set required fields)
+        User u = new User();
+        u.setEmail("int@user.com");
+        u.setPassword("encoded");
+        u.setName("Integration");
+        u.setRole(UserRole.USER);
+        u.setPhone("+34111111111");
+        u.setAddress("Address");
+        u.setCity("City");
+        u.setCountry("Country");
+
+        User saved = userRepository.save(u);
+
+        // List users and check presence
+        mockMvc.perform(get("/api/admin/users/no-self"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.email=='int@user.com')]").exists());
+
+        // Update user's name via controller
+        AdminUserRequest req = new AdminUserRequest();
+        req.setName("UpdatedName");
+        req.setEmail("int@user.com");
+        req.setRole(UserRole.USER);
+        req.setPhone("+34111111111");
+        req.setAddress("Address Falsa");
+        req.setCity("City");
+        req.setCountry("Country");
+
+        mockMvc.perform(put("/api/admin/users/" + saved.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("UpdatedName"));
+
+        // Verify repository updated
+        var after = userRepository.findById(saved.getId()).orElseThrow();
+        assertThat(after.getName()).isEqualTo("UpdatedName");
+
+        mockMvc.perform(delete("/api/admin/users/" + saved.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Usuario eliminado correctamente"));
+
+        assertThat(userRepository.existsById(saved.getId())).isFalse();
+    }
+
+    // Test específico para verificar que no se puede eliminar un usuario con alquileres activos
+    @Test
+    void deleteUser_withActiveRentals_returnsError() throws Exception {
+        // Crear un usuario
+        User u = new User();
+        u.setEmail("rental@user.com");
+        u.setPassword("encoded");
+        u.setName("Rental User");
+        u.setRole(UserRole.USER);
+        u.setPhone("+34111111111");
+        u.setAddress("Address");
+        u.setCity("City");
+        u.setCountry("Country");
+
+        User saved = userRepository.save(u);
+        
+        mockMvc.perform(delete("/api/admin/users/" + saved.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+}

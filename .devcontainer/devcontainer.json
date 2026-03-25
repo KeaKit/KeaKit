@@ -28,7 +28,8 @@
         "ms-azuretools.vscode-docker",
         "ms-vscode.vscode-typescript-next",
         "orta.vscode-jest",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "gruntfuggly.todo-tree"
       ]
     }
   },

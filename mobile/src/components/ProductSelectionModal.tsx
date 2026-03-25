@@ -1,25 +1,24 @@
 import React from "react";
 import {
+  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
-  Image as RNImage,
+  Image,
 } from "react-native";
-import { 
-  Square, 
-  CheckSquare, 
-  Image as ImageIcon, 
-  MinusCircle, 
-  PlusCircle, 
-  CheckCircle2, 
-  Circle 
-} from "lucide-react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { TextInput as PaperTextInput, Button } from "react-native-paper";
 import { Colors, commonStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../types";
+import { useNavigation } from "@react-navigation/native";
+import { ArticleMapView } from "./ArticleMapView";
+
+type ProductSelectionNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 type CatalogProduct = {
   id: number;
@@ -28,6 +27,7 @@ type CatalogProduct = {
   status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
   category?: string;
   city?: string;
+  ownerId: number;
   ownerName?: string;
   imageUrl?: string | null;
   totalUnits: number;
@@ -35,6 +35,9 @@ type CatalogProduct = {
   availableUntil?: string;
   isAvailable?: boolean;
   availabilityMessage?: string;
+  distanceKm?: number;
+  cityLat?: number;
+  cityLng?: number;
 };
 
 type ProductSelectionModalProps = {
@@ -57,6 +60,11 @@ type ProductSelectionModalProps = {
   onToggleAvailable: (show: boolean) => void;
   startDate?: Date | null;
   endDate?: Date | null;
+  expandedSearch: boolean;
+  onToggleExpandedSearch: () => void;
+  loadingNearby: boolean;
+  targetCityCoords?: { lat: number; lng: number } | null;
+  mapProducts?: { id: number; title: string; city?: string | null; pricePerMonth: number; ownerName?: string | null; distanceKm?: number; cityLat?: number; cityLng?: number }[];
 };
 
 export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
@@ -79,7 +87,15 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   onToggleAvailable,
   startDate,
   endDate,
+  expandedSearch,
+  onToggleExpandedSearch,
+  loadingNearby,
+  targetCityCoords,
+  mapProducts = [],
 }) => {
+  const navigation = useNavigation<ProductSelectionNav>();
+  const [mapView, setMapView] = React.useState(false);
+
   // Calcular disponibilidad de productos basado en fechas
   const productsWithAvailability = React.useMemo(() => {
     if (!startDate || !endDate) {
@@ -134,6 +150,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       return { ...p, isAvailable: true };
     });
 
+    // Filtrar por disponibilidad si el checkbox está activado
     if (showOnlyAvailable) {
       return mapped.filter((p) => p.isAvailable === true);
     }
@@ -141,12 +158,19 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     return mapped;
   }, [filteredProducts, startDate, endDate, showOnlyAvailable]);
 
+  const navigateToUserReviews = (ownerId: number, ownerName: string) => {
+    onDismiss();
+    navigation.navigate('UserRatings', {
+      userId: ownerId,
+      userName: ownerName,
+    });
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={createKitStyles.modalOverlay}>
         <View style={createKitStyles.modalCard}>
           <Text style={createKitStyles.modalTitle}>Selecciona productos</Text>
-
           <View style={{ gap: 8, marginBottom: 12 }}>
             <PaperTextInput
               mode="outlined"
@@ -158,6 +182,36 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
               outlineColor={Colors.border}
               activeOutlineColor={Colors.primary}
             />
+
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TouchableOpacity
+                onPress={() => setMapView(false)}
+                style={{
+                  flex: 1, flexDirection: "row", alignItems: "center",
+                  justifyContent: "center", gap: 6, paddingVertical: 8,
+                  borderRadius: 8, borderWidth: 1,
+                  borderColor: !mapView ? Colors.primary : Colors.border,
+                  backgroundColor: !mapView ? "#E3F2FD" : Colors.backgroundWhite,
+                }}
+              >
+                <Ionicons name="list-outline" size={18} color={!mapView ? Colors.primary : Colors.textSecondary} />
+                <Text style={{ color: !mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Lista</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setMapView(true)}
+                style={{
+                  flex: 1, flexDirection: "row", alignItems: "center",
+                  justifyContent: "center", gap: 6, paddingVertical: 8,
+                  borderRadius: 8, borderWidth: 1,
+                  borderColor: mapView ? Colors.primary : Colors.border,
+                  backgroundColor: mapView ? "#E3F2FD" : Colors.backgroundWhite,
+                }}
+              >
+                <Ionicons name="map-outline" size={18} color={mapView ? Colors.primary : Colors.textSecondary} />
+                <Text style={{ color: mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Mapa</Text>
+              </TouchableOpacity>
+            </View>
+
 
             {userCity && (
               <TouchableOpacity
@@ -176,11 +230,11 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   gap: 8,
                 }}
               >
-                {showOnlyMyCity ? (
-                  <CheckSquare size={20} color={Colors.primary} />
-                ) : (
-                  <Square size={20} color={Colors.primary} />
-                )}
+                <Ionicons
+                  name={showOnlyMyCity ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={Colors.primary}
+                />
                 <Text style={{ color: Colors.primary, flex: 1 }}>
                   Solo productos en {userCity}
                 </Text>
@@ -206,11 +260,11 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   gap: 8,
                 }}
               >
-                {showOnlyAvailable ? (
-                  <CheckSquare size={20} color={Colors.primary} />
-                ) : (
-                  <Square size={20} color={Colors.primary} />
-                )}
+                <Ionicons
+                  name={showOnlyAvailable ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={Colors.primary}
+                />
                 <Text style={{ color: Colors.primary, flex: 1 }}>
                   Solo productos disponibles en las fechas seleccionadas
                 </Text>
@@ -245,7 +299,21 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             </ScrollView>
           </View>
 
-          <ScrollView style={createKitStyles.modalList}>
+          {mapView ? (
+            <ArticleMapView
+              articles={(
+                showOnlyMyCity && userCity
+                  ? mapProducts.filter((a) => a.city?.toLowerCase() === userCity.toLowerCase())
+                  : mapProducts
+              ).map((a) => ({ ...a, city: a.city ?? undefined, ownerName: a.ownerName ?? undefined }))}
+              targetCityCoords={targetCityCoords ?? null}
+              userCity={userCity}
+              selectedIds={Object.keys(tempSelectedQuantities).map(Number)}
+              onAddArticle={onToggleSelection}
+            />
+          ) : null}
+
+          <ScrollView style={[createKitStyles.modalList, mapView ? { height: 0 } : {}]}>
             {productsWithAvailability.length === 0 ? (
               <Text
                 style={[
@@ -268,7 +336,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                     key={p.id}
                     style={[
                       createKitStyles.modalRow,
-                      checked && createKitStyles.modalRowChecked,
                       isDisabled && {
                         opacity: 0.7,
                         backgroundColor: "#fafafa",
@@ -278,7 +345,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                     disabled={isDisabled}
                   >
                     {p.imageUrl ? (
-                      <RNImage
+                      <Image
                         source={{ uri: p.imageUrl }}
                         style={{
                           width: 60,
@@ -300,7 +367,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                           marginRight: 12,
                         }}
                       >
-                        <ImageIcon
+                        <Ionicons
+                          name="image-outline"
                           size={24}
                           color={Colors.textSecondary}
                         />
@@ -312,8 +380,22 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       </Text>
 
                       <Text style={commonStyles.caption}>
-                        {p.ownerName ? `${p.ownerName} · ` : ""}
-                        {p.city ? `${p.city} · ` : ""}
+                          {p.ownerName ? (
+                            <Text
+                              style={{ color: "#007AFF" }}
+                              onPress={() => navigateToUserReviews(p.ownerId, p.ownerName || "")}
+                            >
+                              {`${p.ownerName}`}
+                            {" • "}
+                            </Text> 
+                          ) : ""}
+                        {p.city ? `${p.city}` : ""}
+                        {p.distanceKm !== undefined ? (
+                          <Text style={{ color: "#F57F17" }}>{` · ~${p.distanceKm} km`}</Text>
+                        ) : null}
+                        {p.category ? ` · ${p.category}` : ""}
+                        {" • "}
+                        {p.city ? `${p.city} • ` : ""}
                         {p.category ? `${p.category}` : ""}
                       </Text>
                       <Text style={commonStyles.caption}>
@@ -358,7 +440,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                             accessibilityRole="button"
                             accessibilityLabel={`Reducir unidades de ${p.title}`}
                           >
-                            <MinusCircle
+                            <Ionicons
+                              name="remove-circle-outline"
                               size={22}
                               color={Colors.primary}
                             />
@@ -379,7 +462,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                             accessibilityRole="button"
                             accessibilityLabel={`Aumentar unidades de ${p.title}`}
                           >
-                            <PlusCircle
+                            <Ionicons
+                              name="add-circle-outline"
                               size={22}
                               color={
                                 selectedQuantity >= p.totalUnits
@@ -399,11 +483,11 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       <Text style={commonStyles.bodySecondary}>/ mes</Text>
                     </View>
                     {!isDisabled && (
-                      checked ? (
-                        <CheckCircle2 size={22} color={Colors.success} />
-                      ) : (
-                        <Circle size={22} color={Colors.primary} />
-                      )
+                      <Ionicons
+                        name={checked ? "checkmark-circle" : "ellipse-outline"}
+                        size={22}
+                        color={checked ? Colors.success : Colors.primary}
+                      />
                     )}
                   </Pressable>
                 );
