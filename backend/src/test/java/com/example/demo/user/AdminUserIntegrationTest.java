@@ -1,5 +1,6 @@
 package com.example.demo.user;
 
+import com.example.demo.dto.AdminUserRequest;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.UserRepository;
@@ -49,19 +50,25 @@ class AdminUserIntegrationTest {
         User saved = userRepository.save(u);
 
         // List users and check presence
-        mockMvc.perform(get("/api/admin/users"))
+        mockMvc.perform(get("/api/admin/users/no-self"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.email=='int@user.com')]").exists());
 
         // Update user's name via controller
-        var req = new java.util.HashMap<String, Object>();
-        req.put("name", "UpdatedName");
+        AdminUserRequest req = new AdminUserRequest();
+        req.setName("UpdatedName");
+        req.setEmail("int@user.com");
+        req.setRole(UserRole.USER);
+        req.setPhone("+34111111111");
+        req.setAddress("Address Falsa");
+        req.setCity("City");
+        req.setCountry("Country");
 
         mockMvc.perform(put("/api/admin/users/" + saved.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath(".name").value("UpdatedName"));
+                .andExpect(jsonPath("$.name").value("UpdatedName")); // Ojo, he puesto $.name que es más estándar
 
         // Verify repository updated
         var after = userRepository.findById(saved.getId()).orElseThrow();
