@@ -468,6 +468,7 @@ export interface Transaction {
 }
 
 export enum TransactionType {
+  TOP_UP = 'TOP_UP',
   PAYOUT = 'PAYOUT',
   FEE = 'FEE',
   GUARANTEE_DEPOSIT = 'GUARANTEE_DEPOSIT',

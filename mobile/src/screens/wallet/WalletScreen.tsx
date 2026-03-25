@@ -21,6 +21,22 @@ import { ActivityIndicator } from "react-native-paper";
 
 type WalletNav = NativeStackNavigationProp<RootStackParamList, "Wallet">;
 
+const transactionTypeLabels: Record<string, string> = {
+  TOP_UP: "Ingreso",
+  FEE: "Comision",
+  GUARANTEE_DEPOSIT: "Deposito de fianza",
+  GUARANTEE_REFUND: "Devolucion de fianza",
+  REFUND: "Reembolso",
+};
+
+const getTransactionLabel = (transaction: Transaction) => {
+  if (transaction.type === "PAYOUT") {
+    return transaction.amount < 0 ? "Payout" : "Ingreso";
+  }
+
+  return transactionTypeLabels[transaction.type] ?? transaction.type.replaceAll("_", " ");
+};
+
 const TransactionItem = ({
   item,
   index,
@@ -36,10 +52,10 @@ const TransactionItem = ({
 
   return (
     <FadeInItem delay={calculatedDelay}>
-      <View style={styles.transactionCard}>
+        <View style={styles.transactionCard}>
         <View>
           <Text style={[commonStyles.body, { fontWeight: FontWeights.bold }]}>
-            {item.type.replace("_", " ")}
+            {getTransactionLabel(item)}
           </Text>
           <Text style={commonStyles.caption}>
             {new Date(item.createdAt).toLocaleDateString()}

@@ -64,6 +64,31 @@ export default function WithdrawMoneyScreen() {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
+  const getFriendlyErrorMessage = (message: string) => {
+    const normalizedMessage = message.trim();
+
+    if (
+      normalizedMessage.includes("Not enough balance") ||
+      normalizedMessage.includes("Insufficient balance") ||
+      normalizedMessage.includes("Required:") ||
+      normalizedMessage.includes("Available:")
+    ) {
+      const requiredMatch = normalizedMessage.match(/Required:\s*([0-9]+(?:\.[0-9]+)?)/i);
+      const availableMatch = normalizedMessage.match(/Available:\s*([0-9]+(?:\.[0-9]+)?)/i);
+
+      const required = requiredMatch?.[1];
+      const available = availableMatch?.[1];
+
+      if (required && available) {
+        return `No tienes saldo suficiente para realizar esta retirada. Intentas retirar ${required} EUR, pero solo tienes ${available} EUR disponibles.`;
+      }
+
+      return "No tienes saldo suficiente para realizar esta retirada.";
+    }
+
+    return normalizedMessage;
+  };
+
   const validate = (): boolean => {
     const nextErrors: FormErrors = {};
     const normalizedAmount = amount.replace(",", ".");
@@ -105,7 +130,7 @@ export default function WithdrawMoneyScreen() {
       });
       setSuccessMessage("Retirada procesada correctamente.");
     } catch (error) {
-      setErrorMessage((error as Error).message);
+      setErrorMessage(getFriendlyErrorMessage((error as Error).message));
     } finally {
       setSubmitting(false);
     }
