@@ -1,5 +1,5 @@
 import { API_ROUTES } from "../config/api";
-import { Wallet, Transaction } from "../types";
+import { Wallet, Transaction, WithdrawRequest } from "../types";
 import { handleResponse, fetchWithTimeout, jsonHeaders } from "./utils";
 
 export const getWalletByUserId = async (
@@ -30,4 +30,17 @@ export const getLoggedUserTransactions = async (token: string): Promise<Transact
   });
 
   return handleResponse<Transaction[]>(res);
-}
+};
+
+export const withdrawToBank = async (
+  token: string,
+  payload: WithdrawRequest,
+): Promise<string> => {
+  const res = await fetchWithTimeout(API_ROUTES.WITHDRAW_TO_BANK, {
+    method: "POST",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<string>(res);
+};

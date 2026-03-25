@@ -394,6 +394,7 @@ export type RootStackParamList = {
   DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
   Commission: undefined;
   Wallet: undefined;
+  WithdrawMoney: undefined;
   Tracking: { kitId: number };
   TrackingNotifications: undefined;
   AssignedKits: undefined;
@@ -451,6 +452,11 @@ export interface Wallet {
   balance: number;
   userId: number;
   createdAt: string; // ISO String para emular LocalDateTime
+}
+
+export interface WithdrawRequest {
+  bankAccount: string;
+  amount: number;
 }
 
 export interface Transaction {
