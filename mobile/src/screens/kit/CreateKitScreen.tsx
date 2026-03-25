@@ -761,7 +761,7 @@ const CreateKitScreen: React.FC = () => {
                   ).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(
                     2,
                     "0",
-                  )}}/${endDate.getFullYear()}`
+                  )}/${endDate.getFullYear()}`
                 : "Selecciona rango de fechas del alquiler"}
             </Text>
             <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
