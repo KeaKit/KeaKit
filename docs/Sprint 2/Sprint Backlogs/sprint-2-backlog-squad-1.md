@@ -36,7 +36,7 @@
 | [#245](https://github.com/KeaKit/KeaKit/issues/245) | Refactorización del backend de kits | High | 8 | Done | Enrique Nicolae Barac Ploae |
 | [#247](https://github.com/KeaKit/KeaKit/issues/247) | Refactorización del frontend de kits | High | 3 | Done | Enrique Nicolae Barac Ploae |
 | [#244](https://github.com/KeaKit/KeaKit/issues/244) | Refactorización del backend de pagos | High | 8 | Done | Lucía Ponce García de Sola |
-| [#64](https://github.com/KeaKit/KeaKit/issues/64) | HU-ARRENDATARIO-18: Recibir confirmación del pedido | Low | 5 | In Review | Miguel Álvarez Raya |
+| [#64](https://github.com/KeaKit/KeaKit/issues/64) | HU-ARRENDATARIO-18: Recibir confirmación del pedido | Low | 5 | Done | Miguel Álvarez Raya |
 | [#256](https://github.com/KeaKit/KeaKit/issues/256) | Elaborar guión killer opener 12/03/2026 | - | 2 | Done | Miguel Álvarez Raya |
 | [#257](https://github.com/KeaKit/KeaKit/issues/257) | Hacer una landing page para poner todos nuestros enlaces con QR | - | 3 | Done | Miguel Álvarez Raya |
 
@@ -52,7 +52,7 @@
 | [#246](https://github.com/KeaKit/KeaKit/issues/246) | Refactorización del frontend de pagos | High | 5 | Done | Lucía Ponce García de Sola |
 | [#249](https://github.com/KeaKit/KeaKit/issues/249) | Testing creación de kits | Mid | 5 | Done | Enrique Nicolae Barac Ploae |
 | [#59](https://github.com/KeaKit/KeaKit/issues/59) | HU-ARRENDATARIO19: Notificación antes de recibir kit | High | 5 | Done | Enrique Nicolae Barac Ploae |
-| [#64](https://github.com/KeaKit/KeaKit/issues/64) | HU-ARRENDATARIO-18: Recibir confirmación del pedido | Low | 5 | In Review | Miguel Álvarez Raya |
+| [#64](https://github.com/KeaKit/KeaKit/issues/64) | HU-ARRENDATARIO-18: Recibir confirmación del pedido | Low | 5 | Done | Miguel Álvarez Raya |
 
 ## 4. Sprint Backlog - Semana 3
 
@@ -63,21 +63,21 @@
 | [#59](https://github.com/KeaKit/KeaKit/issues/59) | HU-ARRENDATARIO19: Notificación antes de recibir kit | High | 5 | Done | Enrique Nicolae Barac Ploae |
 | [#248](https://github.com/KeaKit/KeaKit/issues/248) | Testing pagos | Mid | 5 | Done | Lucía Ponce García de Sola |
 | [#298](https://github.com/KeaKit/KeaKit/issues/298) | Testing retirada de ingresos (CU-ARRENDADOR-05) | Low | 4 | Done | Enrique Nicolae Barac Ploae |
-| [#292](https://github.com/KeaKit/KeaKit/issues/292) | Frontend retirada de ingresos (CU-ARRENDADOR-05) | High | 5 | In progress | Salma El Hakimy Ettorabi |
+| [#292](https://github.com/KeaKit/KeaKit/issues/292) | Frontend retirada de ingresos (CU-ARRENDADOR-05) | High | 5 | Done | Salma El Hakimy Ettorabi |
 | [#69](https://github.com/KeaKit/KeaKit/issues/69) | Organizar carpetas de documentación | Low | 2 | To Do | Salma El Hakimy Ettorabi |
-| [#64](https://github.com/KeaKit/KeaKit/issues/64) | HU-ARRENDATARIO-18: Recibir confirmación del pedido | Low | 5 | In Review | Miguel Álvarez Raya |
-| [#260](https://github.com/KeaKit/KeaKit/issues/260) | Elaborar guión reel captación de usuarios | - | 4 | In Progress | Miguel Álvarez Raya |
+| [#64](https://github.com/KeaKit/KeaKit/issues/64) | HU-ARRENDATARIO-18: Recibir confirmación del pedido | Low | 5 | Done | Miguel Álvarez Raya |
+| [#260](https://github.com/KeaKit/KeaKit/issues/260) | Elaborar guión reel captación de usuarios | - | 3 | Done | Miguel Álvarez Raya |
 
 ## 5. Resumen carga de trabajo
 
 | Responsable                 | Story Points asignados |  Story Points completados | Horas reportadas |
 |-----------------------------|------------------------|---------------------------|------------------|
-| Miguel Álvarez Raya         | 14                     | 5                         | 28               |
+| Miguel Álvarez Raya         | 13                     | 13                         | 31               |
 | Enrique Nicolae Barac Ploae | 25                     | 25                        | 32               |
-| Luis Emmanuel Chávez Malavé | 9                      | 9                         | 31               |
-| Salma El Hakimy Ettorabi    | 10                     | 3                         | 25               |
+| Luis Emmanuel Chávez Malavé | 9                      | 9                         | 32               |
+| Salma El Hakimy Ettorabi    | 10                     | 8                         | 29               |
 | Lucía Ponce García de Sola  | 18                     | 18                        | 43               |
-| **Total**                   | **76**                 | **60**                    | **159**          |
+| **Total**                   | **75**                 | **73**                    | **167**          |
 
 ## 6. Historial de versiones
 
