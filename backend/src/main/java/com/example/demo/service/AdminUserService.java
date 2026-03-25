@@ -8,7 +8,8 @@ import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.model.Wallet;
 import com.example.demo.repository.UserRepository;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,16 @@ public class AdminUserService {
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
                 .stream()
+                .map(UserResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserResponse> getUsersAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserEmail = authentication != null ? authentication.getName() : "";
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> !user.getEmail().equals(currentUserEmail))
                 .map(UserResponse::new)
                 .collect(Collectors.toList());
     }

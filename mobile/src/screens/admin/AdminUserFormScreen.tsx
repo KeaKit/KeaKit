@@ -6,7 +6,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList, UserResponse } from '../../types';
 import { createUser, updateUser } from '../../services/adminService';
-import { Colors, Spacing } from '../../styles';
+import { Colors, Spacing, commonStyles } from '../../styles';
 
 type AdminUserFormNav = NativeStackNavigationProp<RootStackParamList, 'AdminUsers'>;
 type AdminUserFormRoute = RouteProp<RootStackParamList, 'AdminUsers'>;
@@ -100,8 +100,21 @@ const AdminUserFormScreen: React.FC = () => {
         }, authUser.token);
       }
       navigation.goBack();
-    } catch (err: unknown) {
-      setErrors({ general: (err as Error).message });
+    } catch (err: any) {
+        try {
+          const backendError = err.response?.data || err.message || err;
+          const errorObj = typeof backendError === 'string' ? JSON.parse(backendError) : backendError;
+
+          // Si es un objeto JSON del backend, lo pasamos DIRECTO al estado
+          // Así errors.name recibe su error, errors.email el suyo, etc.
+          if (typeof errorObj === 'object' && errorObj !== null) {
+            setErrors(errorObj); 
+          } else {
+            setErrors({ general: String(errorObj) });
+          }
+        } catch (e) {
+          setErrors({ general: err.message || "Error al guardar el usuario." });
+        }
     } finally {
       setLoading(false);
     }
@@ -109,44 +122,70 @@ const AdminUserFormScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{userToEdit ? 'Editar Usuario' : 'Crear Usuario'}</Text>
+      <View style={commonStyles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{userToEdit ? 'Editar Usuario' : 'Crear Usuario'}</Text>
+            <View style={styles.headerRight} />
+      </View>
 
+      {/* NOMBRE */}
       <TextInput
         style={[styles.input, errors.name && styles.inputError]}
         placeholder="Nombre completo"
         value={name}
         onChangeText={(v) => { setName(v); clearErrors(); }}
       />
+      {errors.name && <Text style={styles.fieldErrorText}>{errors.name}</Text>}
+
+      {/* EMAIL */}
       <TextInput
         style={[styles.input, errors.email && styles.inputError]}
         placeholder="Correo electrónico"
         value={email}
         onChangeText={(v) => { setEmail(v); clearErrors(); }}
       />
+      {errors.email && <Text style={styles.fieldErrorText}>{errors.email}</Text>}
+
+      {/* TELÉFONO */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors.phone && styles.inputError]}
         placeholder="Teléfono"
+        keyboardType="phone-pad"
         value={phone}
         onChangeText={(v) => { setPhone(v); clearErrors(); }}
       />
+      {errors.phone && <Text style={styles.fieldErrorText}>{errors.phone}</Text>}
+
+      {/* DIRECCIÓN */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors.address && styles.inputError]} // Faltaba el array de estilos aquí
         placeholder="Dirección"
         value={address}
         onChangeText={(v) => { setAddress(v); clearErrors(); }}
       />
+      {errors.address && <Text style={styles.fieldErrorText}>{errors.address}</Text>}
+
+      {/* CIUDAD */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors.city && styles.inputError]} // Faltaba el array de estilos
         placeholder="Ciudad"
         value={city}
         onChangeText={(v) => { setCity(v); clearErrors(); }}
       />
+      {errors.city && <Text style={styles.fieldErrorText}>{errors.city}</Text>}
+
+      {/* PAÍS */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors.country && styles.inputError]} // Faltaba el array de estilos
         placeholder="País"
         value={country}
         onChangeText={(v) => { setCountry(v); clearErrors(); }}
       />
+      {errors.country && <Text style={styles.fieldErrorText}>{errors.country}</Text>}
+
+      {/* CONTRASEÑA */}
       <View style={styles.inputContainer}>
         <TextInput
           style={[styles.input, errors.password && styles.inputError]}
@@ -159,7 +198,9 @@ const AdminUserFormScreen: React.FC = () => {
           <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
         </TouchableOpacity>
       </View>
+      {errors.password && <Text style={styles.fieldErrorText}>{errors.password}</Text>}
 
+      {/* ROL */}
       <TouchableOpacity
         style={styles.roleField}
         onPress={() => setRoleModalVisible(true)}
@@ -172,9 +213,10 @@ const AdminUserFormScreen: React.FC = () => {
         </View>
       </TouchableOpacity>
 
-
+      {/* ERROR GENERAL (Por si falla el internet o algo que no sea de un campo específico) */}
       {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
       
+      {/* MODAL DE ROL (Se queda igual) */}
       <Modal visible={roleModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
@@ -264,5 +306,22 @@ const styles = StyleSheet.create({
   modalOptionTextSelected: { color: Colors.primary, fontWeight: "700" },
   modalCancel: { marginTop: 10, alignItems: "center" },
   modalCancelText: { color: "#666", fontWeight: "600" },
+  fieldErrorText: { 
+    color: '#d9534f', 
+    fontSize: 12, 
+    marginTop: 4, 
+    marginLeft: 4 
+  },
+    backButton: {
+    padding: Spacing.sm,
+  },
+    headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  headerRight: {
+    width: 40,
+  },
 
 });

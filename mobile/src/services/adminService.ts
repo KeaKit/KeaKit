@@ -68,6 +68,15 @@ export async function getAllUsers(token: string): Promise<UserResponse[]> {
   return handleResponse<UserResponse[]>(res);
 }
 
+export async function getAdminUsers(token: string): Promise<UserResponse[]> {
+  const res = await fetch(API_ROUTES.GET_ADMIN_ALL_USERS, {
+    method: 'GET',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<UserResponse[]>(res);
+}
+
+
 // Eliminar usuario
 export async function deleteUser(id: number, token: string): Promise<void> {
   const res = await fetch(API_ROUTES.DELETE_USER(id), {

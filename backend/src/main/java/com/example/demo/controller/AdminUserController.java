@@ -4,11 +4,14 @@ import com.example.demo.dto.AdminUserRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.service.AdminUserService;
 
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -24,6 +27,12 @@ public class AdminUserController {
         return ResponseEntity.ok(adminUserService.getAllUsers());
     }
 
+    @GetMapping("/no-self")
+    public ResponseEntity<List<UserResponse>> getUsersAdmin() {
+        return ResponseEntity.ok(adminUserService.getUsersAdmin());
+    }
+    
+
     // CREAR usuario
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@RequestBody AdminUserRequest request) {
@@ -34,7 +43,7 @@ public class AdminUserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @RequestBody AdminUserRequest request) {
+            @Valid @RequestBody AdminUserRequest request) {
 
         return ResponseEntity.ok(adminUserService.updateUser(id, request));
     }
