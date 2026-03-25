@@ -294,9 +294,6 @@ public class KitService {
             throw new RuntimeException("The kit can only be confirmed if its status is PAID");
         }
         kit.setStatus(KitStatus.ACTIVE);
-
-        Kit savedKit = kitRepository.save(kit);
-        orderConfirmationEmailService.sendOrderConfirmation(savedKit);
     }
 
     private List<ItemMemento> itemSelectionToSnapshots(List<KitCreateRequest.ItemSelectionRequest> itemSelections,
