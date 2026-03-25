@@ -8,6 +8,13 @@ Este documento detalla las incidencias reales detectadas durante el Sprint 2, vi
    - 1.2. [Incompatibilidad de Stripe React Native con entorno web (React Native Web)](#12-incompatibilidad-de-stripe-react-native-con-entorno-web-react-native-web)
    - 1.3. [Migración de ZenHub a GitHub Projects y pérdida de funcionalidad de Burndown](#13-migración-de-zenhub-a-github-projects-y-pérdida-de-funcionalidad-de-burndown)
    - 1.4. [Insuficiencia de RAM en planes gratuitos de despliegue con Spring Boot](#14-insuficiencia-de-ram-en-planes-gratuitos-de-despliegue-con-spring-boot)
+   - 1.5. [Bajo rendimiento y falta de compromiso de miembros del equipo](#15-bajo-rendimiento-y-falta-de-compromiso-de-miembros-del-equipo)
+   - 1.6. [Registro incorrecto o fraudulento de horas](#16-registro-incorrecto-o-fraudulento-de-horas)
+   - 1.7. [Mala asignación de puntos de historia](#17-mala-asignación-de-puntos-de-historia)
+   - 1.8. [Incumplimiento de plazos en tareas críticas](#18-incumplimiento-de-plazos-en-tareas-críticas)
+   - 1.9. [Desorganización en el despliegue y CD](#19-desorganización-en-el-despliegue-y-cd)
+   - 1.10. [Exceso de tiempo en reuniones no productivas](#110-exceso-de-tiempo-en-reuniones-no-productivas)
+   - 1.11. [Retrasos e inconsistencias funcionales entre módulos](#111-retrasos-e-inconsistencias-funcionales-entre-módulos)
 2. [Resumen de Impacto](#2-resumen-de-impacto)
 3. [Historial de Versiones](#3-historial-de-versiones)
 
@@ -50,6 +57,81 @@ Este documento detalla las incidencias reales detectadas durante el Sprint 2, vi
     * Pendiente de validación e implantación de la nueva arquitectura de despliegue.
 
 
+### 1.5. Bajo rendimiento y falta de compromiso de miembros del equipo
+* **Problema/incidencia:** Se detectaron miembros del equipo sin actividad significativa durante varias semanas (ausencia de commits, contribuciones técnicas o registro de horas reales). Esta situación generó un desequilibrio en la carga de trabajo, afectando negativamente a la planificación del Sprint y aumentando la presión sobre los miembros activos.
+* **Riesgo asociado:** **R11 – Organizativo (Prioridad Baja).** Rendimiento individual inferior al commitment agreement.
+* **Plan de contingencia:** Comunicación directa con los miembros afectados y seguimiento continuo de su actividad para evaluar su reincorporación efectiva al ritmo del equipo.
+* **Acciones correctivas:**
+    * Establecimiento de mecanismos de control periódico del rendimiento individual (commits, PRs, horas reales).
+    * Aplicación progresiva de medidas disciplinarias en caso de incumplimiento reiterado (advertencia → posible desvinculación del proyecto).
+    * Refuerzo de la transparencia en la contribución individual dentro del equipo.
+
+
+### 1.6. Registro incorrecto o fraudulento de horas
+* **Problema/incidencia:** Se identificaron inconsistencias en el registro de horas en la herramienta de seguimiento (Clockify), incluyendo horas no asociadas a trabajo efectivo o registradas sin asistencia real a sesiones de trabajo, afectando a la fiabilidad de las métricas del proyecto.
+* **Riesgo asociado:** **R14 – Organizativo (Prioridad Alta).** Falta de trazabilidad en el reporte de horas.
+* **Plan de contingencia:** Auditoría interna de los registros de horas y revisión manual por parte de los responsables de subgrupo.
+* **Acciones correctivas:**
+    * Implantación de mecanismos de control de asistencia en sesiones presenciales.
+    * Revisión y validación periódica de los registros de horas.
+    * Eliminación o corrección de horas incorrectamente registradas.
+    * Concienciación del equipo sobre la importancia de la trazabilidad real del esfuerzo.
+
+
+### 1.7. Mala asignación de puntos de historia
+* **Problema/incidencia:** Se detectó una asignación incoherente de puntos de historia, especialmente en tareas no técnicas o de bajo impacto, lo que generó una distorsión en la medición del esfuerzo real del Sprint y en la velocidad del equipo.
+* **Riesgo asociado:** **R17 – Estimación y Planificación (Prioridad Alta).** Incumplimiento de dependencias críticas en el roadmap por estimaciones incorrectas.
+* **Plan de contingencia:** Revisión del backlog y reestimación de tareas utilizando criterios homogéneos.
+* **Acciones correctivas:**
+    * Definición de criterios claros para la asignación de puntos de historia según complejidad técnica y esfuerzo real.
+    * Separación de tareas técnicas y no técnicas en la estimación.
+    * Validación de estimaciones por parte de perfiles con experiencia técnica antes de su aprobación.
+    * Revisión periódica de la coherencia de la velocidad del equipo.
+
+
+### 1.8. Incumplimiento de plazos en tareas críticas
+* **Problema/incidencia:** Se produjeron retrasos en tareas clave del Sprint, lo que bloqueó dependencias críticas y afectó al flujo de trabajo de otros miembros del equipo, especialmente en fases previas a integración y despliegue.
+* **Riesgo asociado:** **R17 – Estimación y Planificación (Prioridad Alta).** Incumplimiento de dependencias críticas en el roadmap.
+* **Plan de contingencia:** Reasignación de tareas y redistribución de recursos para desbloquear el flujo de trabajo.
+* **Acciones correctivas:**
+    * Refuerzo del cumplimiento de deadlines definidos en planificación.
+    * Ajuste del reparto de tareas en función de la disponibilidad real de los miembros.
+    * Identificación temprana de bloqueos y comunicación proactiva.
+    * Penalización en métricas de rendimiento en casos de incumplimiento injustificado.
+
+
+### 1.9. Desorganización en el despliegue y CD
+* **Problema/incidencia:** El proceso de despliegue se realizó de forma precipitada y sin planificación suficiente, lo que redujo el margen para pruebas y correcciones, afectando a la calidad del entregable y a la validación por parte de usuarios piloto.
+* **Riesgo asociado:** **R10 – Técnico (Prioridad Media).** Fallos críticos en la build de producción.
+* **Plan de contingencia:** Uso de rollback a versiones estables y ejecución manual del proceso de build en caso de fallo del pipeline automatizado.
+* **Acciones correctivas:**
+    * Definición clara de responsables del proceso de despliegue.
+    * Planificación anticipada del CD dentro del Sprint.
+    * Integración de fases de testing previas al despliegue.
+    * Mejora de la documentación del proceso de release.
+
+
+### 1.10. Exceso de tiempo en reuniones no productivas
+* **Problema/incidencia:** Se detectó un uso excesivo de tiempo en reuniones poco estructuradas o con baja productividad, afectando a la disponibilidad real de horas para desarrollo.
+* **Riesgo asociado:** **R12 – Organizativo (Prioridad Baja).** Caída de productividad por exceso de reuniones.
+* **Plan de contingencia:** Reducción o eliminación de reuniones no críticas.
+* **Acciones correctivas:**
+    * Establecimiento de límites de tiempo estrictos para reuniones.
+    * Definición previa de objetivos y agenda.
+    * No contabilizar como horas productivas el tiempo que exceda lo planificado.
+    * Fomento de comunicación asíncrona cuando sea posible.
+
+
+### 1.11. Retrasos e inconsistencias funcionales entre módulos
+* **Problema/incidencia:** Se detectaron inconsistencias funcionales entre distintas partes del sistema (por ejemplo, discrepancias en precios entre pantallas), así como retrasos en la implementación de funcionalidades interdependientes, evidenciando problemas de coordinación.
+* **Riesgo asociado:** **R16 – Organizativo (Prioridad Alta).** Silos de información o fallos de coordinación interdepartamental.
+* **Plan de contingencia:** Realización de reuniones de sincronización entre subgrupos para alinear criterios funcionales y técnicos.
+* **Acciones correctivas:**
+    * Refuerzo de la comunicación entre equipos (frontend, backend, QA).
+    * Validación cruzada de funcionalidades antes de su integración.
+    * Definición de criterios funcionales comunes (ej. lógica de precios).
+    * Incremento de pruebas integradas para detectar inconsistencias tempranas.
+
 ## 2. Resumen de Impacto
 
 | Nº | Incidencia | Categoría | Prioridad | Estado |
@@ -58,6 +140,14 @@ Este documento detalla las incidencias reales detectadas durante el Sprint 2, vi
 |2| Incompatibilidad Stripe React Native Web | Técnico (TE) | Media | En seguimiento |
 |3| Migración ZenHub → GitHub Projects | Estimación (EP) / Externo (EX) | Alta | Solucionado |
 |4| RAM insuficiente en despliegue Spring Boot | Técnico (TE) | Alta | En investigación |
+|5| Bajo rendimiento | Organizativo (OR) | Baja | En seguimiento |
+|6| Registro de horas | Organizativo (OR) | Alta | En seguimiento |
+|7| Puntos de historia | Estimación (EP) | Alta | Solucionado |
+|8| Incumplimiento plazos | Estimación (EP) | Alta | En seguimiento |
+|9| Despliegue/CD | Técnico (TE) | Media | En mejora |
+|10| Reuniones largas | Organizativo (OR) | Baja | En mejora |
+|11| Inconsistencias funcionales | Organizativo (OR) | Alta | En seguimiento |
+
 
 
 ## 3. Historial de Versiones
@@ -65,9 +155,11 @@ Este documento detalla las incidencias reales detectadas durante el Sprint 2, vi
 | Versión | Fecha | Descripción | Autor(es) |
 |---------|-------|-------------|-----------|
 | 1.0.0 | 11/03/2026 | Versión inicial del registro de incidencias del Sprint 2 | Ángel Amo Sánchez|
+| 1.1.0 | 25/03/2026 | Añadidas incidencias organizativas y de planificación detectadas posteriormente | Paula Rosa González Páez |
+
 
 ---
 
-**Redactado por:**  Ángel Amo Sánchez
+**Redactado por:**  Ángel Amo Sánchez y Paula Rosa González Páez
 **Fecha de redacción:** 11/03/2026  
-**Versión:** 1.0.0
+**Versión:** 1.1.0
