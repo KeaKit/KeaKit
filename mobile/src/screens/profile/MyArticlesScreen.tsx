@@ -77,6 +77,7 @@ const MyArticlesScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
+      setExpandedId(null);
       const loadArticles = async () => {
         if (!user) {
           setError('Debes iniciar sesión para ver tus artículos');
@@ -164,8 +165,6 @@ const MyArticlesScreen: React.FC = () => {
   };
 
   const navigateToUserReviews = (tenantId: number, tenantName: string) => {
-    setExpandedId(null);
-
     navigation.navigate('UserRatings', {
       userId: tenantId,
       userName: tenantName,
@@ -244,10 +243,7 @@ const MyArticlesScreen: React.FC = () => {
 
         <TouchableOpacity 
           style={styles.viewMoreButton}
-          onPress={() => {
-            setExpandedId(null);
-            navigation.navigate("ArticleRentals", { articleId: item.id, articleTitle: item.title })
-          }}
+          onPress={() => navigation.navigate("ArticleRentals", { articleId: item.id, articleTitle: item.title })}
         >
           <Text style={styles.viewMoreText}>Ver historial completo ({item.rentals.length})</Text>
           <Ionicons name="chevron-forward" size={14} color={Colors.primary} />

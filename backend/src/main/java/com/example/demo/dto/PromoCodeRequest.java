@@ -5,8 +5,7 @@ import java.util.List;
 
 public record PromoCodeRequest(
     @NotBlank String code,
-    @NotNull @DecimalMin("0.0") @DecimalMax("1.0") @Digits(integer = 1, fraction = 0, message = "El porcentaje debe ser un número entero (sin decimales)")
-    Double discountRate,
+    @NotNull @DecimalMin("0.0") @DecimalMax("1.0") Double discountRate,
     boolean active,
     boolean singleUse,
     boolean pilotUserOnly,

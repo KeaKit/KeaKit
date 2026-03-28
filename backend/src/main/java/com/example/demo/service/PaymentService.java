@@ -91,10 +91,14 @@ public class PaymentService {
                                         PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
                                 .build())
                 .build();
-        PaymentIntent intent = PaymentIntent.create(params);
+        PaymentIntent intent = createStripePaymentIntent(params);
         System.out.println(intent.getId());
         System.out.println(intent.getClientSecret());
         return intent;
+    }
+
+    public PaymentIntent createStripePaymentIntent(PaymentIntentCreateParams params) throws StripeException {
+        return PaymentIntent.create(params);
     }
 
     @Transactional
@@ -255,14 +259,56 @@ public class PaymentService {
         params.put("amount", amountInCents);
         params.put("currency", "eur");
         params.put("destination", "btok_fr");
-        Payout payout = Payout.create(params);
+        Payout payout = createStripePayout(params);
 
         return payout;
     }
 
+    public Payout createStripePayout(Map<String, Object> params) throws StripeException {
+        return Payout.create(params);
+    }
+
+    private boolean isValidIban(String iban) {
+        if (iban == null) {
+            return false;
+        }
+
+        String normalized = iban.replaceAll("\\s+", "").toUpperCase();
+        if (!normalized.matches("^[A-Z]{2}\\d{2}[A-Z0-9]{11,30}$")) {
+            return false;
+        }
+
+        String rearranged = normalized.substring(4) + normalized.substring(0, 4);
+        int remainder = 0;
+
+        for (char character : rearranged.toCharArray()) {
+            String chunk = Character.isLetter(character)
+                    ? String.valueOf(character - 'A' + 10)
+                    : String.valueOf(character);
+
+            for (char digit : chunk.toCharArray()) {
+                remainder = (remainder * 10 + Character.getNumericValue(digit)) % 97;
+            }
+        }
+
+        return remainder == 1;
+    }
+
     @Transactional
-    public void withdrawToBank(Long userId, Double amount)
+    public void withdrawToBank(Long userId, Double amount, String bankAccount)
             throws ResourceNotFoundException, NotEnoughBalanceException, StripeException {
+
+        if (amount == null || amount <= 0) {
+            throw new IllegalArgumentException("La cantidad debe ser mayor que 0");
+        }
+
+        if (bankAccount == null || bankAccount.isBlank()) {
+            throw new IllegalArgumentException("La cuenta bancaria es obligatoria");
+        }
+
+        if (!isValidIban(bankAccount)) {
+            throw new IllegalArgumentException("La cuenta bancaria debe ser un IBAN valido");
+        }
 
         Wallet wallet = walletService.getWalletByUserId(userId);
 

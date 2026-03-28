@@ -3,6 +3,8 @@ package com.example.demo.service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class KitService {
@@ -154,9 +157,10 @@ public class KitService {
     }
 
     public KitPaymentDTO getKitPayment(KitCreateRequest request, String promoCode, String userEmail) {
+        double months = calculateMonthsBetween(request.startDate(), request.endDate());
         double subtotalPrice = request.itemSelections().stream()
-                .mapToDouble(item -> item.pricePerMonth() * item.quantity())
-                .sum();
+            .mapToDouble(item -> item.pricePerMonth() * item.quantity() * months)
+            .sum();
         double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
         double courierPrice = 0.0;
         if (request.deliveryMethod() == DeliveryMethod.COURIER) {
@@ -188,10 +192,10 @@ public class KitService {
     public KitPaymentDTO getKitPayment(Long kitId, String promoCode, String userEmail) throws ResourceNotFoundException {
         Kit kit = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
-
+        double months = calculateMonthsBetween(kit.getStartDate(), kit.getEndDate());
         double subtotalPrice = kit.getSnapshots().stream()
-                .mapToDouble(ki -> ki.getPriceAtRental() * ki.getSelectedUnits())
-                .sum();
+            .mapToDouble(ki -> ki.getPriceAtRental() * ki.getSelectedUnits() * months)
+            .sum();
         double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
         double courierPrice = kit.getDeliveryMethod() == DeliveryMethod.COURIER ? PLATFORM_COURIER_PRICE : 0.0;
 
@@ -219,6 +223,19 @@ public class KitService {
 
     private Integer toCents(Double amount) {
         return (amount != null) ? (int) Math.round(amount * 100) : 0;
+    }
+
+    private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
+        int years = end.getYear() - start.getYear();
+        int months = end.getMonthValue() - start.getMonthValue();
+        int days = end.getDayOfMonth() - start.getDayOfMonth();
+
+        int totalMonths = years * 12 + months;
+
+        int daysInMonth = 30;
+        double monthFraction = (double) days / daysInMonth;
+
+        return totalMonths + monthFraction;
     }
 
     public KitResponse update(Long id, Kit updateData) {
@@ -325,9 +342,6 @@ public class KitService {
             throw new RuntimeException("The kit can only be confirmed if its status is PAID");
         }
         kit.setStatus(KitStatus.ACTIVE);
-
-        Kit savedKit = kitRepository.save(kit);
-        orderConfirmationEmailService.sendOrderConfirmation(savedKit);
     }
 
     private List<ItemMemento> itemSelectionToSnapshots(List<KitCreateRequest.ItemSelectionRequest> itemSelections,

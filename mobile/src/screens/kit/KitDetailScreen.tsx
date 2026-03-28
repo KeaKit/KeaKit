@@ -190,7 +190,7 @@ const handleConfirmKit = async () => {
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle del Kit</Text>
-        {kit.status === KitStatus.PAID && (
+        {false && (
         <TouchableOpacity 
           onPress={handleReportProblem} 
           style={styles.reportButton}
@@ -198,9 +198,7 @@ const handleConfirmKit = async () => {
           <Ionicons name="flag-outline" size={22} color="#FF3B30" />
         </TouchableOpacity>
         )}
-        {kit.status !== KitStatus.PAID && (
-          <View style={{ width: 40 }} />
-        )}
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -42,15 +41,12 @@ import com.example.demo.service.GuaranteeReturnEmailService;
 import com.example.demo.service.PaymentService;
 
 import com.stripe.model.PaymentIntent;
-import com.stripe.param.PaymentIntentCreateParams;
 
 import com.example.demo.exception.NotEnoughBalanceException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.stripe.exception.StripeException;
 
 import com.stripe.model.Payout;
-import static org.mockito.ArgumentMatchers.anyMap;
-
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentServiceTest {
@@ -86,7 +82,7 @@ public class PaymentServiceTest {
 
     @BeforeEach
     void setUp() {
-        paymentService = new PaymentService(guaranteeReturnEmailService);
+        paymentService = spy(new PaymentService(guaranteeReturnEmailService));
         ReflectionTestUtils.setField(paymentService, "platformConfigService", platformConfigService);
         ReflectionTestUtils.setField(paymentService, "walletService", walletService);
         ReflectionTestUtils.setField(paymentService, "kitService", kitService);
@@ -128,22 +124,14 @@ public class PaymentServiceTest {
         PaymentIntent mockIntent = mock(PaymentIntent.class);
         when(mockIntent.getId()).thenReturn("pi_mock_123");
         when(mockIntent.getClientSecret()).thenReturn("secret_mock_123");
+        doReturn(mockIntent).when(paymentService).createStripePaymentIntent(any());
 
-        try (MockedStatic<PaymentIntent> mockedPaymentIntent = mockStatic(PaymentIntent.class)) {
+        PaymentIntent result = paymentService.createPaymentIntent(amountInCents);
 
-            // Cuando se llama a PaymentIntent.create devuelve siempre el mock
-            mockedPaymentIntent.when(() -> PaymentIntent.create(any(PaymentIntentCreateParams.class)))
-                    .thenReturn(mockIntent);
-
-            PaymentIntent result = paymentService.createPaymentIntent(amountInCents);
-
-            assertNotNull(result);
-            assertEquals("pi_mock_123", result.getId());
-            assertEquals("secret_mock_123", result.getClientSecret());
-
-            // Verificamos que se llamó al método estático una vez
-            mockedPaymentIntent.verify(() -> PaymentIntent.create(any(PaymentIntentCreateParams.class)), times(1));
-        }
+        assertNotNull(result);
+        assertEquals("pi_mock_123", result.getId());
+        assertEquals("secret_mock_123", result.getClientSecret());
+        verify(paymentService).createStripePaymentIntent(any());
     }
 
     // ====== Happy Paths processPayment ======
@@ -318,51 +306,58 @@ public class PaymentServiceTest {
         Long amountInCents = 5000L;
         Payout mockPayout = mock(Payout.class);
         when(mockPayout.getId()).thenReturn("po_mock_123");
+        doReturn(mockPayout).when(paymentService).createStripePayout(any());
 
-        try (MockedStatic<Payout> mockedPayout = mockStatic(Payout.class)) {
-            mockedPayout.when(() -> Payout.create(anyMap())).thenReturn(mockPayout);
+        Payout result = paymentService.createPayout(amountInCents);
 
-            Payout result = paymentService.createPayout(amountInCents);
-
-            assertNotNull(result);
-            assertEquals("po_mock_123", result.getId());
-            mockedPayout.verify(() -> Payout.create(anyMap()), times(1));
-        }
+        assertNotNull(result);
+        assertEquals("po_mock_123", result.getId());
+        verify(paymentService).createStripePayout(any());
     }
 
     @Test
     void withdrawToBank_ShouldCreatePayoutAndUpdateWallet_WhenBalanceIsEnough() throws Exception {
         Double amount = 50.0;
+        String bankAccount = "ES9121000418450200051332";
         Wallet wallet = TestDataFactory.createMockWallet(10L, TENANT, 200.0);
 
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(wallet);
 
         Payout mockPayout = mock(Payout.class);
-        try (MockedStatic<Payout> mockedPayout = mockStatic(Payout.class)) {
-            mockedPayout.when(() -> Payout.create(anyMap())).thenReturn(mockPayout);
+        doReturn(mockPayout).when(paymentService).createStripePayout(any());
 
-            assertDoesNotThrow(() -> paymentService.withdrawToBank(TENANT.getId(), amount));
+        assertDoesNotThrow(() -> paymentService.withdrawToBank(TENANT.getId(), amount, bankAccount));
 
-            mockedPayout.verify(() -> Payout.create(anyMap()), times(1));
-            verify(walletService).updateWalletBalance(TENANT.getId(), amount);
-        }
+        verify(paymentService).createStripePayout(any());
+        verify(walletService).updateWalletBalance(TENANT.getId(), amount);
     }
 
     @Test
     void withdrawToBank_ShouldThrowNotEnoughBalance_WhenWalletHasInsufficientFunds() throws Exception {
         Double amount = 200.0;
+        String bankAccount = "ES9121000418450200051332";
         Wallet wallet = TestDataFactory.createMockWallet(10L, TENANT, 50.0);
 
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(wallet);
 
-        try (MockedStatic<Payout> mockedPayout = mockStatic(Payout.class)) {
-            NotEnoughBalanceException ex = assertThrows(NotEnoughBalanceException.class,
-                    () -> paymentService.withdrawToBank(TENANT.getId(), amount));
+        NotEnoughBalanceException ex = assertThrows(NotEnoughBalanceException.class,
+                () -> paymentService.withdrawToBank(TENANT.getId(), amount, bankAccount));
 
-            assertThat(ex.getMessage()).contains("Not enough balance");
-            mockedPayout.verifyNoInteractions();
-            verify(walletService, never()).updateWalletBalance(anyLong(), any());
-        }
+        assertThat(ex.getMessage()).contains("Not enough balance");
+        verify(paymentService, never()).createStripePayout(any());
+        verify(walletService, never()).updateWalletBalance(anyLong(), any());
+    }
+
+    @Test
+    void withdrawToBank_ShouldThrowIllegalArgumentException_WhenIbanIsInvalid() throws Exception {
+        Double amount = 50.0;
+        String invalidBankAccount = "ES001234";
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> paymentService.withdrawToBank(TENANT.getId(), amount, invalidBankAccount));
+
+        assertThat(ex.getMessage()).contains("IBAN valido");
+        verify(walletService, never()).getWalletByUserId(anyLong());
     }
 
 

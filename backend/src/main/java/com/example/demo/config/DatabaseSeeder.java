@@ -27,6 +27,7 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
+            DefaultKitRepository defaultKitRepo, // <-- AÑADIDO: Repositorio para los kits predeterminados
             RatingRepository ratingRepo,
             CountryRepository countryRepo,
             CityRepository cityRepo,
@@ -39,7 +40,7 @@ public class DatabaseSeeder {
             owner.setEmail("owner@example.com");
             owner.setPassword(passwordEncoder.encode("password123"));
             owner.setRole(UserRole.USER);
-            owner.setCountry("España");
+            owner.setCountry("Spain");
             owner.setCity("Sevilla");
             owner.setAddress("Calle 123 matame otra vez");
             owner.setPhone("123456789");
@@ -50,7 +51,7 @@ public class DatabaseSeeder {
             tenant.setEmail("tenant@example.com");
             tenant.setPassword(passwordEncoder.encode("password123"));
             tenant.setRole(UserRole.USER);
-            tenant.setCountry("España");
+            tenant.setCountry("Spain");
             tenant.setCity("Sevilla");
             tenant.setAddress("Calle 123 matame otra vez");
             tenant.setPhone("223456789");
@@ -65,17 +66,17 @@ public class DatabaseSeeder {
             // 3. Transacciones
             Transaction initialDeposit = new Transaction();
             initialDeposit.setAmount(500.0);
-            initialDeposit.setType(TransactionType.PAYOUT);
+            initialDeposit.setType(TransactionType.TOP_UP);
             initialDeposit.setDestinationWallet(ownerWallet);
             transactionRepo.save(initialDeposit);
             Transaction tenantDeposit = new Transaction();
             tenantDeposit.setAmount(200.0);
-            tenantDeposit.setType(TransactionType.PAYOUT);
+            tenantDeposit.setType(TransactionType.TOP_UP);
             tenantDeposit.setDestinationWallet(tenantWallet);
             transactionRepo.save(tenantDeposit);
             Transaction tenantDeposit2 = new Transaction();
             tenantDeposit2.setAmount(2.5);
-            tenantDeposit2.setType(TransactionType.PAYOUT);
+            tenantDeposit2.setType(TransactionType.TOP_UP);
             tenantDeposit2.setDestinationWallet(tenantWallet);
             transactionRepo.save(tenantDeposit2);
             
@@ -89,7 +90,6 @@ public class DatabaseSeeder {
             catRepo.save(catTech);
 
             // 5. Artículo (Herencia de Item)
-            // Según tus logs: id de article referencia a id de item
             Article laptop = new Article();
             laptop.setTitle("MacBook Pro");
             laptop.setDescription("16 pulgadas, M2");
@@ -104,10 +104,9 @@ public class DatabaseSeeder {
             laptop.setAvailableFrom(LocalDate.now());
             laptop.setAvailableUntil(LocalDate.now().plusMonths(36));
             laptop.setImageUrl("https://i.imgur.com/bY7sIB3.png");
-
             articleRepo.save(laptop);
 
-            // Artículos en ciudades cercanas a Sevilla (para búsqueda geográfica ampliada y mapa)
+            // Artículos en ciudades cercanas a Sevilla
             Article camara = new Article();
             camara.setTitle("Cámara Sony A7III");
             camara.setDescription("Full frame, 24MP, ideal para fotografía profesional");
@@ -206,6 +205,17 @@ public class DatabaseSeeder {
             pendingPaidKit.setEndDate(LocalDate.now().plusMonths(1));
             kitRepo.save(pendingPaidKit);
 
+            Kit audiovisualKit = new Kit();
+            audiovisualKit.setName("Pack Audiovisual");
+            audiovisualKit.setTenant(tenant);
+            audiovisualKit.setStatus(KitStatus.FINISHED);
+            audiovisualKit.setDeliveryMethod(DeliveryMethod.COURIER);
+            audiovisualKit.setStartDate(LocalDate.now());
+            audiovisualKit.setEndDate(LocalDate.now().plusMonths(1));
+            audiovisualKit.setCountry("Spain");
+            audiovisualKit.setCity("Sevilla");
+            kitRepo.save(audiovisualKit);
+
             // 7.1 ItemMemento
             ItemMemento snap1 = laptop.createSnapshot(1, myKit.getDeliveryMethod(), myKit.getCourierPrice(), myKit.getMeetingPoint());
             snap1.setKit(myKit);
@@ -229,6 +239,73 @@ public class DatabaseSeeder {
             pendingPaidKit.setSnapshots(List.of(snap3, snap4));
             kitRepo.save(pendingPaidKit);
 
+            ItemMemento snapAv1 = camara.createSnapshot(
+                1,
+                audiovisualKit.getDeliveryMethod(),
+                audiovisualKit.getCourierPrice(),
+                audiovisualKit.getMeetingPoint()
+            );
+            snapAv1.setKit(audiovisualKit);
+            snapAv1.setPriceAtRental(camara.getPricePerMonth());
+
+            ItemMemento snapAv2 = dron.createSnapshot(
+                1,
+                audiovisualKit.getDeliveryMethod(),
+                audiovisualKit.getCourierPrice(),
+                audiovisualKit.getMeetingPoint()
+            );
+            snapAv2.setKit(audiovisualKit);
+            snapAv2.setPriceAtRental(dron.getPricePerMonth());
+
+            ItemMemento snapAv3 = proyector.createSnapshot(
+                1,
+                audiovisualKit.getDeliveryMethod(),
+                audiovisualKit.getCourierPrice(),
+                audiovisualKit.getMeetingPoint()
+            );
+            snapAv3.setKit(audiovisualKit);
+            snapAv3.setPriceAtRental(proyector.getPricePerMonth());
+
+            audiovisualKit.setSnapshots(List.of(snapAv1, snapAv2, snapAv3));
+            kitRepo.save(audiovisualKit);
+
+            // ==========================================
+            // 7.2 Kit Predeterminado para el Catálogo (FIX REAL)
+            // ==========================================
+
+            // ⚠️ NO usar laptop ni setupService directamente
+
+            Article laptopRef = new Article();
+            laptopRef.setId(laptop.getId()); // solo referencia por ID
+
+            ServiceItem serviceRef = new ServiceItem();
+            serviceRef.setId(setupService.getId());
+
+            // 💰 precio base
+            Double basePrice = laptop.getPricePerMonth() + setupService.getPricePerMonth();
+
+            // 🧠 kit
+            DefaultKit defaultKit = new DefaultKit(
+                "Pack Trabajo Remoto",
+                "Kit listo para usar, incluye un MacBook Pro y el servicio de instalación de software.",
+                basePrice
+            );
+
+            // ⚠️ asegurar lista
+            if (defaultKit.getItems() == null) {
+                defaultKit.setItems(new java.util.ArrayList<>());
+            }
+
+            // 🔗 items SIN cargar entidad completa
+            DefaultKitItem dki1 = new DefaultKitItem(defaultKit, laptopRef);
+            DefaultKitItem dki2 = new DefaultKitItem(defaultKit, serviceRef);
+
+            defaultKit.getItems().add(dki1);
+            defaultKit.getItems().add(dki2);
+
+            // 💾 guardar
+            defaultKitRepo.save(defaultKit);
+
 
             // 8. Rating
             Rating feedback = new Rating();
@@ -244,7 +321,7 @@ public class DatabaseSeeder {
             // 9. Países Y ciudades       
             CityLoader.loadFromJson(countryRepo, cityRepo);          
 
-            System.out.println("✅ Seeder finalizado: Datos cargados en los 10 repositorios.");
+            System.out.println("✅ Seeder finalizado: Datos cargados en los repositorios.");
 
         };
     }

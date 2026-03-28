@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.example.demo.repository.WalletRepository;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -25,6 +26,9 @@ class AdminUserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private WalletRepository walletRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -90,6 +94,7 @@ class AdminUserServiceTest {
         saved.setCountry("Country");
 
         when(userRepository.save(any(User.class))).thenReturn(saved);
+        when(walletRepository.save(any())).thenReturn(null);
 
         var response = adminUserService.createUser(req);
 
@@ -142,9 +147,11 @@ class AdminUserServiceTest {
     @Test
     void deleteUser_success_deletes() {
         when(userRepository.existsById(3L)).thenReturn(true);
+        doNothing().when(walletRepository).deleteByUserId(3L); // ✅
 
         adminUserService.deleteUser(3L);
 
+        verify(walletRepository).deleteByUserId(3L); // ✅
         verify(userRepository).deleteById(3L);
     }
 }

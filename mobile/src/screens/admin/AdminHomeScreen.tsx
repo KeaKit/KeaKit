@@ -100,7 +100,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: 'Mediar en conflictos entre usuarios',
     color: '#e67e22',
     implemented: true,
-    screen: 'MyIncidents',
+    screen: 'AdminIncidents',
   },
   {
     id: 'default-kits',

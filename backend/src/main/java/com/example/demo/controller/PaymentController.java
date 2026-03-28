@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.WithdrawRequest;
 import com.example.demo.service.AuthService;
 import com.example.demo.service.PaymentService;
 
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -71,19 +73,13 @@ public class PaymentController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<String> withdraw(@RequestBody Double amount) {
+    public ResponseEntity<String> withdraw(@Valid @RequestBody WithdrawRequest request) throws StripeException {
 
-        try {
-            Long userId = authService.getAuthenticatedUserId();
+        Long userId = authService.getAuthenticatedUserId();
 
-            paymentService.withdrawToBank(userId, amount);
+        paymentService.withdrawToBank(userId, request.getAmount(), request.getBankAccount());
 
-            return ResponseEntity.ok("Retirada realizada correctamente");
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error en retirada: " + e.getMessage());
-        }
+        return ResponseEntity.ok("Retirada realizada correctamente");
     }
 
 }

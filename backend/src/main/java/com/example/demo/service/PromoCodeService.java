@@ -27,13 +27,13 @@ public class PromoCodeService {
 
     public PromoCodeResponse findById(Long id) {
         PromoCode promoCode = promoCodeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Promo code not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Código promocional no encontrado"));
         return new PromoCodeResponse(promoCode);
     }
 
     public PromoCodeResponse create(PromoCodeRequest request) {
         promoCodeRepository.findByCodeIgnoreCase(request.code()).ifPresent(existing -> {
-            throw new RuntimeException("A promo code with this code already exists");
+            throw new RuntimeException("Este código promocional ya existe");
         });
 
         PromoCode promoCode = new PromoCode();
@@ -43,11 +43,11 @@ public class PromoCodeService {
 
     public PromoCodeResponse update(Long id, PromoCodeRequest request) {
         PromoCode promoCode = promoCodeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Promo code not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Código promocional no encontrado"));
 
         promoCodeRepository.findByCodeIgnoreCase(request.code()).ifPresent(existing -> {
             if (!existing.getId().equals(id)) {
-                throw new RuntimeException("A promo code with this code already exists");
+                throw new RuntimeException("Este código promocional ya existe");
             }
         });
 
@@ -70,17 +70,17 @@ public class PromoCodeService {
             boolean emailAllowed = promoCode.getPilotEmails().stream()
                     .anyMatch(e -> e.equalsIgnoreCase(userEmail));
             if (!emailAllowed) {
-                return new PromoCodeValidationResponse(false, null, "Este código es exclusivo para usuarios piloto");
+                return new PromoCodeValidationResponse(false, null, "Código promocional no válido");
             }
             // Para piloto: uso único por email
             boolean alreadyUsed = promoCode.getUsedByEmails().stream()
                     .anyMatch(e -> e.equalsIgnoreCase(userEmail));
             if (alreadyUsed) {
-                return new PromoCodeValidationResponse(false, null, "Ya has utilizado este código en una compra anterior");
+                return new PromoCodeValidationResponse(false, null, "Código promocional ya utilizado");
             }
         } else if (promoCode.isSingleUse()) {
             if (!promoCode.getUsedByEmails().isEmpty()) {
-                return new PromoCodeValidationResponse(false, null, "Este código de un solo uso ya ha sido utilizado");
+                return new PromoCodeValidationResponse(false, null, "Código promocional ya utilizado");
             }
         }
 
