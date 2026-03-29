@@ -114,9 +114,14 @@ public class PaymentService {
 
         processGuarantee(paymentInfo.guarantee());
         kit.getItems().forEach(this::processItemPaymentToOwner);
-        completeOrder(kitId);
 
-        // Marcar el código como usado al finalizar el pago
+        kitService.markAsPaid(kitId);
+        Kit kitEntity = kitRepository.findById(kitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found for email confirmation"));
+
+        double discountEuros = paymentInfo.discount() != null ? paymentInfo.discount() / 100.0 : 0.0;
+        emailService.sendOrderConfirmation(kitEntity, discountEuros, promoCode);
+
         if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
             promoCodeService.markAsUsed(promoCode, userEmail);
         }

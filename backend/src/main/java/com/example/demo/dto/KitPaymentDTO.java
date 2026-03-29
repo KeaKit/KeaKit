@@ -8,7 +8,7 @@ public record KitPaymentDTO (
     @NotNull @Min(0) Integer subtotalPrice,
     @NotNull @Min(0) Integer guarantee,
     @NotNull @Min(0) Integer courierPrice,
-    @Min(0) Integer discounty
+    @Min(0) Integer discount
 ) {
     
 }

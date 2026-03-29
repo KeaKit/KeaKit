@@ -18,6 +18,9 @@ public class PromoCodeService {
     @Autowired
     private PromoCodeRepository promoCodeRepository;
 
+    //@Autowired
+    //private PilotUserService pilotUserService;
+
     public List<PromoCodeResponse> findAll() {
         return promoCodeRepository.findAll()
                 .stream()
