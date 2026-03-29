@@ -9,6 +9,8 @@ export const KitPaymentResumeComponent = ({
 }: {
   kitPrices: KitPaymentDTO;
 }) => {
+  const hasDiscount = (kitPrices.discount ?? 0) > 0;
+
   return (
     <View style={styles.container}>
       <View style={styles.row}>
@@ -25,27 +27,29 @@ export const KitPaymentResumeComponent = ({
         </Text>
       </View>
 
-      <View style={styles.row}>
-        <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
-        <Text style={commonStyles.caption}>
-          {(kitPrices.courierPrice / 100).toFixed(2)}€
-        </Text>
-      </View>
-
-      {kitPrices.discount > 0 && (
+      {(kitPrices.courierPrice ?? 0) > 0 && (
         <View style={styles.row}>
+          <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
+          <Text style={commonStyles.caption}>
+            {(kitPrices.courierPrice / 100).toFixed(2)}€
+          </Text>
+        </View>
+      )}
+
+      {hasDiscount && (
+        <View style={[styles.row, styles.discountRow]}>
           <Text style={[commonStyles.caption, styles.discountLabel]}>
             Descuento aplicado
           </Text>
           <Text style={[commonStyles.caption, styles.discountValue]}>
-            -{(kitPrices.discount / 100).toFixed(2)}€
+            -{((kitPrices.discount ?? 0) / 100).toFixed(2)}€
           </Text>
         </View>
       )}
 
       <View style={styles.totalRow}>
         <Text style={styles.total}>Total a pagar</Text>
-        <Text style={styles.totalPrice}>
+        <Text style={[styles.totalPrice, hasDiscount && styles.totalPriceDiscounted]}>
           {(kitPrices.totalPrice / 100).toFixed(2)}€
         </Text>
       </View>
@@ -63,6 +67,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 12,
   },
+  discountRow: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 10,
+  },
   total: {
     color: Colors.primaryHome,
     fontWeight: FontWeights.semibold,
@@ -73,6 +84,9 @@ const styles = StyleSheet.create({
     fontWeight: FontWeights.bold,
     color: Colors.primaryHome,
     marginBottom: 2,
+  },
+  totalPriceDiscounted: {
+    color: '#4caf7d',
   },
   discountLabel: {
     color: Colors.success,

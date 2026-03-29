@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { createPromoCode, updatePromoCode } from '../../services/promoCodeService';
+import { getActivePilotEmails } from '../../services/pilotUserService';
 
 type PromoCodeFormNav = NativeStackNavigationProp<RootStackParamList, 'PromoCodeForm'>;
 type PromoCodeFormRoute = RouteProp<RootStackParamList, 'PromoCodeForm'>;
@@ -51,6 +52,8 @@ const PromoCodeFormScreen: React.FC = () => {
   const [codeError,      setCodeError]      = useState('');
   const [discountError,  setDiscountError]  = useState('');
   const [emailError, setEmailError] = useState('');
+  const [loadingPilotEmails, setLoadingPilotEmails] = useState(false);
+
 
   const validate = (): boolean => {
     let valid = true;
@@ -116,6 +119,25 @@ const PromoCodeFormScreen: React.FC = () => {
       setSaving(false);
     }
   };
+
+  const loadPilotEmails = async () => {
+    if (!user?.token) return;
+    setLoadingPilotEmails(true);
+    try {
+      const activeEmails = await getActivePilotEmails(user.token);
+      // Fusionar: mantener los que ya están + añadir los nuevos activos que falten
+      setPilotEmails(prev => {
+        const existing = new Set(prev.map(e => e.toLowerCase()));
+        const toAdd = activeEmails.filter(e => !existing.has(e.toLowerCase()));
+        return [...prev, ...toAdd];
+      });
+    } catch {
+      Alert.alert('Error', 'No se pudieron cargar los usuarios piloto activos.');
+    } finally {
+      setLoadingPilotEmails(false);
+    }
+  };
+
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
@@ -201,7 +223,13 @@ const PromoCodeFormScreen: React.FC = () => {
               </View>
               <Switch
                 value={pilotUserOnly}
-                onValueChange={v => { setPilotUserOnly(v); if (v) setSingleUse(false); }}
+                onValueChange={v => {
+                  setPilotUserOnly(v);
+                  if (v) {
+                    setSingleUse(false);
+                    if (!isEdit || pilotEmails.length === 0) loadPilotEmails();
+                  }
+                }}
                 trackColor={{ false: KC.border, true: KC.mint }}
                 thumbColor={pilotUserOnly ? KC.mintDark : KC.grayLight}
               />
@@ -220,6 +248,12 @@ const PromoCodeFormScreen: React.FC = () => {
 
               {/* Input añadir email */}
               <View style={styles.emailInputRow}>
+                {loadingPilotEmails && (
+                  <View style={styles.loadingPilotRow}>
+                    <ActivityIndicator size="small" color={KC.blue} />
+                    <Text style={styles.loadingPilotText}>Cargando usuarios piloto activos...</Text>
+                  </View>
+                )}
                 <TextInput
                   style={[styles.input, { flex: 1 }, !!emailError && styles.inputError]}
                   value={newEmail}
@@ -337,6 +371,8 @@ const styles = StyleSheet.create({
   },
   saveBtnDisabled: { opacity: 0.45 },
   saveBtnText: { fontSize: 17, fontWeight: '800', color: KC.white },
+  loadingPilotRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  loadingPilotText: { fontSize: 13, color: KC.gray },
 });
 
 export default PromoCodeFormScreen;

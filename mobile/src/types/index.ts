@@ -422,6 +422,7 @@ export type RootStackParamList = {
   ArticleRentals: { articleId: number, articleTitle: string };
   PromoCodes: undefined;
   PromoCodeForm: { promoCode?: PromoCodeFormData; mode: 'create' | 'edit' };
+  PilotUsers: undefined;
 };
 
 export interface ProfileData {
@@ -528,6 +529,12 @@ export interface PromoCodeFormData {
   singleUse: boolean;
   pilotUserOnly: boolean;
   pilotEmails: string[];
+}
+
+export interface PilotUserData {
+  id: number;
+  email: string;
+  active: boolean;
 }
 
 export interface TrackingNotification {

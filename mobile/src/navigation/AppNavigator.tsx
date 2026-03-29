@@ -53,6 +53,7 @@ import CouriersScreen from '../screens/admin/CouriersScreen';
 import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
 import PromoCodesScreen from '../screens/admin/PromoCodesScreen';
 import PromoCodeFormScreen from '../screens/admin/PromoCodeFormScreen';
+import PilotUsersScreen from '../screens/admin/PilotUsersScreen';
 import ActivityNotificationsScreen from "../screens/notifications/ActivityNotificationsScreen";
 
 import { RootStackParamList } from "../types";
@@ -198,6 +199,14 @@ const AppNavigator: React.FC = () => {
                       {() => (
                         <MainLayout>
                           <DefaultKitsScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+
+                    <Stack.Screen name="PilotUsers">
+                      {() => (
+                        <MainLayout>
+                          <PilotUsersScreen />
                         </MainLayout>
                       )}
                     </Stack.Screen>

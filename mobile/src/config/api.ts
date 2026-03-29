@@ -109,7 +109,11 @@ export const API_ROUTES = {
   PROCESS_PAYMENT_STRIPE_PROMO:(kitId: number, code: string, email: string) =>
       `${BASE_URL}/api/payments/process/stripe/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
 
-
+  // Pilot Users
+  PILOT_USERS:              `${BASE_URL}/api/admin/pilot-users`,
+  PILOT_USER_BY_ID:         (id: number) => `${BASE_URL}/api/admin/pilot-users/${id}`,
+  PILOT_USERS_ACTIVE_EMAILS:`${BASE_URL}/api/admin/pilot-users/active-emails`,
+  PILOT_USERS_BULK_ACTIVE:  `${BASE_URL}/api/admin/pilot-users/bulk-active`,
 
   // Services
   ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,
