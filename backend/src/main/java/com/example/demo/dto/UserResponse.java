@@ -12,12 +12,14 @@ public class UserResponse {
     private String address;
     private String city;
     private String country;
+    private String profilePhotoUrl;
     private String token;
 
     public UserResponse(User user) {
         this.id = user.getId();
         this.email = user.getEmail();
         this.name = user.getName();
+        this.profilePhotoUrl = user.getProfilePhotoUrl();
         this.role = user.getRole();
         this.phone = user.getPhone();
         this.address = user.getAddress();
@@ -34,6 +36,7 @@ public class UserResponse {
         this.address = user.getAddress();
         this.city = user.getCity();
         this.country = user.getCountry();
+        this.profilePhotoUrl = user.getProfilePhotoUrl();
         this.token = token;
     }
 
@@ -67,6 +70,10 @@ public class UserResponse {
 
     public String getCountry() {
         return country;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
     }
 
     public String getToken() {

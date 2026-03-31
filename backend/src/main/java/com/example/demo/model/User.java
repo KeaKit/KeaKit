@@ -43,6 +43,9 @@ public class User {
     @Column(nullable = false)
     private String country;
 
+    @Column(nullable = true)
+    private String profilePhotoUrl;
+
     @Column(nullable = false)
     private boolean isPilotUser = false;
 
@@ -130,5 +133,13 @@ public class User {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
     }
 }

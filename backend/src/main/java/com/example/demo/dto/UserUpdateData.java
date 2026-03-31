@@ -24,6 +24,9 @@ public class UserUpdateData {
     @Column(nullable = false)
     private String country;
 
+    @Column(nullable = true)
+    private String profilePhotoUrl;
+
     public UserUpdateData() {}
 
     public String getName() {
@@ -64,5 +67,13 @@ public class UserUpdateData {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
     }
 }

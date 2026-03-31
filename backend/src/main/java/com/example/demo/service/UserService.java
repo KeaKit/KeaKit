@@ -17,7 +17,9 @@ import com.example.demo.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Service
@@ -31,6 +33,11 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
+    private static final long MAX_PROFILE_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
 
     @Autowired
     private WalletRepository walletRepository;
@@ -104,6 +111,43 @@ public class UserService {
         if (updateData.getCountry() != null) {
             user.setCountry(updateData.getCountry());
         }
+
+        if (updateData.getProfilePhotoUrl() != null) {
+            user.setProfilePhotoUrl(updateData.getProfilePhotoUrl());
+        }
+
+        User savedUser = userRepository.save(user);
+        return new UserResponse(savedUser);
+    }
+
+    public UserResponse updateProfilePhoto(Long id, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            // Profile photo is optional: no change if no file provided
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+            return new UserResponse(user);
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null ||
+                !(contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/jpg"))) {
+            throw new IllegalArgumentException("Profile photo must be JPG or PNG");
+        }
+
+        if (file.getSize() > MAX_PROFILE_PHOTO_SIZE) {
+            throw new IllegalArgumentException("Profile photo size must not exceed 5MB");
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.toLowerCase().matches(".+\\.(jpg|jpeg|png)$")) {
+            throw new IllegalArgumentException("Profile photo filename must end with .jpg, .jpeg, or .png");
+        }
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        String imageUrl = cloudinaryService.uploadImage(file);
+        user.setProfilePhotoUrl(imageUrl);
 
         User savedUser = userRepository.save(user);
         return new UserResponse(savedUser);

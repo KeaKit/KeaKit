@@ -74,6 +74,25 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{id}/profile-photo")
+    public ResponseEntity<UserResponse> updateProfilePhoto(@PathVariable Long id, @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        String authenticatedEmail = getAuthenticatedEmail();
+
+        UserResponse userToUpdate = userService.getUserById(id);
+        if (!authenticatedEmail.equals(userToUpdate.getEmail())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            UserResponse response = userService.updateProfilePhoto(id, file);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(@RequestHeader("Authorization") String authorizationHeader) {
         Map<String, String> response = new HashMap<>();

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -229,5 +230,27 @@ class UserControllerTest {
                                                 }
                                                 """))
                         .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void updateProfilePhoto_authorized_returnsUpdatedProfile() throws Exception {
+                SecurityContextHolder.getContext().setAuthentication(
+                        new UsernamePasswordAuthenticationToken("new.user@test.com", null)
+                );
+
+                User user = new User("new.user@test.com", "hashed-password", "New User", UserRole.USER, "666555444", "Street 1", "Sevilla", "Spain");
+                user.setId(10L);
+                user.setProfilePhotoUrl("https://res.cloudinary.com/test/user-10.jpg");
+                UserResponse updatedResponse = new UserResponse(user);
+
+                when(userService.getUserById(10L)).thenReturn(profileResponse);
+                when(userService.updateProfilePhoto(eq(10L), any())).thenReturn(updatedResponse);
+
+                MockMultipartFile file = new MockMultipartFile("file", "user.jpg", "image/jpeg", "dummy".getBytes());
+
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/users/10/profile-photo")
+                                .file(file))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.profilePhotoUrl").value("https://res.cloudinary.com/test/user-10.jpg"));
         }
 }

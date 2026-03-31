@@ -21,6 +21,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import org.springframework.mock.web.MockMultipartFile;
+
+import java.io.IOException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,6 +45,9 @@ class UserServiceTest {
 
     @Mock
     private WalletRepository walletRepository;
+
+    @Mock
+    private com.example.demo.service.CloudinaryService cloudinaryService;
 
     @InjectMocks
     private UserService userService;
@@ -192,5 +198,35 @@ class UserServiceTest {
         assertThrows(UserNotFoundException.class, () -> userService.updateUser(999L, updateData));
 
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateProfilePhoto_success_updatesProfilePhotoUrl() throws IOException {
+        when(userRepository.findById(10L)).thenReturn(Optional.of(existingUser));
+        when(cloudinaryService.uploadImage(any())).thenReturn("https://res.cloudinary.com/test/user-10.jpg");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        MockMultipartFile image = new MockMultipartFile("file", "user.jpg", "image/jpeg", "dummy".getBytes());
+
+        UserResponse response = userService.updateProfilePhoto(10L, image);
+
+        assertNotNull(response);
+        assertEquals("https://res.cloudinary.com/test/user-10.jpg", response.getProfilePhotoUrl());
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void updateProfilePhoto_invalidContentType_throwsIllegalArgumentException() {
+        MockMultipartFile image = new MockMultipartFile("file", "user.gif", "image/gif", "dummy".getBytes());
+
+        assertThrows(IllegalArgumentException.class, () -> userService.updateProfilePhoto(10L, image));
+    }
+
+    @Test
+    void updateProfilePhoto_tooLarge_throwsIllegalArgumentException() {
+        byte[] largeBytes = new byte[6 * 1024 * 1024];
+        MockMultipartFile image = new MockMultipartFile("file", "user.jpg", "image/jpeg", largeBytes);
+
+        assertThrows(IllegalArgumentException.class, () -> userService.updateProfilePhoto(10L, image));
     }
 }
