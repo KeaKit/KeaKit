@@ -128,14 +128,14 @@ class DefaultKitControllerTest {
     }
 
     @Test
-    void createDefaultKit_invalidName_returns500() throws Exception {
+    void createDefaultKit_invalidName_returns400() throws Exception {
         when(defaultKitService.createDefaultKit(any(DefaultKitCreateRequest.class)))
                 .thenThrow(new IllegalArgumentException("El nombre del kit predeterminado no puede estar vacío."));
 
         mockMvc.perform(post("/api/default-kits")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"\",\"description\":\"Desc\",\"basePrice\":10}"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
