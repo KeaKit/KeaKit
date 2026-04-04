@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { getWalletByUserId } from '../../services/walletService';
+import { getUserById } from '../../services/authService';
 
 type ProfileNav = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 
@@ -32,7 +33,7 @@ interface ActionButton {
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileNav>();
-  const { user, signOut } = useAuth();
+  const { user, setUser, signOut } = useAuth();
 
   const [availableBalance, setAvailableBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
@@ -44,7 +45,11 @@ const ProfileScreen: React.FC = () => {
         try {
           const wallet = await getWalletByUserId(user.id, user.token);
           setAvailableBalance(wallet.balance);
-        } catch (error) {
+        } catch (error: unknown) {
+          if (error instanceof Error && error.name === 'TokenExpiredError') {
+            signOut();
+            return;
+          }
           setAvailableBalance(null);
         } finally {
           setLoadingBalance(false);
@@ -52,7 +57,23 @@ const ProfileScreen: React.FC = () => {
       }
     };
     fetchBalance();
-  }, [user?.id, user?.token]);
+  }, [user?.id, user?.token, signOut]);
+
+  useEffect(() => {
+    const refreshProfile = async () => {
+      if (user?.id && user?.token) {
+        try {
+          const latest = await getUserById(user.id, user.token);
+          setUser({ ...user, ...latest, token: user.token });
+        } catch (error: unknown) {
+          if (error instanceof Error && error.name === 'TokenExpiredError') {
+            signOut();
+          }
+        }
+      }
+    };
+    refreshProfile();
+  }, [user?.id, user?.token, signOut]);
 
   const handleLogout = async () => {
     try {
@@ -143,7 +164,11 @@ const ProfileScreen: React.FC = () => {
 
       <View style={styles.headerCard}>
         <View style={styles.avatarSection}>
+          {user.profilePhotoUrl ? (
+            <Image source={{ uri: user.profilePhotoUrl }} style={styles.logo} />
+          ) : (
             <Image source={require('../../../assets/logo.png')} style={styles.logo} />
+          )}
           <Text style={styles.title}>Perfil</Text>
           <Text style={styles.subtitle}>{user.email}</Text>
           <View style={styles.balanceContainer}>

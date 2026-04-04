@@ -10,12 +10,15 @@ import com.example.demo.security.TokenBlacklistService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map;
 
 @RestController
@@ -34,7 +37,30 @@ public class UserController {
 
     private String getAuthenticatedEmail(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) return null;
         return authentication.getName();
+    }
+
+    private Long getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof com.example.demo.security.JwtAuthenticationToken jwtToken) {
+            return jwtToken.getUserId();
+        }
+        return null;
+    }
+
+    private boolean isAuthorizedForUser(Long targetUserId, String targetEmail) {
+        Long authUserId = getAuthenticatedUserId();
+        if (authUserId != null) {
+            return authUserId.equals(targetUserId);
+        }
+
+        String authEmail = getAuthenticatedEmail();
+        if (authEmail != null && targetEmail != null) {
+            return authEmail.equals(targetEmail);
+        }
+
+        return false;
     }
 
     @PostMapping("/register")
@@ -51,10 +77,8 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
-        String authenticatedEmail = getAuthenticatedEmail();
-
         UserResponse response = userService.getUserById(id);
-        if (!authenticatedEmail.equals(response.getEmail())) {
+        if (!isAuthorizedForUser(id, response.getEmail())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         
@@ -63,10 +87,8 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateData updateData) {
-        String authenticatedEmail = getAuthenticatedEmail();
-
         UserResponse userToUpdate = userService.getUserById(id);
-        if (!authenticatedEmail.equals(userToUpdate.getEmail())) {
+        if (!isAuthorizedForUser(id, userToUpdate.getEmail())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -74,12 +96,10 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{id}/profile-photo")
-    public ResponseEntity<UserResponse> updateProfilePhoto(@PathVariable Long id, @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
-        String authenticatedEmail = getAuthenticatedEmail();
-
+    @PostMapping(value = "/{id}/profile-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateProfilePhoto(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
         UserResponse userToUpdate = userService.getUserById(id);
-        if (!authenticatedEmail.equals(userToUpdate.getEmail())) {
+        if (!isAuthorizedForUser(id, userToUpdate.getEmail())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -87,9 +107,13 @@ public class UserController {
             UserResponse response = userService.updateProfilePhoto(id, file);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Error interno del servidor");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 

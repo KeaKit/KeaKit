@@ -417,7 +417,14 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
             style={[styles.userMenuTrigger, { backgroundColor: Colors.primaryHome }]}
             onPress={() => setUserMenuVisible(!userMenuVisible)}
           >
-            <Text style={styles.userInitial}>{user.name.charAt(0).toUpperCase()}</Text>
+            {user.profilePhotoUrl ? (
+              <Image
+                source={{ uri: user.profilePhotoUrl }}
+                style={styles.userAvatarImage}
+              />
+            ) : (
+              <Text style={styles.userInitial}>{user.name.charAt(0).toUpperCase()}</Text>
+            )}
           </TouchableOpacity>
         )}
 
@@ -523,6 +530,12 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  userAvatarImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   userInitial: {
     color: '#fff',

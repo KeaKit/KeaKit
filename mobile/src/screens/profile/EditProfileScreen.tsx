@@ -14,7 +14,9 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
-import { updateProfile } from '../../services/userService';
+import { updateProfile, uploadProfilePhoto } from '../../services/userService';
+import { useNotification } from '../../components/NotificationContext';
+import * as ImagePicker from 'expo-image-picker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 
@@ -50,7 +52,7 @@ const parseBackendError = (err: unknown): FieldErrors => {
 const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileNav>();
   const route = useRoute();
-  const { user, setUser } = useAuth();
+  const { user, setUser, signOut } = useAuth();
   
   const routeParams = (route.params as { user?: typeof user } | undefined);
   const profileUser = routeParams?.user || user;
@@ -71,6 +73,10 @@ const EditProfileScreen: React.FC = () => {
     onCountryChange,
   } = useLocationPicker(profileUser?.country ?? '', profileUser?.city ?? '');
 
+  const [profileImage, setProfileImage] = useState<string | null>(profileUser?.profilePhotoUrl ?? null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const { showNotification } = useNotification();
+
   const [loading, setLoading] = useState(false);
   const [errors, setErrors]   = useState<FieldErrors>({});
 
@@ -79,6 +85,51 @@ const EditProfileScreen: React.FC = () => {
   const setField = (field: keyof ProfileData) => (value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     clearErrors();
+  };
+
+  const pickProfileImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setSelectedImage(asset.uri);
+      }
+    } catch (error) {
+      showNotification('No se pudo seleccionar la imagen', 'error');
+    }
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!selectedImage || !profileUser || !user) {
+      showNotification('Selecciona una imagen primero', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const updatedUser = await uploadProfilePhoto(profileUser.id, selectedImage, user.token);
+      setProfileImage(updatedUser.profilePhotoUrl ?? null);
+      setUser({
+        ...user,
+        profilePhotoUrl: updatedUser.profilePhotoUrl ?? user.profilePhotoUrl,
+      });
+      showNotification('Foto de perfil actualizada', 'success');
+      setSelectedImage(null);
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'TokenExpiredError') {
+        await signOut();
+        return;
+      }
+      showNotification((err as Error).message || 'Error al subir la foto', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSave = async () => {
@@ -111,9 +162,14 @@ const EditProfileScreen: React.FC = () => {
         address: updatedUser.address,
         city:    updatedUser.city,
         country: updatedUser.country,
+        profilePhotoUrl: updatedUser.profilePhotoUrl ?? user!.profilePhotoUrl,
       });
       navigation.goBack();
     } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'TokenExpiredError') {
+        await signOut();
+        return;
+      }
       setErrors(parseBackendError(err));
     } finally {
       setLoading(false);
@@ -137,7 +193,30 @@ const EditProfileScreen: React.FC = () => {
         <Ionicons name="arrow-back" size={24} color="#103a57" />
       </TouchableOpacity>
 
-      <Image source={require('../../../assets/logo.png')} style={styles.logo} />
+      <Image
+        source={
+          selectedImage
+            ? { uri: selectedImage }
+            : profileImage
+            ? { uri: profileImage }
+            : require('../../../assets/logo.png')
+        }
+        style={styles.logo}
+      />
+
+      <View style={styles.uploadButtonsRow}>
+        <TouchableOpacity style={[styles.uploadButton, styles.selectButton]} onPress={pickProfileImage}>
+          <Text style={styles.uploadButtonText}>Seleccionar</Text>
+        </TouchableOpacity>
+
+        {selectedImage ? (
+          <TouchableOpacity style={[styles.uploadButton, styles.saveButton]} onPress={handleUploadPhoto} disabled={loading}>
+            <Text style={styles.uploadButtonText}>Subir</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={[styles.uploadButton, styles.saveButton, styles.uploadButtonPlaceholder]} />
+        )}
+      </View>
 
       <Text style={styles.title}>Editar perfil</Text>
       <Text style={styles.subtitle}>{profileUser?.email}</Text>
@@ -338,6 +417,34 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 17,
+    fontWeight: '600',
+  },
+  uploadButtonsRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  uploadButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectButton: {
+    backgroundColor: '#103a57',
+    marginRight: 8,
+  },
+  saveButton: {
+    backgroundColor: '#103a57',
+  },
+  uploadButtonPlaceholder: {
+    opacity: 0,
+  },
+  uploadButtonText: {
+    color: '#fff',
+    fontSize: 15,
     fontWeight: '600',
   },
 });

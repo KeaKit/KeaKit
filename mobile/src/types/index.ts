@@ -24,6 +24,7 @@ export interface UserResponse {
   address: string;
   city: string;
   country: string;
+  profilePhotoUrl?: string;
   token?: string;
 }
 
@@ -36,6 +37,7 @@ export interface AuthUser {
   address: string;
   city: string;
   country: string;
+  profilePhotoUrl?: string;
   token: string;
 }
 
@@ -427,6 +429,7 @@ export interface ProfileData {
   address: string;
   city: string;
   country: string;
+  profilePhotoUrl?: string;
 }
 
 export type ServiceStatus = "DRAFT" | "ACTIVE" | "UNAVAILABLE";

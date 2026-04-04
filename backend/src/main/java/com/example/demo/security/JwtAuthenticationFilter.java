@@ -32,36 +32,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authorizationHeader = request.getHeader("Authorization");
         String jwt = jwtUtil.extractTokenFromAuthHeader(authorizationHeader);
-        String email = null;
 
         if (jwt != null) {
-            try {
-                email = jwtUtil.extractEmail(jwt);
-            } catch (Exception e) {
-                logger.error("Error extracting email from token: " + e.getMessage());
-            }
-        }
-
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Verificar si el token está en la blacklist
             if (tokenBlacklistService.isTokenBlacklisted(jwt)) {
-                logger.warn("Token is blacklisted (user logged out): " + email);
-                filterChain.doFilter(request, response);
+                logger.warn("Token is blacklisted (user logged out)");
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is blacklisted");
                 return;
             }
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            if (!jwtUtil.validateToken(jwt)) {
+                logger.warn("Invalid or expired token");
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+                return;
+            }
 
-            if (jwtUtil.validateToken(jwt)) {
-                // Extraer información adicional del token
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                String email;
+                try {
+                    email = jwtUtil.extractEmail(jwt);
+                } catch (Exception e) {
+                    logger.error("Error extracting email from token: " + e.getMessage());
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+                    return;
+                }
+
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
                 Long userId = jwtUtil.extractUserId(jwt);
                 UserRole role = jwtUtil.extractRole(jwt);
 
-                // Usar el token de autenticación personalizado con información adicional
                 JwtAuthenticationToken authenticationToken =
                     new JwtAuthenticationToken(
-                        userDetails, 
-                        null, 
+                        userDetails,
+                        null,
                         userDetails.getAuthorities(),
                         userId,
                         role,
@@ -69,7 +72,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
 
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         }

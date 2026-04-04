@@ -6,6 +6,7 @@ import React, {
   useState,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Buffer } from 'buffer';
 import { loginUser, registerUser } from '../services/authService';
 import { AuthUser, LoginRequest, RegisterRequest } from '../types';
 
@@ -36,11 +37,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   
   const [loading, setLoading] = useState(true);
 
+  const isTokenExpired = (token: string): boolean => {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return true;
+      const payload = parts[1];
+      const decoded = Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+      const data = JSON.parse(decoded);
+      if (!data.exp) return true;
+      return data.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
         const stored = await AsyncStorage.getItem(USER_STORAGE_KEY);
-        if (stored) setUser(JSON.parse(stored) as AuthUser);
+        if (stored) {
+          const authUser = JSON.parse(stored) as AuthUser;
+          if (authUser.token && isTokenExpired(authUser.token)) {
+            await AsyncStorage.removeItem(USER_STORAGE_KEY);
+            _setUser(null);
+          } else {
+            setUser(authUser);
+          }
+        }
       } finally {
         setLoading(false);
       }
@@ -60,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       address: response.address,
       city: response.city,
       country: response.country,
+      profilePhotoUrl: response.profilePhotoUrl,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
     setUser(authUser);
@@ -78,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       address: response.address,
       city: response.city,
       country: response.country,
+      profilePhotoUrl: response.profilePhotoUrl,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
     setUser(authUser);

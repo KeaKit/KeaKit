@@ -5,6 +5,7 @@ export const API_ROUTES = {
   LOGIN:    `${BASE_URL}/api/users/login`,
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
+  UPDATE_PROFILE_PHOTO: (id: number) => `${BASE_URL}/api/users/${id}/profile-photo`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   GET_ADMIN_ALL_USERS: `${BASE_URL}/api/admin/users/no-self`,
   DELETE_USER: (id: number) => `${BASE_URL}/api/admin/users/${id}`,
