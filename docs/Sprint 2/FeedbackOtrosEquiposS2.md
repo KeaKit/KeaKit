@@ -234,16 +234,283 @@ Casos de uso probados:
 
 ---
 
+#### Incidencias
+
+Casos de uso probados:
+
+* Gestión de incidencias (CRUD).
+* Consulta del historial de incidencias propias.
+* Consulta del listado global de incidencias con filtros.
+* Cambio de estados de incidencias.
+* Adición de notas y comentarios rápidos.
+* Añadir filtro para buscar incidencias.
+* Asignar técnicos para gestionar las incidencias.
+* Vinculación de habitaciones con las incidencias.
+* Adjuntar imágenes a las incidencias.
+* Visualizar pipeline con el estado de las incidencias.
+
+---
+
+###### **Gestión de incidencias (CRUD)**
+
+* **Estado:** Funciona correctamente.
+* Se pueden crear, visualizar, editar y gestionar incidencias sin problemas.
+
+---
+
+###### **Consulta del historial de incidencias propias**
+
+* **Estado:** Funciona correctamente.
+* Existe un botón **“Viendo mis incidencias”** que filtra correctamente las incidencias creadas por el usuario residente autenticado.
+
+---
+
+###### **Consulta del listado global de incidencias con filtros**
+
+* **Estado:** Funciona correctamente.
+* Los filtros aplican correctamente, incluyendo el filtro de prioridad con valores **Baja** y **Urgente**.
+
+---
+
+###### **Cambio de estados de incidencias**
+
+* **Estado:** Funciona correctamente.
+* Los cambios de estado se reflejan correctamente tanto en la vista del administrador como en la del residente.
+
+---
+
+###### **Adición de notas y comentarios rápidos a las incidencias**
+
+* **Estado:** Funciona correctamente.
+* Las notas y comentarios añadidos por administración se visualizan correctamente en la vista del residente.
+
+---
+
+###### **Añadir filtro para buscar incidencias**
+
+* **Estado:** Funciona correctamente.
+* La búsqueda permite localizar incidencias de forma rápida y precisa.
+
+---
+
+###### **Asignar técnicos para gestionar las incidencias**
+
+* **Estado:** Funciona correctamente.
+* La asignación ya no es libre, sino que solo permite seleccionar técnicos registrados mediante un desplegable.
+
+**Sugerencia de mejora:**
+
+* Actualmente se puede asignar una incidencia a cualquier técnico registrado, independientemente de si está **activo, ausente o de vacaciones**.
+* Sería recomendable restringir la asignación únicamente a técnicos disponibles.
+
+---
+
+###### **Vinculación de habitaciones con las incidencias**
+
+* **Estado:** Funciona correctamente.
+* La incidencia puede vincularse correctamente a una habitación.
+
+---
+
+###### **Adjuntar imágenes a las incidencias**
+
+* **Estado:** Funciona correctamente.
+* El sistema permite adjuntar imágenes y visualizarlas sin incidencias.
+
+---
+
+###### **Visualizar pipeline con el estado de las incidencias**
+
+* **Estado:** Funciona correctamente.
+* El pipeline refleja correctamente el estado actual y su evolución.
+
+---
+
+**Observación**
+
+* Las notificaciones de incidencias funcionan correctamente en la campana.
+* En la vista de administrador, al acceder a una notificación esta desaparece correctamente.
+* En la vista de residente, las notificaciones ya visualizadas **no desaparecen**, lo que provoca acumulación progresiva.
+
+---
+
+#### Avisos
+
+Casos de uso probados:
+
+* Gestión de avisos (CRUD).
+* Recepción de notificaciones de avisos.
+
+---
+
+###### **Gestión de avisos (CRUD)**
+
+* **Estado:** Funciona correctamente.
+* Todas las operaciones CRUD se ejecutan sin problemas.
+
+---
+
+###### **Recepción de notificaciones de avisos**
+
+* **Estado:** Funciona correctamente.
+* Los residentes reciben correctamente las notificaciones de avisos.
+
+---
+
+#### Reservas
+
+Casos de uso probados:
+
+* Configuración de espacios, horas y aforos.
+* Panel de gestión y visualización de reservas.
+* Consulta de disponibilidad en tiempo real y reserva de espacios.
+* Creación de reservas.
+* Cancelación de reservas propias.
+* Liberación automática de objetos.
+* Permitir múltiples reservas según aforo.
+
+---
+
+###### **Configuración de espacios, horas y aforos**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Panel de gestión y visualización de reservas**
+
+**Vista de residente**
+
+* Permite visualizar correctamente las reservas realizadas.
+
+**Vista de administrador**
+
+* Las reservas se reflejan correctamente en el panel de administración.
+
+****Failure condition detectada (T12)****
+
+* En **Gestión de espacios**, al pulsar el botón **“Ver reservas”**, no se muestran las reservas realizadas de ese espacio.
+* En su lugar, se muestran los **detalles del espacio**, lo cual no corresponde con la acción esperada.
+* En cambio, en **Gestión de objetos**, el botón **“Ver préstamos”** sí funciona correctamente.
+
+---
+
+###### **Consulta de disponibilidad en tiempo real y reserva de espacios**
+
+* **Estado:** Funciona correctamente.
+* El sistema refleja correctamente la disponibilidad en tiempo real.
+
+---
+
+###### **Creación de reservas**
+
+* **Estado:** Funciona correctamente.
+* Se validan fechas, horas y campos obligatorios.
+
+---
+
+###### **Cancelación de reservas propias**
+
+* **Estado:** Funciona correctamente.
+* El residente puede cancelar reservas y el cambio se refleja inmediatamente.
+
+---
+
+###### **Liberación automática de objetos**
+
+* **Estado:** Funciona correctamente.
+* Los espacios y objetos quedan liberados automáticamente al finalizar la reserva.
+
+---
+
+###### **Permitir múltiples reservas a la vez según el aforo del espacio**
+
+* **Estado:** Funciona correctamente.
+* El sistema respeta correctamente el aforo configurado.
+
+---
+
+#### Eventos
+
+Casos de uso probados:
+
+* Gestión de eventos (CRUD).
+* Inscripción a eventos.
+* Gestión de asistencia.
+* Crear reserva de espacios públicos al crear un evento.
+
+---
+
+###### **Gestión de eventos (CRUD)**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Inscripción a eventos**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Gestión de asistencia**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Crear reserva de espacios públicos al crear un evento en dicho espacio**
+
+* **Estado:** Funciona correctamente.
+* La reserva del espacio se genera correctamente al crear el evento.
+
+---
+
+#### Comedor
+
+Casos de uso probados:
+
+* Listado de menús semanales de prueba.
+
+---
+
+###### **Listado de menús semanales de prueba**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+#### Premium
+
+Casos de uso probados:
+
+* Interfaz de customización de la imagen de marca.
+* Modificar banner e icono en el header.
+
+---
+
+###### **Interfaz de customización de la imagen de marca**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Modificar banner e icono en el header**
+
+* **Estado:** Funciona correctamente.
+
+---
+
 ## Historial de versiones
 
 | Versión | Fecha       | Descripción | Autor(es) |
 |---------|------------|-------------|-----------|
 | 1.0.0 | 05/04/2026 | Creación del documento e Integración de pruebas de casos de uso de NexUS  | Salma El Hakimy Ettorabi |
-
+| 1.1.0 | 05/04/2026 | Integración del resto de pruebas de casos de uso de NexUS  | Marta Aguilar Morcillo |
 
 
 ---
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
 **Fecha de redacción:** 05/04/2026
-**Versión:** 1.0.0
+**Versión:** 1.1.0
