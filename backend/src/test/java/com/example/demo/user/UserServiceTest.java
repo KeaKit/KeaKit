@@ -1,4 +1,4 @@
-package com.example.demo.service;
+package com.example.demo.user;
 
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
@@ -12,6 +12,8 @@ import com.example.demo.model.UserRole;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.WalletRepository;
 import com.example.demo.security.JwtUtil;
+import com.example.demo.service.UserService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
