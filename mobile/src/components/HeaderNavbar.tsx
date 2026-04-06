@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,34 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../styles/theme';
 import { RootStackParamList, NavbarHeaderScreen, AuthUser, NavbarHeaderItem } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useTrackingNotifications } from '../context/TrackingNotificationContext';
+import { getUserNotifications } from '../services/notificationService';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
+
+
+const getLogoSize = () => {
+  if (width < 480) {
+    // Móviles pequeños
+    return { width: 70, height: 22 };
+  } else if (width < 768) {
+    // Móviles medianos y grandes
+    return { width: 85, height: 27 };
+  } else if (width < 1024) {
+    // Tablets
+    return { width: 100, height: 32 };
+  } else {
+    // Desktop
+    return { width: 120, height: 38 };
+  }
+};
 
 interface HeaderNavbarProps {
   user: AuthUser | null;
@@ -50,7 +68,18 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
+  const [activityUnreadCount, setActivityUnreadCount] = useState(0);
+  const [screenWidth, setScreenWidth] = useState(width);
   const bellAnim = useRef(new Animated.Value(1)).current;
+  const totalNotifications = (unreadCount || 0) + (activityUnreadCount || 0);
+
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setScreenWidth(window.width);
+    });
+    return () => subscription?.remove();
+  }, []);
 
   // Cerrar dropdown cuando se hace click fuera (solo web)
   useEffect(() => {
@@ -85,6 +114,20 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     }
   }, [unreadCount]);
 
+  // Cargar notificaciones de actividad sin leer
+  useFocusEffect(
+  useCallback(() => {
+    const loadActivityNotifications = async () => {
+      if (user?.id && user?.token) {
+        const notifications = await getUserNotifications(user.id, user.token);
+        const unread = notifications.filter(n => !n.read).length;
+        setActivityUnreadCount(unread); 
+      }
+    };
+    loadActivityNotifications();
+  }, [user])
+);
+
   // Items para usuarios normales
   const userNavItems: NavbarHeaderItem[] = [
     { name: 'Artículos', icon: 'file-tray-full-outline', screen: 'MyArticles', requiresAuth: true },
@@ -98,7 +141,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers', requiresAdmin: true },
     { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories', requiresAdmin: true },
     { name: 'Comisión de Plataforma', icon: 'cash', screen: 'Commission', requiresAdmin: true },
-    { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents', requiresAdmin: true },
+    { name: 'Incidencias', icon: 'warning-outline', screen: 'AdminIncidents', requiresAdmin: true },
     { name: 'Kits Predeterminados', icon: 'cube-outline', screen: 'DefaultKits', requiresAdmin: true },
   ];
 
@@ -142,7 +185,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           items: [
             { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
             { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
-            { name: 'Notificaciones', icon: 'notifications', screen: 'TrackingNotifications' },
+            { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications', badge: activityUnreadCount > 0 ? String(activityUnreadCount) : undefined },
+            { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications', badge: unreadCount > 0 ? String(unreadCount) : undefined },
           ]
         },
         {
@@ -160,7 +204,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           items: [
             { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
             { name: 'Kits asignados', icon: 'cube-outline', screen: 'AssignedKits' },
-            { name: 'Notificaciones', icon: 'notifications', screen: 'TrackingNotifications' },
+            { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications' },
           ]
         },
         {
@@ -178,7 +222,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         items: [
           { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
           { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
-          { name: 'Notificaciones', icon: 'notifications', screen: 'TrackingNotifications' },
+          { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications', badge: activityUnreadCount > 0 ? String(activityUnreadCount) : undefined },
+          { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications', badge: unreadCount > 0 ? String(unreadCount) : undefined },
         ]
       },
       {
@@ -221,25 +266,23 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           <TouchableOpacity onPress={() => navigateToScreen('Home')}>
             <Image 
               source={require('../../assets/logo.png')} 
-              style={styles.logo}
+              style={styles.mobileLogo}
               resizeMode="contain"
             />
           </TouchableOpacity>
         </View>
 
         <View style={styles.mobileRight}>
-          {showBadge && (
+          {user && (
             <TouchableOpacity
               style={styles.bellButton}
-              onPress={() => navigateToScreen('TrackingNotifications')}
+              onPress={() => navigateToScreen('Notifications')}
             >
               <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
                 <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
               </Animated.View>
-              {unreadCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{unreadCount}</Text>
-                </View>
+              {totalNotifications > 0 && (
+                <View style={styles.notificationDot} />
               )}
             </TouchableOpacity>
           )}
@@ -349,18 +392,16 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           </Text>
         )}
 
-        {showBadge && (
+        {user && (
           <TouchableOpacity
             style={styles.bellButton}
-            onPress={() => navigateToScreen('TrackingNotifications')}
+            onPress={() => navigateToScreen('Notifications')}
           >
             <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
               <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
             </Animated.View>
-            {unreadCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadCount}</Text>
-              </View>
+            {totalNotifications > 0 && (
+              <View style={styles.notificationDot} />
             )}
           </TouchableOpacity>
         )}
@@ -412,13 +453,29 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
     zIndex: 10,
   },
+  notificationDot: {
+    position: "absolute",
+    top: 6,
+    right: 8,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: "#ff3b30",
+    borderWidth: 1.5,
+    borderColor: "#ffffff", // Borde blanco para que resalte sobre el icono
+  },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   logo: {
-    width: 120,
-    height: 36,
+    width: getLogoSize().width,
+    height: getLogoSize().height,
+    maxWidth: '500%',
+  },
+  mobileLogo: {
+    width: 40,
+    height: 40,
   },
   navItems: {
     flexDirection: 'row',
@@ -530,7 +587,7 @@ const styles = StyleSheet.create({
   // Mobile
   mobileHeader: {
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -572,8 +629,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalLogo: {
-    width: 120,
-    height: 36,
+    width: 50,
+    height: 50,
   },
   modalScroll: {
     marginBottom: 12,

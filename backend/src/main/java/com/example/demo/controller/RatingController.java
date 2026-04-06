@@ -68,4 +68,14 @@ public class RatingController {
         Map<Long, Boolean> result = ratingService.hasReviewedItems(reviewerId, kitId, itemIds);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/has-reviewed-kit")
+    public ResponseEntity<Map<Long, Boolean>> hasReviewedArticleInKits(
+            @RequestParam Long reviewerId,
+            @RequestParam Long itemId,
+            @RequestParam List<Long> kitIds
+    ) {
+        Map<Long, Boolean> result = ratingService.hasReviewedItemInKits(reviewerId, itemId, kitIds);
+        return ResponseEntity.ok(result);
+    }
 }

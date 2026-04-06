@@ -3,6 +3,7 @@ package com.example.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,12 +42,13 @@ public class ArticleService {
     private final DefaultKitService defaultKitService;
     private final CloudinaryService cloudinaryService;
     private final CityService cityService;
+    private final ArticleAvailabilityRequestService availabilityRequestService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
                           KitRepository kitRepository, CategoryRepository categoryRepository,
                           PaymentService paymentService,
                           CloudinaryService cloudinaryService, DefaultKitService defaultKitService,
-                          CityService cityService) {
+                          CityService cityService, ArticleAvailabilityRequestService availabilityRequestService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.kitRepository = kitRepository;
@@ -55,7 +57,10 @@ public class ArticleService {
         this.defaultKitService = defaultKitService;
         this.paymentService = paymentService;
         this.cityService = cityService;
+        this.availabilityRequestService = availabilityRequestService; // Se inyecta manualmente para evitar dependencia circular
     }
+
+
 
     public Article createWithImage(Article article, MultipartFile image, Long ownerId, Long categoryId) throws IOException {
         User owner = userRepository.findById(ownerId)
@@ -258,7 +263,11 @@ public class ArticleService {
             article.setStatus(ArticleStatus.AVAILABLE);
         }
 
-        return articleRepository.save(article);
+        Article updatedArticle = articleRepository.save(article);
+        if (updatedArticle.getStatus() == ArticleStatus.AVAILABLE) {
+            availabilityRequestService.notifyWatchersWhenAvailable(updatedArticle);
+        }
+        return updatedArticle;
     }
 
    public List<UserArticle> findArticlesByUserId(Long userId, Long categoryId, String condition, Double minPrice, Double maxPrice) {
@@ -335,7 +344,8 @@ public class ArticleService {
         // Liberar el artículo
         article.setStatus(ArticleStatus.AVAILABLE);
         article.setAvailableUntil(null);
-        articleRepository.save(article);
+        Article updatedArticle = articleRepository.save(article);
+        availabilityRequestService.notifyWatchersWhenAvailable(updatedArticle);
 
         return new ReturnResponse(
             articleId,
@@ -479,6 +489,7 @@ public class ArticleService {
             row.setStatus(k.getStatus());
             row.setCity(k.getCity());
             row.setCountry(k.getCountry());
+            row.setKitId(k.getId());
             return row;
         }).collect(Collectors.toList());
         return articleRecord;

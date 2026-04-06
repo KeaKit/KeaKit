@@ -36,7 +36,7 @@ Documentación del primer sprint de desarrollo.
 
 - **[6-S1-deliverable.md](docs/Sprint%201/6-S1-deliverable.md)**: Información sobre el entregable del Sprint 1.
 - **[analisis-cumplimiento-commitment-agreement-sprint1.md](docs/Sprint%201/analisis-cumplimiento-commitment-agreement-sprint1.md)**: Análisis del cumplimiento del Commitment Agreement durante Sprint 1.
-- **[analisis-feedback-sprint1.md](docs/Sprint%201/analisis-feedback-sprint1.md)**: Análisis de la retroalimentación recibida en Sprint 1.
+- **[analisis-feedback-sprint1.md](docs/Sprint%201/analisis-feedback-sprint1.md)**: Análisis de la retroalimentación recibida de los usuarios piloto en Sprint 1.
 - **[estimacion-rentabilidad-proyecto.md](docs/Sprint%201/estimacion-rentabilidad-proyecto.md)**: Estimación de la rentabilidad del proyecto.
 - **[gestion-de-costes.md](docs/Sprint%201/gestion-de-costes.md)**: Gestión y control de costes en Sprint 1.
 - **[img/](docs/Sprint%201/img/)**: Imágenes y recursos gráficos utilizados en la documentación.
@@ -66,16 +66,11 @@ Informes individuales y uno global del uso de herramientas de Inteligencia Artif
 #### 📂 `docs/usuarios pilotos/`
 Información y gestión de usuarios piloto del proyecto.
 
-- **[analisis-propuesta-de-cuestionario-usuarios-piloto.md](docs/usuarios%20pilotos/analisis-propuesta-de-cuestionario-usuarios-piloto.md)**: Análisis y propuesta del cuestionario para usuarios piloto.
-- **[analisis-respuestas-formulario-usuarios-piloto.md](docs/usuarios%20pilotos/analisis-respuestas-formulario-usuarios-piloto.md)**: Análisis de las respuestas recibidas del formulario de usuarios piloto.
+- **[feedback-propuesta-de-idea.md](docs/usuarios%20pilotos/analisis-propuesta-de-cuestionario-usuarios-piloto.md)**: Propuesta de la idea y captación de usuarios piloto.
+- **[analisis-feedback-propuesta-de-idea.md](docs/usuarios%20pilotos/analisis-feedback-propuesta-de-idea.md)**: Análisis de las respuestas recibidas del formulario de propuesta de la idea.
 - **[estrategia-incentivos.md](docs/usuarios%20pilotos/estrategia-incentivos.md)**: Estrategia de incentivos para usuarios piloto.
-- **[estudiante-erasmus.md](docs/usuarios%20pilotos/estudiante-erasmus.md)**: Perfil de usuario piloto: estudiante Erasmus.
+- **[definicion-de-usuarios-piloto.md](docs/usuarios%20pilotos/definicion-de-usuarios-piloto.md)**: Listado de los distintos perfiles distinguidos en los tipos de usuario arrendador y arrendatario.
 - **[listado-usuarios-piloto.md](docs/usuarios%20pilotos/listado-usuarios-piloto.md)**: Listado completo de usuarios piloto del proyecto.
-- **[nomada-digital.md](docs/usuarios%20pilotos/nomada-digital.md)**: Perfil de usuario piloto: nómada digital.
-- **[padre-estudiante-erasmus.md](docs/usuarios%20pilotos/padre-estudiante-erasmus.md)**: Perfil de usuario piloto: padre de estudiante Erasmus.
-- **[persona-comun.md](docs/usuarios%20pilotos/persona-comun.md)**: Perfil de usuario piloto: persona común.
-- **[persona-con-hijos.md](docs/usuarios%20pilotos/persona-con-hijos.md)**: Perfil de usuario piloto: persona con hijos.
-- **[persona-en-practicas.md](docs/usuarios%20pilotos/persona-en-practicas.md)**: Perfil de usuario piloto: persona en prácticas.
 - **[plan-beneficiacion-usuarios-pilotos.md](docs/usuarios%20pilotos/plan-beneficiacion-usuarios-pilotos.md)**: Plan de beneficiación para usuarios piloto.
 
 

@@ -22,6 +22,7 @@ public class User {
     private String password;
 
     @Column(nullable = false)
+    @Size(min = 2, max = 100, message = "Name size must be between 2 and 100")
     private String name;
 
     @Column(nullable = false)
@@ -29,7 +30,7 @@ public class User {
     private UserRole role;
 
     @Column(nullable = false)
-    @Pattern(regexp = "^[0-9\\-\\+]{9,15}$", message = "Phone number must be valid")
+    @Pattern(regexp = "^(\\+\\d{1,3})?\\d{8,12}$", message = "Phone number must be valid")
     private String phone;
 
     @Column(nullable = false)

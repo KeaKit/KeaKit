@@ -4,6 +4,7 @@ import com.example.demo.model.*;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import java.time.LocalDate;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
@@ -32,6 +35,8 @@ class ArticleIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private ObjectMapper objectMapper;
+
+    @MockitoBean private AuthService authService;
 
     private User savedOwner;
     private Article savedArticle;
@@ -534,5 +539,35 @@ class ArticleIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].title").value("Medio")); 
+
+    @Test
+    void testGetArticleRecord_Integration_Success() throws Exception {
+        // Simulamos que el usuario autenticado es el dueño del artículo
+        when(authService.getAuthenticatedUserId()).thenReturn(savedOwner.getId());
+
+        // El servicio findArticleRecord ya fue testeado en los unitarios, 
+        // aquí comprobamos que el flujo completo del endpoint funcione.
+        mockMvc.perform(get("/api/article/record/" + savedArticle.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray());
+                
+    }
+
+    @Test
+    void testGetArticleRecord_Integration_Failure_Unauthorized() throws Exception {
+        when(authService.getAuthenticatedUserId()).thenReturn(999L);
+
+        mockMvc.perform(get("/api/article/record/" + savedArticle.getId()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testGetArticleRecord_Integration_Failure_NoAuth() throws Exception {
+        when(authService.getAuthenticatedUserId()).thenReturn(null);
+
+        mockMvc.perform(get("/api/article/record/" + savedArticle.getId()))
+                .andExpect(status().isUnauthorized());
+
     }
 }

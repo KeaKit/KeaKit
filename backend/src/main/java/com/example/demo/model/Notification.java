@@ -2,6 +2,10 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "notifications")
@@ -13,6 +17,8 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
     private User user; // El destinatario (arrendador)
 
     @Column(nullable = false)
@@ -29,7 +35,10 @@ public class Notification {
     private NotificationType type;
 
     // Guardamos el ID del kit por si el frontend quiere hacer un enlace (deep link) al detalle
-    private Long relatedKitId; 
+    private Long relatedKitId;
+
+    // Para DEMAND_ALERT: ID del artículo solicitado
+    private Long relatedArticleId;
 
     // Constructor vacío para JPA
     public Notification() {}
@@ -98,5 +107,13 @@ public class Notification {
 
     public void setRelatedKitId(Long relatedKitId) {
         this.relatedKitId = relatedKitId;
+    }
+
+    public Long getRelatedArticleId() {
+        return relatedArticleId;
+    }
+
+    public void setRelatedArticleId(Long relatedArticleId) {
+        this.relatedArticleId = relatedArticleId;
     }
 }

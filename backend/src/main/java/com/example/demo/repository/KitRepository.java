@@ -6,9 +6,11 @@ import com.example.demo.model.KitStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,5 +28,23 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
     Optional<Kit> findActiveKitByItemId(@Param("itemId") Long itemId, @Param("status") KitStatus status);
 
     List<Kit> findByStatusAndEndDate(KitStatus status, LocalDate endDate);
+
+
+    // Para eliminar usuarios desde admin sin borrar los items de los kits ya alquilados
+    
+    @Query("SELECT CASE WHEN COUNT(k) > 0 THEN true ELSE false END " +
+           "FROM Kit k JOIN k.snapshots s " +
+           "WHERE s.originalItemId = :itemId " +
+           "AND k.status NOT IN (:excludedStatuses)")
+    boolean existsByItemIdAndStatusNotIn(@Param("itemId") Long itemId, 
+                                          @Param("excludedStatuses") List<KitStatus> excludedStatuses);
+    
+    @Modifying
+    @Transactional
+    @Query("UPDATE Kit k SET k.tenant = null WHERE k.tenant.id = :userId " +
+           "AND k.status IN ('FINISHED', 'CANCELLED')")
+    void updateTenantToNullForFinishedKits(@Param("userId") Long userId);
+    
+    List<Kit> findByTenantIdAndStatus(Long tenantId, KitStatus status);
 }
 

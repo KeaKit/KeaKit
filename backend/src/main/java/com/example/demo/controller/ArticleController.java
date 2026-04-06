@@ -8,6 +8,7 @@ import com.example.demo.model.User;
 import com.example.demo.model.Category;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.CategoryRepository;
+import com.example.demo.service.ArticleAvailabilityRequestService;
 import com.example.demo.service.ArticleService;
 import com.example.demo.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +31,8 @@ public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+    @Autowired
+    private ArticleAvailabilityRequestService availabilityRequestService;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -93,7 +96,23 @@ public class ArticleController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-    
+
+    @PostMapping("/{id}/notify-when-available")
+    public ResponseEntity<?> requestAvailabilityNotification(
+            @PathVariable Long id,
+            @RequestParam Long requesterId) {
+        try {
+            availabilityRequestService.requestAvailabilityNotification(id, requesterId);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Aviso de disponibilidad registrado correctamente.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateArticle(@PathVariable Long id, @RequestParam Long ownerId, @RequestBody Article updateData) {

@@ -2,13 +2,12 @@ package com.example.demo.article;
 
 import com.example.demo.controller.ArticleController;
 import com.example.demo.dto.UserArticle;
-import com.example.demo.model.Article;
-import com.example.demo.model.ArticleStatus;
-import com.example.demo.model.Category;
-import com.example.demo.model.User;
+import com.example.demo.model.*;
 import com.example.demo.security.JwtUtil;
-import com.example.demo.service.ArticleService;
-import com.example.demo.service.AuthService;
+import com.example.demo.service.*;
+import com.example.demo.repository.*;
+import com.example.demo.security.CustomUserDetailsService;
+import com.example.demo.security.TokenBlacklistService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,23 +37,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 class ArticleControllerTest {
 
-    @Autowired
+@Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
     private ArticleService articleService;
 
+    // --- MOCKS FALTANTES O NECESARIOS PARA EL CONTEXTO ---
     @MockitoBean
-    private com.example.demo.repository.UserRepository userRepository;
+    private ArticleAvailabilityRequestService availabilityRequestService; 
 
     @MockitoBean
-    private com.example.demo.security.CustomUserDetailsService customUserDetailsService;
+    private NotificationService notificationService;
+    // ----------------------------------------------------
 
     @MockitoBean
-    private com.example.demo.security.TokenBlacklistService tokenBlacklistService;
+    private UserRepository userRepository;
 
     @MockitoBean
-    private com.example.demo.repository.CategoryRepository categoryRepository;
+    private CustomUserDetailsService customUserDetailsService;
+
+    @MockitoBean
+    private TokenBlacklistService tokenBlacklistService;
+
+    @MockitoBean
+    private CategoryRepository categoryRepository;
 
     @MockitoBean
     private AuthService authService;
@@ -70,6 +77,8 @@ class ArticleControllerTest {
         owner = new User();
         owner.setId(1L);
         owner.setName("Test Owner");
+        
+        // Mock básico para evitar NullPointer si el controlador busca categorías
         when(categoryRepository.findById(any())).thenReturn(Optional.of(new Category()));
 
         sample = new Article();
@@ -79,7 +88,7 @@ class ArticleControllerTest {
         sample.setCity("c");
         sample.setPricePerMonth(10.0);
         sample.setStatus(ArticleStatus.AVAILABLE);
-        sample.setAvailableFrom(LocalDate.now().plusDays(1));   
+        sample.setAvailableFrom(LocalDate.now().plusDays(1)); 
         sample.setAvailableUntil(LocalDate.now().plusDays(10));
     }
 
@@ -409,5 +418,47 @@ class ArticleControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].title").value("Bicicleta Barata"));
+
+    @Test
+    void getArticleRecord_success() throws Exception {
+        sample.setOwner(owner);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+        when(articleService.findById(1L)).thenReturn(sample);
+        when(articleService.findArticleRecord(1L)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void getArticleRecord_notFound() throws Exception {
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+        when(articleService.findById(1L)).thenReturn(null);
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getArticleRecord_unauthorized() throws Exception {
+        User other = new User();
+        other.setId(2L);
+        sample.setOwner(other);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+        when(articleService.findById(1L)).thenReturn(sample);
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getArticleRecord_internalError() throws Exception {
+        when(authService.getAuthenticatedUserId()).thenThrow(new RuntimeException());
+
+        mockMvc.perform(get("/api/article/record/1"))
+            .andExpect(status().isInternalServerError());
+
     }
 }
