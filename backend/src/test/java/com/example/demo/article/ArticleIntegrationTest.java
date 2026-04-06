@@ -538,7 +538,7 @@ class ArticleIntegrationTest {
                 .param("maxPrice", "20.0"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].title").value("Medio")); 
+            .andExpect(jsonPath("$[0].title").value("Medio"));} 
 
     @Test
     void testGetArticleRecord_Integration_Success() throws Exception {

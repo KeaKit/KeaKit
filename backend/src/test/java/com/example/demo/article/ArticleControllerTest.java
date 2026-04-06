@@ -417,7 +417,7 @@ class ArticleControllerTest {
                 .param("maxPrice", "20.0"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].title").value("Bicicleta Barata"));
+            .andExpect(jsonPath("$[0].title").value("Bicicleta Barata"));}
 
     @Test
     void getArticleRecord_success() throws Exception {

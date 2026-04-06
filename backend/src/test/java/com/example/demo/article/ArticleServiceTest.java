@@ -843,7 +843,7 @@ class ArticleServiceTest {
 
         List<UserArticle> result = articleService.findArticlesByUserId(1L, 99L, "BROKEN", 100.0, 500.0);
 
-        assertThat(result).isNotNull();
+        assertThat(result).isNotNull();}
 
 
     // ------------ findArticleRecord ------------
