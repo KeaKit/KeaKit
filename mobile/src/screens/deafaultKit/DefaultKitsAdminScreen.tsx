@@ -11,7 +11,7 @@ import { deleteDefaultKit, fetchAllDefaultKits } from '../../services/defaultKit
 
 type DefaultKitsNav = NativeStackNavigationProp<RootStackParamList, 'DefaultKits'>;
 
-const DefaultKitsScreen: React.FC = () => {
+const DefaultKitsAdminScreen: React.FC = () => {
     const navigation = useNavigation<DefaultKitsNav>();
     const { user } = useAuth();
     const token = (user as any)?.token || ''; 
@@ -184,7 +184,7 @@ const DefaultKitsScreen: React.FC = () => {
     );
 };
 
-export default DefaultKitsScreen;
+export default DefaultKitsAdminScreen;
 
 const styles = StyleSheet.create({
     cardLeft: { 

@@ -82,8 +82,11 @@ public class DefaultKitService {
         }
     }
 
-    public List<DefaultKit> getAllDefaultKits() {
-        return defaultKitRepository.findAll();
+    public List<DefaultKitResponse> getAllDefaultKits() {
+        List<DefaultKit> kits = defaultKitRepository.findAll();
+        return kits.stream()
+               .map(this::mapToDefaultKitResponse) 
+               .collect(Collectors.toList());
     }
 
     public DefaultKit getDefaultKitById(Long id) {
@@ -125,7 +128,7 @@ public class DefaultKitService {
     }
 
     @Transactional
-    public DefaultKit updateDefaultKit(Long id, DefaultKitCreateRequest request) {
+    public DefaultKitResponse updateDefaultKit(Long id, DefaultKitCreateRequest request) {
         checkUserAdmin();
         
         DefaultKit defaultKit = getDefaultKitById(id);
@@ -157,7 +160,8 @@ public class DefaultKitService {
         }
 
         calculateAndSetBasePrice(defaultKit);
-        return defaultKitRepository.save(defaultKit);
+        DefaultKit savedKit = defaultKitRepository.save(defaultKit);
+        return mapToDefaultKitResponse(savedKit);
     }
 
     @Transactional

@@ -28,6 +28,7 @@ import MyKitsHistoryScreen from "../screens/kit/MyKitsHistoryScreen";
 import UserRatingsScreen from "../screens/ratings/UserRatingsScreen";
 import CommissionScreen from "../screens/commission/CommissionScreen";
 import DefaultKitsScreen from "../screens/kit/DefaultKitsScreen";
+import DefaultKitsAdminScreen from "../screens/deafaultKit/DefaultKitsAdminScreen";
 
 // Detail/Creation Screens (without Navbar)
 import EditProfileScreen from "../screens/profile/EditProfileScreen";
@@ -195,7 +196,7 @@ const AppNavigator: React.FC = () => {
                     <Stack.Screen name="DefaultKits">
                       {() => (
                         <MainLayout>
-                          <DefaultKitsScreen />
+                          <DefaultKitsAdminScreen />
                         </MainLayout>
                       )}
                     </Stack.Screen>
