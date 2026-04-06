@@ -6,6 +6,160 @@
 
 ---
 
+
+####  Autenticación
+
+Casos de uso probados:
+
+* Registro de usuarios mediante email.
+* Inicio y cierre de sesión.
+* Recuperación de contraseña.
+* Gestión de roles.
+* Edición de perfil.
+* Manter sesión iniciada.
+
+---
+
+###### Registro de usuarios mediante email.
+
+**Funcionamiento detectado**
+* El sistema efectivamente crea al usuario y le envia el correo en caso de no haber puesto contraseña
+
+**Funcionamiento mejorable**
+* deberia haber un tamaño maximo de contraseña. me dejo poner una de mil caracteres y el correo de bienvenida deberia ser distinto al de recuperacion de contraseña o indicar que el correo que se envia no es de bienvenida sino de recuperación de contraseña
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### Inicio y cierre de sesión.
+
+**Funcionamiento detectado**
+* El sistema efectivamente permite iniciar y cerrar sesión.
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### Recuperación de contraseña.
+
+**Funcionamiento detectado**
+* El sistema envia en corto tiempo un correo de recuperacion de contraseña y funciona correctamente.
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* ninguna
+
+---
+###### Gestión de roles.
+
+**Funcionamiento detectado**
+* El sistema diferencia entre administrador y estudiante.
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### Edición de perfil.
+
+**Funcionamiento detectado**
+* El sistema permite la edicion de perfil tanto de administrador como de estudiante.
+
+**Funcionamiento mejorable**
+* como estudiante el nombre completo pese a tener el *, no se te permite cambiar, por lo que convendria que no apareciera en la pantalla de edicion o se quitara el * que da a entender que es obligatorio 
+
+**Failure condition detectada**
+* T-12: al modificar el apodo desde estudiante y poner un apodo suuuuper largo salta un error de que no se puede guardar, deberia haber un validador de longitud
+
+---
+
+###### Edición de perfil.
+
+**Funcionamiento detectado**
+* se mantiene la sesion iniciada correctamente
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* nada
+---
+
+#### Panel residencias
+
+Casos de uso probados:
+
+* Acceso e interacción con el panel administrativo.
+* Gestión de personal (CRUD).
+* Gestión de residentes (CRUD).
+* Filtrado y visualización de detalles de las habitaciones.
+
+
+---
+
+###### Acceso e interacción con el panel administrativo.
+
+**Funcionamiento detectado**
+* se puede interactuar con el panel
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* nada
+---
+
+###### Gestión de personal (CRUD).
+
+**Funcionamiento detectado**
+* Puedes crear, borrar, ver a una persona
+
+**Funcionamiento mejorable**
+* cuando pones muchos caracteres efectivamente tiene comprobacion de que no se superen, pero no te dice en cual campo estas violando esa restriccion, simplemente te aparece el mensaje por ahi
+
+**Failure condition detectada**
+* nada
+  
+---
+
+###### Filtrado y visualización de detalles de las habitaciones.
+
+**Funcionamiento detectado**
+* Puedes filtrar y visualizar habitaciones
+
+**Funcionamiento mejorable**
+* niguno
+
+**Failure condition detectada**
+* T12- Se contara como fallo pues aunque no sea un caso de uso explicito, los botones estan y no se ha especificado nada en la guia, al crear una habitacion y tener algun error en la validacion, pese a que la validacion salta, una vez corriges el fallo el error no desaparece y tampoco te deja presionar el boton de guardar 
+  
+---
+
+###### Gestión de residentes (CRUD).
+
+**Funcionamiento detectado**
+* Puedes crear, eliminar, leer a un estudiante
+
+**Funcionamiento mejorable**
+* niguno
+
+**Failure condition detectada**
+* T12- comentado anteriormente pero al crear o editar el campo checking no se guarda
+  
+---
+
+
 #### Onboarding
 
 Casos de uso probados:
@@ -480,6 +634,57 @@ Casos de uso probados:
 
 ---
 
+#### Comunicación
+
+Casos de uso probados:
+
+* Gestión de chats (CRUD).
+* Hacer administrador del grupo a los miembros.
+* Añadir y expulsar miembros a los grupos.
+* Chats grupales y privados
+
+---
+
+###### Gestión de chats (CRUD)
+
+**Funcionamiento detectado**
+* Puedes crear, eliminar y ver chats
+
+**Funcionamiento mejorable**
+* nada, suponiendo que esta bien que los usuarios no puedan crear chats grupales y es algo que solo puede hacer el administrador
+
+**Failure condition detectada**
+* nada
+  
+---
+
+###### Hacer administrador del grupo a los miembros.
+
+**Funcionamiento detectado**
+* Puedes poner a otros miembros como administradores del grupo
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* T12 - puse de administrador del chat general al usuario de prueba, y a todos los usuarios creados, pero al iniciar como el usuario de prueba y hacer modificaciones en el chat, al darle guardar cambios, me dice "No tienes permisos para gestionar este grupo." lo mismo al intentar expulsar miembros que son admin o quitarle el admin a otros miembros administradores del grupo 
+  
+---
+
+###### Añadir y expulsar miembros a los grupos.
+
+**Funcionamiento detectado**
+* Como adminsitrador puedes
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* nada
+  
+---
+
+
 #### Premium
 
 Casos de uso probados:
@@ -670,9 +875,9 @@ Casos de uso probados:
 | 1.0.0 | 05/04/2026 | Creación del documento e Integración de pruebas de casos de uso de NexUS  | Salma El Hakimy Ettorabi |
 | 1.1.0 | 05/04/2026 | Integración del resto de pruebas de casos de uso de NexUS  | Marta Aguilar Morcillo |
 | 1.2.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Marta Aguilar Morcillo |
-
+| 1.3.0 | 06/04/2026 | Integración de algunos casos de uso de NexUS  | Luis Emmanuel Chavez Malave |
 ---
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
-**Fecha de redacción:** 05/04/2026
-**Versión:** 1.1.0
+**Fecha de redacción:** 06/04/2026
+**Versión:** 1.3.0
