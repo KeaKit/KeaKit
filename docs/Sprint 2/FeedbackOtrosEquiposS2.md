@@ -1,4 +1,4 @@
-# Informe de Feedback Sprint 2: NexUS 
+# Informe de Feedback Sprint 2: NexUS y MeerKatters
 
 ## 1. NexUS
 
@@ -501,13 +501,175 @@ Casos de uso probados:
 
 ---
 
+## 2. MeerKatters
+
+### Casos de uso probados
+
+---
+
+#### Eventos
+
+Casos de uso probados:
+
+* UC-16 Crear evento.
+* UC-17 Configurar privacidad de evento.
+* UC-18 Especificar información del evento.
+* UC-19 Seleccionar ubicación (mapa interactivo).
+* UC-20 Ver ubicaciones recomendadas.
+* UC-21 Unirse a evento.
+* UC-22 Cancelar asistencia.
+* UC-23 Ver asistentes.
+* UC-24 Editar evento.
+* UC-25 Cancelar evento.
+
+---
+
+###### **UC-16 Crear evento**
+
+* **Estado:** Funciona correctamente.
+* El sistema no permite crear eventos con fecha pasada.
+* Tampoco permite crear eventos cuya fecha de inicio sea posterior a la fecha de fin.
+
+****Failure condition detectada (T-13)****
+
+* Al indicar la ubicación presencial de un evento, el sistema permite introducir una **dirección inventada o inexistente**.
+* Por ejemplo, si se asigna el punto **(0,0)** y se introduce como nombre una dirección ficticia, el evento se guarda igualmente.
+* La ubicación queda registrada con un valor incorrecto y se representa en coordenadas inválidas.
+
+---
+
+###### **UC-17 Configurar privacidad de evento**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-18 Especificar información del evento**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-19 Seleccionar ubicación (mapa interactivo)**
+
+* **Estado:** Funciona correctamente.
+* La ubicación seleccionada se refleja correctamente en el mapa cuando existen coordenadas válidas.
+
+---
+
+###### **UC-20 Ver ubicaciones recomendadas**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-21 Unirse a evento**
+
+* **Estado:** Funciona correctamente.
+* Aunque en la vista de comunidad, al pulsar **“Mostrar cancelados”**, siguen apareciendo eventos cancelados con el botón **“Apuntarse”**, el sistema no completa la inscripción.
+
+**Sugerencia de mejora:**
+
+* No debería mostrarse el botón **“Apuntarse”** ni el formulario de inscripción en eventos **cancelados o ya finalizados**, aunque internamente bloquee la operación.
+* Esto mejora la intuitividad de la interfaz.
+
+****Failure condition detectada (T-12)****
+
+* En **Inicio > Mis eventos > Historial**, aparecen eventos a los que el usuario **no ha asistido**.
+* Incluso se listan eventos ocurridos **antes de la creación de la cuenta**, lo que indica una inconsistencia en el filtrado histórico.
+
+---
+
+###### **UC-22 Cancelar asistencia**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-23 Ver asistentes**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-24 Editar evento**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-25 Cancelar evento**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+#### Contenido
+
+Casos de uso probados:
+
+* UC-26 Subir archivo.
+* UC-27 Visualizar archivo.
+* UC-28 Descargar archivo.
+* UC-29 Eliminar archivo.
+
+---
+
+###### **UC-26 Subir archivo**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-27 Visualizar archivo**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-28 Descargar archivo**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-29 Eliminar archivo**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+#### Mapas y ubicación
+
+Casos de uso probados:
+
+* UC-30 Búsqueda por ubicación.
+* UC-31 Visualizar mapa de meetings.
+
+---
+
+###### **UC-30 Búsqueda por ubicación**
+
+****Failure condition detectada (T-13)****
+
+* El sistema permite introducir una **ubicación inventada en el perfil del usuario**.
+* Aunque no se hayan seleccionado coordenadas reales en el mapa del perfil, la aplicación permite utilizar esa ubicación falsa para buscar profesores cercanos.
+
+---
+
+###### **UC-31 Visualizar mapa de meetings**
+
+* **Estado:** Funciona correctamente.
+* Si el evento tiene coordenadas asociadas, la ubicación aparece correctamente representada en el mapa.
+
+
 ## Historial de versiones
 
 | Versión | Fecha       | Descripción | Autor(es) |
 |---------|------------|-------------|-----------|
 | 1.0.0 | 05/04/2026 | Creación del documento e Integración de pruebas de casos de uso de NexUS  | Salma El Hakimy Ettorabi |
 | 1.1.0 | 05/04/2026 | Integración del resto de pruebas de casos de uso de NexUS  | Marta Aguilar Morcillo |
-
+| 1.2.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Marta Aguilar Morcillo |
 
 ---
 
