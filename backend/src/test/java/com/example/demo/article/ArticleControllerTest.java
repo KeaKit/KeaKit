@@ -27,6 +27,7 @@ import java.util.Optional;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -370,5 +371,43 @@ class ArticleControllerTest {
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].title").value("Taladro de prueba"))
             .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
+    }
+
+
+    // Test filtros MyArticles
+    @Test
+    void getMyArticles_withAllFilters_success() throws Exception {
+        UserArticle dtoFiltered = new UserArticle(12L, "Taladro Nuevo", "url3", 25.0, "AVAILABLE", null);
+
+      
+        when(articleService.findArticlesByUserId(eq(1L), eq(5L), eq("NEW"), eq(10.0), eq(50.0)))
+            .thenReturn(List.of(dtoFiltered));
+
+        mockMvc.perform(get("/api/article/my-articles/1")
+                .param("categoryId", "5")
+                .param("condition", "NEW")
+                .param("minPrice", "10.0")
+                .param("maxPrice", "50.0"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Taladro Nuevo"))
+            .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
+    }
+
+    @Test
+    void getMyArticles_withPartialFilters_success() throws Exception {
+        UserArticle dtoFiltered = new UserArticle(13L, "Bicicleta Barata", "url4", 15.0, "AVAILABLE", null);
+
+       
+        when(articleService.findArticlesByUserId(eq(1L), isNull(), eq("USED"), isNull(), eq(20.0)))
+            .thenReturn(List.of(dtoFiltered));
+
+        mockMvc.perform(get("/api/article/my-articles/1")
+                .param("condition", "USED")
+                .param("maxPrice", "20.0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Bicicleta Barata"));
     }
 }

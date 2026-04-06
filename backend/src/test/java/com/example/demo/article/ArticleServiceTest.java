@@ -807,4 +807,40 @@ class ArticleServiceTest {
         assertThat(a.getAvailableUntil()).isNull();
         verify(articleRepository).save(a);
     }
+    // Test Filtros MyArticles
+    @Test
+    void findArticlesByUserId_withFilters_returnsFilteredDtoMapping() {
+
+        Article filteredArticle = new Article(); 
+        filteredArticle.setId(12L);
+        filteredArticle.setTitle("Martillo");
+        filteredArticle.setStatus(ArticleStatus.AVAILABLE);
+        filteredArticle.setCondition(ArticleCondition.NEW);
+        filteredArticle.setPricePerMonth(15.0);
+
+ 
+        when(articleRepository.findAll(any(Specification.class)))
+            .thenReturn(List.of(filteredArticle));
+
+    
+        List<UserArticle> result = articleService.findArticlesByUserId(1L, 2L, "NEW", 10.0, 20.0);
+
+        assertThat(result).hasSize(1);
+        UserArticle dto = result.get(0);
+        assertThat(dto.title()).isEqualTo("Martillo");
+ 
+        assertThat(dto.status()).isEqualTo("AVAILABLE"); 
+    }
+
+    @Test
+    void findArticlesByUserId_withFiltersNoMatches_returnsEmpty() {
+  
+        when(articleRepository.findAll(any(Specification.class)))
+            .thenReturn(List.of());
+
+        List<UserArticle> result = articleService.findArticlesByUserId(1L, 99L, "BROKEN", 100.0, 500.0);
+
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
+    }
 }
