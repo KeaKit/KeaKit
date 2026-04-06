@@ -38,15 +38,13 @@ public class ArticleService {
     private final DefaultKitService defaultKitService;
     private final CloudinaryService cloudinaryService;
     private final CityService cityService;
-
-    @Autowired
-    private ArticleAvailabilityRequestService availabilityRequestService;
+    private final ArticleAvailabilityRequestService availabilityRequestService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
                           KitRepository kitRepository, CategoryRepository categoryRepository,
                           PaymentService paymentService,
                           CloudinaryService cloudinaryService, DefaultKitService defaultKitService,
-                          CityService cityService) {
+                          CityService cityService, ArticleAvailabilityRequestService availabilityRequestService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.kitRepository = kitRepository;
@@ -55,7 +53,10 @@ public class ArticleService {
         this.defaultKitService = defaultKitService;
         this.paymentService = paymentService;
         this.cityService = cityService;
+        this.availabilityRequestService = availabilityRequestService; // Se inyecta manualmente para evitar dependencia circular
     }
+
+
 
     public Article createWithImage(Article article, MultipartFile image, Long ownerId, Long categoryId) throws IOException {
         User owner = userRepository.findById(ownerId)

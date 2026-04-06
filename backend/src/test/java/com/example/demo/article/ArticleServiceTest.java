@@ -8,6 +8,7 @@ import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.ArticleAvailabilityRequestService;
 import com.example.demo.service.ArticleService;
 import com.example.demo.service.CloudinaryService;
 import com.example.demo.service.DefaultKitService;
@@ -42,6 +43,7 @@ class ArticleServiceTest {
     @Mock private CloudinaryService cloudinaryService;
     @Mock private DefaultKitService defaultKitService;
     @Mock private PaymentService paymentService;
+    @Mock private ArticleAvailabilityRequestService availabilityRequestService; 
 
     @InjectMocks
     private ArticleService articleService;
