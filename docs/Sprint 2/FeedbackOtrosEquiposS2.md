@@ -712,6 +712,191 @@ Casos de uso probados:
 
 ---
 
+#### GESTIÓN DE USUARIOS
+
+Casos de uso probados:
+
+* UC-01 Registrar usuario
+* UC-02 Iniciar sesión
+* UC-03 Cerrar sesión
+* UC-04 Editar perfil
+* UC-05 Ver perfil
+* UC-06 Cambiar contraseña
+* UC-07 Eliminar cuenta
+
+---
+
+###### **UC-01 Registrar usuario**
+
+* **Estado:** Funciona correctamente.
+* El correo es enviando
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-02 Iniciar sesión**
+
+* **Estado:** Funciona correctamente.
+* El sistema requiere que validez la cuenta con email
+* No permite iniciar sesion si no esta validado
+
+****Failure condition detectada T12****
+* Dentro del formulario de iniciar sesion si presionas ¿olvidaste la contraseña? no hace nada para recuperarla, solo te manda a otra pantalla que no es la de inicio de sesion
+
+---
+
+###### **UC-03 Cerrar sesión**
+
+* **Estado:** Funciona correctamente.
+* El sistema efectivamente cierra la sesion
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### *** UC-04 Editar perfil**
+
+* **Estado:** Funciona correctamente.
+* El sistema efectivamente edita el perfil
+* El sistema hace caso omiso a modificaciones en los campos con "inpeccionar elemento"
+* Se tuvieron en cuenta validaciones de logitud en los campos
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-05 Ver perfil**
+
+* **Estado:** Funciona correctamente.
+* El sistema te deja ver el perfil de otras personas
+
+****Failure condition detectada T12****
+* No se si cuenta como failure condition, pero al ver el perfil de alguien que no tiene foto ej. Alejo Molina, su foto deja de ser las letras AM y se transforma en su nombre en entero en texto plano y pequeño
+
+---
+
+###### **UC-06 Cambiar contraseña**
+
+* **Estado:** Funciona correctamente.
+* El sistema valida correctamente la contraseña actual
+
+****Cosas a mejorar****
+* No se tiene la misma validacion para cambiar de contraseña que cuando se crea, para crear requiere mayuscula, minuscula, etc y para cambiar solo que sea 8 caracteres, puedes no poner ninguna mayuscula y lo acepta igualmente
+* El error de cuando la contraseña es muy larga en vez de decir algo como "contraseña muy larga" dice que no puede ser mas de 72 bytes (poco intuitivo para el usuario comun)
+
+****Failure condition detectada ninguno****
+
+---
+
+###### **UC-07 Eliminar cuenta**
+
+* **Estado:** Funciona correctamente.
+* El sistema elimina la cuenta
+
+****Failure condition detectada ninguno****
+
+---
+
+#### COMUNIDADES
+
+Casos de uso probados:
+
+* UC-08 Crear comunidad
+* UC-09 Editar comunidad
+* UC-10 Eliminar comunidad
+* UC-11 Unirse a comunidad
+* UC-12 Solicitar acceso a comunidad privada
+* UC-13 Gestionar miembros de comunidad
+* UC-14 Publicar contenido en comunidad
+* UC-15 Moderar contenido de comunidad
+
+---
+
+###### **UC-08 Crear comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema permite crear comunidades
+
+****sugerencia de mejora:****
+* Poner limite de caracteres en las tags, puedes poner un monton y se bugea visualmente
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-09 Editar comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema permite editar el nombre y descripcion comunidades
+* valida el numero minimo de caracteres para el nombre
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-10 Eliminar comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema elimina la comunidad
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-11 Unirse a comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar a comunidades publicas y no te deja entrar directamente a comunidades privadas
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-12 Solicitar acceso a comunidad privada**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar a comunidades publicas y no te deja entrar directamente a comunidades privadas
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-13 Gestionar miembros de comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar y ver a los miembros de una comunidad
+
+****Sugerencia de mejoras****
+* Que cuando das el admin a alguien puedas quitarselo
+* Que un admin no pueda expulsar a otro porque se podria "adueñar" de la comunidad al expulsar a todos los otros admin 
+
+****Failure condition detectada T12****
+* cuando recibes una solicitud de una comunidad privada cuando le das en aceptar o rechazar el sistema no hace nada
+
+---
+
+###### **UC-14 Publicar contenido en comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar ver a los miembros de una comunidad
+
+****Failure condition detectada ninguno****
+
+---
+
+###### **UC-15 Moderar contenido de comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite eliminar eventos
+* 
+****sugerencia de mejora****
+* Al abrir el chat tienes que bajarle el zoom al 75% para que se pueda ver
+
+****Failure condition detectada ninguno****
+---
+
+
 #### Eventos
 
 Casos de uso probados:
@@ -868,6 +1053,35 @@ Casos de uso probados:
 * Si el evento tiene coordenadas asociadas, la ubicación aparece correctamente representada en el mapa.
 
 
+#### VIDEOLLAMADAS
+
+Casos de uso probados:
+
+* UC-47 Crear sala de videollamada
+* UC-48 Unirse a videollamada
+* UC-49 Compartir audio y vídeo
+* UC-50 Compartir pantalla
+* UC-51 Finalizar videollamada
+---
+
+###### **UC-47 Crear sala de videollamada**
+
+* **Estado:** Funciona correctamente.
+* El sistema detecta cuando hay una reunion activa y cambia el boton de crear reunion por unirse
+
+****Failure condition detectada ninguna****
+---
+
+###### **UC-48 Unirse a videollamada**
+
+* **Estado:** Funciona correctamente.
+* El sistema tiene un boton para crear una sala
+
+****Failure condition detectada T12****
+* Si pones un numero muy alto en duracion como 6000000000000000000000000000000000000000000000000000000000000 al darle crear reunion da un error interno del servidor
+---
+
+
 ## Historial de versiones
 
 | Versión | Fecha       | Descripción | Autor(es) |
@@ -876,8 +1090,9 @@ Casos de uso probados:
 | 1.1.0 | 05/04/2026 | Integración del resto de pruebas de casos de uso de NexUS  | Marta Aguilar Morcillo |
 | 1.2.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Marta Aguilar Morcillo |
 | 1.3.0 | 06/04/2026 | Integración de algunos casos de uso de NexUS  | Luis Emmanuel Chavez Malave |
+| 1.4.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Luis Emmanuel Chavez Malave |
 ---
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
 **Fecha de redacción:** 06/04/2026
-**Versión:** 1.3.0
+**Versión:** 1.4.0
