@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,9 @@ public class ArticleService {
     private final DefaultKitService defaultKitService;
     private final CloudinaryService cloudinaryService;
     private final CityService cityService;
+
+    @Autowired
+    private ArticleAvailabilityRequestService availabilityRequestService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
                           KitRepository kitRepository, CategoryRepository categoryRepository,
@@ -254,7 +258,11 @@ public class ArticleService {
             article.setStatus(ArticleStatus.AVAILABLE);
         }
 
-        return articleRepository.save(article);
+        Article updatedArticle = articleRepository.save(article);
+        if (updatedArticle.getStatus() == ArticleStatus.AVAILABLE) {
+            availabilityRequestService.notifyWatchersWhenAvailable(updatedArticle);
+        }
+        return updatedArticle;
     }
 
     public List<UserArticle> findArticlesByUserId(Long userId) {
@@ -320,7 +328,8 @@ public class ArticleService {
         // Liberar el artículo
         article.setStatus(ArticleStatus.AVAILABLE);
         article.setAvailableUntil(null);
-        articleRepository.save(article);
+        Article updatedArticle = articleRepository.save(article);
+        availabilityRequestService.notifyWatchersWhenAvailable(updatedArticle);
 
         return new ReturnResponse(
             articleId,
