@@ -1052,34 +1052,210 @@ Casos de uso probados:
 * **Estado:** Funciona correctamente.
 * Si el evento tiene coordenadas asociadas, la ubicación aparece correctamente representada en el mapa.
 
+---
 
-#### VIDEOLLAMADAS
+
+#### Profesores
 
 Casos de uso probados:
 
-* UC-47 Crear sala de videollamada
-* UC-48 Unirse a videollamada
-* UC-49 Compartir audio y vídeo
-* UC-50 Compartir pantalla
-* UC-51 Finalizar videollamada
+* UC-32 Crear / editar perfil de profesor.
+* UC-33 Solicitar verificación de profesor.
+* UC-34 Listar profesores.
+* UC-35 Listar profesores verificados.
+* UC-36 Pago para verificación / promoción.
+* UC-37 Valorar profesor.
+* UC-38 Chat con profesor.
+
 ---
 
-###### **UC-47 Crear sala de videollamada**
+###### UC-32 Crear / editar perfil de profesor.
 
-* **Estado:** Funciona correctamente.
-* El sistema detecta cuando hay una reunion activa y cambia el boton de crear reunion por unirse
+**Funcionamiento detectado**
+* Funciona bien, pero las validaciones de campos no son específicas; solo se muestra mensaje genérico.
 
-****Failure condition detectada ninguna****
+**Funcionamiento mejorable**
+* Mostrar específicamente qué campo y qué error ocurre.
+
+**Failure condition detectada**
+* T12
+
 ---
 
-###### **UC-48 Unirse a videollamada**
+###### UC-33 Solicitar verificación de profesor.
 
-* **Estado:** Funciona correctamente.
-* El sistema tiene un boton para crear una sala
+**Funcionamiento detectado**
+* Funciona correctamente.
 
-****Failure condition detectada T12****
-* Si pones un numero muy alto en duracion como 6000000000000000000000000000000000000000000000000000000000000 al darle crear reunion da un error interno del servidor
+**Failure condition detectada**
+* ninguna
+
 ---
+
+###### UC-34 Listar profesores.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-35 Listar profesores verificados.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-36 Pago para verificación / promoción.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-37 Valorar profesor.
+
+**Funcionamiento detectado**
+* No se encuentra completamente implementado; la fecha aparece en formato americano.
+
+**Funcionamiento mejorable**
+* Usar un formato de fecha universal.
+
+**Failure condition detectada**
+* T12
+
+---
+
+###### UC-38 Chat con profesor.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+#### FINANZAS Y SISTEMA DE PAGOS
+
+Casos de uso probados:
+
+* UC-39 Ver planes.
+* UC-40 Suscribirse a un plan.
+* UC-41 Procesar pago.
+* UC-42 Cancelar suscripción.
+
+---
+
+###### UC-39 Ver planes.
+
+**Funcionamiento detectado**
+* Funciona correctamente para profesor, alumno e institución.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-40 Suscribirse a un plan.
+
+**Funcionamiento detectado**
+* Funciona correctamente para profesor y alumno, pero presenta problemas de consistencia y validaciones incompletas:  
+  - En "Tu suscripción" no aparece el plan contratado individualmente; muestra "No tienes suscripción activa".  
+  - Después de contratar un plan de institución, solo ese aparece como activo.  
+  - Validaciones de campos (nombre, email, dominio) se hacen al clicar en "Continuar el pago"; sería mejor hacerlas antes.  
+  - No se valida número de teléfono ni sitio web.  
+  - Si se cierra la ventana de pago sin completar y luego se intenta usar los mismos datos, no se permite indicando que el dominio ya existe.  
+  - No se puede retroceder después de "Continuar pago", impidiendo modificar datos.  
+  - En "Mis pagos", no aparecen los datos del plan de institución contratado, solo que hay un plan activo.  
+  - No queda claro cómo manejar la contratación de plan individual tras un plan institucional.  
+  - En planes individuales, se puede contratar un plan Pro junto con Premium; debería permitir cancelar el anterior antes de aumentar al siguiente.
+
+**Failure condition detectada**
+* T12
+
+---
+
+###### UC-41 Procesar pago.
+
+**Funcionamiento detectado**
+* Funciona correctamente para estudiante, profesor y planes de institución.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-42 Cancelar suscripción.
+
+**Funcionamiento detectado**
+* No se puede; parece que no está desarrollado.
+
+**Failure condition detectada**
+* T12
+
+---
+
+#### Notificaciones
+
+Casos de uso probados:
+
+* UC-43 Enviar notificación.
+* UC-44 Recibir notificación.
+* UC-45 Ver historial de notificaciones.
+* UC-46 Marcar notificación como leída.
+
+---
+
+###### UC-43 Enviar notificación.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-44 Recibir notificación.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-45 Ver historial de notificaciones.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-46 Marcar notificación como leída.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+
+
 
 
 ## Historial de versiones
@@ -1091,8 +1267,9 @@ Casos de uso probados:
 | 1.2.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Marta Aguilar Morcillo |
 | 1.3.0 | 06/04/2026 | Integración de algunos casos de uso de NexUS  | Luis Emmanuel Chavez Malave |
 | 1.4.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Luis Emmanuel Chavez Malave |
+| 1.5.0 | 07/04/2026 | Integración de pruebas de casos de uso de Meerkatters  | Salma El Hakimy Ettorabi |
 ---
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
 **Fecha de redacción:** 06/04/2026
-**Versión:** 1.4.0
+**Versión:** 1.5.0
