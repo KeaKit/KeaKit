@@ -93,6 +93,18 @@ const AppNavigator: React.FC = () => {
                   )}
                 </Stack.Screen>
 
+                <Stack.Screen name="DefaultKits">
+                  {() => (
+                    <MainLayout>
+                      {user.role === "ADMIN" ? (
+                        <DefaultKitsAdminScreen />
+                      ) : (
+                        <DefaultKitsScreen />
+                      )}
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
                 {/* Perfil y listados principales */}
                 <Stack.Screen name="Profile">
                   {() => (
@@ -189,14 +201,6 @@ const AppNavigator: React.FC = () => {
                       {() => (
                         <MainLayout>
                           <CommissionScreen />
-                        </MainLayout>
-                      )}
-                    </Stack.Screen>
-
-                    <Stack.Screen name="DefaultKits">
-                      {() => (
-                        <MainLayout>
-                          <DefaultKitsAdminScreen />
                         </MainLayout>
                       )}
                     </Stack.Screen>

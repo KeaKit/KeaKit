@@ -106,9 +106,9 @@ const PurchaseDefaultKitScreen: React.FC = () => {
       try {
         setLoadingKits(true);
         
-        console.log("1. Llamando a:", API_ROUTES.DEFAULT_KITS_CATALOG);
+        console.log("1. Llamando a:", API_ROUTES.DEFAULT_KITS);
         
-        const kitsRes = await fetch(API_ROUTES.DEFAULT_KITS_CATALOG, { 
+        const kitsRes = await fetch(API_ROUTES.DEFAULT_KITS, { 
             headers: { Authorization: `Bearer ${user.token}` },
         });
 
