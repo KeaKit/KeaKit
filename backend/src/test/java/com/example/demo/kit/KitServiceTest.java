@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -212,6 +213,105 @@ public class KitServiceTest {
         kitService.confirmKitStatus(1L);
 
         assertEquals(KitStatus.ACTIVE, kit.getStatus());
+    }
+
+// ==========================================
+    // TESTS DE DISPONIBILIDAD (CONCURRENCIA)
+    // ==========================================
+
+    @Test
+    void createKit_itemUnavailable_throwsException() {
+        User tenant = createTestUser(1L, "Tenant");
+        User owner = createTestUser(2L, "Owner");
+        // Nota: asumiendo que tu método getTitle() del modelo Article/Item devuelve el nombre.
+        Article article = createTestArticle(100L, "MacBook Pro", 1, owner);
+
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 1, 50.0);
+        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid",
+            LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.DRAFT, null, null, tenant.getId(), List.of(selection));
+
+        when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
+        when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+        
+        // Simulamos que el artículo ya está alquilado en estas fechas
+        when(kitRepository.isItemUnavailableForDates(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList())).thenReturn(true);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.create(req));
+        assertEquals("El artículo 'MacBook Pro' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+    }
+
+    @Test
+    void markAsPaid_itemUnavailable_throwsException() {
+        User user = createTestUser(1L, "Tenant");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setStatus(KitStatus.DRAFT);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusDays(5));
+        
+        ItemMemento snapshot = createTestSnapshot(100L, user);
+        kit.setSnapshots(new ArrayList<>(List.of(snapshot)));
+
+        Article article = createTestArticle(100L, "Cámara Sony", 1, user);
+
+        when(kitRepository.findById(10L)).thenReturn(Optional.of(kit));
+        
+        // Simulamos que el artículo ya no está disponible
+        when(kitRepository.isItemUnavailableForDates(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList())).thenReturn(true);
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.markAsPaid(10L));
+        assertEquals("El artículo 'Cámara Sony' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+    }
+    
+    @Test
+    void addItemToKit_itemUnavailable_throwsException() {
+        User user = createTestUser(1L, "Tenant");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusDays(5));
+        kit.setSnapshots(new ArrayList<>());
+        
+        Article article = createTestArticle(100L, "Taladro", 5, createTestUser(2L, "Owner"));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        
+        // Aquí necesitamos mockear ambos comportamientos de findById (para sacar el item original, y luego para la validación)
+        when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+        when(kitRepository.isItemUnavailableForDates(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList())).thenReturn(true);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> 
+            kitService.addItemToKit(kit.getId(), article.getId(), user.getId()));
+        assertEquals("El artículo 'Taladro' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+    }
+
+    @Test
+    void updateKitDates_itemUnavailable_throwsException() {
+        User user = createTestUser(1L, "Tenant");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setStatus(KitStatus.DRAFT);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusDays(5));
+        
+        ItemMemento snapshot = createTestSnapshot(100L, user);
+        kit.setSnapshots(new ArrayList<>(List.of(snapshot)));
+
+        Kit updateData = new Kit();
+        updateData.setStartDate(LocalDate.now().plusDays(10));
+        updateData.setEndDate(LocalDate.now().plusDays(15));
+        
+        Article article = createTestArticle(100L, "Monitor", 1, user);
+
+        when(kitRepository.findById(10L)).thenReturn(Optional.of(kit));
+        // Simulamos que para las nuevas fechas solicitadas en el update ya está ocupado
+        when(kitRepository.isItemUnavailableForDates(eq(100L), eq(updateData.getStartDate()), eq(updateData.getEndDate()), anyList())).thenReturn(true);
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.update(10L, updateData));
+        assertEquals("El artículo 'Monitor' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
     }
 
     // ==========================================
