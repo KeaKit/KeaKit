@@ -116,6 +116,13 @@ public class AdminUserService {
         return new UserResponse(updatedUser);
     }
 
+    public UserResponse toggleFounderBadge(Long id) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+        user.setFounderBadge(!user.isFounderBadge());
+        return new UserResponse(userRepository.save(user));
+    }
+
     @Transactional
     public void deleteUser(Long id) {
 

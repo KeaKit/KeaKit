@@ -12,6 +12,7 @@ public class UserResponse {
     private String address;
     private String city;
     private String country;
+    private boolean founderBadge;
     private String token;
 
     public UserResponse(User user) {
@@ -23,6 +24,7 @@ public class UserResponse {
         this.address = user.getAddress();
         this.city = user.getCity();
         this.country = user.getCountry();
+        this.founderBadge = user.isFounderBadge();
     }
 
     public UserResponse(User user, String token) {
@@ -34,6 +36,7 @@ public class UserResponse {
         this.address = user.getAddress();
         this.city = user.getCity();
         this.country = user.getCountry();
+        this.founderBadge = user.isFounderBadge(); 
         this.token = token;
     }
 
@@ -71,6 +74,14 @@ public class UserResponse {
 
     public String getToken() {
         return token;
+    }
+
+    public boolean isFounderBadge() {
+        return founderBadge;
+    }
+
+    public void setFounderBadge(boolean founderBadge) {
+        this.founderBadge = founderBadge;
     }
 
     public void setToken(String token) {
