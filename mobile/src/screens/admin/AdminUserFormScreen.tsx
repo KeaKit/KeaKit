@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Modal, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList, UserResponse } from '../../types';
-import { createUser, updateUser } from '../../services/adminService';
+import { createUser, updateUser, toggleFounderBadge } from '../../services/adminService';
 import { Colors, Spacing, commonStyles } from '../../styles';
 
 type AdminUserFormNav = NativeStackNavigationProp<RootStackParamList, 'AdminUsers'>;
@@ -27,9 +27,9 @@ const AdminUserFormScreen: React.FC = () => {
   const route = useRoute<AdminUserFormRoute>();
   const { user: authUser } = useAuth();
 
-  // Para editar
   const userToEdit = (route.params as any)?.user as UserResponse | undefined;
 
+  // Estados del formulario
   const [name, setName] = useState(userToEdit?.name || '');
   const [email, setEmail] = useState(userToEdit?.email || '');
   const [phone, setPhone] = useState(userToEdit?.phone || '');
@@ -40,9 +40,19 @@ const AdminUserFormScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [showPassword, setShowPassword] = useState(false);
-
   const [role, setRole] = useState<"USER" | "COURIER" | "ADMIN">(userToEdit?.role ?? "USER");
   const [roleModalVisible, setRoleModalVisible] = useState(false);
+
+  // Estados para la insignia de fundador
+  const [founderBadge, setFounderBadge] = useState(userToEdit?.founderBadge || false);
+  const [togglingBadge, setTogglingBadge] = useState(false);
+
+  // Sincronizar cuando cambie el usuario a editar
+  useEffect(() => {
+    if (userToEdit) {
+      setFounderBadge(userToEdit.founderBadge);
+    }
+  }, [userToEdit]);
 
   const roleLabel = (value: "USER" | "COURIER" | "ADMIN") => {
     switch (value) {
@@ -52,10 +62,23 @@ const AdminUserFormScreen: React.FC = () => {
     }
   };
 
-
-  if (!authUser) return null; // fallback
-
   const clearErrors = () => setErrors({});
+
+  // Manejar el toggle de la insignia
+  const handleToggleFounderBadge = async () => {
+    if (!userToEdit || !authUser) return;
+    setTogglingBadge(true);
+    try {
+      const updated = await toggleFounderBadge(userToEdit.id, authUser.token);
+      setFounderBadge(updated.founderBadge);
+      // Opcional: mostrar notificación de éxito
+    } catch (error) {
+      console.error('Error toggling founder badge', error);
+      // Opcional: mostrar notificación de error
+    } finally {
+      setTogglingBadge(false);
+    }
+  };
 
   const handleSubmit = async () => {
     const localErrors: FieldErrors = {};
@@ -75,8 +98,7 @@ const AdminUserFormScreen: React.FC = () => {
     try {
       setLoading(true);
       if (userToEdit) {
-        // Editar
-        await updateUser(userToEdit.id, { 
+        await updateUser(userToEdit.id, {
           name: name.trim(),
           email: email.trim(),
           password: password || undefined,
@@ -85,10 +107,9 @@ const AdminUserFormScreen: React.FC = () => {
           address: address.trim(),
           city: city.trim(),
           country: country.trim()
-        }, authUser.token);
+        }, authUser!.token);
       } else {
-        // Crear
-        await createUser({ 
+        await createUser({
           name: name.trim(),
           email: email.trim(),
           password: password.trim(),
@@ -97,40 +118,39 @@ const AdminUserFormScreen: React.FC = () => {
           address: address.trim(),
           city: city.trim(),
           country: country.trim()
-        }, authUser.token);
+        }, authUser!.token);
       }
       navigation.goBack();
     } catch (err: any) {
-        try {
-          const backendError = err.response?.data || err.message || err;
-          const errorObj = typeof backendError === 'string' ? JSON.parse(backendError) : backendError;
-
-          // Si es un objeto JSON del backend, lo pasamos DIRECTO al estado
-          // Así errors.name recibe su error, errors.email el suyo, etc.
-          if (typeof errorObj === 'object' && errorObj !== null) {
-            setErrors(errorObj); 
-          } else {
-            setErrors({ general: String(errorObj) });
-          }
-        } catch (e) {
-          setErrors({ general: err.message || "Error al guardar el usuario." });
+      try {
+        const backendError = err.response?.data || err.message || err;
+        const errorObj = typeof backendError === 'string' ? JSON.parse(backendError) : backendError;
+        if (typeof errorObj === 'object' && errorObj !== null) {
+          setErrors(errorObj);
+        } else {
+          setErrors({ general: String(errorObj) });
         }
+      } catch (e) {
+        setErrors({ general: err.message || "Error al guardar el usuario." });
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  if (!authUser) return null;
+
   return (
     <View style={styles.container}>
       <View style={commonStyles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>{userToEdit ? 'Editar Usuario' : 'Crear Usuario'}</Text>
-            <View style={styles.headerRight} />
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{userToEdit ? 'Editar Usuario' : 'Crear Usuario'}</Text>
+        <View style={styles.headerRight} />
       </View>
 
-      {/* NOMBRE */}
+      {/* Nombre */}
       <TextInput
         style={[styles.input, errors.name && styles.inputError]}
         placeholder="Nombre completo"
@@ -139,7 +159,7 @@ const AdminUserFormScreen: React.FC = () => {
       />
       {errors.name && <Text style={styles.fieldErrorText}>{errors.name}</Text>}
 
-      {/* EMAIL */}
+      {/* Email */}
       <TextInput
         style={[styles.input, errors.email && styles.inputError]}
         placeholder="Correo electrónico"
@@ -148,7 +168,7 @@ const AdminUserFormScreen: React.FC = () => {
       />
       {errors.email && <Text style={styles.fieldErrorText}>{errors.email}</Text>}
 
-      {/* TELÉFONO */}
+      {/* Teléfono */}
       <TextInput
         style={[styles.input, errors.phone && styles.inputError]}
         placeholder="Teléfono"
@@ -158,34 +178,34 @@ const AdminUserFormScreen: React.FC = () => {
       />
       {errors.phone && <Text style={styles.fieldErrorText}>{errors.phone}</Text>}
 
-      {/* DIRECCIÓN */}
+      {/* Dirección */}
       <TextInput
-        style={[styles.input, errors.address && styles.inputError]} // Faltaba el array de estilos aquí
+        style={[styles.input, errors.address && styles.inputError]}
         placeholder="Dirección"
         value={address}
         onChangeText={(v) => { setAddress(v); clearErrors(); }}
       />
       {errors.address && <Text style={styles.fieldErrorText}>{errors.address}</Text>}
 
-      {/* CIUDAD */}
+      {/* Ciudad */}
       <TextInput
-        style={[styles.input, errors.city && styles.inputError]} // Faltaba el array de estilos
+        style={[styles.input, errors.city && styles.inputError]}
         placeholder="Ciudad"
         value={city}
         onChangeText={(v) => { setCity(v); clearErrors(); }}
       />
       {errors.city && <Text style={styles.fieldErrorText}>{errors.city}</Text>}
 
-      {/* PAÍS */}
+      {/* País */}
       <TextInput
-        style={[styles.input, errors.country && styles.inputError]} // Faltaba el array de estilos
+        style={[styles.input, errors.country && styles.inputError]}
         placeholder="País"
         value={country}
         onChangeText={(v) => { setCountry(v); clearErrors(); }}
       />
       {errors.country && <Text style={styles.fieldErrorText}>{errors.country}</Text>}
 
-      {/* CONTRASEÑA */}
+      {/* Contraseña */}
       <View style={styles.inputContainer}>
         <TextInput
           style={[styles.input, errors.password && styles.inputError]}
@@ -200,7 +220,7 @@ const AdminUserFormScreen: React.FC = () => {
       </View>
       {errors.password && <Text style={styles.fieldErrorText}>{errors.password}</Text>}
 
-      {/* ROL */}
+      {/* Rol */}
       <TouchableOpacity
         style={styles.roleField}
         onPress={() => setRoleModalVisible(true)}
@@ -213,15 +233,36 @@ const AdminUserFormScreen: React.FC = () => {
         </View>
       </TouchableOpacity>
 
-      {/* ERROR GENERAL (Por si falla el internet o algo que no sea de un campo específico) */}
+      {/* Switch para insignia de fundador (solo en modo edición) */}
+      {userToEdit && (
+        <View style={styles.switchContainer}>
+          <View style={styles.switchLabelContainer}>
+            <Text style={styles.switchLabel}>Insignia de fundador</Text>
+            <Text style={styles.switchDescription}>
+              {founderBadge
+                ? "El usuario mostrará la insignia en su perfil"
+                : "El usuario NO mostrará la insignia"}
+            </Text>
+          </View>
+          <Switch
+            value={founderBadge}
+            onValueChange={handleToggleFounderBadge}
+            disabled={togglingBadge}
+            trackColor={{ false: '#ccc', true: Colors.primary }}
+            thumbColor={founderBadge ? '#fff' : '#f4f3f4'}
+          />
+          {togglingBadge && <ActivityIndicator size="small" color={Colors.primary} style={styles.switchLoading} />}
+        </View>
+      )}
+
+      {/* Error general */}
       {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
-      
-      {/* MODAL DE ROL (Se queda igual) */}
+
+      {/* Modal de selección de rol */}
       <Modal visible={roleModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Selecciona rol</Text>
-
             {(["USER", "COURIER", "ADMIN"] as const).map((r) => (
               <TouchableOpacity
                 key={r}
@@ -237,17 +278,14 @@ const AdminUserFormScreen: React.FC = () => {
                 {role === r && <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />}
               </TouchableOpacity>
             ))}
-
-            <TouchableOpacity
-              style={styles.modalCancel}
-              onPress={() => setRoleModalVisible(false)}
-            >
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setRoleModalVisible(false)}>
               <Text style={styles.modalCancelText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
+      {/* Botón de guardar */}
       <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{userToEdit ? 'Actualizar' : 'Crear'}</Text>}
       </TouchableOpacity>
@@ -278,7 +316,6 @@ const styles = StyleSheet.create({
   roleLabel: { fontSize: 12, color: "#666", marginBottom: 6 },
   roleValueRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   roleValue: { fontSize: 16, fontWeight: "600", color: "#222" },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -306,22 +343,43 @@ const styles = StyleSheet.create({
   modalOptionTextSelected: { color: Colors.primary, fontWeight: "700" },
   modalCancel: { marginTop: 10, alignItems: "center" },
   modalCancelText: { color: "#666", fontWeight: "600" },
-  fieldErrorText: { 
-    color: '#d9534f', 
-    fontSize: 12, 
-    marginTop: 4, 
-    marginLeft: 4 
+  fieldErrorText: {
+    color: '#d9534f',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
-    backButton: {
-    padding: Spacing.sm,
-  },
-    headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  headerRight: {
-    width: 40,
-  },
+  backButton: { padding: Spacing.sm },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary },
+  headerRight: { width: 40 },
 
+  // Estilos para el switch de founder badge
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 12,
+    marginTop: 10,
+  },
+  switchLabelContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#222',
+  },
+  switchDescription: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  switchLoading: {
+    marginLeft: 8,
+  },
 });

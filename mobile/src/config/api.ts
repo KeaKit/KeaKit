@@ -128,7 +128,10 @@ export const API_ROUTES = {
     `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`,
 
   // Article history
-  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`
+  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`,
+
+  // Insignia
+  TOGGLE_FOUNDER_BADGE: (id: number) => `${BASE_URL}/api/admin/users/${id}/founder-badge`,
 
 } as const;
 
