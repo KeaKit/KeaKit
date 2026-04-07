@@ -14,6 +14,14 @@ export const commonStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundWhite,
   },
+  
+  contentContainer: {
+    flex: 1,
+    backgroundColor: Colors.backgroundGray,
+    justifyContent: "space-between",
+    padding: Spacing.lg,
+    gap: Spacing.lg
+  },
 
   screenPadding: {
     paddingHorizontal: Spacing.lg,

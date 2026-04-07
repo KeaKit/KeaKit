@@ -13,3 +13,6 @@ export * from "./PushNotification";
 export * from "./SelectPicker";
 export * from "./SkeletonPulse";
 export * from "./FadeInItem";
+export * from "./KeakitCRUDButton";
+export * from "./KeakitSearchBar";
+export * from "./KeakitTag";
