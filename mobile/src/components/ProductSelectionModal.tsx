@@ -17,6 +17,9 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types";
 import { useNavigation } from "@react-navigation/native";
 import { ArticleMapView } from "./ArticleMapView";
+import { useAuth } from "../context/AuthContext";
+import { useNotification } from "./NotificationContext";
+import { requestArticleAvailabilityNotification } from "../services/articleService";
 
 type ProductSelectionNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -94,7 +97,32 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   mapProducts = [],
 }) => {
   const navigation = useNavigation<ProductSelectionNav>();
+  const { user } = useAuth();
+  const { showNotification } = useNotification();
   const [mapView, setMapView] = React.useState(false);
+  const [requestingIds, setRequestingIds] = React.useState<Record<number, boolean>>({});
+
+  const handleRequestAvailability = async (articleId: number) => {
+    if (!user?.id || !user.token) {
+      showNotification('Necesitas iniciar sesión para solicitar el aviso.', 'error');
+      return;
+    }
+
+    if (requestingIds[articleId]) return;
+    setRequestingIds((prev) => ({ ...prev, [articleId]: true }));
+
+    try {
+      await requestArticleAvailabilityNotification(articleId, user.id, user.token);
+      showNotification('Te avisaremos cuando el artículo vuelva a estar disponible.', 'success');
+    } catch (error) {
+      showNotification(
+        error instanceof Error ? error.message : 'No se pudo solicitar el aviso.',
+        'error',
+      );
+    } finally {
+      setRequestingIds((prev) => ({ ...prev, [articleId]: false }));
+    }
+  };
 
   // Calcular disponibilidad de productos basado en fechas
   const productsWithAvailability = React.useMemo(() => {
@@ -330,19 +358,20 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   p.id,
                 );
                 const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
-                const isDisabled = p.isAvailable === false;
+                // Cambio: Un producto se puede añadir si hay fechas válidas Y está AVAILABLE
+                const canBeAdded = p.isAvailable && p.status === 'AVAILABLE';
+
                 return (
                   <Pressable
                     key={p.id}
                     style={[
                       createKitStyles.modalRow,
-                      isDisabled && {
+                      !canBeAdded && {
                         opacity: 0.7,
                         backgroundColor: "#fafafa",
                       },
                     ]}
-                    onPress={() => !isDisabled && onToggleSelection(p.id)}
-                    disabled={isDisabled}
+                    onPress={() => canBeAdded && onToggleSelection(p.id)}
                   >
                     {p.imageUrl ? (
                       <Image
@@ -405,7 +434,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                         <Text
                           style={[
                             commonStyles.caption,
-                            { color: Colors.textSecondary, marginTop: 2 },
+                            { color: p.isAvailable ? Colors.textSecondary : Colors.error, marginTop: 2 },
                           ]}
                         >
                           {p.availabilityMessage}
@@ -420,7 +449,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                         marginRight: 8,
                       }}
                     >
-                      {checked ? (
+                      {checked && canBeAdded ? (
                         <View
                           style={{
                             flexDirection: "row",
@@ -482,12 +511,43 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       </Text>
                       <Text style={commonStyles.bodySecondary}>/ mes</Text>
                     </View>
-                    {!isDisabled && (
+                    
+                    {/* CAMBIO: Lógica de icono simplificada para mostrar siempre Checkmark o Campana */}
+                    {canBeAdded ? (
                       <Ionicons
                         name={checked ? "checkmark-circle" : "ellipse-outline"}
                         size={22}
                         color={checked ? Colors.success : Colors.primary}
                       />
+                    ) : (
+                      <View style={{ alignItems: 'center', justifyContent: 'center', width: 45 }}>
+                        <TouchableOpacity
+                          onPress={() => handleRequestAvailability(p.id)}
+                          disabled={requestingIds[p.id]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Avisar cuando ${p.title} esté disponible`}
+                        >
+                          {requestingIds[p.id] ? (
+                            <ActivityIndicator size="small" color={Colors.warning} />
+                          ) : (
+                            <Ionicons
+                              name="notifications-outline"
+                              size={22}
+                              color={Colors.warning}
+                            />
+                          )}
+                        </TouchableOpacity>
+                        <Text
+                          style={{
+                            color: Colors.warning,
+                            fontSize: 8,
+                            marginTop: 2,
+                            textAlign: 'center',
+                          }}
+                        >
+                          Avisarme
+                        </Text>
+                      </View>
                     )}
                   </Pressable>
                 );

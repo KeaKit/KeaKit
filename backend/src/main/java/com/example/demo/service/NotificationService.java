@@ -32,7 +32,12 @@ public class NotificationService {
 
     // Método general para crear notificaciones
     public void createNotification(User user, String message, NotificationType type, Long kitId) {
+        createNotification(user, message, type, kitId, null);
+    }
+
+    public void createNotification(User user, String message, NotificationType type, Long kitId, Long relatedArticleId) {
         Notification notification = new Notification(user, message, type, kitId);
+        notification.setRelatedArticleId(relatedArticleId);
         notificationRepository.save(notification);
     }
 
@@ -113,5 +118,12 @@ public class NotificationService {
                 createNotification(landlord, message, NotificationType.RETURN_REMINDER, kit.getId());
             }
         }
+    }
+
+    public void deleteNotification(Long id) {
+        if (!notificationRepository.existsById(id)) {
+            throw new RuntimeException("La notificación no existe");
+        }
+        notificationRepository.deleteById(id);
     }
 }

@@ -8,6 +8,7 @@ import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.ArticleAvailabilityRequestService;
 import com.example.demo.service.ArticleService;
 import com.example.demo.service.CloudinaryService;
 import com.example.demo.service.DefaultKitService;
@@ -21,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -42,6 +44,7 @@ class ArticleServiceTest {
     @Mock private CloudinaryService cloudinaryService;
     @Mock private DefaultKitService defaultKitService;
     @Mock private PaymentService paymentService;
+    @Mock private ArticleAvailabilityRequestService availabilityRequestService; 
 
     @InjectMocks
     private ArticleService articleService;
@@ -614,9 +617,10 @@ class ArticleServiceTest {
         rented.setStatus(ArticleStatus.RENTED);
         rented.setAvailableUntil(UNTIL);
 
-        when(articleRepository.findByOwnerId(1L)).thenReturn(List.of(article, rented));
+        when(articleRepository.findAll(any(Specification.class)))
+            .thenReturn(List.of(article, rented));
 
-        var result = articleService.findArticlesByUserId(1L);
+        var result = articleService.findArticlesByUserId(1L, null, null, null, null);
 
         assertThat(result).hasSize(2);
 
@@ -638,10 +642,10 @@ class ArticleServiceTest {
         LocalDate rentalEndDate = LocalDate.now().plusDays(10);
         articleRented.setAvailableUntil(rentalEndDate);
 
-        when(articleRepository.findByOwnerId(owner.getId()))
-            .thenReturn(List.of(articleAvailable, articleRented));
+        when(articleRepository.findAll(any(Specification.class)))
+        .thenReturn(List.of(articleAvailable, articleRented));
 
-        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null, null);
 
         assertThat(result).hasSize(2);
 
@@ -658,17 +662,17 @@ class ArticleServiceTest {
 
     @Test
     void findArticlesByUserId_emptyList_returnsEmpty() {
-        when(articleRepository.findByOwnerId(99L)).thenReturn(List.of());
+        when(articleRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        var result = articleService.findArticlesByUserId(99L);
+        var result = articleService.findArticlesByUserId(99L, null, null, null, null);
         assertThat(result).isEmpty();
     }
 
     @Test
     void findArticlesByUserId_whenUserHasNoArticles_returnsEmptyAndNotNull() {
-        when(articleRepository.findByOwnerId(owner.getId())).thenReturn(List.of());
+        when(articleRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null, null);
 
         assertThat(result).isNotNull();
         assertThat(result).isEmpty();
@@ -806,6 +810,42 @@ class ArticleServiceTest {
         verify(articleRepository).save(a);
     }
 
+    // Test Filtros MyArticles
+    @Test
+    void findArticlesByUserId_withFilters_returnsFilteredDtoMapping() {
+
+        Article filteredArticle = new Article(); 
+        filteredArticle.setId(12L);
+        filteredArticle.setTitle("Martillo");
+        filteredArticle.setStatus(ArticleStatus.AVAILABLE);
+        filteredArticle.setCondition(ArticleCondition.NEW);
+        filteredArticle.setPricePerMonth(15.0);
+
+ 
+        when(articleRepository.findAll(any(Specification.class)))
+            .thenReturn(List.of(filteredArticle));
+
+    
+        List<UserArticle> result = articleService.findArticlesByUserId(1L, 2L, "NEW", 10.0, 20.0);
+
+        assertThat(result).hasSize(1);
+        UserArticle dto = result.get(0);
+        assertThat(dto.title()).isEqualTo("Martillo");
+ 
+        assertThat(dto.status()).isEqualTo("AVAILABLE"); 
+    }
+
+    @Test
+    void findArticlesByUserId_withFiltersNoMatches_returnsEmpty() {
+  
+        when(articleRepository.findAll(any(Specification.class)))
+            .thenReturn(List.of());
+
+        List<UserArticle> result = articleService.findArticlesByUserId(1L, 99L, "BROKEN", 100.0, 500.0);
+
+        assertThat(result).isNotNull();}
+
+
     // ------------ findArticleRecord ------------
 
     @Test
@@ -863,6 +903,7 @@ class ArticleServiceTest {
         when(articleRepository.findAllKitsWhereArticleHasBeen(1L)).thenReturn(List.of(draft, cancelled));
 
         List<com.example.demo.dto.ArticleRecordDTO> result = articleService.findArticleRecord(1L);
+
 
         assertThat(result).isEmpty();
     }

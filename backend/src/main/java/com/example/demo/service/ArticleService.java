@@ -1,5 +1,9 @@
 package com.example.demo.service;
 
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +20,7 @@ import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
+import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.User;
 import com.example.demo.model.Category;
 import com.example.demo.model.ArticleStatus;
@@ -37,12 +42,13 @@ public class ArticleService {
     private final DefaultKitService defaultKitService;
     private final CloudinaryService cloudinaryService;
     private final CityService cityService;
+    private final ArticleAvailabilityRequestService availabilityRequestService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
                           KitRepository kitRepository, CategoryRepository categoryRepository,
                           PaymentService paymentService,
                           CloudinaryService cloudinaryService, DefaultKitService defaultKitService,
-                          CityService cityService) {
+                          CityService cityService, ArticleAvailabilityRequestService availabilityRequestService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.kitRepository = kitRepository;
@@ -51,7 +57,10 @@ public class ArticleService {
         this.defaultKitService = defaultKitService;
         this.paymentService = paymentService;
         this.cityService = cityService;
+        this.availabilityRequestService = availabilityRequestService; // Se inyecta manualmente para evitar dependencia circular
     }
+
+
 
     public Article createWithImage(Article article, MultipartFile image, Long ownerId, Long categoryId) throws IOException {
         User owner = userRepository.findById(ownerId)
@@ -254,24 +263,39 @@ public class ArticleService {
             article.setStatus(ArticleStatus.AVAILABLE);
         }
 
-        return articleRepository.save(article);
+        Article updatedArticle = articleRepository.save(article);
+        if (updatedArticle.getStatus() == ArticleStatus.AVAILABLE) {
+            availabilityRequestService.notifyWatchersWhenAvailable(updatedArticle);
+        }
+        return updatedArticle;
     }
 
-    public List<UserArticle> findArticlesByUserId(Long userId) {
-        List<Article> articles = articleRepository.findByOwnerId(userId);
-        return articles.stream().map(article -> {
-            boolean isRented = article.getStatus() != null &&
-                               "RENTED".equalsIgnoreCase(article.getStatus().name());
-            LocalDate rentedUntil = isRented ? article.getAvailableUntil() : null;
-            return new UserArticle(
+   public List<UserArticle> findArticlesByUserId(Long userId, Long categoryId, String condition, Double minPrice, Double maxPrice) {
+    Specification<Article> spec = Specification.where(ArticleFilter.hasOwnerId(userId))
+            .and(ArticleFilter.hasCategoryId(categoryId))
+            .and(ArticleFilter.hasCondition(condition))
+            .and(ArticleFilter.isPriceInRange(minPrice, maxPrice));
+            
+        List<Article> articles = articleRepository.findAll(spec);
+
+        return articles.stream()
+            .map(this::convertToUserArticle)
+            .collect(Collectors.toList());
+    }
+
+    private UserArticle convertToUserArticle(Article article) {
+        boolean isRented = article.getStatus() != null &&
+                "RENTED".equalsIgnoreCase(article.getStatus().name());
+        LocalDate rentedUntil = isRented ? article.getAvailableUntil() : null;
+        
+        return new UserArticle(
                 article.getId(),
                 article.getTitle(),
                 article.getImageUrl(),
                 article.getPricePerMonth(),
                 article.getStatus() != null ? article.getStatus().name() : "UNKNOWN",
                 rentedUntil
-            );
-        }).collect(Collectors.toList());
+        );
     }
 
     @Transactional
@@ -320,7 +344,8 @@ public class ArticleService {
         // Liberar el artículo
         article.setStatus(ArticleStatus.AVAILABLE);
         article.setAvailableUntil(null);
-        articleRepository.save(article);
+        Article updatedArticle = articleRepository.save(article);
+        availabilityRequestService.notifyWatchersWhenAvailable(updatedArticle);
 
         return new ReturnResponse(
             articleId,

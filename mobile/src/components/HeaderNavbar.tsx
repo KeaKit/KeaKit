@@ -23,6 +23,7 @@ import { getUserNotifications } from '../services/notificationService';
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
 
+
 const getLogoSize = () => {
   if (width < 480) {
     // Móviles pequeños
@@ -70,6 +71,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const [activityUnreadCount, setActivityUnreadCount] = useState(0);
   const [screenWidth, setScreenWidth] = useState(width);
   const bellAnim = useRef(new Animated.Value(1)).current;
+  const totalNotifications = (unreadCount || 0) + (activityUnreadCount || 0);
+
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -113,22 +116,17 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
 
   // Cargar notificaciones de actividad sin leer
   useFocusEffect(
-    useCallback(() => {
-      const loadActivityNotifications = async () => {
-        if (user?.id && user?.token) {
-          try {
-            const notifications = await getUserNotifications(user.id, user.token);
-            const unreadCount = notifications.filter(n => !n.read).length;
-            setActivityUnreadCount(unreadCount);
-          } catch (err) {
-            console.error('Error loading activity notifications:', err);
-          }
-        }
-      };
-
-      loadActivityNotifications();
-    }, [user])
-  );
+  useCallback(() => {
+    const loadActivityNotifications = async () => {
+      if (user?.id && user?.token) {
+        const notifications = await getUserNotifications(user.id, user.token);
+        const unread = notifications.filter(n => !n.read).length;
+        setActivityUnreadCount(unread); 
+      }
+    };
+    loadActivityNotifications();
+  }, [user])
+);
 
   // Items para usuarios normales
   const userNavItems: NavbarHeaderItem[] = [
@@ -275,18 +273,16 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         </View>
 
         <View style={styles.mobileRight}>
-          {showBadge && (
+          {user && (
             <TouchableOpacity
               style={styles.bellButton}
-              onPress={() => navigateToScreen('TrackingNotifications')}
+              onPress={() => navigateToScreen('Notifications')}
             >
               <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
                 <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
               </Animated.View>
-              {unreadCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{unreadCount}</Text>
-                </View>
+              {totalNotifications > 0 && (
+                <View style={styles.notificationDot} />
               )}
             </TouchableOpacity>
           )}
@@ -396,18 +392,16 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           </Text>
         )}
 
-        {showBadge && (
+        {user && (
           <TouchableOpacity
             style={styles.bellButton}
-            onPress={() => navigateToScreen('TrackingNotifications')}
+            onPress={() => navigateToScreen('Notifications')}
           >
             <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
               <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
             </Animated.View>
-            {unreadCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadCount}</Text>
-              </View>
+            {totalNotifications > 0 && (
+              <View style={styles.notificationDot} />
             )}
           </TouchableOpacity>
         )}
@@ -458,6 +452,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     zIndex: 10,
+  },
+  notificationDot: {
+    position: "absolute",
+    top: 6,
+    right: 8,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: "#ff3b30",
+    borderWidth: 1.5,
+    borderColor: "#ffffff", // Borde blanco para que resalte sobre el icono
   },
   logoContainer: {
     flexDirection: 'row',

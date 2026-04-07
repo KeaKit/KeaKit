@@ -406,10 +406,17 @@ const CreateKitScreen: React.FC = () => {
     setShowOnlyMyCity(city.trim().length > 0);
     setShowOnlyAvailable(true);
 
+    // Cargar productos del mapa solo si el usuario está autenticado
     if (user?.token) {
-      getArticlesForMap(user.token, country.trim() || undefined)
-        .then(setMapProducts)
-        .catch(() => setMapProducts([]));
+      try {
+        const mapData = await getArticlesForMap(user.token, country.trim() || undefined);
+        setMapProducts(mapData);
+      } catch (error) {
+        console.warn('Error al cargar productos del mapa:', error);
+        setMapProducts([]);
+      }
+    } else {
+      setMapProducts([]);
     }
 
     setCatalogModalVisible(true);
