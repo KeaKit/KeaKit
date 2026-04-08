@@ -24,6 +24,7 @@ import {
   Header,
   CategoryFormComponent,
   CategoryDetailsComponent,
+  CategoryArticlesComponent,
 } from "../../components";
 import { Provider as PaperProvider, MD3LightTheme } from "react-native-paper";
 
@@ -76,71 +77,11 @@ export default function CategoryDetailsScreen() {
   const { user } = useAuth();
   const token = (user as any)?.token || "";
 
-  const [articleCount, setArticleCount] = useState<number>(0);
-  const [latestArticles, setLatestArticles] = useState<UserArticle[]>([]);
-  const [isLoadingExtra, setIsLoadingExtra] = useState(false);
-
-  useEffect(() => {
-    if (categoryToEdit?.id) {
-      loadExtraData(categoryToEdit.id);
-    }
-  }, [categoryToEdit?.id]);
-
-  const loadExtraData = async (categoryId: number) => {
-    setIsLoadingExtra(true);
-    try {
-      const [count, articles] = await Promise.all([
-        fetchArticleCountByCategory(categoryId, token),
-        fetchLatestArticlesByCategory(categoryId, token),
-      ]);
-      setArticleCount(count);
-      setLatestArticles(articles);
-    } catch (error) {
-      console.warn("No se pudieron cargar los detalles extra", error);
-    } finally {
-      setIsLoadingExtra(false);
-    }
-  };
-
   const getHeaderTitle = () => {
     if (formMode === "view") return "Detalles de categoría";
     if (formMode === "edit") return "Editar categoría";
     return "Crear categoría";
   };
-
-  
-
-  const renderArticle = ({ item }: { item: UserArticle }) => (
-    <View style={articleCard}>
-      {item.imageUrl ? (
-        <Image
-          source={{ uri: item.imageUrl }}
-          style={articleImage}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={[articleImage, imagePlaceholder]}>
-          <Ionicons name="image-outline" size={24} color={Colors.textLight} />
-        </View>
-      )}
-      <View style={articleInfo}>
-        <View style={{ flex: 1, paddingRight: Spacing.xs }}>
-          <Text style={articleTitle} numberOfLines={1}>
-            {item.title}
-          </Text>
-          <Text style={articleBadge}>
-            {item.status === "AVAILABLE"
-              ? "Disponible"
-              : item.status === "RENTED"
-                ? "Alquilado"
-                : "Inactivo"}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-
-  
 
   return (
     <PaperProvider theme={customTheme}>
@@ -157,11 +98,10 @@ export default function CategoryDetailsScreen() {
         >
           {isEditable ? (
             <CategoryFormComponent
-            categoryToEdit={categoryToEdit}
+              categoryToEdit={categoryToEdit}
               formMode={formMode}
               navigation={navigation}
               token={token}
-              
             />
           ) : (
             <CategoryDetailsComponent
@@ -169,60 +109,11 @@ export default function CategoryDetailsScreen() {
               setMode={setFormMode}
             />
           )}
-          {formMode !== "create" && (
-            <View
-              style={{
-                flex: 1,
-                flexDirection: "column",
-                alignContent: "flex-start",
-                gap: Spacing.md,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: Spacing.md,
-                  alignItems: "center",
-                }}
-              >
-                <Text style={[commonStyles.subtitle, { marginBottom: 0 }]}>
-                  Últimos Artículos
-                </Text>
-                {!isLoadingExtra && articleCount > 0 && (
-                  <View style={statCircle}>
-                    <Text style={statNumber}>{articleCount}</Text>
-                  </View>
-                )}
-              </View>
-
-              {isLoadingExtra ? (
-                <ActivityIndicator
-                  size="small"
-                  color={Colors.primary}
-                  style={{ alignSelf: "flex-start", marginLeft: Spacing.md }}
-                />
-              ) : latestArticles.length > 0 ? (
-                <>
-                  <FlatList
-                    horizontal
-                    data={latestArticles}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderArticle}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingBottom: Spacing.xl }}
-                  />
-                </>
-              ) : (
-                <Text
-                  style={[
-                    commonStyles.bodySecondary,
-                    { marginLeft: Spacing.sm },
-                  ]}
-                >
-                  Aún no hay artículos en esta categoría.
-                </Text>
-              )}
-            </View>
+          {categoryToEdit && (
+            <CategoryArticlesComponent
+              category={categoryToEdit}
+              token={token}
+            />
           )}
         </ScrollView>
       </SafeAreaView>

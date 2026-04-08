@@ -1,5 +1,12 @@
 import { StyleSheet } from "react-native";
-import { Colors, Spacing, BorderRadius, FontSizes, FontWeights, Shadows } from "./theme";
+import {
+  Colors,
+  Spacing,
+  BorderRadius,
+  FontSizes,
+  FontWeights,
+  Shadows,
+} from "./theme";
 
 export const categoryFormScreenStyles = StyleSheet.create({
   formCard: {
@@ -27,6 +34,19 @@ export const categoryFormScreenStyles = StyleSheet.create({
 
   // Artículos
 
+  articleListContainer: {
+    flex: 1,
+    flexDirection: "column",
+    alignContent: "flex-start",
+    gap: Spacing.md,
+  },
+
+  articleListTitle: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    alignItems: "center",
+  },
+
   statCircle: {
     width: 32,
     height: 32,
@@ -48,7 +68,6 @@ export const categoryFormScreenStyles = StyleSheet.create({
     backgroundColor: Colors.backgroundWhite,
     borderRadius: BorderRadius.lg,
     padding: Spacing.sm,
-    marginRight: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
     ...Shadows.small,

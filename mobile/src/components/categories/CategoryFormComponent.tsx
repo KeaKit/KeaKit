@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { View, Text } from "react-native";
 import { TextInput } from "react-native-paper";
-import { commonStyles } from "../styles";
-import { categoryFormScreenStyles } from "../styles/categoryFormScreenStyles";
-import { SelectPicker } from "./SelectPicker";
-import { KeakitButton } from "./KeakitButton";
-import { updateCategory, createCategory } from "../services/categoryService";
-import { Category } from "../types";
+import { commonStyles } from "../../styles";
+import { categoryFormScreenStyles } from "../../styles/categoryFormScreenStyles";
+import { SelectPicker } from "../SelectPicker";
+import { KeakitButton } from "../KeakitButton";
+import { updateCategory, createCategory } from "../../services/categoryService";
+import { Category } from "../../types";
 import { Platform, Alert } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types";
+import { RootStackParamList } from "../../types";
 
 type FormErrors = Partial<Record<keyof FormState, string>>;
 
@@ -54,7 +54,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
   categoryToEdit,
   formMode,
   navigation,
-  token
+  token,
 }) => {
   const [formData, setFormData] = useState<FormState>({
     name: categoryToEdit?.name || "",
