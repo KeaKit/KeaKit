@@ -16,3 +16,5 @@ export * from "./FadeInItem";
 export * from "./KeakitCRUDButton";
 export * from "./KeakitSearchBar";
 export * from "./KeakitTag";
+export * from "./CategoryFormComponent";
+export * from "./CategoryDetailsComponent";
