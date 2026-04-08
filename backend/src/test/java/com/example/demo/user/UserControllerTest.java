@@ -1,7 +1,10 @@
 package com.example.demo.user;
 
 import com.example.demo.controller.UserController;
+import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
+import com.example.demo.dto.UserUpdateData;
 import com.example.demo.exception.InvalidCredentialsException;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundException;
@@ -24,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -54,7 +58,7 @@ class UserControllerTest {
 
     private UserResponse registerResponse;
     private UserResponse loginResponse;
-        private UserResponse profileResponse;
+    private UserResponse profileResponse;
 
     @BeforeEach
     void setUp() {
@@ -63,14 +67,15 @@ class UserControllerTest {
 
         registerResponse = new UserResponse(user, "register-token");
         loginResponse = new UserResponse(user, "login-token");
-                profileResponse = new UserResponse(user);
+        profileResponse = new UserResponse(user);
 
-                SecurityContextHolder.clearContext();
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void register_success() throws Exception {
-        when(userService.register(any())).thenReturn(registerResponse);
+        // CORREGIDO: register ahora recibe 2 parámetros
+        when(userService.register(any(RegisterRequest.class), anyString())).thenReturn(registerResponse);
 
         mockMvc.perform(post("/api/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -93,7 +98,8 @@ class UserControllerTest {
 
     @Test
     void register_userAlreadyExists_returnsConflict() throws Exception {
-        when(userService.register(any())).thenThrow(new UserAlreadyExistsException("Email already exists"));
+        // CORREGIDO: register ahora recibe 2 parámetros
+        when(userService.register(any(RegisterRequest.class), anyString())).thenThrow(new UserAlreadyExistsException("Email already exists"));
 
         mockMvc.perform(post("/api/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -114,7 +120,7 @@ class UserControllerTest {
 
     @Test
     void login_success() throws Exception {
-        when(userService.login(any())).thenReturn(loginResponse);
+        when(userService.login(any(LoginRequest.class))).thenReturn(loginResponse);
 
         mockMvc.perform(post("/api/users/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -131,7 +137,7 @@ class UserControllerTest {
 
     @Test
     void login_invalidCredentials_returnsUnauthorized() throws Exception {
-        when(userService.login(any())).thenThrow(new InvalidCredentialsException("Invalid password"));
+        when(userService.login(any(LoginRequest.class))).thenThrow(new InvalidCredentialsException("Invalid password"));
 
         mockMvc.perform(post("/api/users/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -147,7 +153,7 @@ class UserControllerTest {
 
     @Test
     void login_userNotFound_returnsNotFound() throws Exception {
-        when(userService.login(any())).thenThrow(new UserNotFoundException("User not found"));
+        when(userService.login(any(LoginRequest.class))).thenThrow(new UserNotFoundException("User not found"));
 
         mockMvc.perform(post("/api/users/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -161,73 +167,73 @@ class UserControllerTest {
             .andExpect(jsonPath("$.message").value("User not found"));
     }
 
-        @Test
-        void getUser_authorized_returnsUserProfile() throws Exception {
-                SecurityContextHolder.getContext().setAuthentication(
-                        new UsernamePasswordAuthenticationToken("new.user@test.com", null)
-                );
-                when(userService.getUserById(10L)).thenReturn(profileResponse);
+    @Test
+    void getUser_authorized_returnsUserProfile() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("new.user@test.com", null)
+        );
+        when(userService.getUserById(10L)).thenReturn(profileResponse);
 
-                mockMvc.perform(get("/api/users/10"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.id").value(10L))
-                        .andExpect(jsonPath("$.email").value("new.user@test.com"))
-                        .andExpect(jsonPath("$.name").value("New User"));
-        }
+        mockMvc.perform(get("/api/users/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10L))
+                .andExpect(jsonPath("$.email").value("new.user@test.com"))
+                .andExpect(jsonPath("$.name").value("New User"));
+    }
 
-        @Test
-        void getUser_notAuthorized_returnsForbidden() throws Exception {
-                SecurityContextHolder.getContext().setAuthentication(
-                        new UsernamePasswordAuthenticationToken("other.user@test.com", null)
-                );
-                when(userService.getUserById(10L)).thenReturn(profileResponse);
+    @Test
+    void getUser_notAuthorized_returnsForbidden() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("other.user@test.com", null)
+        );
+        when(userService.getUserById(10L)).thenReturn(profileResponse);
 
-                mockMvc.perform(get("/api/users/10"))
-                        .andExpect(status().isForbidden());
-        }
+        mockMvc.perform(get("/api/users/10"))
+                .andExpect(status().isForbidden());
+    }
 
-        @Test
-        void updateUser_authorized_returnsUpdatedProfile() throws Exception {
-                SecurityContextHolder.getContext().setAuthentication(
-                        new UsernamePasswordAuthenticationToken("new.user@test.com", null)
-                );
+    @Test
+    void updateUser_authorized_returnsUpdatedProfile() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("new.user@test.com", null)
+        );
 
-                User updatedUser = new User("new.user@test.com", "hashed-password", "Updated Name", UserRole.USER, "666555444", "Street 2", "Valencia", "Spain");
-                updatedUser.setId(10L);
-                UserResponse updatedResponse = new UserResponse(updatedUser);
+        User updatedUser = new User("new.user@test.com", "hashed-password", "Updated Name", UserRole.USER, "666555444", "Street 2", "Valencia", "Spain");
+        updatedUser.setId(10L);
+        UserResponse updatedResponse = new UserResponse(updatedUser);
 
-                when(userService.getUserById(10L)).thenReturn(profileResponse);
-                when(userService.updateUser(eq(10L), any())).thenReturn(updatedResponse);
+        when(userService.getUserById(10L)).thenReturn(profileResponse);
+        when(userService.updateUser(eq(10L), any(UserUpdateData.class))).thenReturn(updatedResponse);
 
-                mockMvc.perform(put("/api/users/10")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                                {
-                                                  "name":"Updated Name",
-                                                  "address":"Street 2",
-                                                  "city":"Valencia"
-                                                }
-                                                """))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.id").value(10L))
-                        .andExpect(jsonPath("$.name").value("Updated Name"))
-                        .andExpect(jsonPath("$.city").value("Valencia"));
-        }
+        mockMvc.perform(put("/api/users/10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name":"Updated Name",
+                                  "address":"Street 2",
+                                  "city":"Valencia"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10L))
+                .andExpect(jsonPath("$.name").value("Updated Name"))
+                .andExpect(jsonPath("$.city").value("Valencia"));
+    }
 
-        @Test
-        void updateUser_notAuthorized_returnsForbidden() throws Exception {
-                SecurityContextHolder.getContext().setAuthentication(
-                        new UsernamePasswordAuthenticationToken("other.user@test.com", null)
-                );
-                when(userService.getUserById(10L)).thenReturn(profileResponse);
+    @Test
+    void updateUser_notAuthorized_returnsForbidden() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("other.user@test.com", null)
+        );
+        when(userService.getUserById(10L)).thenReturn(profileResponse);
 
-                mockMvc.perform(put("/api/users/10")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                                {
-                                                  "name":"Updated Name"
-                                                }
-                                                """))
-                        .andExpect(status().isForbidden());
-        }
+        mockMvc.perform(put("/api/users/10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name":"Updated Name"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
 }

@@ -8,6 +8,8 @@ export interface RegisterRequest {
   city: string;
   country: string;
   password: string;
+  acceptedPolicies?: boolean;
+  acceptedMarketing?: boolean;
 }
 
 export interface LoginRequest {
@@ -420,6 +422,7 @@ export type RootStackParamList = {
   Couriers: undefined;
   CourierDetail: { courier: UserResponse; isBusy?: boolean };
   ArticleRentals: { articleId: number; articleTitle: string };
+  RgpdPolicy: undefined;
 };
 
 export interface ProfileData {

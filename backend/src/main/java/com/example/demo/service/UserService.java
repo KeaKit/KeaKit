@@ -4,6 +4,7 @@ import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserUpdateData;
+import com.example.demo.model.RgpdConsent;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.model.Wallet;
@@ -12,12 +13,15 @@ import com.example.demo.exception.InvalidCredentialsException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundException;
+import com.example.demo.repository.RgpdConsentRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -35,7 +39,15 @@ public class UserService {
     @Autowired
     private WalletRepository walletRepository;
 
-    public UserResponse register(RegisterRequest request) {
+    @Autowired
+    private RgpdConsentRepository rgpdConsentRepository;
+
+    @Transactional
+    public UserResponse register(RegisterRequest request, String clientIp) {
+        System.out.println("=== REGISTRO RGPD ===");
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("acceptedPolicies: " + request.getAcceptedPolicies());
+        
         String normalizedEmail = request.getEmail().toLowerCase().trim();
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new UserAlreadyExistsException("Email already exists");
@@ -54,7 +66,31 @@ public class UserService {
                 request.getCountry());
 
         User savedUser = userRepository.save(user);
+        System.out.println("Usuario guardado con ID: " + savedUser.getId());
+        
         this.createWalletForUser(savedUser);
+        
+        // GUARDAR CONSENTIMIENTO SIEMPRE QUE acceptedPolicies SEA TRUE
+        if (request.getAcceptedPolicies() != null && request.getAcceptedPolicies()) {
+            System.out.println("Guardando consentimiento RGPD para usuario: " + savedUser.getId());
+            
+            // Eliminar consentimiento previo si existe (por si acaso)
+            rgpdConsentRepository.findByUser(savedUser).ifPresent(existing -> {
+                rgpdConsentRepository.delete(existing);
+                System.out.println("Consentimiento previo eliminado");
+            });
+            
+            RgpdConsent consent = new RgpdConsent();
+            consent.setUser(savedUser);
+            consent.setAcceptedVersion("1.0");
+            consent.setAcceptedAt(LocalDateTime.now());
+            consent.setIpAddress(clientIp);
+            
+            rgpdConsentRepository.save(consent);
+            System.out.println("Consentimiento guardado correctamente");
+        } else {
+            System.out.println("NO se guarda consentimiento - acceptedPolicies es: " + request.getAcceptedPolicies());
+        }
 
         String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId(), savedUser.getRole());
         return new UserResponse(savedUser, token);
@@ -65,7 +101,6 @@ public class UserService {
             throw new ResourceNotFoundException("User not found. Cannot create wallet.");
         }
         Wallet wallet = new Wallet(user);
-
         walletRepository.save(wallet);
     }
 

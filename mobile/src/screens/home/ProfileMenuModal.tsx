@@ -94,6 +94,14 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
 
               <TouchableOpacity
                 style={componentStyles.menuItem}
+                onPress={() => navigateTo('RgpdPolicy')}
+              >
+                <Ionicons name="document-text" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Política de Privacidad</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
                 onPress={() => navigateTo('ActivityNotifications')}
               >
                 <Ionicons name="notifications" size={24} color={Colors.primary} />

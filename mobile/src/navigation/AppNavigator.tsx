@@ -1,4 +1,3 @@
-// AppNavigator.tsx
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -57,6 +56,7 @@ import CourierDetailScreen from "../screens/admin/CourierDetailScreen";
 import { RootStackParamList } from "../types";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
 import PurchaseDefaultKitScreen from '../screens/deafaultKit/PurchaseDefaultKitScreen';
+import RgpdPolicyScreen from "../screens/legal/RgpdPolicyScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

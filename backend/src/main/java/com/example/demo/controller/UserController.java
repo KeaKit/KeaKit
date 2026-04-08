@@ -7,6 +7,8 @@ import com.example.demo.dto.UserUpdateData;
 import com.example.demo.service.UserService;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.security.TokenBlacklistService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,15 +34,32 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private String getAuthenticatedEmail(){
+    private String getAuthenticatedEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getName();
     }
 
+    // En UserController.java - Modificar el método register
+
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-        UserResponse response = userService.register(request);
+    public ResponseEntity<UserResponse> register(
+            @Valid @RequestBody RegisterRequest request,
+            HttpServletRequest httpRequest) {
+
+        String clientIp = getClientIp(httpRequest);
+        UserResponse response = userService.register(request, clientIp);
         return ResponseEntity.ok(response);
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty()) {
+            ip = request.getRemoteAddr();
+        }
+        if (ip == null || ip.isEmpty() || "0:0:0:0:0:0:0:1".equals(ip) || "127.0.0.1".equals(ip)) {
+            ip = "unknown";
+        }
+        return ip;
     }
 
     @PostMapping("/login")
@@ -57,12 +76,13 @@ public class UserController {
         if (!authenticatedEmail.equals(response.getEmail())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        
+
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateData updateData) {
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id,
+            @Valid @RequestBody UserUpdateData updateData) {
         String authenticatedEmail = getAuthenticatedEmail();
 
         UserResponse userToUpdate = userService.getUserById(id);
