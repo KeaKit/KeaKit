@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, Alert, Platform, StyleSheet, Animated } from "react-native";
+import { View, Text, StyleSheet, Animated } from "react-native";
 import { Icon, TextInput } from "react-native-paper";
 import { commonStyles } from "../../styles";
 import { categoryFormScreenStyles } from "../../styles/categoryFormScreenStyles";
@@ -9,6 +9,7 @@ import { updateCategory, createCategory } from "../../services/categoryService";
 import { Category } from "../../types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types";
+import { KeakitModal } from "../KeakitModal";
 
 type FormErrors = Partial<Record<keyof FormState, string>>;
 
@@ -66,6 +67,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const successOpacity = React.useRef(new Animated.Value(0)).current;
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -130,9 +132,6 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
         maxPrice: parseFloat(formData.maxPrice),
       };
 
-      const successMessage =
-        formMode === "edit" ? "Categoría actualizada" : "Categoría creada";
-
       if (formMode === "edit" && categoryToEdit) {
         await updateCategory(categoryToEdit.id, payload, token);
       } else {
@@ -146,9 +145,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
-      Platform.OS === "web"
-        ? window.alert(errorMessage)
-        : Alert.alert("Error", errorMessage);
+      setSaveError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -157,9 +154,17 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
   const showSuccess = () => {
     setSaveSuccess(true);
     Animated.sequence([
-      Animated.timing(successOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(successOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
       Animated.delay(1800),
-      Animated.timing(successOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
+      Animated.timing(successOpacity, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
     ]).start(() => setSaveSuccess(false));
   };
 
@@ -196,6 +201,12 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
 
   return (
     <View style={formCard}>
+      <KeakitModal
+        visible={!!saveError}
+        variant="error"
+        message={saveError || "Ha ocurrido un error al guardar la categoría."}
+        onDismiss={() => setSaveError(null)}
+      />
       <View style={inputRow}>
         <TextInput
           mode="outlined"
@@ -277,7 +288,9 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
         <Animated.View style={[styles.toast, { opacity: successOpacity }]}>
           <Icon source="check-circle-outline" size={18} color="#4caf7d" />
           <Text style={styles.toastText}>
-            {formMode === "edit" ? "Categoría actualizada correctamente" : "Categoría creada correctamente"}
+            {formMode === "edit"
+              ? "Categoría actualizada correctamente"
+              : "Categoría creada correctamente"}
           </Text>
         </Animated.View>
       )}
