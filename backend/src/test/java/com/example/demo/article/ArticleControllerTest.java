@@ -2,13 +2,12 @@ package com.example.demo.article;
 
 import com.example.demo.controller.ArticleController;
 import com.example.demo.dto.UserArticle;
-import com.example.demo.model.Article;
-import com.example.demo.model.ArticleStatus;
-import com.example.demo.model.Category;
-import com.example.demo.model.User;
+import com.example.demo.model.*;
 import com.example.demo.security.JwtUtil;
-import com.example.demo.service.ArticleService;
-import com.example.demo.service.AuthService;
+import com.example.demo.service.*;
+import com.example.demo.repository.*;
+import com.example.demo.security.CustomUserDetailsService;
+import com.example.demo.security.TokenBlacklistService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +26,7 @@ import java.util.Optional;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -37,23 +37,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 class ArticleControllerTest {
 
-    @Autowired
+@Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
     private ArticleService articleService;
 
+    // --- MOCKS FALTANTES O NECESARIOS PARA EL CONTEXTO ---
     @MockitoBean
-    private com.example.demo.repository.UserRepository userRepository;
+    private ArticleAvailabilityRequestService availabilityRequestService; 
 
     @MockitoBean
-    private com.example.demo.security.CustomUserDetailsService customUserDetailsService;
+    private NotificationService notificationService;
+    // ----------------------------------------------------
 
     @MockitoBean
-    private com.example.demo.security.TokenBlacklistService tokenBlacklistService;
+    private UserRepository userRepository;
 
     @MockitoBean
-    private com.example.demo.repository.CategoryRepository categoryRepository;
+    private CustomUserDetailsService customUserDetailsService;
+
+    @MockitoBean
+    private TokenBlacklistService tokenBlacklistService;
+
+    @MockitoBean
+    private CategoryRepository categoryRepository;
 
     @MockitoBean
     private AuthService authService;
@@ -69,6 +77,8 @@ class ArticleControllerTest {
         owner = new User();
         owner.setId(1L);
         owner.setName("Test Owner");
+        
+        // Mock básico para evitar NullPointer si el controlador busca categorías
         when(categoryRepository.findById(any())).thenReturn(Optional.of(new Category()));
 
         sample = new Article();
@@ -78,7 +88,7 @@ class ArticleControllerTest {
         sample.setCity("c");
         sample.setPricePerMonth(10.0);
         sample.setStatus(ArticleStatus.AVAILABLE);
-        sample.setAvailableFrom(LocalDate.now().plusDays(1));   
+        sample.setAvailableFrom(LocalDate.now().plusDays(1)); 
         sample.setAvailableUntil(LocalDate.now().plusDays(10));
     }
 
@@ -307,7 +317,7 @@ class ArticleControllerTest {
         UserArticle dto1 = new UserArticle(10L, "Taladro", "url1", 15.0, "AVAILABLE", null);
         UserArticle dto2 = new UserArticle(11L, "Bicicleta", "url2", 30.0, "RENTED", LocalDate.of(2026, 12, 31));
 
-        when(articleService.findArticlesByUserId(1L)).thenReturn(List.of(dto1, dto2));
+        when(articleService.findArticlesByUserId(eq(1L), any(), any(), any(), any())).thenReturn(List.of(dto1, dto2));
 
         mockMvc.perform(get("/api/article/my-articles/1"))
             .andExpect(status().isOk())
@@ -323,7 +333,7 @@ class ArticleControllerTest {
 
     @Test
     void getMyArticles_emptyList_returnsOk() throws Exception {
-        when(articleService.findArticlesByUserId(2L)).thenReturn(List.of());
+        when(articleService.findArticlesByUserId(eq(2L), any(), any(), any(), any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/article/my-articles/2"))
             .andExpect(status().isOk())
@@ -332,7 +342,7 @@ class ArticleControllerTest {
 
     @Test
     void getMyArticles_serviceThrows_returnsInternalServerError() throws Exception {
-        when(articleService.findArticlesByUserId(3L)).thenThrow(new RuntimeException("Error fetching articles"));
+        when(articleService.findArticlesByUserId(eq(3L), any(), any(), any(), any())).thenThrow(new RuntimeException("Error fetching articles"));
 
         mockMvc.perform(get("/api/article/my-articles/3"))
             .andExpect(status().isInternalServerError())
@@ -371,6 +381,43 @@ class ArticleControllerTest {
             .andExpect(jsonPath("$[0].title").value("Taladro de prueba"))
             .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
     }
+
+
+    // Test filtros MyArticles
+    @Test
+    void getMyArticles_withAllFilters_success() throws Exception {
+        UserArticle dtoFiltered = new UserArticle(12L, "Taladro Nuevo", "url3", 25.0, "AVAILABLE", null);
+
+      
+        when(articleService.findArticlesByUserId(eq(1L), eq(5L), eq("NEW"), eq(10.0), eq(50.0)))
+            .thenReturn(List.of(dtoFiltered));
+
+        mockMvc.perform(get("/api/article/my-articles/1")
+                .param("categoryId", "5")
+                .param("condition", "NEW")
+                .param("minPrice", "10.0")
+                .param("maxPrice", "50.0"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Taladro Nuevo"))
+            .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
+    }
+
+    @Test
+    void getMyArticles_withPartialFilters_success() throws Exception {
+        UserArticle dtoFiltered = new UserArticle(13L, "Bicicleta Barata", "url4", 15.0, "AVAILABLE", null);
+
+       
+        when(articleService.findArticlesByUserId(eq(1L), isNull(), eq("USED"), isNull(), eq(20.0)))
+            .thenReturn(List.of(dtoFiltered));
+
+        mockMvc.perform(get("/api/article/my-articles/1")
+                .param("condition", "USED")
+                .param("maxPrice", "20.0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Bicicleta Barata"));}
 
     @Test
     void getArticleRecord_success() throws Exception {
@@ -412,5 +459,6 @@ class ArticleControllerTest {
 
         mockMvc.perform(get("/api/article/record/1"))
             .andExpect(status().isInternalServerError());
+
     }
 }

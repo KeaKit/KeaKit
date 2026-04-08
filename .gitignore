@@ -4,3 +4,6 @@ HELP.md
 ### VS Code ###
 .vscode/
 node_modules
+
+locust-env/
+__pycache__

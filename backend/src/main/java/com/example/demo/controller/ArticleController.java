@@ -8,16 +8,21 @@ import com.example.demo.model.User;
 import com.example.demo.model.Category;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.CategoryRepository;
+import com.example.demo.service.ArticleAvailabilityRequestService;
 import com.example.demo.service.ArticleService;
 import com.example.demo.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.util.Map;
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/article")
@@ -26,6 +31,8 @@ public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+    @Autowired
+    private ArticleAvailabilityRequestService availabilityRequestService;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -89,7 +96,23 @@ public class ArticleController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-    
+
+    @PostMapping("/{id}/notify-when-available")
+    public ResponseEntity<?> requestAvailabilityNotification(
+            @PathVariable Long id,
+            @RequestParam Long requesterId) {
+        try {
+            availabilityRequestService.requestAvailabilityNotification(id, requesterId);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Aviso de disponibilidad registrado correctamente.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateArticle(@PathVariable Long id, @RequestParam Long ownerId, @RequestBody Article updateData) {
@@ -122,10 +145,23 @@ public class ArticleController {
     }
 
     @GetMapping("/my-articles/{userId}")
-    public ResponseEntity<List<UserArticle>> getMyArticles(@PathVariable Long userId) {
-        List<UserArticle> articles = articleService.findArticlesByUserId(userId);
+    public ResponseEntity<?> getMyArticles(
+        @PathVariable Long userId, 
+        @RequestParam(required = false) Long categoryId,
+        @RequestParam(required = false) String condition,
+        @RequestParam(required = false) Double minPrice,   
+        @RequestParam(required = false) Double maxPrice) {
+        try {
         
+        List<UserArticle> articles = articleService.findArticlesByUserId(userId, categoryId, condition, minPrice, maxPrice);
         return ResponseEntity.ok(articles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(Map.of(
+                "message", e.getMessage(),
+                "status", 500
+            ));
+    }
     }
 
     @GetMapping("/category/{categoryId}/count")

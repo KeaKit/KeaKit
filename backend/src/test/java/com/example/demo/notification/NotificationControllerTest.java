@@ -1,21 +1,38 @@
 package com.example.demo.notification;
 
 import com.example.demo.controller.NotificationController;
+import com.example.demo.model.Article;
+import com.example.demo.model.ArticleAvailabilityRequest;
+import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Notification;
 import com.example.demo.model.NotificationType;
 import com.example.demo.model.User;
+import com.example.demo.repository.ArticleAvailabilityRequestRepository;
+import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.NotificationRepository;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.service.ArticleAvailabilityRequestService;
+import com.example.demo.service.ArticleService;
 import com.example.demo.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import java.util.List;
+import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -26,21 +43,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 class NotificationControllerTest {
 
-    @Autowired
+   @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
-    private NotificationService notificationService;
+    // --- MOCKS DEL CONTEXTO DE SPRING ---
+    @MockitoBean private NotificationService notificationService;
+    @MockitoBean private ArticleRepository articleRepository;
+    @MockitoBean private NotificationRepository notificationRepository;
+    @MockitoBean private UserRepository userRepository;
+    @MockitoBean private ArticleAvailabilityRequestRepository requestRepository;
+    @MockitoBean private ArticleAvailabilityRequestService availabilityRequestService;
+    @MockitoBean private ArticleService articleService;
 
-    // Beans extra necesarios por cómo tenéis montada la seguridad genérica en otros controllers
-    @MockitoBean
-    private com.example.demo.repository.UserRepository userRepository;
-    @MockitoBean
-    private com.example.demo.security.CustomUserDetailsService customUserDetailsService;
-    @MockitoBean
-    private com.example.demo.security.TokenBlacklistService tokenBlacklistService;
-    @MockitoBean
-    private com.example.demo.security.JwtUtil jwtUtil;
+    // --- MOCKS DE SEGURIDAD (Necesarios para que el contexto arranque) ---
+    @MockitoBean private com.example.demo.security.CustomUserDetailsService customUserDetailsService;
+    @MockitoBean private com.example.demo.security.TokenBlacklistService tokenBlacklistService;
+    @MockitoBean private com.example.demo.security.JwtUtil jwtUtil;
+
+    private User owner;
+    private User requester;
+
 
     private Notification testNotification;
 
@@ -81,4 +103,24 @@ class NotificationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Notification not found"));
     }
+
+
+        @Test
+        void testDeleteNotification_Integration() throws Exception {
+            // No intentes guardar nada real en el repo mockeado
+            Long notificationId = 1L;
+
+            // Si tu controlador llama al service:
+            doNothing().when(notificationService).deleteNotification(notificationId);
+            
+            mockMvc.perform(delete("/api/notifications/" + notificationId))
+                    .andExpect(status().isOk());
+
+            verify(notificationService, times(1)).deleteNotification(notificationId);
+        }
+
+
+
+
+
 }

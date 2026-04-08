@@ -4,7 +4,7 @@
 1. [Sprint Goal](#1-sprint-goal)
 2. [Sprint Backlog - Semana 1](#2-sprint-backlog---semana-1)
 3. [Sprint Backlog - Semana 2](#3-sprint-backlog---semana-2)
-4. [Sprint Backlog - Semana 2](#4-sprint-backlog---semana-3)
+4. [Sprint Backlog - Semana 3](#4-sprint-backlog---semana-3)
 5. [Historial de versiones](#6-historial-de-versiones)
 
 ## Integrantes del equipo
@@ -42,24 +42,33 @@
 
 | ID Issue | Descripción | Prioridad | Estimación (SP) | Estado | Responsable |
 |----------|-------------|-----------|-----------------|--------|-------------|
-| [#291](https://github.com/KeaKit/KeaKit/issues/291)  | Frontend de CU-ADMIN-06 - Creación kits predeterminados| Mid | - | To Do |Guillermo García León|
-| [#293](https://github.com/KeaKit/KeaKit/issues/293)  | Backend de CU-ADMIN-06 - Creación kits predeterminados| Mid | -  | To Do |Ismael Carrasco Mkhazni|
-| [#294](https://github.com/KeaKit/KeaKit/issues/294)  | Testing de CU-ADMIN-06 - Creación kits predeterminados| Mid | - | To Do  | -|
-| [#295](https://github.com/KeaKit/KeaKit/issues/295)  | Frontend de CU-ARRENDATARIO-07 - Modificar kits predeterminados | Mid |  - | To Do |Rosa María Espinosa Martínez |
-| [#296](https://github.com/KeaKit/KeaKit/issues/296)  | Backend de CU-ARRENDATARIO-07 - Modificar kits predeterminados| Mid | - | To Do |Germán Ojeda Garrido|
-| [#297](https://github.com/KeaKit/KeaKit/issues/297)  | Testing de CU-ARRENDATARIO-07 - Modificar kits predeterminados| Mid | - | To Do |-|
+| [#291](https://github.com/KeaKit/KeaKit/issues/291)  | Frontend de CU-ADMIN-06 - Creación kits predeterminados| Mid | - | Done |Guillermo García León|
+| [#293](https://github.com/KeaKit/KeaKit/issues/293)  | Backend de CU-ADMIN-06 - Creación kits predeterminados| Mid | -  | Done |Ismael Carrasco Mkhazni|
+| [#294](https://github.com/KeaKit/KeaKit/issues/294)  | Testing de CU-ADMIN-06 - Creación kits predeterminados| Mid | - | Done  | Samuel Tamayo Balogh|
+| [#295](https://github.com/KeaKit/KeaKit/issues/295)  | Frontend de CU-ARRENDATARIO-07 - Modificar kits predeterminados | Mid |  - | Done |Rosa María Espinosa Martínez |
+| [#296](https://github.com/KeaKit/KeaKit/issues/296)  | Backend de CU-ARRENDATARIO-07 - Modificar kits predeterminados| Mid | - | Done |Germán Ojeda Garrido|
+| [#297](https://github.com/KeaKit/KeaKit/issues/297)  | Testing de CU-ARRENDATARIO-07 - Modificar kits predeterminados| Mid | - | Done |Samuel Tamayo Balogh|
 | [#307](https://github.com/KeaKit/KeaKit/issues/307)  | Sprint 2 Backlog Grupo 2 | Low | - | Done |Guillermo García León|
 
 
 ## 4. Sprint Backlog - Semana 3
 
-Apartado a rellenar tras el próximo reparto.
+| ID Issue | Descripción | Prioridad | Estimación (SP) | Estado | Responsable |
+|----------|-------------|-----------|-----------------|--------|-------------|
+| [#291](https://github.com/KeaKit/KeaKit/issues/291)  | Frontend: CU-ARRENDADOR-08 - Notificaciones de actividad| Mid | - | Done |Rosa María Espinosa Martínez|
+| [#353](https://github.com/KeaKit/KeaKit/issues/353)  | Backend: CU-ARRENDADOR-08 - Notificaciones de actividad| Mid | -  | Done |Germán Ojeda Garrido|
+| [#354](https://github.com/KeaKit/KeaKit/issues/354)  | Testing: CU-ARRENDADOR-08 - Notificaciones de actividad| Mid | - | Done  | Ismael Carrasco Mkhazni|
+| [#372](https://github.com/KeaKit/KeaKit/issues/372)  | Corregir Plan de Pruebas| Mid | - | Done  | Ismael Carrasco Mkhazni|
+| [#415](https://github.com/KeaKit/KeaKit/pull/415)  | Revisar PR: Hotfix/admin gestion usuarios| High | - | Done  | Guillermo García León|
+| [#408](https://github.com/KeaKit/KeaKit/pull/408)  | Revisar PR: Feat/bugfix create kit screen dont get prices breakdown| High | - | Done  | Guillermo García León|
+| -  | Corregir Presentacion: Plan de Pruebas| Mid | - | Done  | Guillermo García León|
+
 
 ## 5. Historial de versiones
 
 | Versión | Fecha       | Descripción                    | Autor(es)                  |
 |---------|-------------|--------------------------------|----------------------------|
 | 1.0.0   | 17/03/2026  |  Sprint Backlog Semana 1 y 2            | Guillermo García León|
-
+| 2.0.0   | 07/04/2026  |  Sprint Backlog Semana 3           | Guillermo García León|
 
 ---

@@ -6,6 +6,160 @@
 
 ---
 
+
+####  Autenticación
+
+Casos de uso probados:
+
+* Registro de usuarios mediante email.
+* Inicio y cierre de sesión.
+* Recuperación de contraseña.
+* Gestión de roles.
+* Edición de perfil.
+* Manter sesión iniciada.
+
+---
+
+###### Registro de usuarios mediante email.
+
+**Funcionamiento detectado**
+* El sistema efectivamente crea al usuario y le envia el correo en caso de no haber puesto contraseña
+
+**Funcionamiento mejorable**
+* deberia haber un tamaño maximo de contraseña. me dejo poner una de mil caracteres y el correo de bienvenida deberia ser distinto al de recuperacion de contraseña o indicar que el correo que se envia no es de bienvenida sino de recuperación de contraseña
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### Inicio y cierre de sesión.
+
+**Funcionamiento detectado**
+* El sistema efectivamente permite iniciar y cerrar sesión.
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### Recuperación de contraseña.
+
+**Funcionamiento detectado**
+* El sistema envia en corto tiempo un correo de recuperacion de contraseña y funciona correctamente.
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* ninguna
+
+---
+###### Gestión de roles.
+
+**Funcionamiento detectado**
+* El sistema diferencia entre administrador y estudiante.
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### Edición de perfil.
+
+**Funcionamiento detectado**
+* El sistema permite la edicion de perfil tanto de administrador como de estudiante.
+
+**Funcionamiento mejorable**
+* como estudiante el nombre completo pese a tener el *, no se te permite cambiar, por lo que convendria que no apareciera en la pantalla de edicion o se quitara el * que da a entender que es obligatorio 
+
+**Failure condition detectada**
+* T-12: al modificar el apodo desde estudiante y poner un apodo suuuuper largo salta un error de que no se puede guardar, deberia haber un validador de longitud
+
+---
+
+###### Edición de perfil.
+
+**Funcionamiento detectado**
+* se mantiene la sesion iniciada correctamente
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* nada
+---
+
+#### Panel residencias
+
+Casos de uso probados:
+
+* Acceso e interacción con el panel administrativo.
+* Gestión de personal (CRUD).
+* Gestión de residentes (CRUD).
+* Filtrado y visualización de detalles de las habitaciones.
+
+
+---
+
+###### Acceso e interacción con el panel administrativo.
+
+**Funcionamiento detectado**
+* se puede interactuar con el panel
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* nada
+---
+
+###### Gestión de personal (CRUD).
+
+**Funcionamiento detectado**
+* Puedes crear, borrar, ver a una persona
+
+**Funcionamiento mejorable**
+* cuando pones muchos caracteres efectivamente tiene comprobacion de que no se superen, pero no te dice en cual campo estas violando esa restriccion, simplemente te aparece el mensaje por ahi
+
+**Failure condition detectada**
+* nada
+  
+---
+
+###### Filtrado y visualización de detalles de las habitaciones.
+
+**Funcionamiento detectado**
+* Puedes filtrar y visualizar habitaciones
+
+**Funcionamiento mejorable**
+* niguno
+
+**Failure condition detectada**
+* T12- Se contara como fallo pues aunque no sea un caso de uso explicito, los botones estan y no se ha especificado nada en la guia, al crear una habitacion y tener algun error en la validacion, pese a que la validacion salta, una vez corriges el fallo el error no desaparece y tampoco te deja presionar el boton de guardar 
+  
+---
+
+###### Gestión de residentes (CRUD).
+
+**Funcionamiento detectado**
+* Puedes crear, eliminar, leer a un estudiante
+
+**Funcionamiento mejorable**
+* niguno
+
+**Failure condition detectada**
+* T12- comentado anteriormente pero al crear o editar el campo checking no se guarda
+  
+---
+
+
 #### Onboarding
 
 Casos de uso probados:
@@ -480,6 +634,57 @@ Casos de uso probados:
 
 ---
 
+#### Comunicación
+
+Casos de uso probados:
+
+* Gestión de chats (CRUD).
+* Hacer administrador del grupo a los miembros.
+* Añadir y expulsar miembros a los grupos.
+* Chats grupales y privados
+
+---
+
+###### Gestión de chats (CRUD)
+
+**Funcionamiento detectado**
+* Puedes crear, eliminar y ver chats
+
+**Funcionamiento mejorable**
+* nada, suponiendo que esta bien que los usuarios no puedan crear chats grupales y es algo que solo puede hacer el administrador
+
+**Failure condition detectada**
+* nada
+  
+---
+
+###### Hacer administrador del grupo a los miembros.
+
+**Funcionamiento detectado**
+* Puedes poner a otros miembros como administradores del grupo
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* T12 - puse de administrador del chat general al usuario de prueba, y a todos los usuarios creados, pero al iniciar como el usuario de prueba y hacer modificaciones en el chat, al darle guardar cambios, me dice "No tienes permisos para gestionar este grupo." lo mismo al intentar expulsar miembros que son admin o quitarle el admin a otros miembros administradores del grupo 
+  
+---
+
+###### Añadir y expulsar miembros a los grupos.
+
+**Funcionamiento detectado**
+* Como adminsitrador puedes
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* nada
+  
+---
+
+
 #### Premium
 
 Casos de uso probados:
@@ -506,6 +711,191 @@ Casos de uso probados:
 ### Casos de uso probados
 
 ---
+
+#### GESTIÓN DE USUARIOS
+
+Casos de uso probados:
+
+* UC-01 Registrar usuario
+* UC-02 Iniciar sesión
+* UC-03 Cerrar sesión
+* UC-04 Editar perfil
+* UC-05 Ver perfil
+* UC-06 Cambiar contraseña
+* UC-07 Eliminar cuenta
+
+---
+
+###### **UC-01 Registrar usuario**
+
+* **Estado:** Funciona correctamente.
+* El correo es enviando
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-02 Iniciar sesión**
+
+* **Estado:** Funciona correctamente.
+* El sistema requiere que validez la cuenta con email
+* No permite iniciar sesion si no esta validado
+
+****Failure condition detectada T12****
+* Dentro del formulario de iniciar sesion si presionas ¿olvidaste la contraseña? no hace nada para recuperarla, solo te manda a otra pantalla que no es la de inicio de sesion
+
+---
+
+###### **UC-03 Cerrar sesión**
+
+* **Estado:** Funciona correctamente.
+* El sistema efectivamente cierra la sesion
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### *** UC-04 Editar perfil**
+
+* **Estado:** Funciona correctamente.
+* El sistema efectivamente edita el perfil
+* El sistema hace caso omiso a modificaciones en los campos con "inpeccionar elemento"
+* Se tuvieron en cuenta validaciones de logitud en los campos
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-05 Ver perfil**
+
+* **Estado:** Funciona correctamente.
+* El sistema te deja ver el perfil de otras personas
+
+****Failure condition detectada T12****
+* No se si cuenta como failure condition, pero al ver el perfil de alguien que no tiene foto ej. Alejo Molina, su foto deja de ser las letras AM y se transforma en su nombre en entero en texto plano y pequeño
+
+---
+
+###### **UC-06 Cambiar contraseña**
+
+* **Estado:** Funciona correctamente.
+* El sistema valida correctamente la contraseña actual
+
+****Cosas a mejorar****
+* No se tiene la misma validacion para cambiar de contraseña que cuando se crea, para crear requiere mayuscula, minuscula, etc y para cambiar solo que sea 8 caracteres, puedes no poner ninguna mayuscula y lo acepta igualmente
+* El error de cuando la contraseña es muy larga en vez de decir algo como "contraseña muy larga" dice que no puede ser mas de 72 bytes (poco intuitivo para el usuario comun)
+
+****Failure condition detectada ninguno****
+
+---
+
+###### **UC-07 Eliminar cuenta**
+
+* **Estado:** Funciona correctamente.
+* El sistema elimina la cuenta
+
+****Failure condition detectada ninguno****
+
+---
+
+#### COMUNIDADES
+
+Casos de uso probados:
+
+* UC-08 Crear comunidad
+* UC-09 Editar comunidad
+* UC-10 Eliminar comunidad
+* UC-11 Unirse a comunidad
+* UC-12 Solicitar acceso a comunidad privada
+* UC-13 Gestionar miembros de comunidad
+* UC-14 Publicar contenido en comunidad
+* UC-15 Moderar contenido de comunidad
+
+---
+
+###### **UC-08 Crear comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema permite crear comunidades
+
+****sugerencia de mejora:****
+* Poner limite de caracteres en las tags, puedes poner un monton y se bugea visualmente
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-09 Editar comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema permite editar el nombre y descripcion comunidades
+* valida el numero minimo de caracteres para el nombre
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-10 Eliminar comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema elimina la comunidad
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-11 Unirse a comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar a comunidades publicas y no te deja entrar directamente a comunidades privadas
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-12 Solicitar acceso a comunidad privada**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar a comunidades publicas y no te deja entrar directamente a comunidades privadas
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-13 Gestionar miembros de comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar y ver a los miembros de una comunidad
+
+****Sugerencia de mejoras****
+* Que cuando das el admin a alguien puedas quitarselo
+* Que un admin no pueda expulsar a otro porque se podria "adueñar" de la comunidad al expulsar a todos los otros admin 
+
+****Failure condition detectada T12****
+* cuando recibes una solicitud de una comunidad privada cuando le das en aceptar o rechazar el sistema no hace nada
+
+---
+
+###### **UC-14 Publicar contenido en comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar ver a los miembros de una comunidad
+
+****Failure condition detectada ninguno****
+
+---
+
+###### **UC-15 Moderar contenido de comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite eliminar eventos
+* 
+****sugerencia de mejora****
+* Al abrir el chat tienes que bajarle el zoom al 75% para que se pueda ver
+
+****Failure condition detectada ninguno****
+---
+
 
 #### Eventos
 
@@ -662,6 +1052,211 @@ Casos de uso probados:
 * **Estado:** Funciona correctamente.
 * Si el evento tiene coordenadas asociadas, la ubicación aparece correctamente representada en el mapa.
 
+---
+
+
+#### Profesores
+
+Casos de uso probados:
+
+* UC-32 Crear / editar perfil de profesor.
+* UC-33 Solicitar verificación de profesor.
+* UC-34 Listar profesores.
+* UC-35 Listar profesores verificados.
+* UC-36 Pago para verificación / promoción.
+* UC-37 Valorar profesor.
+* UC-38 Chat con profesor.
+
+---
+
+###### UC-32 Crear / editar perfil de profesor.
+
+**Funcionamiento detectado**
+* Funciona bien, pero las validaciones de campos no son específicas; solo se muestra mensaje genérico.
+
+**Funcionamiento mejorable**
+* Mostrar específicamente qué campo y qué error ocurre.
+
+**Failure condition detectada**
+* T12
+
+---
+
+###### UC-33 Solicitar verificación de profesor.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-34 Listar profesores.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-35 Listar profesores verificados.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-36 Pago para verificación / promoción.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-37 Valorar profesor.
+
+**Funcionamiento detectado**
+* No se encuentra completamente implementado; la fecha aparece en formato americano.
+
+**Funcionamiento mejorable**
+* Usar un formato de fecha universal.
+
+**Failure condition detectada**
+* T12
+
+---
+
+###### UC-38 Chat con profesor.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+#### FINANZAS Y SISTEMA DE PAGOS
+
+Casos de uso probados:
+
+* UC-39 Ver planes.
+* UC-40 Suscribirse a un plan.
+* UC-41 Procesar pago.
+* UC-42 Cancelar suscripción.
+
+---
+
+###### UC-39 Ver planes.
+
+**Funcionamiento detectado**
+* Funciona correctamente para profesor, alumno e institución.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-40 Suscribirse a un plan.
+
+**Funcionamiento detectado**
+* Funciona correctamente para profesor y alumno, pero presenta problemas de consistencia y validaciones incompletas:  
+  - En "Tu suscripción" no aparece el plan contratado individualmente; muestra "No tienes suscripción activa".  
+  - Después de contratar un plan de institución, solo ese aparece como activo.  
+  - Validaciones de campos (nombre, email, dominio) se hacen al clicar en "Continuar el pago"; sería mejor hacerlas antes.  
+  - No se valida número de teléfono ni sitio web.  
+  - Si se cierra la ventana de pago sin completar y luego se intenta usar los mismos datos, no se permite indicando que el dominio ya existe.  
+  - No se puede retroceder después de "Continuar pago", impidiendo modificar datos.  
+  - En "Mis pagos", no aparecen los datos del plan de institución contratado, solo que hay un plan activo.  
+  - No queda claro cómo manejar la contratación de plan individual tras un plan institucional.  
+  - En planes individuales, se puede contratar un plan Pro junto con Premium; debería permitir cancelar el anterior antes de aumentar al siguiente.
+
+**Failure condition detectada**
+* T12
+
+---
+
+###### UC-41 Procesar pago.
+
+**Funcionamiento detectado**
+* Funciona correctamente para estudiante, profesor y planes de institución.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-42 Cancelar suscripción.
+
+**Funcionamiento detectado**
+* No se puede; parece que no está desarrollado.
+
+**Failure condition detectada**
+* T12
+
+---
+
+#### Notificaciones
+
+Casos de uso probados:
+
+* UC-43 Enviar notificación.
+* UC-44 Recibir notificación.
+* UC-45 Ver historial de notificaciones.
+* UC-46 Marcar notificación como leída.
+
+---
+
+###### UC-43 Enviar notificación.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-44 Recibir notificación.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-45 Ver historial de notificaciones.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### UC-46 Marcar notificación como leída.
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Failure condition detectada**
+* ninguna
+
+
+
+
 
 ## Historial de versiones
 
@@ -670,9 +1265,11 @@ Casos de uso probados:
 | 1.0.0 | 05/04/2026 | Creación del documento e Integración de pruebas de casos de uso de NexUS  | Salma El Hakimy Ettorabi |
 | 1.1.0 | 05/04/2026 | Integración del resto de pruebas de casos de uso de NexUS  | Marta Aguilar Morcillo |
 | 1.2.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Marta Aguilar Morcillo |
-
+| 1.3.0 | 06/04/2026 | Integración de algunos casos de uso de NexUS  | Luis Emmanuel Chavez Malave |
+| 1.4.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Luis Emmanuel Chavez Malave |
+| 1.5.0 | 07/04/2026 | Integración de pruebas de casos de uso de Meerkatters  | Salma El Hakimy Ettorabi |
 ---
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
-**Fecha de redacción:** 05/04/2026
-**Versión:** 1.1.0
+**Fecha de redacción:** 06/04/2026
+**Versión:** 1.5.0

@@ -29,12 +29,13 @@
         "ms-vscode.vscode-typescript-next",
         "orta.vscode-jest",
         "redhat.vscode-yaml",
-        "gruntfuggly.todo-tree"
+        "gruntfuggly.todo-tree",
+        "ms-python.python"
       ]
     }
   },
 
-  "forwardPorts": [3000, 8080, 5432, 19000, 19001, 19002],
+  "forwardPorts": [3000, 8080, 5432, 19000, 19001, 19002, 8089],
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
