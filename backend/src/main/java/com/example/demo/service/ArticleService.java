@@ -1,7 +1,9 @@
 package com.example.demo.service;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import org.springframework.stereotype.Service;
@@ -13,12 +15,15 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.demo.dto.ArticleFilterResponseDTO;
 import com.example.demo.dto.ArticleNearbyDTO;
+import com.example.demo.dto.ArticleResponse;
 import com.example.demo.dto.CityCoordinatesDTO;
 import com.example.demo.dto.ArticleRecordDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.User;
@@ -375,6 +380,99 @@ public class ArticleService {
                 rentedUntil
             );
         }).collect(Collectors.toList());
+    }
+
+    public ArticleFilterResponseDTO filterArticlesForKit(Double minPrice, Double maxPrice, String country, Integer page,
+            Integer size) {
+        validateFilterInput(minPrice, maxPrice, country, page, size);
+
+        int safePage = page != null ? page : 0;
+        int safeSize = size != null ? size : 10;
+        String sanitizedCountry = sanitizeCountry(country);
+
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        Specification<Article> spec = Specification.where(ArticleFilter.hasStatus(ArticleStatus.AVAILABLE))
+                .and(ArticleFilter.isPriceInRange(minPrice, maxPrice))
+                .and(ArticleFilter.hasCountry(sanitizedCountry));
+
+        Page<ArticleResponse> resultPage = articleRepository.findAll(spec, pageable).map(this::toArticleResponse);
+
+        if (resultPage.isEmpty()) {
+            throw new ResourceNotFoundException("No articles found for the provided filters");
+        }
+
+        return new ArticleFilterResponseDTO(
+                resultPage.getContent(),
+                resultPage.getNumber(),
+                resultPage.getSize(),
+                resultPage.getTotalElements(),
+                resultPage.getTotalPages(),
+                resultPage.hasNext(),
+                resultPage.hasPrevious());
+    }
+
+    private void validateFilterInput(Double minPrice, Double maxPrice, String country, Integer page, Integer size) {
+        if (minPrice != null && minPrice <= 0) {
+            throw new IllegalArgumentException("minPrice must be greater than 0");
+        }
+        if (maxPrice != null && maxPrice <= 0) {
+            throw new IllegalArgumentException("maxPrice must be greater than 0");
+        }
+        if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
+            throw new IllegalArgumentException("minPrice cannot be greater than maxPrice");
+        }
+
+        if (country != null) {
+            String trimmed = country.trim();
+            if (trimmed.isEmpty()) {
+                throw new IllegalArgumentException("country must not be blank");
+            }
+            if (trimmed.length() > 120) {
+                throw new IllegalArgumentException("country cannot exceed 120 characters");
+            }
+        }
+
+        if (page != null && page < 0) {
+            throw new IllegalArgumentException("page must be greater than or equal to 0");
+        }
+        if (size != null && size <= 0) {
+            throw new IllegalArgumentException("size must be greater than 0");
+        }
+    }
+
+    private String sanitizeCountry(String country) {
+        if (country == null) {
+            return null;
+        }
+        String trimmed = country.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private ArticleResponse toArticleResponse(Article article) {
+        ArticleResponse dto = new ArticleResponse();
+        dto.setId(article.getId());
+        dto.setTitle(article.getTitle());
+        dto.setDescription(article.getDescription());
+        dto.setCity(article.getCity());
+        dto.setCountry(article.getCountry());
+        dto.setPricePerMonth(article.getPricePerMonth());
+        dto.setAvailableFrom(article.getAvailableFrom());
+        dto.setAvailableUntil(article.getAvailableUntil());
+        dto.setImageUrl(article.getImageUrl());
+        dto.setStatus(article.getStatus());
+        dto.setPurchaseDate(article.getPurchaseDate());
+
+        if (article.getCategory() != null) {
+            dto.setCategoryId(article.getCategory().getId());
+            dto.setCategoryName(article.getCategory().getName());
+        }
+
+        if (article.getOwner() != null) {
+            dto.setOwnerId(article.getOwner().getId());
+            dto.setOwnerName(article.getOwner().getName());
+        }
+
+        return dto;
     }
 
     public List<ArticleNearbyDTO> findNearbyArticles(String targetCity, String country, double radiusKm) {

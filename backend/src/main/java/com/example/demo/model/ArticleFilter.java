@@ -2,7 +2,6 @@ package com.example.demo.model;
 
 import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Predicate; 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,5 +34,18 @@ public class ArticleFilter {
 
             return predicates.isEmpty() ? null : cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    public static Specification<Article> hasCountry(String country) {
+        return (root, query, cb) -> {
+            if (country == null || country.trim().isEmpty()) {
+                return null;
+            }
+            return cb.equal(cb.lower(root.get("country")), country.trim().toLowerCase());
+        };
+    }
+
+    public static Specification<Article> hasStatus(ArticleStatus status) {
+        return (root, query, cb) -> (status == null) ? null : cb.equal(root.get("status"), status);
     }
 }
