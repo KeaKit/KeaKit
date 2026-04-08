@@ -80,6 +80,10 @@ public class AdminUserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (request.getEmail() != null) {
+            if (!request.getEmail().equals(user.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
+                throw new UserAlreadyExistsException("El correo ya está registrado.");
+            }
+
             user.setEmail(request.getEmail());
         }
 
