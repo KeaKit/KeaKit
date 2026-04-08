@@ -6,6 +6,8 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList, UserResponse } from '../../types';
 import { createUser, updateUser } from '../../services/adminService';
+import { SelectPicker } from '../../components/SelectPicker';
+import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { Colors, Spacing, commonStyles } from '../../styles';
 
 type AdminUserFormNav = NativeStackNavigationProp<RootStackParamList, 'AdminUsers'>;
@@ -40,6 +42,20 @@ const AdminUserFormScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [showPassword, setShowPassword] = useState(false);
+
+  const {
+    countries,
+    cities,
+    loadingCities,
+    onCountryChange,
+  } = useLocationPicker();
+
+  useEffect(() => {
+    // Si estamos editando y el usuario ya tiene país, forzamos la carga de sus ciudades
+    if (userToEdit?.country) {
+      onCountryChange(userToEdit.country);
+    }
+  }, []);
 
   const [role, setRole] = useState<"USER" | "COURIER" | "ADMIN">(userToEdit?.role ?? "USER");
   const [roleModalVisible, setRoleModalVisible] = useState(false);
@@ -167,23 +183,44 @@ const AdminUserFormScreen: React.FC = () => {
       />
       {errors.address && <Text style={styles.fieldErrorText}>{errors.address}</Text>}
 
-      {/* CIUDAD */}
-      <TextInput
-        style={[styles.input, errors.city && styles.inputError]} // Faltaba el array de estilos
-        placeholder="Ciudad"
-        value={city}
-        onChangeText={(v) => { setCity(v); clearErrors(); }}
-      />
-      {errors.city && <Text style={styles.fieldErrorText}>{errors.city}</Text>}
-
-      {/* PAÍS */}
-      <TextInput
-        style={[styles.input, errors.country && styles.inputError]} // Faltaba el array de estilos
-        placeholder="País"
-        value={country}
-        onChangeText={(v) => { setCountry(v); clearErrors(); }}
-      />
+      {/* PAÍS (Selector desplegable) */}
+      <View style={styles.pickerContainer}>
+        <View style={[styles.pickerWrapper, errors.country && styles.inputError]}>
+          <SelectPicker
+            options={countries}
+            selectedValue={country}
+            placeholder="País"
+            onValueChange={(value: string) => {
+              onCountryChange(value);
+              setCountry(value);
+              setCity(''); // Reseteamos la ciudad al cambiar de país
+              clearErrors();
+            }}
+          />
+        </View>
+      </View>
       {errors.country && <Text style={styles.fieldErrorText}>{errors.country}</Text>}
+
+      {/* CIUDAD (Selector desplegable) */}
+      <View style={styles.pickerContainer}>
+        <View style={[styles.pickerWrapper, errors.city && styles.inputError]}>
+          {loadingCities ? (
+            <ActivityIndicator size="small" color={Colors.primary} style={{ margin: 12 }} />
+          ) : (
+            <SelectPicker
+              options={cities.map((c: string) => ({ label: c, value: c }))}
+              selectedValue={city}
+              placeholder={country ? 'Ciudad' : 'Primero elige un país'}
+              disabled={cities.length === 0}
+              onValueChange={(value: string) => {
+                setCity(value);
+                clearErrors();
+              }}
+            />
+          )}
+        </View>
+      </View>
+      {errors.city && <Text style={styles.fieldErrorText}>{errors.city}</Text>}
 
       {/* CONTRASEÑA */}
       <View style={styles.inputContainer}>
@@ -323,5 +360,18 @@ const styles = StyleSheet.create({
   headerRight: {
     width: 40,
   },
-
+  pickerContainer: { 
+    padding: 0, 
+    justifyContent: 'center',
+  },
+  pickerWrapper: {
+    height: 50, 
+    backgroundColor: '#fff', 
+    borderRadius: 10, 
+    marginTop: 10, 
+    borderWidth: 1, 
+    borderColor: '#ddd',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
 });
