@@ -82,13 +82,21 @@ public class DefaultKitService {
         }
     }
 
-    public List<DefaultKit> getAllDefaultKits() {
-        return defaultKitRepository.findAll();
+    public List<DefaultKitResponse> getAllDefaultKits() {
+        List<DefaultKit> kits = defaultKitRepository.findAll();
+        return kits.stream()
+               .map(this::mapToDefaultKitResponse) 
+               .collect(Collectors.toList());
     }
 
     public DefaultKit getDefaultKitById(Long id) {
         return defaultKitRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se ha encontrado el Kit Predeterminado con ID: " + id));
+    }
+
+    public DefaultKitResponse findDefaultKitById(Long id) {
+        DefaultKit kit = getDefaultKitById(id);
+        return mapToDefaultKitResponse(kit); // Tu función que convierte entidad a DTO
     }
 
     private void calculateAndSetBasePrice(DefaultKit defaultKit) {
@@ -125,7 +133,7 @@ public class DefaultKitService {
     }
 
     @Transactional
-    public DefaultKit updateDefaultKit(Long id, DefaultKitCreateRequest request) {
+    public DefaultKitResponse updateDefaultKit(Long id, DefaultKitCreateRequest request) {
         checkUserAdmin();
         
         DefaultKit defaultKit = getDefaultKitById(id);
@@ -157,7 +165,8 @@ public class DefaultKitService {
         }
 
         calculateAndSetBasePrice(defaultKit);
-        return defaultKitRepository.save(defaultKit);
+        DefaultKit savedKit = defaultKitRepository.save(defaultKit);
+        return mapToDefaultKitResponse(savedKit);
     }
 
     @Transactional
