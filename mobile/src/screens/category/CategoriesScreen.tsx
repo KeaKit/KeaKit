@@ -179,7 +179,7 @@ export default function CategoriesScreen() {
   );
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={commonStyles.container}>
       <Header
         title="Gestión de categorías"
         showBack={true}

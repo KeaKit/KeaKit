@@ -18,6 +18,7 @@ export const commonStyles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     backgroundColor: Colors.backgroundGray,
+    flexDirection: "column",
     justifyContent: "space-between",
     padding: Spacing.lg,
     gap: Spacing.lg
