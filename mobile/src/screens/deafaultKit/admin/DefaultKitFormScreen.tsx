@@ -15,19 +15,19 @@ import {
 
 registerTranslation("es", es);
 
-import { useAuth } from "../../context/AuthContext";
-import { API_ROUTES } from "../../config/api";
-import { RootStackParamList, DefaultKitCreateRequest } from "../../types";
-import { Colors, commonStyles, componentStyles } from "../../styles";
-import { createKitStyles } from "../../styles/createKitStyles";
-import { ProductSelectionModal } from "../../components/ProductSelectionModal";
+import { useAuth } from "../../../context/AuthContext";
+import { API_ROUTES } from "../../../config/api";
+import { RootStackParamList, DefaultKitCreateRequest } from "../../../types";
+import { Colors, commonStyles, componentStyles } from "../../../styles";
+import { createKitStyles } from "../../../styles/createKitStyles";
+import { ProductSelectionModal } from "../../../components/ProductSelectionModal";
 import {
   removeSelectedQuantity,
   upsertSelectedQuantity
-} from "../kit/createKitSelection";
-import { createDefaultKit, updateDefaultKit } from "../../services/defaultKitService";
-import { categoryFormScreenStyles } from '../../styles/categoryFormScreenStyles';
-import DefaultKitItemComponent from "../../components/DefaultKitItemComponent";
+} from "../../kit/createKitSelection";
+import { createDefaultKit, updateDefaultKit } from "../../../services/defaultKitService";
+import { categoryFormScreenStyles } from '../../../styles/categoryFormScreenStyles';
+import DefaultKitItemComponent from "../../../components/DefaultKitItemComponent";
 
 const { saveButton, saveButtonText, editButton } = categoryFormScreenStyles;
 
