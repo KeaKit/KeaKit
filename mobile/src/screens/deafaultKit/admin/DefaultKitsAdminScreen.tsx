@@ -1,13 +1,13 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { DefaultKit, RootStackParamList } from "../../types";
+import { DefaultKit, RootStackParamList } from "../../../types";
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Button, Modal, Portal, Text } from 'react-native-paper';
-import { Colors, commonStyles, componentStyles, Spacing } from '../../styles';
+import { Colors, commonStyles, componentStyles, Spacing } from '../../../styles';
 import { TouchableOpacity, View, StyleSheet, FlatList, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { deleteDefaultKit, fetchAllDefaultKits } from '../../services/defaultKitService';
+import { deleteDefaultKit, fetchAllDefaultKits } from '../../../services/defaultKitService';
 
 type DefaultKitsNav = NativeStackNavigationProp<RootStackParamList, 'DefaultKits'>;
 

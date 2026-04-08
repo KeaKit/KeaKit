@@ -24,8 +24,8 @@ public class DefaultKitController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DefaultKit> getDefaultKitById(@PathVariable Long id) {
-        return ResponseEntity.ok(defaultKitService.getDefaultKitById(id));
+    public ResponseEntity<DefaultKitResponse> getDefaultKitById(@PathVariable Long id) {
+        return ResponseEntity.ok(defaultKitService.findDefaultKitById(id));
     }
 
     @PostMapping

@@ -2,6 +2,7 @@ package com.example.demo.defaultkit;
 
 import com.example.demo.controller.DefaultKitController;
 import com.example.demo.dto.DefaultKitCreateRequest;
+import com.example.demo.dto.DefaultKitResponse;
 import com.example.demo.exception.AccessForbiddenException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.DefaultKit;
@@ -58,16 +59,35 @@ class DefaultKitControllerTest {
 
     @Test
     void getAllDefaultKits_success_returnsList() throws Exception {
+    // 1. Creamos las entidades de prueba
+        DefaultKit dk1 = new DefaultKit("Kit Mudanza", "Desc 1", 50.0);
+        dk1.setId(1L);
         DefaultKit dk2 = new DefaultKit("Kit Cocina", "Menaje básico", 29.99);
         dk2.setId(2L);
-        when(defaultKitService.getAllDefaultKits()).thenReturn(List.of(sampleKit, dk2));
 
-        mockMvc.perform(get("/api/default-kits"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Kit Mudanza"))
-                .andExpect(jsonPath("$[1].name").value("Kit Cocina"));
-    }
+        // 2. Las convertimos a DefaultKitResponse (lo que espera el mock)
+        DefaultKitResponse res1 = new DefaultKitResponse();
+        res1.setId(dk1.getId());
+        res1.setName(dk1.getName());
+        res1.setDescription(dk1.getDescription()); 
+        res1.setBasePrice(dk1.getBasePrice());
+        res1.setItems(List.of());  
+    DefaultKitResponse res2 = new DefaultKitResponse();
+        res2.setId(dk2.getId());
+        res2.setName(dk2.getName());
+        res2.setDescription(dk2.getDescription()); 
+        res2.setBasePrice(dk2.getBasePrice());
+        res2.setItems(List.of());
+    // 3. Configuramos el mock con la lista de DTOs
+    when(defaultKitService.getAllDefaultKits()).thenReturn(List.of(res1, res2));
+
+    mockMvc.perform(get("/api/default-kits")
+            .header("Authorization", "Bearer token-valido")) // Asegúrate de incluir auth si tu security lo requiere
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].name").value("Kit Mudanza"))
+            .andExpect(jsonPath("$[1].name").value("Kit Cocina"));
+}
 
     @Test
     void getAllDefaultKits_empty_returnsEmptyList() throws Exception {
@@ -82,7 +102,15 @@ class DefaultKitControllerTest {
 
     @Test
     void getDefaultKitById_success_returnsKit() throws Exception {
-        when(defaultKitService.getDefaultKitById(1L)).thenReturn(sampleKit);
+        DefaultKitResponse response = new DefaultKitResponse();
+        response.setId(1L);
+        response.setName("Kit Mudanza");
+        response.setDescription("Kit completo para mudanzas");
+        response.setBasePrice(59.99);
+        response.setItems(List.of()); // O .setItems según se llame en tu DTO
+
+        // 2. Mockeamos el método findDefaultKitById (que es el que usa el controlador ahora)
+        when(defaultKitService.findDefaultKitById(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/default-kits/1"))
                 .andExpect(status().isOk())
@@ -94,7 +122,7 @@ class DefaultKitControllerTest {
 
     @Test
     void getDefaultKitById_notFound_returns404() throws Exception {
-        when(defaultKitService.getDefaultKitById(999L))
+        when(defaultKitService.findDefaultKitById(999L))
                 .thenThrow(new ResourceNotFoundException("No se ha encontrado el Kit Predeterminado con ID: 999"));
 
         mockMvc.perform(get("/api/default-kits/999"))
@@ -152,19 +180,27 @@ class DefaultKitControllerTest {
     // ── PUT /api/default-kits/{id} ────────────────────────────────────────
 
     @Test
-    void updateDefaultKit_success_returnsOk() throws Exception {
-        DefaultKit updated = new DefaultKit("Kit Actualizado", "Nueva desc", 79.99);
-        updated.setId(1L);
-        when(defaultKitService.updateDefaultKit(eq(1L), any(DefaultKitCreateRequest.class)))
-                .thenReturn(updated);
+void updateDefaultKit_success_returnsOk() throws Exception {
+    // 1. Preparamos el DTO de respuesta
+    Long id = 1L;
+    DefaultKitResponse responseDto = new DefaultKitResponse();
+    responseDto.setId(id);
+    responseDto.setName("Kit Actualizado");
+    responseDto.setDescription("Nueva desc");
+    responseDto.setBasePrice(79.99);
+    responseDto.setItems(List.of());
 
-        mockMvc.perform(put("/api/default-kits/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Kit Actualizado\",\"description\":\"Nueva desc\",\"basePrice\":79.99}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Kit Actualizado"))
-                .andExpect(jsonPath("$.basePrice").value(79.99));
-    }
+    // 2. El mock debe retornar el DTO
+    when(defaultKitService.updateDefaultKit(eq(id), any(DefaultKitCreateRequest.class)))
+            .thenReturn(responseDto);
+
+    mockMvc.perform(put("/api/default-kits/" + id)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\":\"Kit Actualizado\",\"description\":\"Nueva desc\",\"basePrice\":79.99}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("Kit Actualizado"))
+            .andExpect(jsonPath("$.basePrice").value(79.99));
+}
 
     @Test
     void updateDefaultKit_notFound_returns404() throws Exception {

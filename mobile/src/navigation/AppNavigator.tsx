@@ -27,8 +27,8 @@ import AdminUsersScreen from "../screens/admin/AdminUsersScreen";
 import MyKitsHistoryScreen from "../screens/kit/MyKitsHistoryScreen";
 import UserRatingsScreen from "../screens/ratings/UserRatingsScreen";
 import CommissionScreen from "../screens/commission/CommissionScreen";
-import DefaultKitsScreen from "../screens/kit/DefaultKitsScreen";
-import DefaultKitsAdminScreen from "../screens/deafaultKit/DefaultKitsAdminScreen";
+import DefaultKitsScreen from "../screens/deafaultKit/tenant/DefaultKitsScreen";
+import DefaultKitsAdminScreen from "../screens/deafaultKit/admin/DefaultKitsAdminScreen";
 
 // Detail/Creation Screens (without Navbar)
 import EditProfileScreen from "../screens/profile/EditProfileScreen";
@@ -36,8 +36,8 @@ import UploadArticleScreen from "../screens/profile/UploadArticleScreen";
 import CheckoutScreen from "../screens/kit/CheckoutScreen";
 import CreateRatingScreen from "../screens/ratings/CreateRatingScreen";
 import CreateKitScreen from "../screens/kit/CreateKitScreen";
-import EditDefaultKitScreen from "../screens/kit/EditDefaultKitScreen";
-import DefaultKitFormScreen from "../screens/deafaultKit/DefaultKitFormScreen";
+import EditDefaultKitScreen from "../screens/deafaultKit/tenant/EditDefaultKitScreen";
+import DefaultKitFormScreen from "../screens/deafaultKit/admin/DefaultKitFormScreen";
 import AdminUserFormScreen from "../screens/admin/AdminUserFormScreen";
 import EditArticleScreen from "../screens/profile/EditArticleScreen";
 import KitDetailScreen from "../screens/kit/KitDetailScreen";
@@ -56,7 +56,7 @@ import CourierDetailScreen from "../screens/admin/CourierDetailScreen";
 
 import { RootStackParamList } from "../types";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
-import PurchaseDefaultKitScreen from '../screens/deafaultKit/PurchaseDefaultKitScreen';
+import PurchaseDefaultKitScreen from '../screens/deafaultKit/tenant/PurchaseDefaultKitScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

@@ -94,6 +94,11 @@ public class DefaultKitService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se ha encontrado el Kit Predeterminado con ID: " + id));
     }
 
+    public DefaultKitResponse findDefaultKitById(Long id) {
+        DefaultKit kit = getDefaultKitById(id);
+        return mapToDefaultKitResponse(kit); // Tu función que convierte entidad a DTO
+    }
+
     private void calculateAndSetBasePrice(DefaultKit defaultKit) {
         double total = 0.0;
         if (defaultKit.getItems() != null) {
