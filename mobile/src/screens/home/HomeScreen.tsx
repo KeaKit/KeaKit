@@ -379,7 +379,7 @@ const HomeScreen: React.FC = () => {
                     styles.pillButtonPrimary,
                     { paddingVertical: isMobile ? 8 : 10 }
                   ]} 
-                  onPress={() => navigation.navigate('PurchaseDefaultKit')}
+                  onPress={() => navigation.navigate('DefaultKits')}
                 >
                   <Text style={[
                     styles.pillButtonTextLight,

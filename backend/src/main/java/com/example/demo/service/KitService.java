@@ -4,8 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +28,6 @@ import com.example.demo.model.User;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import java.time.temporal.ChronoUnit;
 
 @Service
 public class KitService {
@@ -324,6 +321,7 @@ public class KitService {
             throw new RuntimeException("The kit can only be confirmed if its status is PAID");
         }
         kit.setStatus(KitStatus.ACTIVE);
+        kitRepository.save(kit);
     }
 
     private List<ItemMemento> itemSelectionToSnapshots(List<KitCreateRequest.ItemSelectionRequest> itemSelections,
