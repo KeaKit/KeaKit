@@ -14,6 +14,8 @@ public class UserResponse {
     private String country;
     private String token;
 
+    public UserResponse() {}
+
     public UserResponse(User user) {
         this.id = user.getId();
         this.email = user.getEmail();
