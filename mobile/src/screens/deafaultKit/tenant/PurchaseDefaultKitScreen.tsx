@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal, es, registerTranslation } from "react-native-paper-dates";
@@ -22,28 +22,29 @@ import {
 
 registerTranslation("es", es);
 
-import { useLocationPicker } from "../../hooks/useLocationPicker";
-import { useAuth } from "../../context/AuthContext";
-import { createKit } from "../../services/kitService";
-import { processPaymentWithWallet } from "../../services";
-import { API_ROUTES } from "../../config/api";
+import { useLocationPicker } from "../../../hooks/useLocationPicker";
+import { useAuth } from "../../../context/AuthContext";
+import { createKit } from "../../../services/kitService";
+import { processPaymentWithWallet } from "../../../services";
+import { API_ROUTES } from "../../../config/api";
 import {
   RootStackParamList,
   KitCreateRequest,
   KitStatus,
   DefaultKit,
-} from "../../types";
-import { Colors, commonStyles } from "../../styles";
+} from "../../../types";
+import { Colors, commonStyles } from "../../../styles";
 
 // Componentes
-import { SelectPicker } from "../../components/SelectPicker";
-import { KitPaymentResumeComponent } from "../../components/KitPaymentResumeComponent";
+import { SelectPicker } from "../../../components/SelectPicker";
+import { KitPaymentResumeComponent } from "../../../components/KitPaymentResumeComponent";
 
 const COMISION = 0;
 const GUARANTEE_PERCENTAGE = 0.2;
 const PLATFORM_COURIER_PRICE = 9.99;
 
-type PurchaseDefaultKitNav = NativeStackNavigationProp<RootStackParamList & { PurchaseDefaultKit: undefined }, "PurchaseDefaultKit">;
+type PurchaseDefaultKitNav = NativeStackNavigationProp<RootStackParamList, "PurchaseDefaultKit">;
+type PurchaseDefaultKitRoute = RouteProp<RootStackParamList, "PurchaseDefaultKit">;
 
 type FormErrors = {
   country?: string;
@@ -67,12 +68,15 @@ function calculateMonthsBetween(start: Date, end: Date): number {
 
 const PurchaseDefaultKitScreen: React.FC = () => {
   const navigation = useNavigation<PurchaseDefaultKitNav>();
+  const route = useRoute<PurchaseDefaultKitRoute>();
   const { user } = useAuth();
+  
+  // Recibimos el ID del kit desde el catálogo
+  const { kitId } = route.params;
 
-  // Estados de datos
-  const [defaultKits, setDefaultKits] = useState<DefaultKit[]>([]);
-  const [loadingKits, setLoadingKits] = useState(true);
+  // Ya no es una lista, es solo EL kit que hemos seleccionado
   const [selectedKit, setSelectedKit] = useState<DefaultKit | null>(null);
+  const [loadingKit, setLoadingKit] = useState(true);
 
   // Estados del formulario
   const {
@@ -100,30 +104,34 @@ const PurchaseDefaultKitScreen: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
+  // Carga SOLO el kit seleccionado y el wallet
+  // Carga el kit seleccionado y el wallet
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSpecificData = async () => {
       if (!user?.token) return;
       try {
-        setLoadingKits(true);
+        setLoadingKit(true);
         
-        console.log("1. Llamando a:", API_ROUTES.DEFAULT_KITS_CATALOG);
-        
-        const kitsRes = await fetch(API_ROUTES.DEFAULT_KITS_CATALOG, { 
+        // 1. Usamos el endpoint general que SABEMOS que funciona (Evitamos el error 500)
+        const kitRes = await fetch(API_ROUTES.DEFAULT_KITS, { 
             headers: { Authorization: `Bearer ${user.token}` },
         });
 
-        console.log("2. Status de la respuesta:", kitsRes.status);
-
-        if (kitsRes.ok) {
-          const kitsData = await kitsRes.json();
-          console.log("3. Datos recibidos:", JSON.stringify(kitsData, null, 2));
-          setDefaultKits(kitsData);
+        if (kitRes.ok) {
+          const allKits = await kitRes.json();
+          // Buscamos el kit exacto que el usuario seleccionó en la pantalla anterior
+          const targetKit = allKits.find((k: any) => k.id === kitId);
+          
+          if (targetKit) {
+            setSelectedKit(targetKit);
+          } else {
+            console.error("Kit no encontrado en la lista del backend");
+          }
         } else {
-          const errorText = await kitsRes.text();
-          console.log("3. Error del backend:", errorText);
+          console.error("Error al cargar los kits:", kitRes.status);
         }
 
-        // Lo del wallet lo dejamos igual
+        // 2. Cargar Wallet
         const walletRes = await fetch(API_ROUTES.GET_WALLET_BY_USER_ID(user.id), {
           headers: { Authorization: `Bearer ${user.token}` },
         });
@@ -132,13 +140,13 @@ const PurchaseDefaultKitScreen: React.FC = () => {
           setWalletBalance(walletData.balance);
         }
       } catch (error) {
-        console.error("Error de red/código cargando datos:", error);
+        console.error("Error de red cargando datos:", error);
       } finally {
-        setLoadingKits(false);
+        setLoadingKit(false);
       }
     };
-    fetchData();
-  }, [user?.token, user?.id]);
+    fetchSpecificData();
+  }, [user?.token, user?.id, kitId]);
   
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
@@ -155,8 +163,6 @@ const PurchaseDefaultKitScreen: React.FC = () => {
     if (!selectedKit || monthsBetween === null) return 0;
     return selectedKit.basePrice * monthsBetween;
   }, [selectedKit, monthsBetween]);
-
-  const courierPrice = deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
   const kitPayment = useMemo(() => {
     const subtotal = Math.round(totalPrice * 100);
@@ -177,22 +183,27 @@ const PurchaseDefaultKitScreen: React.FC = () => {
   const finalPrice = kitPayment.totalPrice / 100;
 
   const checkAvailability = (start: Date, end: Date) => {
-    if (!selectedKit) return [];
+    if (!selectedKit || !selectedKit.items) return [];
     const invalidTitles: string[] = [];
     const kitStartNum = start.getFullYear() * 10000 + (start.getMonth() + 1) * 100 + start.getDate();
     const kitEndNum = end.getFullYear() * 10000 + (end.getMonth() + 1) * 100 + end.getDate();
 
-    selectedKit.items.forEach(({ item }) => {
-      if (!item.availableFrom || !item.availableUntil) return;
-      const rawFrom = item.availableFrom.split('T')[0];
-      const rawUntil = item.availableUntil.split('T')[0];
+    // Modificado para usar la estructura correcta del DTO
+    selectedKit.items.forEach((kItem: any) => {
+      // kItem puede tener la información en kItem o en kItem.item dependiendo de cómo responda este endpoint
+      const itemData = kItem.item || kItem; 
+      
+      if (!itemData.availableFrom || !itemData.availableUntil) return;
+      
+      const rawFrom = itemData.availableFrom.split('T')[0];
+      const rawUntil = itemData.availableUntil.split('T')[0];
       const fromParts = rawFrom.split('-');
       const untilParts = rawUntil.split('-');
       const pStartNum = parseInt(fromParts[0]) * 10000 + parseInt(fromParts[1]) * 100 + parseInt(fromParts[2]);
       const pEndNum = parseInt(untilParts[0]) * 10000 + parseInt(untilParts[1]) * 100 + parseInt(untilParts[2]);
 
       if (!(kitStartNum >= pStartNum && kitEndNum <= pEndNum)) {
-        invalidTitles.push(item.title);
+        invalidTitles.push(itemData.title || itemData.name);
       }
     });
     return invalidTitles;
@@ -232,6 +243,16 @@ const PurchaseDefaultKitScreen: React.FC = () => {
     const validation = validate();
     if (!validation.valid || !validation.payloadDates) return;
 
+    // Adaptamos el mapeo para que soporte tanto item.item.id como item.id
+    const mappedSelections = (selectedKit.items || []).map((kItem: any) => {
+       const itemData = kItem.item || kItem;
+       return {
+         itemId: itemData.id,
+         quantity: 1, 
+         pricePerMonth: itemData.pricePerMonth || itemData.priceAtRental || 0,
+       };
+    });
+
     const payload: KitCreateRequest = {
       name: selectedKit.name,
       country: country.trim(),
@@ -242,11 +263,7 @@ const PurchaseDefaultKitScreen: React.FC = () => {
       meetingPoint: deliveryMethod === "MEETING_POINT" ? meetingPoint.trim() : courierAddress.trim(),
       tenantId: user.id,
       status: KitStatus.DRAFT,
-      itemSelections: selectedKit.items.map((kItem) => ({
-        itemId: kItem.item.id,
-        quantity: 1, 
-        pricePerMonth: kItem.item.pricePerMonth,
-      })),
+      itemSelections: mappedSelections,
     };
 
     try {
@@ -273,69 +290,49 @@ const PurchaseDefaultKitScreen: React.FC = () => {
     colors: { ...MD3LightTheme.colors, primary: Colors.primary, primaryContainer: "#E3F2FD" },
   };
 
-  // --- VISTA 1: LISTADO DE KITS PREDETERMINADOS ---
-  if (!selectedKit) {
+  // Si está cargando, mostramos spinner centrado
+  if (loadingKit) {
     return (
       <SafeAreaView style={commonStyles.container}>
-        {/* Header utilizando tu commonStyles.header */}
         <View style={commonStyles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color={Colors.primary} />
           </TouchableOpacity>
-          <Text style={commonStyles.headerTitle}>Kits Recomendados</Text>
+          <Text style={commonStyles.headerTitle}>Cargando Kit</Text>
           <View style={{ width: 24 }} />
         </View>
-
-        {loadingKits ? (
-          <View style={commonStyles.centerContent}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-          </View>
-        ) : defaultKits.length === 0 ? (
-          <View style={commonStyles.centerContent}>
-            <Ionicons name="cube-outline" size={60} color={Colors.textSecondary} />
-            <Text style={[commonStyles.bodySecondary, commonStyles.marginTopMd, { textAlign: 'center' }]}>
-              No hay kits predeterminados disponibles en este momento.
-            </Text>
-          </View>
-        ) : (
-          <ScrollView contentContainerStyle={commonStyles.screenPadding}>
-            <Text style={[commonStyles.bodySecondary, commonStyles.marginTopLg, commonStyles.marginBottomLg]}>
-              Selecciona uno de nuestros kits listos para usar y personaliza las fechas de tu alquiler.
-            </Text>
-            {defaultKits.map((kit) => (
-              <TouchableOpacity
-                key={kit.id}
-                onPress={() => setSelectedKit(kit)}
-                style={[commonStyles.cardSmall, commonStyles.marginBottomMd, { flexDirection: "row", alignItems: "center" }]}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={[commonStyles.bodyPrimary, { fontWeight: "bold", fontSize: 18 }]}>{kit.name}</Text>
-                  <Text style={[commonStyles.bodySecondary, commonStyles.marginTopSm]}>
-                    {kit.description}
-                  </Text>
-                  <Text style={[commonStyles.caption, commonStyles.marginTopSm]}>
-                    Contiene {kit.items.length} artículos
-                  </Text>
-                  <Text style={[commonStyles.bodyPrimary, { fontWeight: "bold", color: Colors.primary, marginTop: 8 }]}>
-                    Base: {kit.basePrice.toFixed(2)}€/mes
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={24} color={Colors.textSecondary} />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
+        <View style={commonStyles.centerContent}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
 
-  // --- VISTA 2: FORMULARIO DE PAGO/CONFIGURACIÓN ---
+  // Si hubo un error y no hay kit
+  if (!selectedKit) {
+    return (
+      <SafeAreaView style={commonStyles.container}>
+        <View style={commonStyles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          </TouchableOpacity>
+          <Text style={commonStyles.headerTitle}>Error</Text>
+          <View style={{ width: 24 }} />
+        </View>
+        <View style={commonStyles.centerContent}>
+          <Text style={commonStyles.bodySecondary}>No se ha podido cargar el kit.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // --- VISTA PRINCIPAL: FORMULARIO DE PAGO/CONFIGURACIÓN (Copiada tal cual) ---
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
         {/* Header utilizando tu commonStyles.header */}
         <View style={commonStyles.header}>
-          <TouchableOpacity onPress={() => setSelectedKit(null)}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={commonStyles.headerTitle}>Configura tu Kit</Text>
@@ -347,7 +344,7 @@ const PurchaseDefaultKitScreen: React.FC = () => {
           <View style={[commonStyles.cardSmall, commonStyles.marginTopLg, commonStyles.marginBottomLg, { backgroundColor: '#E3F2FD' }]}>
             <Text style={[commonStyles.bodyPrimary, { fontWeight: 'bold', color: Colors.primary }]}>{selectedKit.name}</Text>
             <Text style={[commonStyles.bodySecondary, commonStyles.marginTopSm]}>
-              Incluye {selectedKit.items.length} productos preseleccionados listos para alquilar.
+              Incluye {(selectedKit.items || selectedKit.items || []).length} productos preseleccionados listos para alquilar.
             </Text>
           </View>
 

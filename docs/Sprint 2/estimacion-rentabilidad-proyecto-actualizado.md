@@ -32,6 +32,38 @@ A partir de este punto, se plantea un escenario de **crecimiento optimista**, im
 
 ---
 
+## Estimación de crecimiento de usuarios
+
+Partiendo de un escenario inicial de **30 usuarios piloto**, se establece una hipótesis de crecimiento progresivo de la base de usuarios durante los primeros meses tras el lanzamiento.
+
+Para la estimación financiera se asume un **crecimiento mensual del 20 %** en el número de usuarios activos, impulsado por:
+
+- El efecto red entre usuarios
+- La confianza generada por los primeros alquileres
+- La recomendación boca a boca
+- La mejora de la visibilidad de la aplicación
+
+La evolución estimada sería la siguiente:
+
+| Mes | Usuarios estimados |
+|---|---:|
+| Mes 1 | 30 |
+| Mes 2 | 36 |
+| Mes 3 | 43 |
+| Mes 4 | 52 |
+| Mes 5 | 62 |
+| Mes 6 | 74 |
+
+Esta hipótesis de crecimiento sirve como referencia para contrastar posteriormente la evolución real del proyecto durante la fase de validación.
+
+A partir de este punto, se plantea un escenario de **crecimiento optimista**, impulsado por:
+
+- El efecto red entre usuarios
+- Recomendaciones y confianza en la plataforma
+- Incremento progresivo de la visibilidad
+
+---
+
 ## Costes operativos recurrentes (OPEX)
 
 Tras el lanzamiento, la aplicación genera costes mensuales fijos necesarios para su funcionamiento:
@@ -100,6 +132,24 @@ Si se mantiene el crecimiento estimado en el número de alquileres, se puede pro
 | 9 meses | ~89.000 € |
 
 Según esta estimación, el proyecto alcanzaría el **punto de equilibrio entre el mes 9 y el mes 10 tras su lanzamiento**.
+
+---
+
+## Evolución de la estimación de obtención de usuarios con respecto a la realidad
+
+Con el objetivo de validar la hipótesis inicial de crecimiento planteada en la estimación financiera, se ha realizado una comparación entre la evolución prevista de usuarios piloto y el crecimiento real observado durante el desarrollo del proyecto.
+
+La estimación inicial asumía un **crecimiento mensual del 20 %** en la base de usuarios activos, partiendo de **30 usuarios piloto** como escenario de referencia.
+
+Tomando como **marco temporal de análisis la evolución desde el Sprint 2 hasta la situación actual del proyecto**, se observa que el número de usuarios piloto ha pasado de **17 a 19 usuarios**, lo que supone un incremento real de:
+
+**((19 - 17) / 17) × 100 = 11,76 %**
+
+Por tanto, el crecimiento real registrado hasta el momento es del **11,76 %**, valor que se sitúa por debajo de la hipótesis optimista inicial del 20 % mensual.
+
+No obstante, esta evolución confirma una **tendencia positiva en la captación de usuarios piloto**, validando parcialmente la viabilidad del modelo de crecimiento planteado. La diferencia entre la previsión inicial y la evolución real permite ajustar futuras proyecciones económicas con datos más cercanos al comportamiento real del mercado durante la fase de validación.
+
+Este contraste entre estimación y realidad aporta mayor solidez al análisis de rentabilidad, al basar las siguientes iteraciones del modelo financiero en métricas obtenidas durante la ejecución real del proyecto.
 
 ---
 
