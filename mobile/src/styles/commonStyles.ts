@@ -229,6 +229,12 @@ export const commonStyles = StyleSheet.create({
     marginVertical: Spacing.lg,
   },
 
+  dividerSmall: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.sm,
+  },
+
   // Mensajes de error
   errorContainer: {
     flexDirection: 'row',
