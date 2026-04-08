@@ -224,6 +224,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
           { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications', badge: activityUnreadCount > 0 ? String(activityUnreadCount) : undefined },
           { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications', badge: unreadCount > 0 ? String(unreadCount) : undefined },
+          { name: 'Política de Privacidad', icon: 'document-text', screen: 'EditPolicy' },
         ]
       },
       {

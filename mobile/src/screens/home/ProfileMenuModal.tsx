@@ -126,7 +126,6 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
                 ) : null}
               </TouchableOpacity>
 
-
               <TouchableOpacity
                 style={componentStyles.menuItem}
                 onPress={() => navigateTo('UserRatings', {

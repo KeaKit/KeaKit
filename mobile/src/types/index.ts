@@ -423,6 +423,7 @@ export type RootStackParamList = {
   CourierDetail: { courier: UserResponse; isBusy?: boolean };
   ArticleRentals: { articleId: number; articleTitle: string };
   RgpdPolicy: undefined;
+  EditPolicy: undefined;
 };
 
 export interface ProfileData {

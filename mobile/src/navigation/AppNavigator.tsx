@@ -57,6 +57,7 @@ import { RootStackParamList } from "../types";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
 import PurchaseDefaultKitScreen from '../screens/deafaultKit/PurchaseDefaultKitScreen';
 import RgpdPolicyScreen from "../screens/legal/RgpdPolicyScreen";
+import EditPolicyScreen from "../screens/admin/EditPolicyScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -290,6 +291,10 @@ const AppNavigator: React.FC = () => {
                   name="WithdrawMoney"
                   component={WithdrawMoneyScreen}
                 />
+                <Stack.Screen 
+                  name="EditPolicy" 
+                  component={EditPolicyScreen} 
+                />
 
                 {/*Tracking - Delivery*/}
 
@@ -320,6 +325,7 @@ const AppNavigator: React.FC = () => {
               <>
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="RgpdPolicy" component={RgpdPolicyScreen} />
               </>
             )}
           </Stack.Navigator>

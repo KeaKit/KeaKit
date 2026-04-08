@@ -112,6 +112,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     screen: 'DefaultKits',
   },
   {
+    id: 'privacy-policy',
+    icon: 'document-text',
+    label: 'Política de Privacidad',
+    description: 'Editar la política y gestionar versiones',
+    color: KC.lavender,
+    implemented: true,
+    screen: 'EditPolicy',
+  },
+  {
     id: 'object-types',
     icon: 'cube',
     label: 'Tipos de Objetos',

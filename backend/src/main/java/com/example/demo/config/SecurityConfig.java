@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/users/**").authenticated()
                 .requestMatchers("/api/ratings/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/category", "/api/category/**").permitAll()
+                .requestMatchers("/api/rgpd/current-policy").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

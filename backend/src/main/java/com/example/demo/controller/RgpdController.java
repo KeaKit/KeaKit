@@ -1,7 +1,11 @@
+// controller/RgpdController.java - MODIFICADO
 package com.example.demo.controller;
 
 import com.example.demo.dto.RgpdRequest;
 import com.example.demo.dto.RgpdResponse;
+import com.example.demo.model.PrivacyPolicy;
+import com.example.demo.dto.PolicyInfoResponse;
+import com.example.demo.service.PrivacyPolicyService;
 import com.example.demo.service.RgpdService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -17,11 +21,21 @@ public class RgpdController {
     @Autowired
     private RgpdService rgpdService;
 
+    @Autowired
+    private PrivacyPolicyService privacyPolicyService;
+
     @GetMapping("/check")
     public ResponseEntity<RgpdResponse> checkConsent() {
         boolean hasAccepted = rgpdService.hasCurrentUserAccepted();
-        System.out.println("RGPD check endpoint called - hasAccepted: " + hasAccepted);
         return ResponseEntity.ok(new RgpdResponse(hasAccepted));
+    }
+
+    @GetMapping("/needs-consent")
+    public ResponseEntity<PolicyInfoResponse> needsConsent() {
+        boolean needsConsent = rgpdService.needsConsent();
+        String version = rgpdService.getCurrentPolicyVersion();
+        String content = rgpdService.getCurrentPolicyContent();
+        return ResponseEntity.ok(new PolicyInfoResponse(needsConsent, version, content));
     }
 
     @PostMapping("/accept")
@@ -29,7 +43,6 @@ public class RgpdController {
             @Valid @RequestBody RgpdRequest request,
             HttpServletRequest httpRequest) {
         String clientIp = getClientIp(httpRequest);
-        System.out.println("RGPD accept endpoint called - version: " + request.getVersion() + ", ip: " + clientIp);
         rgpdService.recordConsent(request.getVersion(), clientIp);
         return ResponseEntity.ok().build();
     }
@@ -44,4 +57,11 @@ public class RgpdController {
         }
         return ip;
     }
+
+    @GetMapping("/current-policy")
+    public ResponseEntity<PrivacyPolicy> getCurrentPublicPolicy() {
+        PrivacyPolicy policy = privacyPolicyService.getCurrentActivePolicy();
+        return ResponseEntity.ok(policy);
+    }
+    
 }

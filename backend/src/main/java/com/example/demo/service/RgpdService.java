@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.model.PrivacyPolicy;
 import com.example.demo.model.RgpdConsent;
 import com.example.demo.model.User;
 import com.example.demo.repository.RgpdConsentRepository;
@@ -21,27 +22,57 @@ public class RgpdService {
     
     @Autowired
     private RgpdConsentRepository rgpdConsentRepository;
+    
+    @Autowired
+    private PrivacyPolicyService privacyPolicyService;
+
+    // Devuelve si el usuario necesita re-aceptar la política
+    public boolean needsConsent() {
+        try {
+            Long userId = authService.getAuthenticatedUserId();
+            if (userId == null) return false;
+            
+            User user = userRepository.findById(userId).orElse(null);
+            if (user == null) return false;
+            
+            PrivacyPolicy currentPolicy = privacyPolicyService.getCurrentActivePolicy();
+            if (currentPolicy == null) return true;
+            
+            return rgpdConsentRepository.findByUser(user)
+                .map(consent -> !consent.getAcceptedVersion().equals(currentPolicy.getVersion()))
+                .orElse(true);
+        } catch (Exception e) {
+            return true;
+        }
+    }
+    
+    // Obtener la versión actual de la política
+    public String getCurrentPolicyVersion() {
+        PrivacyPolicy policy = privacyPolicyService.getCurrentActivePolicy();
+        return policy != null ? policy.getVersion() : "1.0";
+    }
+    
+    // Obtener el contenido actual de la política
+    public String getCurrentPolicyContent() {
+        PrivacyPolicy policy = privacyPolicyService.getCurrentActivePolicy();
+        return policy != null ? policy.getContent() : "";
+    }
 
     public boolean hasCurrentUserAccepted() {
         try {
             Long userId = authService.getAuthenticatedUserId();
-            if (userId == null) {
-                System.out.println("RGPD check: userId es null");
-                return false;
-            }
+            if (userId == null) return false;
             
             User user = userRepository.findById(userId).orElse(null);
-            if (user == null) {
-                System.out.println("RGPD check: User no encontrado para ID: " + userId);
-                return false;
-            }
+            if (user == null) return false;
             
-            boolean exists = rgpdConsentRepository.existsByUser(user);
-            System.out.println("RGPD check for user " + userId + " (" + user.getEmail() + "): " + exists);
-            return exists;
+            PrivacyPolicy currentPolicy = privacyPolicyService.getCurrentActivePolicy();
+            if (currentPolicy == null) return false;
+            
+            return rgpdConsentRepository.findByUser(user)
+                .map(consent -> consent.getAcceptedVersion().equals(currentPolicy.getVersion()))
+                .orElse(false);
         } catch (Exception e) {
-            System.out.println("RGPD check error: " + e.getMessage());
-            e.printStackTrace();
             return false;
         }
     }
@@ -49,25 +80,28 @@ public class RgpdService {
     @Transactional
     public void recordConsent(String version, String ipAddress) {
         Long userId = authService.getAuthenticatedUserId();
-        System.out.println("Recording consent for user: " + userId + ", version: " + version);
-        
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
-        // Eliminar consentimiento existente
-        rgpdConsentRepository.findByUser(user).ifPresent(existing -> {
-            System.out.println("Removing existing consent for user: " + userId);
-            rgpdConsentRepository.delete(existing);
-        });
+        // Buscar si ya existe un consentimiento para este usuario
+        RgpdConsent existingConsent = rgpdConsentRepository.findByUser(user).orElse(null);
         
-        // Crear nuevo consentimiento
-        RgpdConsent consent = new RgpdConsent();
-        consent.setUser(user);
-        consent.setAcceptedVersion(version);
-        consent.setAcceptedAt(LocalDateTime.now());
-        consent.setIpAddress(ipAddress);
-        
-        rgpdConsentRepository.save(consent);
-        System.out.println("Consent saved successfully for user: " + userId);
+        if (existingConsent != null) {
+            // Actualizar el existente en lugar de crear uno nuevo
+            existingConsent.setAcceptedVersion(version);
+            existingConsent.setAcceptedAt(LocalDateTime.now());
+            existingConsent.setIpAddress(ipAddress);
+            rgpdConsentRepository.save(existingConsent);
+            System.out.println("Consentimiento actualizado para usuario: " + userId + " a versión: " + version);
+        } else {
+            // Crear nuevo consentimiento
+            RgpdConsent consent = new RgpdConsent();
+            consent.setUser(user);
+            consent.setAcceptedVersion(version);
+            consent.setAcceptedAt(LocalDateTime.now());
+            consent.setIpAddress(ipAddress);
+            rgpdConsentRepository.save(consent);
+            System.out.println("Nuevo consentimiento creado para usuario: " + userId + " versión: " + version);
+        }
     }
 }
