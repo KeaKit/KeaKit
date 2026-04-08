@@ -8,6 +8,7 @@ public class ItemCatalogResponse {
     private String title;
     private String description;
     private String city;
+    private String country;
     private Double pricePerMonth;
     private LocalDate availableFrom;
     private LocalDate availableUntil;
@@ -34,6 +35,9 @@ public class ItemCatalogResponse {
 
     public String getCity() { return city; }
     public void setCity(String city) { this.city = city; }
+
+    public String getCountry() { return country; }
+    public void setCountry(String country) { this.country = country; }
 
     public Double getPricePerMonth() { return pricePerMonth; }
     public void setPricePerMonth(Double pricePerMonth) { this.pricePerMonth = pricePerMonth; }

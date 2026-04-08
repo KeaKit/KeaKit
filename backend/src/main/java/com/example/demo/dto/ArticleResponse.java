@@ -9,7 +9,6 @@ public class ArticleResponse {
     private String title;
     private String description;
     private String city;
-    private String country;
     private Double pricePerMonth;
     private LocalDate availableFrom;
     private LocalDate availableUntil;
@@ -55,14 +54,6 @@ public class ArticleResponse {
 
     public void setCity(String city) {
         this.city = city;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
     }
 
     public Double getPricePerMonth() {

@@ -2,9 +2,9 @@ package com.example.demo.dto;
 
 import java.util.List;
 
-public class ArticleFilterResponseDTO {
+public class ItemFilterResponseDTO {
 
-    private List<ArticleResponse> content;
+    private List<ItemCatalogResponse> content;
     private int page;
     private int size;
     private long totalElements;
@@ -12,11 +12,11 @@ public class ArticleFilterResponseDTO {
     private boolean hasNext;
     private boolean hasPrevious;
 
-    public ArticleFilterResponseDTO() {
+    public ItemFilterResponseDTO() {
     }
 
-    public ArticleFilterResponseDTO(List<ArticleResponse> content, int page, int size, long totalElements, int totalPages,
-            boolean hasNext, boolean hasPrevious) {
+    public ItemFilterResponseDTO(List<ItemCatalogResponse> content, int page, int size, long totalElements,
+            int totalPages, boolean hasNext, boolean hasPrevious) {
         this.content = content;
         this.page = page;
         this.size = size;
@@ -26,11 +26,11 @@ public class ArticleFilterResponseDTO {
         this.hasPrevious = hasPrevious;
     }
 
-    public List<ArticleResponse> getContent() {
+    public List<ItemCatalogResponse> getContent() {
         return content;
     }
 
-    public void setContent(List<ArticleResponse> content) {
+    public void setContent(List<ItemCatalogResponse> content) {
         this.content = content;
     }
 

@@ -1,12 +1,8 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.ArticleFilterDTO;
-import com.example.demo.dto.ArticleFilterResponseDTO;
 import com.example.demo.dto.ArticleNearbyDTO;
 import com.example.demo.dto.ArticleRecordDTO;
-import com.example.demo.dto.ErrorResponse;
 import com.example.demo.dto.UserArticle;
-import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
 import com.example.demo.model.Category;
@@ -16,8 +12,6 @@ import com.example.demo.service.ArticleAvailabilityRequestService;
 import com.example.demo.service.ArticleService;
 import com.example.demo.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -227,51 +221,6 @@ public class ArticleController {
             return ResponseEntity.ok(articles);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
-
-    @GetMapping("/filter-for-kit")
-    public ResponseEntity<?> filterArticlesForKit(
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice,
-            @RequestParam(required = false) String country,
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            HttpServletRequest request) {
-        try {
-            ArticleFilterResponseDTO response = articleService.filterArticlesForKit(minPrice, maxPrice, country, page, size);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse(400, "Bad Request", e.getMessage(), request.getRequestURI()));
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse(404, "Not Found", e.getMessage(), request.getRequestURI()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse(500, "Internal Server Error", e.getMessage(), request.getRequestURI()));
-        }
-    }
-
-    @PostMapping("/filter-for-kit")
-    public ResponseEntity<?> filterArticlesForKit(@Valid @RequestBody ArticleFilterDTO filter, HttpServletRequest request) {
-        try {
-            ArticleFilterResponseDTO response = articleService.filterArticlesForKit(
-                    filter.getMinPrice(),
-                    filter.getMaxPrice(),
-                    filter.getCountry(),
-                    filter.getPage(),
-                    filter.getSize());
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse(400, "Bad Request", e.getMessage(), request.getRequestURI()));
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse(404, "Not Found", e.getMessage(), request.getRequestURI()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse(500, "Internal Server Error", e.getMessage(), request.getRequestURI()));
         }
     }
 
