@@ -165,6 +165,17 @@ public class KitControllerTest {
             .andExpect(content().string("Kit not found"));
     }
 
+    @Test
+    void confirmKitStatus_notPaid_returnsError() throws Exception {
+        String errorMessage = "The kit can only be confirmed if its status is PAID";
+        doThrow(new RuntimeException(errorMessage))
+            .when(kitService).confirmKitStatus(1L);
+
+        mockMvc.perform(patch("/api/kits/confirm/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string(errorMessage));
+    }
+
     // ==========================================
     // TESTS PARA HISTÓRICO DE KITS
     // ==========================================
