@@ -3,6 +3,7 @@ package com.example.demo.service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.stream.Collectors;
@@ -133,6 +134,7 @@ public class KitService {
                 if (request.tenantId() == foundItem.getOwner().getId()) {
                     throw new RuntimeException("Tenant cannot select their own items");
                 }
+                validateItemAvailability(item.itemId(), kit.getStartDate(), kit.getEndDate());
             }
         }
 
@@ -270,6 +272,17 @@ public class KitService {
             kit.setCourierPrice(null);
         }
 
+        if (updateData.getStartDate() != null || updateData.getEndDate() != null) {
+            LocalDate newStart = updateData.getStartDate() != null ? updateData.getStartDate() : kit.getStartDate();
+            LocalDate newEnd = updateData.getEndDate() != null ? updateData.getEndDate() : kit.getEndDate();
+            
+            if (kit.getStatus() == KitStatus.DRAFT && kit.getSnapshots() != null) {
+                for (ItemMemento snapshot : kit.getSnapshots()) {
+                    validateItemAvailability(snapshot.getOriginalItemId(), newStart, newEnd);
+                }
+            }
+        }
+
         validateDates(kit.getStartDate(), kit.getEndDate());
 
         Kit savedKit = kitRepository.save(kit);
@@ -376,6 +389,12 @@ public class KitService {
             throw new RuntimeException("Only DRAFT kits can be paid");
         }
 
+        if (kit.getSnapshots() != null) {
+            for (ItemMemento snapshot : kit.getSnapshots()) {
+                validateItemAvailability(snapshot.getOriginalItemId(), kit.getStartDate(), kit.getEndDate());
+            }
+        }
+
         kit.setStatus(KitStatus.PAID);
         Kit saved = kitRepository.save(kit);
 
@@ -425,6 +444,8 @@ public class KitService {
         if (alreadyExists) {
             throw new RuntimeException("This item is already in the kit");
         }
+
+        validateItemAvailability(itemId, kit.getStartDate(), kit.getEndDate());
 
         // 4. Creamos el Snapshot para el nuevo objeto
         ItemMemento newSnapshot = item.createSnapshot(
@@ -480,4 +501,21 @@ public class KitService {
         return new KitResponse(savedKit);
     }
 
+
+
+
+    private void validateItemAvailability(Long itemId, LocalDate startDate, LocalDate endDate) {
+        List<KitStatus> unavailableStatuses = Arrays.asList(KitStatus.PAID, KitStatus.ACTIVE);
+        boolean isUnavailable = kitRepository.isItemUnavailableForDates(itemId, startDate, endDate, unavailableStatuses);
+        
+        if (isUnavailable) {
+            // Buscamos el artículo en la base de datos para obtener su nombre
+            Item item = itemRepository.findById(itemId)
+                    .orElseThrow(() -> new RuntimeException("Item not found: " + itemId));
+                    
+            // Lanza el error con el nombre del artículo. 
+            // Nota: Si en tu modelo 'Item' la propiedad se llama distinto, cambia getTitle() por getName()
+            throw new RuntimeException("El artículo '" + item.getTitle() + "' ya no está disponible en las fechas seleccionadas.");
+        }
+    }
 }

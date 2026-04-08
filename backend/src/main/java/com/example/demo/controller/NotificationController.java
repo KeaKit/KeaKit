@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.Notification;
 import com.example.demo.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,6 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/notifications")
+@CrossOrigin
 public class NotificationController {
 
     @Autowired
@@ -30,6 +32,32 @@ public class NotificationController {
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // CU-ARRENDADOR-06: Crear alerta de demanda cuando un artículo no está disponible
+    @PostMapping("/demand-alert")
+    public ResponseEntity<?> createDemandAlert(
+            @RequestParam Long articleId,
+            @RequestParam Long requesterId) {
+        try {
+            Notification notification = notificationService.createDemandAlert(articleId, requesterId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(notification);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @CrossOrigin(origins = "*") // Importante para evitar problemas de CORS con el móvil
+    public ResponseEntity<?> deleteNotification(@PathVariable Long id) {
+        try {
+            notificationService.deleteNotification(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se pudo eliminar: " + e.getMessage());
         }
     }
 }

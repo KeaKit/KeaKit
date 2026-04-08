@@ -202,12 +202,17 @@ export default function CheckoutScreen({ route }: Props) {
         await executeStripePayment(prices.totalPrice);
       }
       navigation.navigate("MyKits");
-    } catch (err) {
-      let msg = "Ha ocurrido un error durante el proceso de pago.\n" + (err as Error).message;
-      if ((err as Error).message.includes("payment_intent")) {
-        msg += "\n\n¿Eres desarrollador? Este error es conocido.\nRevisa el foro de incidencias de Teams.";
-      }
-      showErrorModal(msg);
+    } catch (error) {
+      console.error("❌ Error:", error);
+      let errorMessage =
+        "Ha ocurrido un error durante el proceso de pago.\n" +
+        (error as Error).message;
+      if (errorMessage.includes("ya no está disponible")) {
+          errorMessage = errorMessage + "\n\nPor favor, vuelve atrás y elimina el artículo no disponible o modifica las fechas del kit.";
+        } else if (errorMessage.includes("payment_intent")) {
+          errorMessage += "\n\n¿Eres desarrollador? Este error es conocido.\nRevisa el foro de incidencias de Teams.";
+        }
+      showErrorModal(errorMessage);
     } finally {
       setLoading(false);
     }

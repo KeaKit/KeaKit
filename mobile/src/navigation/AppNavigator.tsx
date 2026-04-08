@@ -55,6 +55,7 @@ import PromoCodesScreen from '../screens/admin/PromoCodesScreen';
 import PromoCodeFormScreen from '../screens/admin/PromoCodeFormScreen';
 import PilotUsersScreen from '../screens/admin/PilotUsersScreen';
 import ActivityNotificationsScreen from "../screens/notifications/ActivityNotificationsScreen";
+import NotificationsScreen from "../screens/notifications/NotificationsScreen";
 
 import { RootStackParamList } from "../types";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
@@ -322,6 +323,10 @@ const AppNavigator: React.FC = () => {
                 <Stack.Screen
                   name="ActivityNotifications"
                   component={ActivityNotificationsScreen}
+                />
+                <Stack.Screen
+                  name="Notifications"
+                  component={NotificationsScreen}
                 />
                 <Stack.Screen
                   name="AssignedKits"

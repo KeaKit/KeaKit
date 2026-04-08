@@ -406,10 +406,17 @@ const CreateKitScreen: React.FC = () => {
     setShowOnlyMyCity(city.trim().length > 0);
     setShowOnlyAvailable(true);
 
+    // Cargar productos del mapa solo si el usuario está autenticado
     if (user?.token) {
-      getArticlesForMap(user.token, country.trim() || undefined)
-        .then(setMapProducts)
-        .catch(() => setMapProducts([]));
+      try {
+        const mapData = await getArticlesForMap(user.token, country.trim() || undefined);
+        setMapProducts(mapData);
+      } catch (error) {
+        console.warn('Error al cargar productos del mapa:', error);
+        setMapProducts([]);
+      }
+    } else {
+      setMapProducts([]);
     }
 
     setCatalogModalVisible(true);
@@ -588,9 +595,22 @@ const CreateKitScreen: React.FC = () => {
         navigation.navigate("Checkout", { kitId: createdKit.id });
       }
 
-    } catch (error) {
-      console.error("🔥 ERROR al procesar la creación/pago del kit:", error);
-      setErrors({ general: "Ha ocurrido un error al procesar el kit o el pago." });
+   } catch (err) {
+      console.error("ERROR al procesar la creación/pago del kit:", err);
+
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+
+      const errorMsg = error.response?.data?.message || error.message || "";
+
+      // 3. Aplicamos tu lógica de validación
+      if (errorMsg.includes("ya no está disponible")) {
+        setErrors({ items: errorMsg }); // Se mostrará debajo de la lista de artículos
+      } else {
+        setErrors({ general: "Ha ocurrido un error al procesar el kit o el pago." });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -1035,8 +1055,15 @@ const CreateKitScreen: React.FC = () => {
                   if (created) {
                     navigation.navigate("MyKits");
                   }
-                } catch (e) {
-                  console.error("Error guardando borrador:", e);
+                } catch (error: any) {
+                  console.error("Error guardando borrador:", error);
+                  
+                  const errorMsg = error.response?.data?.message || error.message || "";
+                  if (errorMsg.includes("ya no está disponible")) {
+                    setErrors({ items: errorMsg });
+                  } else {
+                    setErrors({ general: "No se pudo guardar el borrador." });
+                  }
                 } finally {
                   setSubmitting(false);
                 }

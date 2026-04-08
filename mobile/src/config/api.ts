@@ -32,6 +32,7 @@ export const API_ROUTES = {
   UPLOAD_ARTICLE: (ownerId: number,categoryId: number) => `${BASE_URL}/api/article/upload?ownerId=${ownerId}&categoryId=${categoryId}`,
   UPLOAD_ARTICLE_WITH_IMAGE: (ownerId: number, categoryId: number) => `${BASE_URL}/api/article/upload-with-image?ownerId=${ownerId}&categoryId=${categoryId}`,
   GET_ARTICLE: (id: number) => `${BASE_URL}/api/article/${id}`,
+  REQUEST_AVAILABILITY_NOTIFICATION: (articleId: number, requesterId: number) => `${BASE_URL}/api/article/${articleId}/notify-when-available?requesterId=${requesterId}`,
   UPDATE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
   DELETE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
   TOGGLE_RENT:    (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/toggle-rent?ownerId=${ownerId}`,

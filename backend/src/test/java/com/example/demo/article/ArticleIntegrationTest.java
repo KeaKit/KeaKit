@@ -464,6 +464,82 @@ class ArticleIntegrationTest {
             .andExpect(jsonPath("$[0].title").value("Taladro"));
     }
 
+    // Test Filtros My Articles 
+@Test
+    void testGetMyArticles_Integration_WithFilters_Success() throws Exception {
+        
+        Article article1 = new Article();
+        article1.setTitle("Taladro Nuevo");
+        article1.setDescription("Taladro en perfectas condiciones");
+        article1.setCity("Madrid"); 
+        article1.setOwner(savedOwner);
+        article1.setCategory(savedCategory);
+        article1.setCondition(ArticleCondition.NEW); 
+        article1.setPricePerMonth(20.0);
+        articleRepository.save(article1); 
+
+        Article article2 = new Article();
+        article2.setTitle("Taladro Usado");
+        article2.setDescription("Taladro con algunas marcas de uso"); 
+        article2.setCity("Barcelona"); 
+        article2.setOwner(savedOwner);
+        article2.setCategory(savedCategory);
+        article2.setCondition(ArticleCondition.USED); 
+        article2.setPricePerMonth(10.0);
+        articleRepository.save(article2); 
+
+        Article article3 = new Article();
+        article3.setTitle("Bicicleta Cara");
+        article3.setDescription("Bicicleta de montaña profesional");
+        article3.setCity("Valencia"); 
+        article3.setOwner(savedOwner);
+        article3.setCategory(savedCategory);
+        article3.setCondition(ArticleCondition.NEW);
+        article3.setPricePerMonth(100.0);
+        articleRepository.save(article3); 
+
+   
+        mockMvc.perform(get("/api/article/my-articles/" + savedOwner.getId())
+                .param("categoryId", savedCategory.getId().toString())
+                .param("condition", "NEW")
+                .param("maxPrice", "50.0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Taladro Nuevo"));
+    }
+
+   @Test
+    void testGetMyArticles_Integration_FilterByPriceRange_Success() throws Exception {
+
+        Article cheap = new Article();
+        cheap.setTitle("Barato");
+        cheap.setDescription("Descripción del artículo barato"); 
+        cheap.setCity("Sevilla");                               
+        cheap.setCondition(ArticleCondition.USED);              
+        cheap.setCategory(savedCategory);                        
+        cheap.setOwner(savedOwner);
+        cheap.setPricePerMonth(5.0);
+        articleRepository.save(cheap);
+
+  
+        Article medium = new Article();
+        medium.setTitle("Medio");
+        medium.setDescription("Descripción del artículo medio");  
+        medium.setCity("Madrid");                                 
+        medium.setCondition(ArticleCondition.NEW);                
+        medium.setCategory(savedCategory);                        
+        medium.setOwner(savedOwner);
+        medium.setPricePerMonth(15.0);
+        articleRepository.save(medium);
+
+  
+        mockMvc.perform(get("/api/article/my-articles/" + savedOwner.getId())
+                .param("minPrice", "10.0")
+                .param("maxPrice", "20.0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Medio"));} 
+
     @Test
     void testGetArticleRecord_Integration_Success() throws Exception {
         // Simulamos que el usuario autenticado es el dueño del artículo
@@ -492,5 +568,6 @@ class ArticleIntegrationTest {
 
         mockMvc.perform(get("/api/article/record/" + savedArticle.getId()))
                 .andExpect(status().isUnauthorized());
+
     }
 }

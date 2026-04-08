@@ -1,30 +1,44 @@
-import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  SafeAreaView,
-  TouchableOpacity,
-  Pressable,
-  Image,
-  LayoutAnimation,
-  Platform,
-  UIManager
-} from 'react-native';
+
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, SafeAreaView, TouchableOpacity, Pressable, Image, Modal, TextInput, LayoutAnimation, Platform, UIManager } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList, UserArticle, Category } from '../../types';
+import { fetchAllCategories } from '../../services/categoryService';
 import { getMyArticles, deleteArticle, getArticleById, getArticleRecord } from '../../services/articleService';
-import { RootStackParamList, UserArticle } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
-import { useNotification } from '../../components/NotificationContext'; // 👈 Importar notificaciones
-import { ConfirmModal } from '../../components/ConfirmModal'; // 👈 Importar modal de confirmación
+import { useNotification } from '../../components/NotificationContext'; 
+import { ConfirmModal } from '../../components/ConfirmModal'; 
+import { SelectPicker } from '../../components/SelectPicker';
+import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { DatePickerModal, es, registerTranslation } from 'react-native-paper-dates';
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
 type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
+registerTranslation('es', es);
+
+const CONDITION_OPTIONS = [
+  { value: '', label: 'Cualquier estado' },
+  { value: 'NEW', label: 'Nuevo' },
+  { value: 'LIGHTLY_USED', label: 'Poco usado' },
+  { value: 'USED', label: 'Usado' },
+  { value: 'WORN', label: 'Desgastado' },
+];
+
+const customTheme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: Colors.primary,
+    onPrimary: '#FFFFFF',
+    primaryContainer: '#E3F2FD',
+    onPrimaryContainer: Colors.primary,
+    surface: '#FFFFFF',
+  },
+};
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -33,7 +47,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const MyArticlesScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<MyArticlesNav>();
-  const { showNotification } = useNotification(); // 👈 Hook de notificaciones
+  const { showNotification } = useNotification(); 
 
   const [articles, setArticles] = useState<UserArticle[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<UserArticle[]>([]);
@@ -45,6 +59,14 @@ const MyArticlesScreen: React.FC = () => {
   // Estados para el modal de confirmación
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<UserArticle | null>(null);
+
+  // Estados de Filtros Avanzados
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filtersModalVisible, setFiltersModalVisible] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedCondition, setSelectedCondition] = useState<string>('');
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -75,6 +97,48 @@ const MyArticlesScreen: React.FC = () => {
     setExpandedId(id);
   };
 
+  
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (!user) return;
+      try {
+        const data = await fetchAllCategories(user.token);
+        setCategories(data.filter(c => c.status === 'ACTIVE'));
+      } catch (err) {
+        console.error('Error cargando categorías', err);
+      }
+    };
+    loadCategories();
+  }, [user]);
+
+  const loadArticles = async (ignoreFilters = false) => {
+    if (!user) {
+      setError('Debes iniciar sesión para ver tus artículos');
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+
+      const queryFilters = ignoreFilters ? {} : {
+        categoryId: selectedCategoryId ? Number(selectedCategoryId) : undefined,
+        condition: selectedCondition || undefined,
+        minPrice: minPrice ? parseFloat(minPrice) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+      };
+
+      const data = await getMyArticles(user.id, user.token, queryFilters);
+      setArticles(data);
+      setFilteredArticles(applyFilter(filter, data));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar artículos');
+      showNotification('Error al cargar los artículos', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       setExpandedId(null);
@@ -101,6 +165,23 @@ const MyArticlesScreen: React.FC = () => {
     }, [user])
   );
 
+  const handleApplyAdvancedFilters = () => {
+    setFiltersModalVisible(false);
+    loadArticles();
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCategoryId('');
+    setSelectedCondition('');
+    setMinPrice("");
+    setMaxPrice("");
+    setFiltersModalVisible(false);
+    loadArticles(true); 
+  };
+
+  
+  const activeAdvancedFiltersCount = [selectedCategoryId, selectedCondition, minPrice, maxPrice].filter(Boolean).length;
+
   const applyFilter = (f: FilterType, data: UserArticle[]) => {
     if (f === 'AVAILABLE') return data.filter(a => a.status === 'AVAILABLE');
     if (f === 'RENTED')    return data.filter(a => a.status === 'RENTED');
@@ -118,7 +199,7 @@ const MyArticlesScreen: React.FC = () => {
       const full = await getArticleById(item.id, user.token);
       navigation.navigate('EditArticle', { article: full });
     } catch (err: any) {
-      showNotification(err.message || 'No se pudo cargar el artículo', 'error'); // 👈 Notificación
+      showNotification(err.message || 'No se pudo cargar el artículo', 'error');
     }
   };
 
@@ -127,11 +208,9 @@ const MyArticlesScreen: React.FC = () => {
       showNotification(
         'Este artículo está actualmente alquilado. Espera a que finalice el alquiler para eliminarlo.',
         'error'
-      ); // 👈 Notificación
+      ); 
       return;
     }
-    
-    // Mostrar modal de confirmación
     setArticleToDelete(item);
     setConfirmModalVisible(true);
   };
@@ -147,12 +226,12 @@ const MyArticlesScreen: React.FC = () => {
       const updated = articles.filter(a => a.id !== articleToDelete.id);
       setArticles(updated);
       setFilteredArticles(applyFilter(filter, updated));
-      showNotification('Artículo eliminado correctamente', 'success'); // 👈 Notificación éxito
+      showNotification('Artículo eliminado correctamente', 'success'); 
     } catch (err) {
       showNotification(
         err instanceof Error ? err.message : 'No se pudo eliminar el artículo',
         'error'
-      ); // 👈 Notificación error
+      ); 
     } finally {
       setDeletingId(null);
       setArticleToDelete(null);
@@ -333,93 +412,185 @@ const MyArticlesScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={commonStyles.container}>
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Cargando artículos...</Text>
-        </View>
-      </SafeAreaView>
+      <PaperProvider theme={customTheme}>
+        <SafeAreaView style={commonStyles.container}>
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Cargando artículos...</Text>
+          </View>
+        </SafeAreaView>
+      </PaperProvider>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={commonStyles.container}>
-        <View style={styles.centerContainer}>
-          <Ionicons name="alert-circle-outline" size={60} color="#d9534f" />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.retryButtonText}>Volver</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <PaperProvider theme={customTheme}>
+        <SafeAreaView style={commonStyles.container}>
+          <View style={styles.centerContainer}>
+            <Ionicons name="alert-circle-outline" size={60} color="#d9534f" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.retryButtonText}>Volver</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </PaperProvider>
     );
   }
 
   return (
-    <SafeAreaView style={commonStyles.container}>
-      <View style={commonStyles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mis Artículos</Text>
-        <View style={styles.headerRight} />
-      </View>
-
-      <View style={styles.filterContainer}>
-        {(['ALL', 'AVAILABLE', 'RENTED'] as FilterType[]).map((f) => (
-          <TouchableOpacity
-            key={f}
-            style={[styles.filterButton, filter === f && styles.filterButtonActive]}
-            onPress={() => handleFilter(f)}
-          >
-            <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {getFilterLabel(f)}
-            </Text>
+    <PaperProvider theme={customTheme}>
+      <SafeAreaView style={commonStyles.container}>
+        <View style={commonStyles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
           </TouchableOpacity>
-        ))}
-      </View>
-
-      {filteredArticles.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="cube-outline" size={80} color="#ccc" />
-          <Text style={styles.emptyText}>
-            {filter === 'ALL'
-              ? 'No tienes artículos subidos'
-              : `No tienes artículos ${filter === 'AVAILABLE' ? 'disponibles' : 'alquilados'}`}
-          </Text>
-          <Text style={styles.emptySubtext}>Pulsa el botón + para subir tu primer artículo</Text>
+          <Text style={styles.headerTitle}>Mis Artículos</Text>
+          
+          {/* PASO 5: BOTÓN EN EL HEADER */}
+          <View style={styles.headerRight}>
+            <TouchableOpacity onPress={() => setFiltersModalVisible(true)} style={styles.filterIconButton}>
+              <Ionicons name="options-outline" size={24} color={activeAdvancedFiltersCount > 0 ? Colors.primary : '#666'} />
+              {activeAdvancedFiltersCount > 0 && (
+                <View style={styles.filterBadge}>
+                  <Text style={styles.filterBadgeText}>{activeAdvancedFiltersCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      ) : (
-        <FlatList
-          data={filteredArticles}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderArticle}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
+
+        <View style={styles.filterContainer}>
+          {(['ALL', 'AVAILABLE', 'RENTED'] as FilterType[]).map((f) => (
+            <TouchableOpacity
+              key={f}
+              style={[styles.filterButton, filter === f && styles.filterButtonActive]}
+              onPress={() => handleFilter(f)}
+            >
+              <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
+                {getFilterLabel(f)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {filteredArticles.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="cube-outline" size={80} color="#ccc" />
+            <Text style={styles.emptyText}>
+              {filter === 'ALL'
+                ? 'No tienes artículos subidos'
+                : `No tienes artículos ${filter === 'AVAILABLE' ? 'disponibles' : 'alquilados'}`}
+            </Text>
+            <Text style={styles.emptySubtext}>Pulsa el botón + para subir tu primer artículo</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredArticles}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderArticle}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate('UploadArticle')}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={32} color="#fff" />
+        </TouchableOpacity>
+
+        {/* PASO 6: MODAL DE FILTROS AVANZADOS */}
+        <Modal visible={filtersModalVisible} animationType="slide" transparent={true}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Filtros Avanzados</Text>
+                <TouchableOpacity onPress={() => setFiltersModalVisible(false)}>
+                  <Ionicons name="close" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.filterLabel}>Categoría</Text>
+              <View style={styles.pickerWrapper}>
+                <SelectPicker
+                  options={[
+                    { label: 'Todas las categorías', value: '' },
+                    ...categories.map(c => ({ label: c.name, value: c.id.toString() }))
+                  ]}
+                  selectedValue={selectedCategoryId}
+                  onValueChange={setSelectedCategoryId}
+                  placeholder="Selecciona una categoría"
+                />
+              </View>
+
+              <Text style={styles.filterLabel}>Condición</Text>
+              <View style={styles.pickerWrapper}>
+                <SelectPicker
+                  options={CONDITION_OPTIONS}
+                  selectedValue={selectedCondition}
+                  onValueChange={setSelectedCondition}
+                  placeholder="Cualquier estado"
+                />
+              </View>
+
+              <Text style={styles.filterLabel}>Rango de Precios</Text>
+              <View style={styles.priceRangeContainer}>
+                <View style={styles.priceInputWrapper}>
+                  <TextInput
+                    style={styles.priceInput}
+                    placeholder="Mín"
+                    keyboardType="numeric"
+                    value={minPrice}
+                    onChangeText={setMinPrice}
+                    placeholderTextColor="#999"
+                  />
+                </View>
+                
+                <Text style={styles.priceSeparator}>a</Text>
+
+                <View style={styles.priceInputWrapper}>
+                  <TextInput
+                    style={styles.priceInput}
+                    placeholder="Máx"
+                    keyboardType="numeric"
+                    value={maxPrice}
+                    onChangeText={setMaxPrice}
+                    placeholderTextColor="#999"
+                  />
+                </View>
+              </View>
+
+              
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
+                  <Text style={styles.clearButtonText}>Limpiar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.applyButton} onPress={handleApplyAdvancedFilters}>
+                  <Text style={styles.applyButtonText}>Aplicar Filtros</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal de confirmación para eliminar */}
+        <ConfirmModal
+          visible={confirmModalVisible}
+          title="Confirmar eliminación"
+          message={`¿Seguro que quieres eliminar "${articleToDelete?.title}"? Esta acción no se puede deshacer.`}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          confirmStyle="destructive"
         />
-      )}
-
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('UploadArticle')}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="add" size={32} color="#fff" />
-      </TouchableOpacity>
-
-      {/* Modal de confirmación para eliminar */}
-      <ConfirmModal
-        visible={confirmModalVisible}
-        title="Confirmar eliminación"
-        message={`¿Seguro que quieres eliminar "${articleToDelete?.title}"? Esta acción no se puede deshacer.`}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        confirmStyle="destructive"
-      />
-    </SafeAreaView>
+      </SafeAreaView>
+    </PaperProvider>
   );
 };
 
@@ -636,6 +807,56 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 8,
   },
+
+  filterIconButton: { padding: Spacing.sm, position: 'relative' },
+  filterBadge: { position: 'absolute', top: 4, right: 4, backgroundColor: '#d9534f', width: 16, height: 16, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  filterBadgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: Spacing.lg, minHeight: '50%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#333' },
+  filterLabel: { fontSize: 14, fontWeight: '600', color: '#666', marginBottom: Spacing.xs, marginTop: Spacing.md },
+  pickerWrapper: { backgroundColor: '#f5f5f5', borderRadius: 8, marginBottom: Spacing.sm },
+  datePickerButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f5f5', padding: Spacing.md, borderRadius: 8, gap: Spacing.sm },
+  datePlaceholderText: { color: '#999', fontSize: 16 },
+  dateSelectedText: { color: '#333', fontSize: 16 },
+  modalActions: { flexDirection: 'row', marginTop: Spacing.xl, gap: Spacing.md },
+  clearButton: { flex: 1, padding: Spacing.md, borderRadius: 8, backgroundColor: '#f0f0f0', alignItems: 'center' },
+  clearButtonText: { color: '#666', fontWeight: '600', fontSize: 16 },
+  applyButton: { flex: 2, padding: Spacing.md, borderRadius: 8, backgroundColor: Colors.primary, alignItems: 'center' },
+  applyButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  priceRangeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginTop: 5,
+  },
+  priceInputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  priceIcon: {
+    marginRight: 5,
+  },
+  priceInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    paddingVertical: 10,
+  },
+  priceSeparator: {
+    fontSize: 14,
+    color: '#999',
+    fontWeight: '600',
+    marginHorizontal: 4,},
   cardContainer: {
     backgroundColor: '#fff',
     borderRadius: 12,
