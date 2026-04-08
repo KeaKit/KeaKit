@@ -1,12 +1,10 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
-  Alert,
   ActivityIndicator,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -28,6 +26,7 @@ import {
   KeakitCRUDButton,
   KeakitTag,
   KeakitSearchBar,
+  KeakitModal,
 } from "../../components";
 
 const { categoryCard, cardLeft, categoryName, cardRight, buttonsArea } =
@@ -51,12 +50,30 @@ export default function CategoriesScreen() {
 
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{
+    categoryName: string;
+    categoryId: number;
+  } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       loadCategories();
     }, [token]),
   );
+
+  useEffect(() => {
+    // Al cerrar el modal de eliminación, se limpia la categoría después de un breve retraso
+    // Con la animación se veía el nombre de la categoría "undefined" por un instante
+    if (!deleteModalVisible) {
+      const timer = setTimeout(() => {
+        setCategoryToDelete(null);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [deleteModalVisible]);
 
   const loadCategories: () => Promise<void> = async () => {
     setIsLoading(true);
@@ -83,7 +100,8 @@ export default function CategoriesScreen() {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
-      Alert.alert("Error", `No se pudieron cargar: ${errorMessage}`);
+      setErrorModalVisible(true);
+      setErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -104,36 +122,17 @@ export default function CategoriesScreen() {
     navigation.navigate("CategoryForm", { category, mode: "edit" });
   };
 
-  const handleDeleteCategory = (categoryId: number, categoryName: string) => {
-    const performDelete = async () => {
-      try {
-        await deleteCategory(categoryId, token);
-        setCategories((prev) => prev.filter((c) => c.id !== categoryId));
-      } catch (error) {
-        if (Platform.OS === "web") {
-          window.alert("Error: No se pudo eliminar la categoría.");
-        } else {
-          Alert.alert("Error", "No se pudo eliminar la categoría.");
-        }
-      }
-    };
-
-    if (Platform.OS === "web") {
-      const confirmDelete = window.confirm(
-        `¿Deseas eliminar la categoría "${categoryName}"?`,
-      );
-      if (confirmDelete) {
-        performDelete();
-      }
-    } else {
-      Alert.alert(
-        "Eliminar categoría",
-        `¿Deseas eliminar la categoría "${categoryName}"?`,
-        [
-          { text: "Cancelar", style: "cancel" },
-          { text: "Eliminar", style: "destructive", onPress: performDelete },
-        ],
-      );
+  const handleDeleteCategory = async (categoryId: number) => {
+    try {
+      await deleteCategory(categoryId, token);
+      setCategories((prev) => prev.filter((c) => c.id !== categoryId));
+    } catch (error) {
+      setErrorModalVisible(true);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      setErrorMessage(errorMessage);
+    } finally {
+      loadCategories();
     }
   };
 
@@ -165,7 +164,13 @@ export default function CategoriesScreen() {
           {item.articleCount === 0 && (
             <KeakitCRUDButton
               type="delete"
-              onPress={() => handleDeleteCategory(item.id, item.name)}
+              onPress={() => {
+                setCategoryToDelete({
+                  categoryName: item.name,
+                  categoryId: item.id,
+                });
+                setDeleteModalVisible(true);
+              }}
               variant="violet"
             />
           )}
@@ -186,6 +191,29 @@ export default function CategoriesScreen() {
         onBack={() => navigation.goBack()}
       />
 
+      <KeakitModal
+        visible={errorModalVisible}
+        onDismiss={() => {
+          setErrorModalVisible(false);
+          setErrorMessage("");
+          navigation.goBack();
+        }}
+        message={`No se pudieron cargar las categorías: ${errorMessage}`}
+        variant="error"
+      />
+
+      <KeakitModal
+        visible={deleteModalVisible}
+        onDismiss={() => {
+          setDeleteModalVisible(false);
+        }}
+        onConfirm={() => {
+          handleDeleteCategory(categoryToDelete!.categoryId);
+        }}
+        message={`¿Deseas eliminar la categoría "${categoryToDelete?.categoryName}"?`}
+        variant="confirmation"
+      />
+
       <View style={commonStyles.contentContainer}>
         <KeakitSearchBar
           placeholder="Buscar categorías..."
@@ -203,7 +231,12 @@ export default function CategoriesScreen() {
           <ActivityIndicator
             size="large"
             color={Colors.primary}
-            style={{ marginTop: 20 }}
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: 90,
+            }}
           />
         ) : (
           <FlatList
