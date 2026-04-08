@@ -49,13 +49,14 @@ public class AdminUserService {
     }
 
     public UserResponse createUser(AdminUserRequest request) {
-
-        if (userRepository.existsByEmail(request.getEmail())) {
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+        
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new UserAlreadyExistsException("Email already exists");
         }
 
         User user = new User(
-                request.getEmail(),
+                normalizedEmail,
                 passwordEncoder.encode(request.getPassword()),
                 request.getName(),
                 request.getRole() != null ? request.getRole() : UserRole.USER, // 👈 fallback
@@ -80,11 +81,12 @@ public class AdminUserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (request.getEmail() != null) {
-            if (!request.getEmail().equals(user.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
+            String normalizedEmail = request.getEmail().toLowerCase().trim();
+
+            if (!normalizedEmail.equals(user.getEmail()) && userRepository.existsByEmail(normalizedEmail)) {
                 throw new UserAlreadyExistsException("El correo ya está registrado.");
             }
-
-            user.setEmail(request.getEmail());
+            user.setEmail(normalizedEmail); 
         }
 
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
