@@ -43,7 +43,8 @@ public class ItemMemento {
     private String pickupAddressSnapshot;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category", referencedColumnName = "name")
+    @JoinColumn(name = "category_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Category categoryAtRental;
 
     private String imageUrlAtRental;
