@@ -45,9 +45,9 @@
 | [#433](https://github.com/KeaKit/KeaKit/issues/433)  | Añadir los tests del nuevo borrado de usuarios   | Mid |  1    | Done |Cristina Fernández Chica|
 | [#436](https://github.com/KeaKit/KeaKit/issues/436)  | Demo   | High | 3   | Done |José Luis Moraza Vergara|
 | [#439](https://github.com/KeaKit/KeaKit/issues/439)  |Análisis usuarios piloto (usuarios propios)  | Mid |  3 | Done |Candela Jazmín Gutiérrez González|
-| [#441](https://github.com/KeaKit/KeaKit/issues/441)  | CU-ARRENDATARIO-09 - Avisos de disponibilidad - Backend  | High |  4 | Done |Por asignar|
-| [#442](https://github.com/KeaKit/KeaKit/issues/442)  | CU-ARRENDATARIO-09 - Avisos de disponibilidad - Frontend  | High |  5 | Done |Por asignar|
-| [#443](https://github.com/KeaKit/KeaKit/issues/443)  | CU-ARRENDATARIO-09 - Avisos de disponibilidad - Test | High |  2 | Done |Por asignar|
+| [#441](https://github.com/KeaKit/KeaKit/issues/441)  | CU-ARRENDATARIO-09 - Avisos de disponibilidad - Backend  | High |  4 | Done |Paula González Páez|
+| [#442](https://github.com/KeaKit/KeaKit/issues/442)  | CU-ARRENDATARIO-09 - Avisos de disponibilidad - Frontend  | High |  5 | Done |Paula González Páez|
+| [#443](https://github.com/KeaKit/KeaKit/issues/443)  | CU-ARRENDATARIO-09 - Avisos de disponibilidad - Test | High |  2 | Done |Paula González Páez|
 | [#444](https://github.com/KeaKit/KeaKit/issues/444)  | Añadir feedback a base de conocimiento conjunta  | Mid |  2  | Done |Marta Aguilar Morcillo|
 | [#447](https://github.com/KeaKit/KeaKit/issues/447)  | Feedback como usuario piloto - Marta  | High |  3  | Done |Marta Aguilar Morcillo|
 | [#452](https://github.com/KeaKit/KeaKit/issues/452)  | Sprint 3 Backlog Grupo 4 Semana 1   | Low |  1    | Done |Cristina Fernández Chica|
@@ -81,11 +81,12 @@
 | Versión | Fecha       | Descripción                    | Autor(es)                  |
 |---------|-------------|--------------------------------|----------------------------|
 | 1.0.0   | 01/04/2026  |  Sprint Backlog Semana 1               | Cristina Fernández Chica |
+| 1.0.1   | 08/04/2026  |  Se completan las asignaciones             | Cristina Fernández Chica |
 
 
 
 
 ---
 **Redactado por:** Cristina Fernández Chica
-**Fecha de redacción:** 01/04/2026  
-**Versión:** 1.0.0
+**Fecha de redacción:** 08/04/2026  
+**Versión:** 1.0.1
