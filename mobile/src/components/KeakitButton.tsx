@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Text, StyleSheet, Pressable, Animated, Platform, ViewStyle, StyleProp, View, ActivityIndicator } from "react-native";
 import { Icon } from "react-native-paper";
-import { BorderRadius, Colors, FontSizes, FontWeights, Shadows } from "../styles/theme";
+import { BorderRadius, Colors, FontSizes, FontWeights } from "../styles/theme";
 
 
 type ButtonVariant = "blue" | "violet" | "green" | "modalBlue";
