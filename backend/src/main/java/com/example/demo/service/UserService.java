@@ -36,14 +36,15 @@ public class UserService {
     private WalletRepository walletRepository;
 
     public UserResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new UserAlreadyExistsException("Email already exists");
         }
 
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
         User user = new User(
-                request.getEmail(),
+                normalizedEmail,
                 hashedPassword,
                 request.getName(),
                 UserRole.USER,
@@ -69,7 +70,8 @@ public class UserService {
     }
 
     public UserResponse login(LoginRequest request) {
-        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+        Optional<User> userOpt = userRepository.findByEmail(normalizedEmail);
 
         if (userOpt.isEmpty()) {
             throw new UserNotFoundException("User not found");
@@ -116,7 +118,8 @@ public class UserService {
     }
 
     public UserResponse getUserByEmail(String email) throws UserNotFoundException {
-        User user = userRepository.findByEmail(email)
+        String normalizedEmail = email.toLowerCase().trim();
+        User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return new UserResponse(user);
     }
