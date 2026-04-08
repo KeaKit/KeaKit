@@ -269,7 +269,6 @@ class UserControllerIntegrationTest {
         
         UserUpdateData updateData = buildValidUpdateData();
 
-        // User 2 intenta actualizar a User 1
         mockMvc.perform(put("/api/users/" + user1.getId())
                         .header("Authorization", "Bearer " + user2.getToken())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -285,7 +284,7 @@ class UserControllerIntegrationTest {
         mockMvc.perform(put("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateData)))
-                .andExpect(status().isForbidden()); // Spring Security devuelve 403 o 401 según config
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -293,7 +292,7 @@ class UserControllerIntegrationTest {
     void updateUser_invalidName_returns400() throws Exception {
         UserResponse registered = registerAndGetToken("shortname@example.com");
         UserUpdateData updateData = buildValidUpdateData();
-        updateData.setName("A"); // Min es 2
+        updateData.setName("A");
 
         mockMvc.perform(put("/api/users/" + registered.getId())
                         .header("Authorization", "Bearer " + registered.getToken())
@@ -307,7 +306,7 @@ class UserControllerIntegrationTest {
     void updateUser_invalidPhone_returns400() throws Exception {
         UserResponse registered = registerAndGetToken("badphone@example.com");
         UserUpdateData updateData = buildValidUpdateData();
-        updateData.setPhone("123"); // Regexp falla
+        updateData.setPhone("123");
 
         mockMvc.perform(put("/api/users/" + registered.getId())
                         .header("Authorization", "Bearer " + registered.getToken())
@@ -321,7 +320,7 @@ class UserControllerIntegrationTest {
     void updateUser_invalidAddress_returns400() throws Exception {
         UserResponse registered = registerAndGetToken("shortaddress@example.com");
         UserUpdateData updateData = buildValidUpdateData();
-        updateData.setAddress("Casa"); // Min es 5
+        updateData.setAddress("Casa");
 
         mockMvc.perform(put("/api/users/" + registered.getId())
                         .header("Authorization", "Bearer " + registered.getToken())
