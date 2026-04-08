@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { View, Text } from "react-native";
-import { TextInput } from "react-native-paper";
+import { View, Text, Alert, Platform, StyleSheet, Animated } from "react-native";
+import { Icon, TextInput } from "react-native-paper";
 import { commonStyles } from "../../styles";
 import { categoryFormScreenStyles } from "../../styles/categoryFormScreenStyles";
 import { SelectPicker } from "../SelectPicker";
 import { KeakitButton } from "../KeakitButton";
 import { updateCategory, createCategory } from "../../services/categoryService";
 import { Category } from "../../types";
-import { Platform, Alert } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types";
 
@@ -65,6 +64,8 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const successOpacity = React.useRef(new Animated.Value(0)).current;
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -138,14 +139,10 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
         await createCategory(payload, token);
       }
 
-      if (Platform.OS === "web") {
-        window.alert(successMessage);
+      showSuccess();
+      setTimeout(() => {
         navigation.goBack();
-      } else {
-        Alert.alert("Éxito", successMessage, [
-          { text: "OK", onPress: () => navigation.goBack() },
-        ]);
-      }
+      }, 1500);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error desconocido";
@@ -155,6 +152,15 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const showSuccess = () => {
+    setSaveSuccess(true);
+    Animated.sequence([
+      Animated.timing(successOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.delay(1800),
+      Animated.timing(successOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
+    ]).start(() => setSaveSuccess(false));
   };
 
   const sanitizePrice = (price: string): string => {
@@ -266,6 +272,39 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
           loading={isSaving}
         />
       </View>
+
+      {saveSuccess && (
+        <Animated.View style={[styles.toast, { opacity: successOpacity }]}>
+          <Icon source="check-circle-outline" size={18} color="#4caf7d" />
+          <Text style={styles.toastText}>
+            {formMode === "edit" ? "Categoría actualizada correctamente" : "Categoría creada correctamente"}
+          </Text>
+        </Animated.View>
+      )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  toast: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    alignSelf: "center",
+    backgroundColor: "#c3f1d1",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
+    marginTop: 12,
+  },
+  toastText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4caf7d",
+  },
+});
