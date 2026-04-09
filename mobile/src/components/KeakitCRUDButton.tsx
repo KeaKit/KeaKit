@@ -81,21 +81,14 @@ export const KeakitCRUDButton = ({
       <Pressable
         onPress={onPress}
         disabled={disabled}
-        onHoverIn={() => !disabled && (setIsHovered(true), animateScale(1.02))}
-        onHoverOut={() => (setIsHovered(false), animateScale(1))}
-        onPressIn={() => !disabled && animateScale(0.96)}
-        onPressOut={() => !disabled && animateScale(isHovered ? 1.02 : 1)}
+        onHoverIn={() => {!disabled && (setIsHovered(true), animateScale(1.02))}}
+        onHoverOut={() => {!disabled && (setIsHovered(false), animateScale(1))}}
+        onPressIn={() => {!disabled && animateScale(0.96)}}
+        onPressOut={() => {!disabled && animateScale(isHovered ? 1.02 : 1)}}
         style={({ pressed }): StyleProp<ViewStyle> => [
           styles.button,
           getVariantStyles(),
           !disabled && (isHovered || pressed) && styles.buttonActive,
-          Platform.OS === "web" &&
-            ({
-              cursor: (disabled ? "not-allowed" : "pointer") as any,
-              outlineStyle: "none",
-              userSelect: "none",
-              transition: "all 0.2s ease-in-out",
-            } as any),
         ]}
       >
         <Icon source={getIconName()} size={20} color={getTextStyle().color} />
@@ -124,7 +117,6 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontWeight: FontWeights.semibold,
     color: Colors.textWhite,
-    ...Platform.select({ web: { userSelect: "none" } as any }),
   },
   // --- VARIANTES ---
   blue: { backgroundColor: Colors.primaryHome },

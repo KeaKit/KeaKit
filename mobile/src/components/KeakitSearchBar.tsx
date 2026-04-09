@@ -27,7 +27,7 @@ export const KeakitSearchBar = ({
         <IconButton
           icon="close"
           iconColor={Colors.textSecondary}
-          onPress={() => onChange("")}
+          onPress={() => { onChange("") }}
           style={styles.clearIcon}
         />
       )}

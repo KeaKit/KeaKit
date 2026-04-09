@@ -103,7 +103,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         }
       };
       window.addEventListener("click", handleClickOutside);
-      return () => window.removeEventListener("click", handleClickOutside);
+      return () => {window.removeEventListener("click", handleClickOutside)};
     }
   }, []);
 
@@ -233,8 +233,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     setUserMenuVisible(false);
   };
 
-  const handleLogout = async () => {
-    await signOut();
+  const handleLogout = () => {
+    signOut().catch(console.error);
     setUserMenuVisible(false);
     setMenuVisible(false);
   };
@@ -399,7 +399,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     return (
       <View style={styles.mobileHeader}>
         <View style={styles.mobileLeft}>
-          <TouchableOpacity onPress={() => navigateToScreen("Home")}>
+          <TouchableOpacity onPress={() => { navigateToScreen("Home") }}>
             <Image
               source={require("../../assets/logo.png")}
               style={styles.mobileLogo}
@@ -412,7 +412,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           {user && (
             <TouchableOpacity
               style={styles.bellButton}
-              onPress={() => navigateToScreen("Notifications")}
+              onPress={() => { navigateToScreen("Notifications") }}
             >
               <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
                 <Ionicons
@@ -430,7 +430,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           {user && (
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => navigateToScreen("Wallet")}
+              onPress={() => { navigateToScreen("Wallet") }}
             >
               <Ionicons
                 name="wallet-outline"
@@ -544,7 +544,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   return (
     <View style={styles.header}>
       <TouchableOpacity
-        onPress={() => navigateToScreen("Home")}
+        onPress={() => {navigateToScreen("Home")}}
         style={styles.logoContainer}
       >
         <Image
