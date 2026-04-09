@@ -55,9 +55,12 @@ export const CategoryArticlesComponent = ({
   const firstRowFull = latestArticles.length >= numColumns;
 
   useEffect(() => {
-    if (category.id) {
-      loadArticles(category.id);
-    }
+    const loadData = async () => {
+      if (category.id) {
+        await loadArticles(category.id);
+      }
+    };
+    loadData();
   }, [category.id]);
 
   const loadArticles = async (categoryId: number) => {

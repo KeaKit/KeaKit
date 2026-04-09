@@ -119,35 +119,52 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = async () => {
-    validate();
+  const handleSave = () => {
+    if (!validate()) {
+      return;
+    }
 
     setIsSaving(true);
-    try {
-      const payload: Partial<Category> = {
-        name: formData.name,
-        description: formData.description,
-        status: formData.status,
-        minPrice: parseFloat(formData.minPrice),
-        maxPrice: parseFloat(formData.maxPrice),
-      };
+    const payload: Partial<Category> = {
+      name: formData.name,
+      description: formData.description,
+      status: formData.status,
+      minPrice: parseFloat(formData.minPrice),
+      maxPrice: parseFloat(formData.maxPrice),
+    };
 
-      if (formMode === "edit" && categoryToEdit) {
-        await updateCategory(categoryToEdit.id, payload, token);
-      } else {
-        await createCategory(payload, token);
-      }
-
-      showSuccess();
-      setTimeout(() => {
-        navigation.goBack();
-      }, 1500);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Error desconocido";
-      setSaveError(errorMessage);
-    } finally {
-      setIsSaving(false);
+    if (formMode === "edit" && categoryToEdit) {
+      updateCategory(categoryToEdit.id, payload, token)
+        .then(() => {
+          showSuccess();
+          setTimeout(() => {
+            navigation.goBack();
+          }, 1500);
+        })
+        .catch((error) => {
+          const errorMessage =
+            error instanceof Error ? error.message : "Error desconocido";
+          setSaveError(errorMessage);
+        })
+        .finally(() => {
+          setIsSaving(false);
+        });
+    } else {
+      createCategory(payload, token)
+        .then(() => {
+          showSuccess();
+          setTimeout(() => {
+            navigation.goBack();
+          }, 1500);
+        })
+        .catch((error) => {
+          const errorMessage =
+            error instanceof Error ? error.message : "Error desconocido";
+          setSaveError(errorMessage);
+        })
+        .finally(() => {
+          setIsSaving(false);
+        });
     }
   };
 
@@ -165,7 +182,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
         duration: 400,
         useNativeDriver: true,
       }),
-    ]).start(() => setSaveSuccess(false));
+    ]).start(() => { setSaveSuccess(false); });
   };
 
   const sanitizePrice = (price: string): string => {
@@ -205,7 +222,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
         visible={!!saveError}
         variant="error"
         message={saveError || "Ha ocurrido un error al guardar la categoría."}
-        onDismiss={() => setSaveError(null)}
+        onDismiss={() => { setSaveError(null); }}
       />
       <View style={inputRow}>
         <TextInput
@@ -213,7 +230,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
           label="Nombre de la categoría"
           placeholder="Ej. Electrónica"
           value={formData.name}
-          onChangeText={(text) => handleChange("name", text)}
+          onChangeText={(text) => { handleChange("name", text); }}
           error={!!formErrors.name}
           style={input}
         />
@@ -227,7 +244,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
           label="Descripción"
           placeholder="Añade una descripción..."
           value={formData.description}
-          onChangeText={(text) => handleChange("description", text)}
+          onChangeText={(text) => { handleChange("description", text); }}
           error={!!formErrors.description}
           style={input}
           multiline
@@ -244,7 +261,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
             value: status,
           }))}
           selectedValue={formData.status}
-          onValueChange={(value) => handleChange("status", value)}
+          onValueChange={(value) => { handleChange("status", value); }}
           placeholder="Selecciona un estado"
         />
       </View>
@@ -259,7 +276,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
             keyboardType="numeric"
             placeholder="Mín"
             value={formData.minPrice}
-            onChangeText={(text) => handleChange("minPrice", text)}
+            onChangeText={(text) => { handleChange("minPrice", text); }}
           />
           <Text style={priceSeparator}>€ -</Text>
           <TextInput
@@ -268,7 +285,7 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
             keyboardType="numeric"
             placeholder="Máx"
             value={formData.maxPrice}
-            onChangeText={(text) => handleChange("maxPrice", text)}
+            onChangeText={(text) => { handleChange("maxPrice", text); }}
           />
           <Text style={priceSeparator}>€</Text>
         </View>
