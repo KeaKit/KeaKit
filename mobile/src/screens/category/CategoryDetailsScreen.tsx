@@ -1,25 +1,11 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-  FlatList,
-  Image,
-} from "react-native";
+import React, { useState } from "react";
+import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { UserArticle, RootStackParamList } from "../../types";
+import { RootStackParamList } from "../../types";
 import { useAuth } from "../../context/AuthContext";
-import {
-  fetchArticleCountByCategory,
-  fetchLatestArticlesByCategory,
-} from "../../services/categoryService";
-
-import { Colors, Spacing, commonStyles } from "../../styles";
-import { categoryFormScreenStyles } from "../../styles/categoryFormScreenStyles";
+import { Colors, commonStyles } from "../../styles";
 import {
   Header,
   CategoryFormComponent,
@@ -46,21 +32,13 @@ const customTheme = {
     outlineVariant: Colors.success,
   },
 };
-const {
-  articleCard,
-  articleImage,
-  imagePlaceholder,
-  articleInfo,
-  articleTitle,
-  articleBadge,
-  statCircle,
-  statNumber,
-} = categoryFormScreenStyles;
+
 
 type CategoryFormNav = NativeStackNavigationProp<
   RootStackParamList,
   "CategoryForm"
 >;
+
 type CategoryFormRoute = RouteProp<RootStackParamList, "CategoryForm">;
 
 export default function CategoryDetailsScreen() {
