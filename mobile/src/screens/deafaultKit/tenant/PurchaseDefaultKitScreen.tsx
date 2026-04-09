@@ -278,8 +278,20 @@ const PurchaseDefaultKitScreen: React.FC = () => {
         navigation.navigate("Checkout", { kitId: createdKit.id });
       }
     } catch (error) {
+      const errorType = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+
+      const errorMsg = errorType.response?.data?.message || errorType.message || "";
+      if (errorMsg.includes("ya no está disponible") || 
+                errorMsg.includes("unidades"))
+      {
+        setErrors({ general:errorMsg }); 
       console.error("Error al procesar el kit:", error);
-      setErrors({ general: "Ha ocurrido un error al procesar el pedido." });
+      }else{
+        setErrors({ general: "Ha ocurrido un error al procesar el pedido." });
+      }
     } finally {
       setSubmitting(false);
     }

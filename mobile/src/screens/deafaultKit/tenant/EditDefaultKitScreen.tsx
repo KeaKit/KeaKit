@@ -21,6 +21,9 @@ const EditDefaultKitScreen = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     
+    // 1. NUEVO ESTADO PARA EL ERROR
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    
     const [modalVisible, setModalVisible] = useState(false);
     const [catalog, setCatalog] = useState<PresetCatalogProduct[]>([]);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -45,13 +48,9 @@ const EditDefaultKitScreen = () => {
                 const kitData = await kitRes.json();
                 setKitBase(kitData);
                 
-                // --- MAPEO DE SEGURIDAD CORREGIDO ---
-                // En el DTO de DefaultKit del Back, los items vienen en 'kitItems'
-                // En la versión antigua, venían en 'items' y cada uno tenía un objeto 'item' dentro.
                 let rawItems = kitData.kitItems || kitData.items || [];
                 
                 const normalizedItems = rawItems.map((it: any) => {
-                    // Si viene de la interfaz antigua (it.item.title)
                     if (it.item) {
                         return {
                             id: it.item.id,
@@ -60,7 +59,6 @@ const EditDefaultKitScreen = () => {
                             category: it.item.category || ""
                         };
                     }
-                    // Si viene del DTO nuevo (kitItems con name y priceAtRental)
                     return {
                         id: it.id || it.itemId,
                         title: it.name || it.title || "Artículo sin nombre",
@@ -91,7 +89,7 @@ const EditDefaultKitScreen = () => {
     }, [kitId, user?.token, user?.id]);
 
     const handleRemoveItem = (idToRemove: number) => {
-        // Filtramos por cualquier ID posible para asegurar que se borre
+        setErrorMessage(null); // Limpiamos error al modificar el carrito
         setCurrentItems(prev => prev.filter(item => item.id !== idToRemove && item.itemId !== idToRemove));
     };
 
@@ -102,6 +100,7 @@ const EditDefaultKitScreen = () => {
     };
 
     const handleConfirmModal = () => {
+        setErrorMessage(null); // Limpiamos error al modificar el carrito
         const newItems = selectedIds
             .map(id => catalog.find(c => c.id === id))
             .filter(Boolean)
@@ -122,9 +121,8 @@ const EditDefaultKitScreen = () => {
         
         try {
             setSaving(true);
+            setErrorMessage(null); // Reseteamos el error antes de intentar
             
-            // Generamos fechas por defecto para que el backend no de error 400
-            // Usamos el formato YYYY-MM-DD que espera el KitCreateRequest
             const today = new Date();
             const tomorrow = new Date();
             tomorrow.setDate(today.getDate() + 1);
@@ -137,25 +135,20 @@ const EditDefaultKitScreen = () => {
                 pricePerMonth: item.pricePerMonth || 0, 
             }));
 
-            // CONSTRUCCIÓN DEL PAYLOAD COMPLETO PARA EVITAR EL ERROR 400
             const payload: Partial<KitCreateRequest> = {
                 name: `Mi versión de ${kitBase?.name || 'Kit'}`,
                 tenantId: user.id,
                 status: KitStatus.DRAFT,
                 itemSelections: mappedSelections,
-                // SOLUCIÓN AL ERROR: Enviamos fechas por defecto
                 startDate: formatDate(today),
                 endDate: formatDate(tomorrow),
-                // Campos obligatorios adicionales
                 country: kitBase?.country || user?.country || "España",
                 city: kitBase?.city || user?.city || "Sevilla",
                 deliveryMethod: "MEETING_POINT",
                 meetingPoint: "A acordar con el propietario",
             };
 
-            console.log("Enviando payload al backend:", JSON.stringify(payload));
-
-            const response = await fetch(API_ROUTES.CREATE_KIT, {
+           const response = await fetch(API_ROUTES.CREATE_KIT, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -163,18 +156,49 @@ const EditDefaultKitScreen = () => {
                 },
                 body: JSON.stringify(payload),
             });
-
-            if (response.ok) {
-                Alert.alert("¡Éxito!", "Tu kit personalizado ha sido guardado como borrador en tu perfil.");
-                navigation.navigate("MyKits");
-            } else {
-                const errorData = await response.text();
-                console.error("Error 400 detallado:", errorData);
-                Alert.alert("Error", "No se pudo crear el kit. Revisa los datos obligatorios.");
+            
+            if (!response.ok) {
+                // Leemos la respuesta como texto UNA SOLA VEZ
+                const responseText = await response.text(); 
+                let backendMessage = "Error desconocido del servidor";
+                
+                try {
+                    // Intentamos convertir ese texto a JSON
+                    const errorData = JSON.parse(responseText);
+                    backendMessage = errorData.message || errorData.error || JSON.stringify(errorData);
+                } catch (parseError) {
+                    // Si falla, significa que el backend devolvió texto plano o HTML
+                    backendMessage = responseText;
+                }
+                
+                // Lanzamos el error con el mensaje real
+                throw new Error(backendMessage);
             }
-        } catch (error) {
-            console.error("Error en la petición POST:", error);
-            Alert.alert("Error", "Ocurrió un error de red al intentar guardar el kit.");
+                
+            Alert.alert("Éxito", "El kit se ha guardado en tus borradores.");
+            navigation.goBack();
+
+        } catch (err) { 
+            let errorMsg = "Ha ocurrido un error al guardar el kit.";
+
+            if (err instanceof Error) {
+                errorMsg = err.message;
+            } else if (typeof err === 'object' && err !== null) {
+                const errorObj = err as { response?: { data?: { message?: string } }, message?: string };
+                errorMsg = errorObj.response?.data?.message || errorObj.message || JSON.stringify(err);
+            } else if (typeof err === 'string') {
+                errorMsg = err;
+            }
+
+            const msgLower = errorMsg.toLowerCase();
+            if (
+                msgLower.includes("disponible") || 
+                msgLower.includes("unidades")
+            ) {
+                setErrorMessage(errorMsg); 
+            } else {
+                setErrorMessage(errorMsg || "Ha ocurrido un error al guardar el kit.");
+            }
         } finally {
             setSaving(false);
         }
@@ -223,7 +247,6 @@ const EditDefaultKitScreen = () => {
                 {currentItems.map((item, idx) => (
                     <View key={`${item.id || item.itemId}-${idx}`} style={defaultKitStyles.itemRow}>
                         <View style={defaultKitStyles.itemInfo}>
-                            {/* Ahora usamos 'title' que fue normalizado arriba */}
                             <Text style={defaultKitStyles.itemName}>{item.title}</Text>
                             <Text style={defaultKitStyles.itemMeta}>
                                 {item.category} · {Number(item.pricePerMonth).toFixed(2)}€/mes
@@ -241,11 +264,20 @@ const EditDefaultKitScreen = () => {
                 <TouchableOpacity style={defaultKitStyles.addButton} onPress={() => setModalVisible(true)}>
                     <Text style={defaultKitStyles.addButtonText}>+ Añadir más productos</Text>
                 </TouchableOpacity>
+                
+                {/* 4. MOSTRAMOS EL ERROR VISUALMENTE SI EXISTE */}
+                {errorMessage && (
+                    <Text style={{ color: Colors.error, marginTop: 15, textAlign: 'center', fontSize: 14 }}>
+                        {errorMessage}
+                    </Text>
+                )}
 
                 <TouchableOpacity 
                     style={[
                         defaultKitStyles.confirmButton, 
-                        currentItems.length === 0 && defaultKitStyles.confirmButtonDisabled
+                        currentItems.length === 0 && defaultKitStyles.confirmButtonDisabled,
+                        // Le damos un poco más de margen top si hay error para que respire
+                        { marginTop: errorMessage ? 10 : 20 }
                     ]} 
                     onPress={handleSaveAsMyKit}
                     disabled={currentItems.length === 0 || saving}

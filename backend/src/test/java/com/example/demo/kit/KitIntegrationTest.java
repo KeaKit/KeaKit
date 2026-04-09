@@ -287,7 +287,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Selected quantity exceeds available units"));
+            .andExpect(content().string("El artículo 'Item Unidades 1' solo tiene 1 unidades en total."));
     }
 
     @Test

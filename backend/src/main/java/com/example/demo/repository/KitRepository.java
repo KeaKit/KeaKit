@@ -48,16 +48,15 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
     List<Kit> findByTenantIdAndStatus(Long tenantId, KitStatus status);
 
 
-    // Comprueba si el artículo ya está alquilado en esas fechas
-    @Query("SELECT CASE WHEN COUNT(k) > 0 THEN true ELSE false END " +
-           "FROM Kit k JOIN k.snapshots s " +
+   // Devuelve los kits pagados/activos que se cruzan con estas fechas
+    @Query("SELECT DISTINCT k FROM Kit k JOIN k.snapshots s " +
            "WHERE s.originalItemId = :itemId " +
            "AND k.status IN (:statuses) " +
            "AND k.startDate <= :endDate " +
            "AND k.endDate >= :startDate")
-    boolean isItemUnavailableForDates(@Param("itemId") Long itemId,
-                                      @Param("startDate") LocalDate startDate,
-                                      @Param("endDate") LocalDate endDate,
-                                      @Param("statuses") List<KitStatus> statuses);
+    List<Kit> findOverlappingKitsForItem(@Param("itemId") Long itemId,
+                                         @Param("startDate") LocalDate startDate,
+                                         @Param("endDate") LocalDate endDate,
+                                         @Param("statuses") List<KitStatus> statuses);
 }
 
