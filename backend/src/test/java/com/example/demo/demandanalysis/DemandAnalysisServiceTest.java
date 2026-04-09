@@ -1,8 +1,15 @@
 package com.example.demo.demandanalysis;
 
-import com.example.demo.dto.DemandAnalysisDTO;
-import com.example.demo.repository.ItemMementoRepository;
-import com.example.demo.service.DemandAnalysisService;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,14 +19,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import com.example.demo.dto.DemandAnalysisDTO;
+import com.example.demo.repository.ItemMementoRepository;
+import com.example.demo.service.DemandAnalysisService;
 
 @ExtendWith(MockitoExtension.class)
 class DemandAnalysisServiceTest {
@@ -133,5 +135,25 @@ class DemandAnalysisServiceTest {
         List<DemandAnalysisDTO> result = demandAnalysisService.getTopDemandedItemsByCategory("NoExiste", null);
 
         assertTrue(result.isEmpty());
+    }
+
+    // Verifica el correcto mapeo del Object[] a DTO cuando hay valores nulos 
+    @Test
+    void mapResultsToDTOs_handlesNullValuesGracefully() {
+        // Añadimos <Object[]> explícitamente para evitar que Java aplane el array por el varargs
+        List<Object[]> resultsWithNulls = List.<Object[]>of(
+                new Object[]{10L, "Producto Sin Imagen", null, null, 1L, 2L}
+        );
+
+        when(itemMementoRepository.findTopDemandedItems(any())).thenReturn(resultsWithNulls);
+
+        List<DemandAnalysisDTO> result = demandAnalysisService.getTopDemandedItems(null);
+
+        assertEquals(1, result.size());
+        assertEquals(10L, result.get(0).getItemId());
+        assertEquals("Producto Sin Imagen", result.get(0).getTitle());
+        assertNull(result.get(0).getCategoryName()); // Verifica que asigne null sin lanzar NullPointerException
+        assertNull(result.get(0).getImageUrl());
+        assertEquals(1L, result.get(0).getTotalTimesRented());
     }
 }
