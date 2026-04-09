@@ -1,5 +1,7 @@
 import Ionicons from "@expo/vector-icons/build/Ionicons";
 
+export type UserRole = "ADMIN" | "USER" | "COURIER";
+
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -19,7 +21,7 @@ export interface UserResponse {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER" | "COURIER";
+  role: UserRole;
   phone: string;
   address: string;
   city: string;
@@ -31,7 +33,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
-  role: "ADMIN" | "USER" | "COURIER";
+  role: UserRole;
   phone: string;
   address: string;
   city: string;
@@ -183,7 +185,7 @@ export interface Kit {
     email: string;
     password: string;
     name: string;
-    role: "ADMIN" | "USER";
+    role: UserRole;
     phone: string;
     address: string;
     city: string;
