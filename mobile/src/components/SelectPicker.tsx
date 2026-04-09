@@ -55,7 +55,7 @@ export const SelectPicker: React.FC<Props> = ({
 
   return (
     <View style={{ flex: 1, flexDirection: "column", gap: 6 }}>
-    {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={styles.label}>{label}</Text>}
       <TouchableOpacity
         style={[styles.trigger, disabled && styles.triggerDisabled]}
         onPress={() => !disabled && setVisible(true)}
@@ -92,7 +92,11 @@ export const SelectPicker: React.FC<Props> = ({
                   autoFocus
                 />
                 {query.length > 0 && (
-                  <TouchableOpacity onPress={() => setQuery("")}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setQuery("");
+                    }}
+                  >
                     <Ionicons name="close-circle" size={18} color="#999" />
                   </TouchableOpacity>
                 )}
@@ -145,7 +149,7 @@ export const SelectPicker: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  label:{
+  label: {
     fontSize: 14,
     color: "#1C1B1F",
     marginBottom: 4,
@@ -172,7 +176,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: "#333",
-    ...({ outlineWidth: 0, outlineStyle: "none" } as any),
   },
   emptyText: {
     textAlign: "center",
