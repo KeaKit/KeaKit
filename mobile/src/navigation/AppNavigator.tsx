@@ -41,7 +41,7 @@ import DefaultKitFormScreen from "../screens/deafaultKit/admin/DefaultKitFormScr
 import AdminUserFormScreen from "../screens/admin/AdminUserFormScreen";
 import EditArticleScreen from "../screens/profile/EditArticleScreen";
 import KitDetailScreen from "../screens/kit/KitDetailScreen";
-import CategoryFormScreen from "../screens/category/CategoryFormScreen";
+import CategoryFormScreen from "../screens/category/CategoryDetailsScreen";
 import CreateIncidentScreen from "../screens/incidents/CreateIncidentScreen";
 import IncidentDetailScreen from "../screens/incidents/IncidentDetailScreen";
 import CreateServiceScreen from "../screens/service/CreateServiceScreen";
