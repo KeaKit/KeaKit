@@ -15,6 +15,6 @@
 * **Entrega Sprint 2:** [Ver vídeo](https://drive.google.com/file/d/142E5qaFmIJLIVRP6IqLaVL_4WrrU4pcw/view?usp=sharing)
 
 ### 🔹 Sprint 3
-* **Semana 1:** *Pendiente*
+* **Semana 1:** [Ver video](https://drive.google.com/file/d/1WV_KULISfubn-ek3TC7dperHrzuWH0aG/view?usp=sharing)
 
 ---
