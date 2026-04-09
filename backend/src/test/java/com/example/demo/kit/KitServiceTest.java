@@ -8,6 +8,8 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +20,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -213,6 +216,51 @@ public class KitServiceTest {
         kitService.confirmKitStatus(1L);
 
         assertEquals(KitStatus.ACTIVE, kit.getStatus());
+    }
+
+    @Test
+    void confirmKitStatus_when_idNotExists_throwsException() {
+        when(kitRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> kitService.confirmKitStatus(99L));
+    }
+
+    @Test
+    void confirmKitStatus_when_statusNotPaid_throwsExceptionWithCorrectMessage() {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.DRAFT);
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
+
+        assertEquals("The kit can only be confirmed if its status is PAID", exception.getMessage());
+    }
+
+    @Test
+    void confirmKitStatus_calls_save_repository() {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.PAID);
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        kitService.confirmKitStatus(1L);
+
+        verify(kitRepository, times(1)).save(any(Kit.class)); 
+    }
+
+    @Test
+    void confirmKitStatus_savesWithCorrectStatus() {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.PAID);
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        kitService.confirmKitStatus(1L);
+
+        ArgumentCaptor<Kit> kitCaptor = ArgumentCaptor.forClass(Kit.class);
+        verify(kitRepository).save(kitCaptor.capture());
+        
+        assertEquals(KitStatus.ACTIVE, kitCaptor.getValue().getStatus());
     }
 
 // ==========================================

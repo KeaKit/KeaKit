@@ -857,4 +857,41 @@ class KitIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(1));
     }
+
+    // ==========================================
+    // TESTS INTEGRACIÓN: CONFIRMACIÓN DE STATUS (PATCH)
+    // ==========================================
+
+    @Test
+    void testConfirmKitStatus_success() throws Exception {
+        savedKit.setStatus(KitStatus.PAID);
+        kitRepository.save(savedKit);
+
+        mockMvc.perform(patch("/api/kits/confirm/" + savedKit.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Kit status confirmed succesfully"));
+
+        Kit updatedKit = kitRepository.findById(savedKit.getId()).orElseThrow();
+        assertThat(updatedKit.getStatus()).isEqualTo(KitStatus.ACTIVE);
+    }
+
+    @Test
+    void testConfirmKitStatus_wrongInitialStatus_returnsNotFound() throws Exception {
+        savedKit.setStatus(KitStatus.ACTIVE);
+        kitRepository.save(savedKit);
+
+        mockMvc.perform(patch("/api/kits/confirm/" + savedKit.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("The kit can only be confirmed if its status is PAID"));
+    }
+
+    @Test
+    void testConfirmKitStatus_kitNotFound_returnsNotFound() throws Exception {
+        mockMvc.perform(patch("/api/kits/confirm/999999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Kit not found"));
+    }
 }
