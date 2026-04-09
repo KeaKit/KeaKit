@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Category, RootStackParamList } from "../../types";
+import { AuthUser, Category, RootStackParamList } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 
 import {
@@ -44,7 +44,7 @@ interface CategoryWithCount extends Category {
 export default function CategoriesScreen() {
   const navigation = useNavigation<CategoriesNav>();
   const { user } = useAuth();
-  const token = (user as any)?.token || "";
+  const token = (user as AuthUser)?.token || "";
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -71,7 +71,7 @@ export default function CategoriesScreen() {
       const timer = setTimeout(() => {
         setCategoryToDelete(null);
       }, 300);
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(timer) }
     }
   }, [deleteModalVisible]);
 
@@ -207,8 +207,10 @@ export default function CategoriesScreen() {
         onDismiss={() => {
           setDeleteModalVisible(false);
         }}
-        onConfirm={() => {
-          handleDeleteCategory(categoryToDelete!.categoryId);
+        onConfirm={async () => {
+          if (categoryToDelete) {
+            await handleDeleteCategory(categoryToDelete.categoryId);
+          }
         }}
         message={`¿Deseas eliminar la categoría "${categoryToDelete?.categoryName}"?`}
         variant="confirmation"
