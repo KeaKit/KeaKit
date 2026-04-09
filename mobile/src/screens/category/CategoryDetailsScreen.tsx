@@ -3,7 +3,7 @@ import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../types";
+import { AuthUser, RootStackParamList } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { Colors, commonStyles } from "../../styles";
 import {
@@ -33,7 +33,6 @@ const customTheme = {
   },
 };
 
-
 type CategoryFormNav = NativeStackNavigationProp<
   RootStackParamList,
   "CategoryForm"
@@ -53,7 +52,7 @@ export default function CategoryDetailsScreen() {
   const navigation = useNavigation<CategoryFormNav>();
 
   const { user } = useAuth();
-  const token = (user as any)?.token || "";
+  const token = (user as AuthUser)?.token || "";
 
   const getHeaderTitle = () => {
     if (formMode === "view") return "Detalles de categoría";
@@ -82,10 +81,14 @@ export default function CategoryDetailsScreen() {
               token={token}
             />
           ) : (
-            <CategoryDetailsComponent
-              category={categoryToEdit!}
-              setMode={setFormMode}
-            />
+            <>
+              {categoryToEdit && (
+                <CategoryDetailsComponent
+                  category={categoryToEdit}
+                  setMode={setFormMode}
+                />
+              )}
+            </>
           )}
           {categoryToEdit && (
             <CategoryArticlesComponent
