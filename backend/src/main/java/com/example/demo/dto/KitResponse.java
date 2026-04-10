@@ -118,8 +118,8 @@ public class KitResponse {
         this.meetingPoint = kit.getMeetingPoint();
         this.courierPrice = kit.getCourierPrice();
         this.tenantId = kit.getTenant() != null ? kit.getTenant().getId() : null;
-    this.tenantName = kit.getTenant() != null ? kit.getTenant().getName() : null;
-    this.tenantEmail = kit.getTenant() != null ? kit.getTenant().getEmail() : null;
+        this.tenantName = kit.getTenant() != null ? kit.getTenant().getName() : null;
+        this.tenantEmail = kit.getTenant() != null ? kit.getTenant().getEmail() : null;
 
         List<ItemMemento> snapshots = kit.getSnapshots() != null ? kit.getSnapshots() : List.of();
 

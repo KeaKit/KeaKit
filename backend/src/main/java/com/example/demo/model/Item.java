@@ -47,7 +47,8 @@ public abstract class Item {
     protected LocalDate availableUntil;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "category", referencedColumnName = "name", nullable = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Category category;
 
     @NotNull
