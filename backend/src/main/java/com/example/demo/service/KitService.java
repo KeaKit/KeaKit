@@ -199,7 +199,7 @@ public class KitService {
     private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
         int years = end.getYear() - start.getYear();
         int months = end.getMonthValue() - start.getMonthValue();
-        int days = end.getDayOfMonth() - start.getDayOfMonth();
+        int days = end.getDayOfMonth() - start.getDayOfMonth() + 1; // +1 para incluir el día de inicio
 
         int totalMonths = years * 12 + months;
 

@@ -41,6 +41,7 @@ import {
 } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
+import { formatRentalDuration } from "../../utils/duration";
 
 // Componentes
 import { SelectPicker } from "../../components/SelectPicker";
@@ -95,16 +96,13 @@ type CatalogProduct = {
 };
 
 function calculateMonthsBetween(start: Date, end: Date): number {
-  const years = end.getUTCFullYear() - start.getUTCFullYear();
-  const months = end.getUTCMonth() - start.getUTCMonth();
-  const days = end.getUTCDate() - start.getUTCDate();
+  const MS_PER_DAY = 24 * 60 * 60 * 1000; // misma logica que en duration.ts para mantener consistencia, 
+  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()); // esto devuelve milisegundos, al restar fechas en JS obtienes la diferencia en milisegundos, por eso convertimos ambas fechas a UTC sin hora para luego restarlas y dividir por los milisegundos que tiene un día, así obtenemos la cantidad de días entre ambas fechas.
+  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+  const totalDays = Math.max(0, Math.round((endUtc - startUtc) / MS_PER_DAY)) + 1;
+  
+  return totalDays / 30.0;
 
-  let totalMonths = years * 12 + months;
-
-  const daysInMonth = 30;
-  const monthFraction = days / daysInMonth;
-
-  return totalMonths + monthFraction;
 }
 
 const CreateKitScreen: React.FC = () => {
@@ -828,7 +826,7 @@ const CreateKitScreen: React.FC = () => {
           {monthsBetween !== null && monthsBetween > 0 && (
             <View style={{ marginTop: 8, marginBottom: 16 }}>
               <Text style={commonStyles.bodySecondary}>
-                Duración: {monthsBetween.toFixed(2)} meses
+                Duración: {startDate && endDate ? formatRentalDuration(startDate, endDate) : ""}
               </Text>
             </View>
           )}

@@ -34,6 +34,7 @@ import {
   DefaultKit,
 } from "../../../types";
 import { Colors, commonStyles } from "../../../styles";
+import { formatRentalDuration } from "../../../utils/duration";
 
 // Componentes
 import { SelectPicker } from "../../../components/SelectPicker";
@@ -57,13 +58,12 @@ type FormErrors = {
 };
 
 function calculateMonthsBetween(start: Date, end: Date): number {
-  const years = end.getUTCFullYear() - start.getUTCFullYear();
-  const months = end.getUTCMonth() - start.getUTCMonth();
-  const days = end.getUTCDate() - start.getUTCDate();
-  let totalMonths = years * 12 + months;
-  const daysInMonth = 30;
-  const monthFraction = days / daysInMonth;
-  return totalMonths + monthFraction;
+  const MS_PER_DAY = 24 * 60 * 60 * 1000; 
+  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()); 
+  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+  const totalDays = Math.max(0, Math.round((endUtc - startUtc) / MS_PER_DAY)) + 1;
+  
+  return totalDays / 30.0;
 }
 
 const PurchaseDefaultKitScreen: React.FC = () => {
@@ -450,7 +450,9 @@ const PurchaseDefaultKitScreen: React.FC = () => {
 
           {monthsBetween !== null && monthsBetween > 0 && (
             <View style={commonStyles.marginBottomMd}>
-              <Text style={commonStyles.bodySecondary}>Duración: {monthsBetween.toFixed(2)} meses</Text>
+              <Text style={commonStyles.bodySecondary}>
+                Duración: {startDate && endDate ? formatRentalDuration(startDate, endDate) : ""}
+              </Text>
             </View>
           )}
 

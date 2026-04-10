@@ -922,9 +922,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(request);
 
-        assertEquals(15398, result.totalPrice());
-        assertEquals(11999, result.subtotalPrice());
-        assertEquals(2400, result.guarantee());
+        assertEquals(15878, result.totalPrice());
+        assertEquals(12365, result.subtotalPrice());
+        assertEquals(2473, result.guarantee());
         assertEquals(999, result.courierPrice());
     }
 
@@ -941,9 +941,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(request);
 
-        assertEquals(3600, result.totalPrice());
-        assertEquals(3000, result.subtotalPrice());
-        assertEquals(600, result.guarantee());
+        assertEquals(3720, result.totalPrice());
+        assertEquals(3100, result.subtotalPrice());
+        assertEquals(620, result.guarantee());
         assertEquals(0, result.courierPrice());
     }
 
@@ -969,9 +969,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(77L);
 
-        assertEquals(12459, result.totalPrice());
-        assertEquals(9550, result.subtotalPrice());
-        assertEquals(1910, result.guarantee());
+        assertEquals(12841, result.totalPrice());
+        assertEquals(9868, result.subtotalPrice());
+        assertEquals(1973, result.guarantee());
         assertEquals(999, result.courierPrice());
     }
 
@@ -1015,9 +1015,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(88L);
 
-        assertEquals(18000, result.totalPrice());
-        assertEquals(15000, result.subtotalPrice());
-        assertEquals(3000, result.guarantee());
+        assertEquals(18600, result.totalPrice());
+        assertEquals(15500, result.subtotalPrice());
+        assertEquals(3100, result.guarantee());
         assertEquals(0, result.courierPrice());
     }
 
