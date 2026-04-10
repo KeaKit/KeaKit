@@ -33,6 +33,32 @@ public class ItemFilter {
         };
     }
 
+    public static Specification<Item> hasCity(String city) {
+        return (root, query, cb) -> {
+            if (city == null || city.trim().isEmpty()) {
+                return null;
+            }
+            return cb.equal(cb.lower(root.get("city")), city.trim().toLowerCase());
+        };
+    }
+
+    public static Specification<Item> hasCategoryId(Long categoryId) {
+        return (root, query, cb) -> (categoryId == null) ? null : cb.equal(root.get("category").get("id"), categoryId);
+    }
+
+    public static Specification<Item> hasArticleCondition(ArticleCondition condition) {
+        return (root, query, cb) -> {
+            if (condition == null) {
+                return null;
+            }
+
+            return cb.and(
+                    cb.equal(root.type(), Article.class),
+                    cb.equal(cb.treat(root, Article.class).get("condition"), condition)
+            );
+        };
+    }
+
     public static Specification<Item> isRentable() {
         return (root, query, cb) -> cb.or(
                 cb.and(

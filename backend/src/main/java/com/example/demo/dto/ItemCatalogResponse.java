@@ -17,6 +17,7 @@ public class ItemCatalogResponse {
     private Long ownerId;
     private String ownerName;
     private String status;   // solo para ARTICLE
+    private String condition; // solo para ARTICLE
     private String imageUrl; // solo para ARTICLE
 
     public ItemCatalogResponse() {}
@@ -62,6 +63,9 @@ public class ItemCatalogResponse {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getCondition() { return condition; }
+    public void setCondition(String condition) { this.condition = condition; }
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }

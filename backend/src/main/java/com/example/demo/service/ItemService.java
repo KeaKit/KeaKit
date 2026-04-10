@@ -4,6 +4,7 @@ import com.example.demo.dto.ItemCatalogResponse;
 import com.example.demo.dto.ItemFilterResponseDTO;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Article;
+import com.example.demo.model.ArticleCondition;
 import com.example.demo.model.Item;
 import com.example.demo.model.ItemFilter;
 import com.example.demo.model.ServiceItem;
@@ -31,17 +32,23 @@ public class ItemService {
         return itemRepository.findAll();
     }
 
-    public ItemFilterResponseDTO filterItemsForKit(Double minPrice, Double maxPrice, String country, Integer page, Integer size) {
-        validateFilterInput(minPrice, maxPrice, country, page, size);
+    public ItemFilterResponseDTO filterItemsForKit(Double minPrice, Double maxPrice, String country, String city,
+            Long categoryId, String condition, Integer page, Integer size) {
+        ArticleCondition parsedCondition = validateAndParseFilterInput(minPrice, maxPrice, country, city, categoryId,
+                condition, page, size);
 
         int safePage = page != null ? page : 0;
         int safeSize = size != null ? size : 10;
         String sanitizedCountry = sanitizeCountry(country);
+        String sanitizedCity = sanitizeCity(city);
 
         Pageable pageable = PageRequest.of(safePage, safeSize);
         Specification<Item> spec = Specification.where(ItemFilter.isRentable())
                 .and(ItemFilter.isPriceInRange(minPrice, maxPrice))
-                .and(ItemFilter.hasCountry(sanitizedCountry));
+                .and(ItemFilter.hasCountry(sanitizedCountry))
+                .and(ItemFilter.hasCity(sanitizedCity))
+                .and(ItemFilter.hasCategoryId(categoryId))
+                .and(ItemFilter.hasArticleCondition(parsedCondition));
 
         Page<ItemCatalogResponse> resultPage = itemRepository.findAll(spec, pageable).map(this::toCatalogResponse);
 
@@ -105,7 +112,8 @@ public class ItemService {
         itemRepository.deleteById(id);
     }
 
-    private void validateFilterInput(Double minPrice, Double maxPrice, String country, Integer page, Integer size) {
+    private ArticleCondition validateAndParseFilterInput(Double minPrice, Double maxPrice, String country, String city,
+            Long categoryId, String condition, Integer page, Integer size) {
         if (minPrice != null && minPrice <= 0) {
             throw new IllegalArgumentException("minPrice must be greater than 0");
         }
@@ -126,11 +134,35 @@ public class ItemService {
             }
         }
 
+        if (city != null) {
+            String trimmed = city.trim();
+            if (trimmed.isEmpty()) {
+                throw new IllegalArgumentException("city must not be blank");
+            }
+            if (trimmed.length() > 120) {
+                throw new IllegalArgumentException("city cannot exceed 120 characters");
+            }
+        }
+
+        if (categoryId != null && categoryId <= 0) {
+            throw new IllegalArgumentException("categoryId must be greater than 0");
+        }
+
         if (page != null && page < 0) {
             throw new IllegalArgumentException("page must be greater than or equal to 0");
         }
         if (size != null && size <= 0) {
             throw new IllegalArgumentException("size must be greater than 0");
+        }
+
+        if (condition == null || condition.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return ArticleCondition.valueOf(condition.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("condition must be one of: NEW, LIGHTLY_USED, USED, WORN");
         }
     }
 
@@ -139,6 +171,14 @@ public class ItemService {
             return null;
         }
         String trimmed = country.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String sanitizeCity(String city) {
+        if (city == null) {
+            return null;
+        }
+        String trimmed = city.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
 
@@ -160,10 +200,12 @@ public class ItemService {
         if (item instanceof Article article) {
             dto.setItemType("ARTICLE");
             dto.setStatus(article.getStatus() != null ? article.getStatus().name() : null);
+            dto.setCondition(article.getCondition() != null ? article.getCondition().name() : null);
             dto.setImageUrl(article.getImageUrl());
         } else if (item instanceof ServiceItem serviceItem) {
             dto.setItemType("SERVICE");
             dto.setStatus(serviceItem.getStatus() != null ? serviceItem.getStatus().name() : null);
+            dto.setCondition(null);
             dto.setImageUrl(null);
         }
 

@@ -15,6 +15,14 @@ public class ItemFilterDTO {
     @Size(max = 120, message = "country cannot exceed 120 characters")
     private String country;
 
+    @Size(max = 120, message = "city cannot exceed 120 characters")
+    private String city;
+
+    @Positive(message = "categoryId must be greater than 0")
+    private Long categoryId;
+
+    private String condition;
+
     @Min(value = 0, message = "page must be greater than or equal to 0")
     private Integer page = 0;
 
@@ -43,6 +51,30 @@ public class ItemFilterDTO {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 
     public Integer getPage() {

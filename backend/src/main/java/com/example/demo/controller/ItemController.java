@@ -51,11 +51,15 @@ public class ItemController {
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String country,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String condition,
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             HttpServletRequest request) {
         try {
-            ItemFilterResponseDTO response = itemService.filterItemsForKit(minPrice, maxPrice, country, page, size);
+            ItemFilterResponseDTO response = itemService.filterItemsForKit(minPrice, maxPrice, country, city, categoryId,
+                    condition, page, size);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -78,6 +82,9 @@ public class ItemController {
                     filter.getMinPrice(),
                     filter.getMaxPrice(),
                     filter.getCountry(),
+            filter.getCity(),
+            filter.getCategoryId(),
+            filter.getCondition(),
                     filter.getPage(),
                     filter.getSize());
             return ResponseEntity.ok(response);
@@ -111,10 +118,12 @@ public class ItemController {
         if (item instanceof Article article) {
             dto.setItemType("ARTICLE");
             dto.setStatus(article.getStatus() != null ? article.getStatus().name() : null);
+            dto.setCondition(article.getCondition() != null ? article.getCondition().name() : null);
             dto.setImageUrl(article.getImageUrl());
         } else {
             dto.setItemType("SERVICE");
             dto.setStatus(null);
+            dto.setCondition(null);
             dto.setImageUrl(null);
         }
 
