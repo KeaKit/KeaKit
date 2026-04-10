@@ -12,7 +12,7 @@ spring:
     defer-datasource-initialization: true 
     hibernate:
       # 'create' borra todo al iniciar. Úsalo solo en desarrollo.
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
