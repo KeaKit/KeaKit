@@ -128,7 +128,11 @@ export const API_ROUTES = {
     `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`,
 
   // Article history
-  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`
+  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`,
+
+  // Demand analysis
+  DEMAND_ANALYSIS_TOP: (limit?: number) =>
+    limit && limit > 0 ? `${BASE_URL}/api/demand-analysis/top?limit=${limit}` : `${BASE_URL}/api/demand-analysis/top`
 
 } as const;
 
