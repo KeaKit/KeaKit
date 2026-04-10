@@ -16,7 +16,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // Función para verificar si es móvil/tablet
     const checkIsMobile = () => {
       const { width } = Dimensions.get('window');
-      setIsMobile(width < 768);
+      setIsMobile(width < 1116);
     };
 
     checkIsMobile();

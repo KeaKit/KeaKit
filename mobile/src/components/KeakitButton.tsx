@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Text, StyleSheet, Pressable, Animated, Platform, ViewStyle, StyleProp, View, ActivityIndicator } from "react-native";
-import { BorderRadius, Colors, FontSizes, FontWeights, Shadows } from "../styles/theme";
+import { Icon } from "react-native-paper";
+import { BorderRadius, Colors, FontSizes, FontWeights } from "../styles/theme";
 
 
 type ButtonVariant = "blue" | "violet" | "green" | "modalBlue";
@@ -11,6 +12,7 @@ interface KeakitButtonProps {
   disabled?: boolean;
   loading?: boolean;
   variant?: ButtonVariant;
+  icon?: string;
 }
 
 export const KeakitButton = ({
@@ -19,6 +21,7 @@ export const KeakitButton = ({
   disabled = false,
   loading = false,
   variant = "blue",
+  icon,
 }: KeakitButtonProps) => {
 
   const [isHovered, setIsHovered] = useState(false);
@@ -74,6 +77,9 @@ export const KeakitButton = ({
           } as any),
         ]}
       >
+        {icon && !loading && (
+          <Icon source={icon} size={20} color={getTextStyle().color} />
+        )}
         <Text style={[styles.buttonText,getTextStyle(), { opacity: loading ? 0 : 1 }]}>
           {title}
         </Text>
@@ -96,7 +102,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: BorderRadius.md,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
   },
   buttonText: {
     fontSize: FontSizes.base,

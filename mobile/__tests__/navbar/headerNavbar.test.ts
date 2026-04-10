@@ -19,25 +19,73 @@ const source: string = fs.readFileSync(HEADER_NAVBAR_PATH, 'utf-8');
 
 type HeaderNavItem = { name: string; icon: string; screen: string; flag: string };
 
+let adminNavItems: HeaderNavItem[] = [];
+let userNavItems: HeaderNavItem[] = [];
 /**
- * Extrae un array de NavbarHeaderItems del bloque que empieza con `identifier: NavbarHeaderItem[] = [`
+ * Extrae ambos arrays de navegación (adminNavItems y userNavItems) del código fuente de HeaderNavbar.tsx
+ * @param src Código fuente de HeaderNavbar.tsx como string
+ * @returns Objeto { adminNavItems: HeaderNavItem[], userNavItems: HeaderNavItem[] }
  */
-function extractHeaderNavItems(src: string, identifier: string): HeaderNavItem[] {
-  const regex = new RegExp(`${identifier}:\\s*NavbarHeaderItem\\[\\]\\s*=\\s*\\[([\\s\\S]*?)\\];`);
-  const match = src.match(regex);
-  if (!match) throw new Error(`No se encontró el array "${identifier}" en HeaderNavbar.tsx`);
+function extractNavItems(src: string): { adminNavItems: HeaderNavItem[], userNavItems: HeaderNavItem[] } {
+  const items: { adminNavItems: HeaderNavItem[], userNavItems: HeaderNavItem[] } = { 
+    adminNavItems: [] as HeaderNavItem[], 
+    userNavItems: [] as HeaderNavItem[] 
+  };
 
-  const items: HeaderNavItem[] = [];
-  const itemRegex = /\{\s*name:\s*'([^']+)',\s*icon:\s*'([^']+)',\s*screen:\s*'([^']+)',\s*(requiresAuth|requiresAdmin):\s*true\s*\}/g;
-  let m: RegExpExecArray | null;
-  while ((m = itemRegex.exec(match[1])) !== null) {
-    items.push({ name: m[1], icon: m[2], screen: m[3], flag: m[4] });
+  const arrayRegex = /const\s+(adminNavItems|userNavItems):\s*NavbarHeaderItem\[\]\s*=\s*\[([\s\S]*?)\];/g;
+  let arrayMatch;
+
+  while ((arrayMatch = arrayRegex.exec(src)) !== null) {
+    const arrayName = arrayMatch[1];
+    const arrayContent = arrayMatch[2];
+
+    const itemRegex = /\{\s*name:\s*["']([^"']+)["'][,\s]*icon:\s*["']([^"']+)["'][,\s]*screen:\s*["']([^"']+)["'][,\s]*(requiresAuth|requiresAdmin):\s*true\s*[,\s]*\}/gs;
+    
+    let itemMatch;
+    while ((itemMatch = itemRegex.exec(arrayContent)) !== null) {
+      const item: HeaderNavItem = {
+        name: itemMatch[1],
+        icon: itemMatch[2],
+        screen: itemMatch[3],
+        flag: itemMatch[4]
+      };
+
+      if (arrayName === 'adminNavItems') {
+        items.adminNavItems.push(item);
+      } else if (arrayName === 'userNavItems') {
+        items.userNavItems.push(item);
+      }
+    }
   }
+
   return items;
 }
 
-const adminNavItems = extractHeaderNavItems(source, 'adminNavItems');
-const userNavItems = extractHeaderNavItems(source, 'userNavItems');
+beforeAll(() => {
+  const extracted = extractNavItems(source);
+  expect(extracted.adminNavItems).toBeDefined();
+  expect(extracted.userNavItems).toBeDefined();
+  adminNavItems = extracted.adminNavItems;
+  userNavItems = extracted.userNavItems;
+  expect(adminNavItems.length).toBe(5);
+  expect(userNavItems.length).toBe(4);
+}
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Extracción de datos del código fuente
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('extracción de adminNavItems y userNavItems de HeaderNavbar.tsx', () => {
+  it('extrae adminNavItems correctamente', () => {
+    expect(adminNavItems).toHaveLength(5);
+  });
+  
+  it('extrae userNavItems correctamente', () => {
+    expect(userNavItems).toHaveLength(4);
+  });
+});
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Selección de ítems por rol
@@ -45,7 +93,7 @@ const userNavItems = extractHeaderNavItems(source, 'userNavItems');
 
 describe('selección de ítems por rol en HeaderNavbar', () => {
   it('usa adminNavItems cuando el rol es ADMIN', () => {
-    expect(source).toMatch(/user\.role\s*===\s*'ADMIN'/);
+    expect(source).toMatch(/user\.role\s*===\s*["']ADMIN["']/);
   });
 
   it('filtra adminNavItems para usuarios ADMIN', () => {
