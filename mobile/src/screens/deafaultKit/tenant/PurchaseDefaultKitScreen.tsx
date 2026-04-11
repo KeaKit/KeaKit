@@ -38,6 +38,7 @@ import { Colors, commonStyles } from "../../../styles";
 // Componentes
 import { SelectPicker } from "../../../components/SelectPicker";
 import { KitPaymentResumeComponent } from "../../../components/KitPaymentResumeComponent";
+import { formatRentalDuration, calculateMonthsBetween } from "../../../utils/duration";
 
 const COMISION = 0;
 const GUARANTEE_PERCENTAGE = 0.2;
@@ -56,15 +57,6 @@ type FormErrors = {
   general?: string;
 };
 
-function calculateMonthsBetween(start: Date, end: Date): number {
-  const years = end.getUTCFullYear() - start.getUTCFullYear();
-  const months = end.getUTCMonth() - start.getUTCMonth();
-  const days = end.getUTCDate() - start.getUTCDate();
-  let totalMonths = years * 12 + months;
-  const daysInMonth = 30;
-  const monthFraction = days / daysInMonth;
-  return totalMonths + monthFraction;
-}
 
 const PurchaseDefaultKitScreen: React.FC = () => {
   const navigation = useNavigation<PurchaseDefaultKitNav>();
@@ -150,9 +142,7 @@ const PurchaseDefaultKitScreen: React.FC = () => {
   
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
-    const start = new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()));
-    const end = new Date(Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()));
-    return calculateMonthsBetween(start, end);
+    return calculateMonthsBetween(startDate, endDate);
   }, [startDate, endDate]);
 
   const clearFieldError = (field: keyof FormErrors) => {
@@ -462,7 +452,9 @@ const PurchaseDefaultKitScreen: React.FC = () => {
 
           {monthsBetween !== null && monthsBetween > 0 && (
             <View style={commonStyles.marginBottomMd}>
-              <Text style={commonStyles.bodySecondary}>Duración: {monthsBetween.toFixed(2)} meses</Text>
+              <Text style={commonStyles.bodySecondary}>
+                Duración: {startDate && endDate ? formatRentalDuration(startDate, endDate) : ""}
+              </Text>
             </View>
           )}
 

@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -22,6 +23,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@TestPropertySource(properties = {
+    "jwt.secret=TestSecretKeyForJWTTestingThatIsLongEnoughToMeetThe256BitRequirementForHMACSHA256Algorithm1234567890",
+    "jwt.expiration=86400000",
+    "spring.datasource.url=jdbc:h2:mem:testdb",
+    "spring.datasource.driverClassName=org.h2.Driver",
+    "spring.datasource.username=sa",
+    "spring.datasource.password=",
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.h2.console.enabled=true",
+    "STRIPE_SECRET_KEY=sk_test_mock_key_for_testing_only",
+    "CLOUDINARY_CLOUD_NAME=dummy",
+    "CLOUDINARY_API_KEY=dummy",
+    "CLOUDINARY_API_SECRET=dummy",
+    "logging.level.root=INFO",
+    "logging.level.com.example.demo=DEBUG"
+})
 class UserControllerIntegrationTest {
 
     @Autowired

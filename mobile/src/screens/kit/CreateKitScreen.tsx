@@ -52,6 +52,7 @@ import {
   upsertSelectedQuantity,
 } from "./createKitSelection";
 import { styles } from "../../styles/uploadArticleScreenStyles";
+import { formatRentalDuration, calculateMonthsBetween } from "../../utils/duration";
 
 const COMISION = 0; // todos son usuarios pilotos y no se cobra comision
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
@@ -93,19 +94,6 @@ type CatalogProduct = {
   cityLat?: number;
   cityLng?: number;
 };
-
-function calculateMonthsBetween(start: Date, end: Date): number {
-  const years = end.getUTCFullYear() - start.getUTCFullYear();
-  const months = end.getUTCMonth() - start.getUTCMonth();
-  const days = end.getUTCDate() - start.getUTCDate();
-
-  let totalMonths = years * 12 + months;
-
-  const daysInMonth = 30;
-  const monthFraction = days / daysInMonth;
-
-  return totalMonths + monthFraction;
-}
 
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
@@ -186,15 +174,7 @@ const CreateKitScreen: React.FC = () => {
 
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
-
-    const start = new Date(
-      Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()),
-    );
-    const end = new Date(
-      Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()),
-    );
-
-    return calculateMonthsBetween(start, end);
+    return calculateMonthsBetween(startDate, endDate);
   }, [startDate, endDate]);
 
   const clearFieldError = (field: keyof FormErrors) => {
@@ -831,7 +811,7 @@ const CreateKitScreen: React.FC = () => {
           {monthsBetween !== null && monthsBetween > 0 && (
             <View style={{ marginTop: 8, marginBottom: 16 }}>
               <Text style={commonStyles.bodySecondary}>
-                Duración: {monthsBetween.toFixed(2)} meses
+                Duración: {startDate && endDate ? formatRentalDuration(startDate, endDate) : ""}
               </Text>
             </View>
           )}
