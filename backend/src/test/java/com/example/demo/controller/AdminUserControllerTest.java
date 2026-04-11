@@ -147,4 +147,100 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Usuario eliminado correctamente"));
     }
+
+
+    @Test
+    void deleteUser_activeRentals_returnsBadRequestWithCode() throws Exception {
+        String errorMessage = "El usuario tiene alquileres activos";
+
+        // Simular excepción desde el servicio
+        org.mockito.Mockito.doThrow(new RuntimeException(errorMessage))
+                .when(adminUserDeletionService).deleteUserWithItems(5L);
+
+        mockMvc.perform(delete("/api/admin/users/5"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(errorMessage))
+                .andExpect(jsonPath("$.code").value("ACTIVE_RENTALS_EXIST"))
+                .andExpect(jsonPath("$.resolution").exists());
+    }
+
+    @Test
+    void deleteUser_paidRentals_returnsBadRequestWithCode() throws Exception {
+        String errorMessage = "Tiene alquileres pagado pendientes";
+
+        org.mockito.Mockito.doThrow(new RuntimeException(errorMessage))
+                .when(adminUserDeletionService).deleteUserWithItems(6L);
+
+        mockMvc.perform(delete("/api/admin/users/6"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(errorMessage))
+                .andExpect(jsonPath("$.code").value("PAID_RENTALS_EXIST"))
+                .andExpect(jsonPath("$.resolution").exists());
+    }
+
+    @Test
+    void deleteUser_itemInActiveRental_returnsBadRequestWithCode() throws Exception {
+        String errorMessage = "El artículo está en un alquiler activo o pagado";
+
+        org.mockito.Mockito.doThrow(new RuntimeException(errorMessage))
+                .when(adminUserDeletionService).deleteUserWithItems(7L);
+
+        mockMvc.perform(delete("/api/admin/users/7"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(errorMessage))
+                .andExpect(jsonPath("$.code").value("ITEM_IN_ACTIVE_RENTAL"))
+                .andExpect(jsonPath("$.resolution").exists());
+    }
+
+    @Test
+    void deleteUser_genericError_returnsBadRequestWithoutCode() throws Exception {
+        String errorMessage = "Error inesperado";
+
+        org.mockito.Mockito.doThrow(new RuntimeException(errorMessage))
+                .when(adminUserDeletionService).deleteUserWithItems(8L);
+
+        mockMvc.perform(delete("/api/admin/users/8"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(errorMessage))
+                .andExpect(jsonPath("$.code").doesNotExist())
+                .andExpect(jsonPath("$.resolution").doesNotExist());
+    }
+
+
+    @Test
+    void getUsersAdmin_returnsEmptyList() throws Exception {
+        when(adminUserService.getUsersAdmin()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/admin/users/no-self"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void getUsersAdmin_returnsList() throws Exception {
+        var user = new com.example.demo.model.User();
+        user.setId(1L);
+        user.setEmail("test@domain.com");
+        user.setName("Test");
+        user.setPassword("pwd");
+        user.setRole(UserRole.USER);
+        user.setPhone("123");
+        user.setAddress("Addr");
+        user.setCity("City");
+        user.setCountry("Country");
+
+        UserResponse resp = new UserResponse(user);
+
+        when(adminUserService.getUsersAdmin()).thenReturn(Collections.singletonList(resp));
+
+        mockMvc.perform(get("/api/admin/users/no-self"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].email").value("test@domain.com"));
+    }
+
 }

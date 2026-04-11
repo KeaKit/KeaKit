@@ -29,7 +29,7 @@ public class AdminUserService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private WalletRepository walletRepository; // 👈 AÑADIR
+    private WalletRepository walletRepository;
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
@@ -59,16 +59,15 @@ public class AdminUserService {
                 normalizedEmail,
                 passwordEncoder.encode(request.getPassword()),
                 request.getName(),
-                request.getRole() != null ? request.getRole() : UserRole.USER, // 👈 fallback
+                request.getRole() != null ? request.getRole() : UserRole.USER,
                 request.getPhone(),
                 request.getAddress(),
                 request.getCity(),
-                request.getCountry() // 👈 IMPORTANTE
+                request.getCountry()
         );
 
         User savedUser = userRepository.save(user);
 
-        // 👇 Crear wallet como en UserService
         Wallet wallet = new Wallet(savedUser);
         walletRepository.save(wallet);
 
@@ -113,7 +112,7 @@ public class AdminUserService {
             user.setCity(request.getCity());
         }
 
-        if (request.getCountry() != null) { // 👈 IMPORTANTE
+        if (request.getCountry() != null) {
             user.setCountry(request.getCountry());
         }
 
