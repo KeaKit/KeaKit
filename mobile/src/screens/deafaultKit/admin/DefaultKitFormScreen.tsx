@@ -385,7 +385,7 @@ const DefaultKitFormScreen: React.FC = () => {
           ) : (
             <KeakitButton
               title={formMode === 'edit' ? 'Confirmar cambios' : 'Crear kit predeterminado'}
-              onPress={handleSubmit}
+              onPress={async () => await handleSubmit()}
               icon={formMode === 'edit' ? "check" : "plus"}
               loading={submitting}
               disabled={submitting}
