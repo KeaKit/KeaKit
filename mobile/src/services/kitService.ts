@@ -184,3 +184,18 @@ export async function getUnassignedKits(
   return handleResponse<KitResponse[]>(res);
 }
 
+export async function getKitPaymentWithPromo(
+  kitId: number,
+  token: string,
+  promoCode: string,
+  email: string,
+): Promise<KitPaymentDTO> {
+  const res = await fetchWithTimeout(
+    API_ROUTES.GET_KIT_PAYMENT_BY_ID_PROMO(kitId, promoCode, email),
+    {
+      method: 'GET',
+      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    },
+  );
+  return handleResponse<KitPaymentDTO>(res);
+}

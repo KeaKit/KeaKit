@@ -98,6 +98,24 @@ export const API_ROUTES = {
   GET_MY_WALLET:             `${BASE_URL}/api/wallet/my-wallet`,
   GET_MY_TRANSACTIONS:       `${BASE_URL}/api/wallet/my-wallet/transactions`,
 
+  // Promo Codes
+  PROMO_CODES:                `${BASE_URL}/api/admin/promo-codes`,
+  PROMO_CODE_BY_ID:           (id: number) => `${BASE_URL}/api/admin/promo-codes/${id}`,
+  VALIDATE_PROMO_CODE:        (code: string, email: string) =>
+      `${BASE_URL}/api/promo-codes/validate?code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
+  GET_KIT_PAYMENT_BY_ID_PROMO:(kitId: number, code: string, email: string) =>
+      `${BASE_URL}/api/kits/payment/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
+  PROCESS_PAYMENT_WALLET_PROMO:(kitId: number, code: string, email: string) =>
+      `${BASE_URL}/api/payments/process/wallet/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
+  PROCESS_PAYMENT_STRIPE_PROMO:(kitId: number, code: string, email: string) =>
+      `${BASE_URL}/api/payments/process/stripe/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
+
+  // Pilot Users
+  PILOT_USERS:              `${BASE_URL}/api/admin/pilot-users`,
+  PILOT_USER_BY_ID:         (id: number) => `${BASE_URL}/api/admin/pilot-users/${id}`,
+  PILOT_USERS_ACTIVE_EMAILS:`${BASE_URL}/api/admin/pilot-users/active-emails`,
+  PILOT_USERS_BULK_ACTIVE:  `${BASE_URL}/api/admin/pilot-users/bulk-active`,
+
   // Services
   ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,
   MY_SERVICES: (userId: number) => `${BASE_URL}/api/services/my-services?ownerId=${userId}`,

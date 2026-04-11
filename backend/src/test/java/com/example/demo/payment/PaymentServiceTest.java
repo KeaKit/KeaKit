@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.ArgumentMatchers.isNull;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.demo.TestDataFactory;
@@ -140,7 +141,7 @@ public class PaymentServiceTest {
     void processPayment_ShouldCompleteSuccessfully_WhenPayWithWalletIsTrue() throws Exception {
         // Mocks de servicios
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(KIT_PAYMENT);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
@@ -153,14 +154,14 @@ public class PaymentServiceTest {
         // 3. Assert: Verificamos interacciones clave
         verify(transactionRepository, atLeast(3)).save(any(Transaction.class)); // Pago, Fianza, Pago Owner
         verify(kitService).markAsPaid(KIT_ID);
-        verify(emailService).sendOrderConfirmation(KIT);
+        verify(emailService).sendOrderConfirmation(eq(KIT), anyDouble(), isNull());
     }
 
     @Test
     void processPayment_ShouldCompleteSuccessfully_WhenPayWithWalletIsFalse() throws Exception {
         // Mocks de servicios
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(KIT_PAYMENT);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
@@ -171,7 +172,7 @@ public class PaymentServiceTest {
 
         verify(transactionRepository, atLeast(2)).save(any(Transaction.class)); // Fianza, Pago Owner
         verify(kitService).markAsPaid(KIT_ID);
-        verify(emailService).sendOrderConfirmation(KIT);
+        verify(emailService).sendOrderConfirmation(eq(KIT), anyDouble(), isNull());
     }
 
     // ====== Sad Paths processPayment ======
@@ -192,7 +193,7 @@ public class PaymentServiceTest {
     @Test
     void processPayment_ShouldThrowException_WhenUserNotFound() {
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(KIT_PAYMENT);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
         when(userService.getUserByEmail(anyString()))
@@ -210,7 +211,7 @@ public class PaymentServiceTest {
     void processPayment_ShouldThrowException_WhenNotEnoughBalance() {
         Wallet notEnoughBalanceWallet = TestDataFactory.createMockWallet(4L, TENANT, 10.0);
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(KIT_PAYMENT);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(notEnoughBalanceWallet);
 
         assertEquals(walletService.getWalletByUserId(TENANT.getId()).getBalance(), 10.0);
@@ -228,17 +229,17 @@ public class PaymentServiceTest {
         assertEquals(3, KIT_RESPONSE.getItems().size(), "El kit de prueba debería tener 3 items");
 
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(KIT_PAYMENT);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
 
-        paymentService.processPayment(KIT_ID, false);
+        paymentService.processPayment(KIT_ID, false, null, null);
 
         verify(itemService, never()).findById(anyLong());
         verify(transactionRepository, atLeast(3)).save(any(Transaction.class));
-        verify(emailService).sendOrderConfirmation(any());
+        verify(emailService).sendOrderConfirmation(any(), anyDouble(), isNull());
     }
 
     @Test
@@ -247,7 +248,7 @@ public class PaymentServiceTest {
         ReflectionTestUtils.setField(tenantPilot, "isPilotUser", true);
 
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(KIT_PAYMENT);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(ADMIN_EMAIL)).thenReturn(ADMIN_RESPONSE); 
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
@@ -258,7 +259,7 @@ public class PaymentServiceTest {
 
         verify(transactionRepository, atLeast(3)).save(any(Transaction.class));
         verify(platformConfigService, never()).getCommissionRate(); 
-        verify(emailService).sendOrderConfirmation(KIT);
+        verify(emailService).sendOrderConfirmation(eq(KIT), anyDouble(), isNull());
     }
 
     @Test
@@ -267,7 +268,7 @@ public class PaymentServiceTest {
         ReflectionTestUtils.setField(tenantPilot, "isPilotUser", true);
 
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(KIT_PAYMENT);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(ADMIN_EMAIL)).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
@@ -278,7 +279,7 @@ public class PaymentServiceTest {
 
         verify(transactionRepository, atLeast(3)).save(any(Transaction.class));
         verify(platformConfigService, never()).getCommissionRate();
-        verify(emailService).sendOrderConfirmation(KIT);
+        verify(emailService).sendOrderConfirmation(eq(KIT), anyDouble(), isNull());
     }
 
     @Test
@@ -287,7 +288,7 @@ public class PaymentServiceTest {
         ReflectionTestUtils.setField(tenantPilot, "isPilotUser", true);
 
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(KIT_PAYMENT);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(ADMIN_EMAIL)).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
@@ -298,7 +299,7 @@ public class PaymentServiceTest {
 
         verify(transactionRepository, atLeast(3)).save(any(Transaction.class));
         verify(platformConfigService, never()).getCommissionRate();
-        verify(emailService).sendOrderConfirmation(KIT);
+        verify(emailService).sendOrderConfirmation(eq(KIT), anyDouble(), isNull());
     }
 
     @Test

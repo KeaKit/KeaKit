@@ -115,6 +115,7 @@ export interface KitPaymentDTO {
   guarantee: number;
   platformfee: number;
   courierPrice: number;
+  discount: number;
 }
 
 export type ArticleCondition = "NEW" | "LIGHTLY_USED" | "USED" | "WORN";
@@ -420,8 +421,11 @@ export type RootStackParamList = {
   TrackingNotifications: undefined;
   AssignedKits: undefined;
   Couriers: undefined;
-  CourierDetail: { courier: UserResponse; isBusy?: boolean };
-  ArticleRentals: { articleId: number; articleTitle: string };
+  CourierDetail: { courier: UserResponse, isBusy?: boolean };
+  ArticleRentals: { articleId: number, articleTitle: string };
+  PromoCodes: undefined;
+  PromoCodeForm: { promoCode?: PromoCodeFormData; mode: 'create' | 'edit' };
+  PilotUsers: undefined;
 };
 
 export interface ProfileData {
@@ -518,6 +522,22 @@ export interface UpdateDeliveryRequest {
   status?: DeliveryStatus;
   estimatedArrival?: string;
   lastLocation?: string;
+}
+
+export interface PromoCodeFormData {
+  id?: number;
+  code: string;
+  discountRate: number;
+  active: boolean;
+  singleUse: boolean;
+  pilotUserOnly: boolean;
+  pilotEmails: string[];
+}
+
+export interface PilotUserData {
+  id: number;
+  email: string;
+  active: boolean;
 }
 
 export interface TrackingNotification {

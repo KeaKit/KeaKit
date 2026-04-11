@@ -31,29 +31,32 @@ import DefaultKitsScreen from "../screens/deafaultKit/tenant/DefaultKitsScreen";
 import DefaultKitsAdminScreen from "../screens/deafaultKit/admin/DefaultKitsAdminScreen";
 
 // Detail/Creation Screens (without Navbar)
-import EditProfileScreen from "../screens/profile/EditProfileScreen";
-import UploadArticleScreen from "../screens/profile/UploadArticleScreen";
-import CheckoutScreen from "../screens/kit/CheckoutScreen";
-import CreateRatingScreen from "../screens/ratings/CreateRatingScreen";
-import CreateKitScreen from "../screens/kit/CreateKitScreen";
-import EditDefaultKitScreen from "../screens/deafaultKit/tenant/EditDefaultKitScreen";
-import DefaultKitFormScreen from "../screens/deafaultKit/admin/DefaultKitFormScreen";
-import AdminUserFormScreen from "../screens/admin/AdminUserFormScreen";
-import EditArticleScreen from "../screens/profile/EditArticleScreen";
-import KitDetailScreen from "../screens/kit/KitDetailScreen";
-import CategoryFormScreen from "../screens/category/CategoryDetailsScreen";
-import CreateIncidentScreen from "../screens/incidents/CreateIncidentScreen";
-import IncidentDetailScreen from "../screens/incidents/IncidentDetailScreen";
-import CreateServiceScreen from "../screens/service/CreateServiceScreen";
-import EditServiceScreen from "../screens/service/EditServiceScreen";
-import KitTrackingScreen from "../screens/kit/KitTrackingScreen";
-import { TrackingNotificationsProvider } from "../context/TrackingNotificationContext";
-import TrackingNotificationsScreen from "../screens/notifications/TrackingNotificationsScreen";
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import UploadArticleScreen from '../screens/profile/UploadArticleScreen';
+import CheckoutScreen from '../screens/kit/CheckoutScreen';
+import CreateRatingScreen from '../screens/ratings/CreateRatingScreen';
+import CreateKitScreen from '../screens/kit/CreateKitScreen';
+import EditDefaultKitScreen from '../screens/kit/EditDefaultKitScreen';
+import DefaultKitFormScreen from '../screens/deafaultKit/DefaultKitFormScreen';
+import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
+import EditArticleScreen from '../screens/profile/EditArticleScreen';
+import KitDetailScreen from '../screens/kit/KitDetailScreen';
+import CategoryFormScreen from '../screens/category/CategoryFormScreen';
+import CreateIncidentScreen from '../screens/incidents/CreateIncidentScreen';
+import IncidentDetailScreen from '../screens/incidents/IncidentDetailScreen';
+import CreateServiceScreen from '../screens/service/CreateServiceScreen';
+import EditServiceScreen from '../screens/service/EditServiceScreen';
+import KitTrackingScreen from '../screens/kit/KitTrackingScreen';
+import { TrackingNotificationsProvider } from '../context/TrackingNotificationContext';
+import TrackingNotificationsScreen from '../screens/notifications/TrackingNotificationsScreen';
+import AssignedKitsScreen from '../screens/kit/AssignedKitsScreen';
+import CouriersScreen from '../screens/admin/CouriersScreen';
+import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
+import PromoCodesScreen from '../screens/admin/PromoCodesScreen';
+import PromoCodeFormScreen from '../screens/admin/PromoCodeFormScreen';
+import PilotUsersScreen from '../screens/admin/PilotUsersScreen';
 import ActivityNotificationsScreen from "../screens/notifications/ActivityNotificationsScreen";
 import NotificationsScreen from "../screens/notifications/NotificationsScreen";
-import AssignedKitsScreen from "../screens/kit/AssignedKitsScreen";
-import CouriersScreen from "../screens/admin/CouriersScreen";
-import CourierDetailScreen from "../screens/admin/CourierDetailScreen";
 
 import { RootStackParamList } from "../types";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
@@ -206,6 +209,30 @@ const AppNavigator: React.FC = () => {
                       )}
                     </Stack.Screen>
 
+                    <Stack.Screen name="DefaultKits">
+                      {() => (
+                        <MainLayout>
+                          <DefaultKitsScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+
+                    <Stack.Screen name="PilotUsers">
+                      {() => (
+                        <MainLayout>
+                          <PilotUsersScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+                    
+                    <Stack.Screen name="PromoCodes">
+                      {() => (
+                        <MainLayout>
+                          <PromoCodesScreen />
+                        </MainLayout>
+                      )}
+                    </Stack.Screen>
+
                     <Stack.Screen name="Couriers">
                       {() => (
                         <MainLayout>
@@ -299,6 +326,9 @@ const AppNavigator: React.FC = () => {
                 {/*Tracking - Delivery*/}
 
                 <Stack.Screen name="Tracking" component={KitTrackingScreen} />
+
+                <Stack.Screen name="PromoCodeForm" component={PromoCodeFormScreen} />
+
                 <Stack.Screen
                   name="TrackingNotifications"
                   component={TrackingNotificationsScreen}
