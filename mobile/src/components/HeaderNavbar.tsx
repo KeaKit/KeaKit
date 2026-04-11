@@ -23,6 +23,8 @@ import { getUserNotifications } from '../services/notificationService';
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
 
+const FOUNDER_BADGE_URL = 'https://res.cloudinary.com/dndpdkr7o/image/upload/q_auto/f_auto/v1775597474/WhatsApp_Image_2026-04-07_at_23.28.21_gzsmap.jpg';
+
 const getLogoSize = () => {
   if (width < 480) {
     // Móviles pequeños
@@ -261,11 +263,19 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
       <View style={styles.mobileHeader}>
         <View style={styles.mobileLeft}>
           <TouchableOpacity onPress={() => navigateToScreen('Home')}>
-            <Image 
-              source={require('../../assets/logo.png')} 
-              style={styles.mobileLogo}
-              resizeMode="contain"
-            />
+            {user?.founderBadge ? (
+              <Image
+                source={{ uri: FOUNDER_BADGE_URL }}
+                style={styles.mobileBadge} 
+                resizeMode="cover"
+              />
+            ) : (
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.mobileLogo}
+                resizeMode="contain"
+              />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -378,7 +388,19 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   return (
     <View style={styles.header}>
       <TouchableOpacity onPress={() => navigateToScreen('Home')} style={styles.logoContainer}>
-        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+          {user?.founderBadge ? (
+            <Image
+              source={{ uri: FOUNDER_BADGE_URL }}
+              style={styles.badgeLogo} 
+              resizeMode="cover"
+            />
+          ) : (
+            <Image
+              source={require('../../assets/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          )}
       </TouchableOpacity>
 
       <View style={styles.navItems}>
@@ -695,6 +717,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '800',
     fontSize: 22,
+  },
+  mobileBadge: {
+    width: 45,
+    height: 45,
+    borderRadius: 20, 
+  },
+  badgeLogo: {
+    width: getLogoSize().width,
+    height: getLogoSize().height,
   },
 });
 
