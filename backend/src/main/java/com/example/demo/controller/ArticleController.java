@@ -115,9 +115,34 @@ public class ArticleController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateArticle(@PathVariable Long id, @RequestParam Long ownerId, @RequestBody Article updateData) {
+    public ResponseEntity<?> updateArticle(
+            @PathVariable Long id,
+            @RequestParam Long ownerId,
+            @RequestBody Article updateData) {
         try {
             Article updated = articleService.update(id, ownerId, updateData);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @PutMapping(value = "/{id}/with-image", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> updateArticleWithImage(
+            @PathVariable Long id,
+            @RequestParam Long ownerId,
+            @RequestPart("data") String dataJson,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        try {
+            Article updateData = objectMapper.readValue(dataJson, Article.class);
+            Article updated;
+            
+            if (image != null && !image.isEmpty()) {
+                updated = articleService.updateWithImage(id, ownerId, updateData, image);
+            } else {
+                updated = articleService.update(id, ownerId, updateData);
+            }
+            
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

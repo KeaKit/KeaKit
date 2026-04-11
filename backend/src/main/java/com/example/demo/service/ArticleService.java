@@ -152,72 +152,7 @@ public class ArticleService {
         if (updateData.getStatus() != null)
             throw new RuntimeException("Cannot change status via update; use toggleRent endpoint");
 
-        if (updateData.getTitle() != null) {
-            if (updateData.getTitle().trim().isEmpty())
-                throw new RuntimeException("Title cannot be empty");
-            article.setTitle(updateData.getTitle());
-        }
-
-        if (updateData.getDescription() != null) {
-            if (updateData.getDescription().trim().isEmpty())
-                throw new RuntimeException("Description cannot be empty");
-            if (updateData.getDescription().length() > 1000)
-                throw new RuntimeException("Description cannot exceed 1000 characters");
-            article.setDescription(updateData.getDescription());
-        }
-
-        if (updateData.getCity() != null) {
-            if (updateData.getCity().trim().isEmpty())
-                throw new RuntimeException("City cannot be empty");
-            article.setCity(updateData.getCity());
-        }
-
-        if (updateData.getPricePerMonth() != null) {
-            if (updateData.getPricePerMonth() < 0)
-                throw new RuntimeException("pricePerMonth must be >= 0");
-            article.setPricePerMonth(updateData.getPricePerMonth());
-        }
-
-        Category resolvedCategory = article.getCategory();
-        if (updateData.getCategory() != null && updateData.getCategory().getId() != null) {
-            resolvedCategory = categoryRepository.findById(updateData.getCategory().getId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-            article.setCategory(resolvedCategory);
-        }
-        if (resolvedCategory != null && article.getPricePerMonth() != null) {
-            double price = article.getPricePerMonth();
-            if (price < resolvedCategory.getMinPrice() || price > resolvedCategory.getMaxPrice()) {
-                throw new RuntimeException(
-                    "pricePerMonth must be between " + resolvedCategory.getMinPrice() +
-                    " and " + resolvedCategory.getMaxPrice() + " for this category"
-                );
-            }
-        }
-
-        if (updateData.getTotalUnits() != null) {
-            if (updateData.getTotalUnits() < 1)
-                throw new RuntimeException("totalUnits must be >= 1");
-            article.setTotalUnits(updateData.getTotalUnits());
-        }
-
-        if (updateData.getAvailableFrom() != null) {
-            if (updateData.getAvailableFrom().isBefore(LocalDate.now()))
-                throw new RuntimeException("availableFrom cannot be in the past");
-            article.setAvailableFrom(updateData.getAvailableFrom());
-        }
-        if (updateData.getAvailableUntil() != null) {
-            article.setAvailableUntil(updateData.getAvailableUntil());
-        }
-        LocalDate from = article.getAvailableFrom();
-        LocalDate until = article.getAvailableUntil();
-        if (from != null && until != null && from.isAfter(until))
-            throw new RuntimeException("availableFrom must be before or equal to availableUntil");
-
-        if (updateData.getImageUrl() != null) article.setImageUrl(updateData.getImageUrl());
-
-        if (updateData.getPurchaseDate() != null) article.setPurchaseDate(updateData.getPurchaseDate());
-
-        if (updateData.getCondition() != null) article.setCondition(updateData.getCondition());
+        updateArticleFields(article, updateData);
 
         return articleRepository.save(article);
     }
@@ -493,5 +428,111 @@ public class ArticleService {
             return row;
         }).collect(Collectors.toList());
         return articleRecord;
+    }
+
+    @Transactional
+    public Article updateWithImage(Long id, Long ownerId, Article updateData, MultipartFile image) throws IOException {
+        Article article = articleRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Article not found"));
+
+        if (article.getStatus() == ArticleStatus.RENTED)
+            throw new RuntimeException("Article is currently rented and cannot be edited");
+
+        User owner = article.getOwner();
+        if (owner == null || !owner.getId().equals(ownerId))
+            throw new RuntimeException("Only the owner can modify this article");
+
+        // Subir nueva imagen si viene
+        if (image != null && !image.isEmpty()) {
+            // Eliminar imagen anterior si existe
+            if (article.getImageUrl() != null && !article.getImageUrl().isEmpty()) {
+                try {
+                    cloudinaryService.deleteImage(article.getImageUrl());
+                } catch (IOException e) {
+                    System.err.println("Warning: Failed to delete old image: " + e.getMessage());
+                }
+            }
+            
+            // Subir nueva imagen
+            String imageUrl = cloudinaryService.uploadImage(image);
+            article.setImageUrl(imageUrl);
+        }
+
+        updateArticleFields(article, updateData);
+        
+        return articleRepository.save(article);
+    }
+
+    // Método auxiliar para no duplicar código
+    private void updateArticleFields(Article article, Article updateData) {
+        if (updateData.getTitle() != null) {
+            if (updateData.getTitle().trim().isEmpty())
+                throw new RuntimeException("Title cannot be empty");
+            article.setTitle(updateData.getTitle());
+        }
+
+        if (updateData.getDescription() != null) {
+            if (updateData.getDescription().trim().isEmpty())
+                throw new RuntimeException("Description cannot be empty");
+            if (updateData.getDescription().length() > 1000)
+                throw new RuntimeException("Description cannot exceed 1000 characters");
+            article.setDescription(updateData.getDescription());
+        }
+
+        if (updateData.getCity() != null) {
+            if (updateData.getCity().trim().isEmpty())
+                throw new RuntimeException("City cannot be empty");
+            article.setCity(updateData.getCity());
+        }
+
+        if (updateData.getPricePerMonth() != null) {
+            if (updateData.getPricePerMonth() < 0)
+                throw new RuntimeException("pricePerMonth must be >= 0");
+            article.setPricePerMonth(updateData.getPricePerMonth());
+        }
+
+        Category resolvedCategory = article.getCategory();
+        if (updateData.getCategory() != null && updateData.getCategory().getId() != null) {
+            resolvedCategory = categoryRepository.findById(updateData.getCategory().getId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+            article.setCategory(resolvedCategory);
+        }
+        if (resolvedCategory != null && article.getPricePerMonth() != null) {
+            double price = article.getPricePerMonth();
+            if (price < resolvedCategory.getMinPrice() || price > resolvedCategory.getMaxPrice()) {
+                throw new RuntimeException(
+                    "pricePerMonth must be between " + resolvedCategory.getMinPrice() +
+                    " and " + resolvedCategory.getMaxPrice() + " for this category"
+                );
+            }
+        }
+
+        if (updateData.getTotalUnits() != null) {
+            if (updateData.getTotalUnits() < 1)
+                throw new RuntimeException("totalUnits must be >= 1");
+            article.setTotalUnits(updateData.getTotalUnits());
+        }
+
+        if (updateData.getAvailableFrom() != null) {
+            if (updateData.getAvailableFrom().isBefore(LocalDate.now()))
+                throw new RuntimeException("availableFrom cannot be in the past");
+            article.setAvailableFrom(updateData.getAvailableFrom());
+        }
+        if (updateData.getAvailableUntil() != null) {
+            article.setAvailableUntil(updateData.getAvailableUntil());
+        }
+        LocalDate from = article.getAvailableFrom();
+        LocalDate until = article.getAvailableUntil();
+        if (from != null && until != null && from.isAfter(until))
+            throw new RuntimeException("availableFrom must be before or equal to availableUntil");
+
+        if (updateData.getPurchaseDate() != null) 
+            article.setPurchaseDate(updateData.getPurchaseDate());
+
+        if (updateData.getCondition() != null) 
+            article.setCondition(updateData.getCondition());
+            
+        if (updateData.getImageUrl() != null) 
+            article.setImageUrl(updateData.getImageUrl());
     }
 }
