@@ -2,7 +2,10 @@ package com.example.demo.kit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -163,6 +166,36 @@ public class KitControllerTest {
         mockMvc.perform(patch("/api/kits/confirm/1"))
             .andExpect(status().isNotFound())
             .andExpect(content().string("Kit not found"));
+    }
+
+    @Test
+    void confirmKitStatus_notPaid_returnsError() throws Exception {
+        String errorMessage = "The kit can only be confirmed if its status is PAID";
+        doThrow(new RuntimeException(errorMessage))
+            .when(kitService).confirmKitStatus(1L);
+
+        mockMvc.perform(patch("/api/kits/confirm/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string(errorMessage));
+    }
+
+    @Test
+    void confirmKitStatus_verifyServiceCall() throws Exception {
+        mockMvc.perform(patch("/api/kits/confirm/99"))
+            .andExpect(status().isOk());
+
+        // Verifica que el controlador realmente pasó el ID 99 al servicio
+        verify(kitService, times(1)).confirmKitStatus(99L);
+    }
+
+    @Test
+    void confirmKitStatus_unexpectedRuntimeError_returnsNotFound() throws Exception {
+        doThrow(new NullPointerException("Unexpected null value"))
+            .when(kitService).confirmKitStatus(1L);
+
+        mockMvc.perform(patch("/api/kits/confirm/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string("Unexpected null value"));
     }
 
     // ==========================================

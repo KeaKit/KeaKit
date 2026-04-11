@@ -1,4 +1,4 @@
-# Sprint Backlog: Sprint 2 - Squad 4
+# Sprint Backlog: Sprint 2 - Squad 3
 
 ## Índice del documento
 1. [Sprint Goal](#1-sprint-goal)
@@ -43,7 +43,7 @@
 | ID Issue | Descripción | Prioridad | Estimación (SP) | Estado | Responsable |
 |----------|-------------|-----------|-----------------|--------|-------------|
 | [#312](https://github.com/KeaKit/KeaKit/issues/312)  | Sprint Backlog | Mid |  2  | Done | Adrián Chabrera Rubio  |
-| [#313](https://github.com/KeaKit/KeaKit/issues/313)  | Continuar Refactorización Valoraciones  | Mid |  4  | In Progress |   Alejandro González Macías  |
+| [#313](https://github.com/KeaKit/KeaKit/issues/313)  | Continuar Refactorización Valoraciones  | Mid |  4  | Done |   Alejandro González Macías  |
 | [#144](https://github.com/KeaKit/KeaKit/issues/144)  |  HU-ARRENDATARIO-39: Indicar que el objeto no cumple con lo prometido |  Mid  | 3  | In Progress   | Alejandro González Macías 
 | [#145](https://github.com/KeaKit/KeaKit/issues/145)  | HU-ARRENDATARIO-41 - Recibir una notificación cuando se procese la devolución de mi depósito | Mid  |  2  | Done |   Adrián Chabrera Rubio  |
 | [#235](https://github.com/KeaKit/KeaKit/issues/235)  | CU-GENERAL-03 - Testing | Mid |  3  | Done | Marta De la Calle González |
@@ -57,9 +57,7 @@
 | [#373](https://github.com/KeaKit/KeaKit/issues/373)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Backend) | Mid |  2  | Done |  Adrián Chabrera Rubio  |
 | [#374](https://github.com/KeaKit/KeaKit/issues/374)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Frontend) | Mid |  3  | Done | Alejandro González Macías  |
 | [#375](https://github.com/KeaKit/KeaKit/issues/375)  | CU-ARRENDADOR-10 - Historial de alquileres de un objeto (Testing) | Mid |  2   | Done | Alejandro González Macías  |
-| [#335](https://github.com/KeaKit/KeaKit/issues/335)  | Implementar fotos de perfil de usuarios | Low | 4 | In Progress | Marta De la Calle González |
-| [#336](https://github.com/KeaKit/KeaKit/issues/336)  | Combinar pantallas de perfil y valoraciones | Low | 1 | In Progress | Guillermo Ciria González |
-| [#337](https://github.com/KeaKit/KeaKit/issues/337)  | Crear pantalla de perfil de otros usuarios | Low | 2 | In Progress | Rafael Harana Mancilla |
+| [#335](https://github.com/KeaKit/KeaKit/issues/335)  | Implementar fotos de perfil de usuarios | Low | 4 | Done | Marta De la Calle González |
 | [#345](https://github.com/KeaKit/KeaKit/issues/345)  | Seeder de ciudades europeas por medio de api externa | High | 3 | Done | Adrián Chabrera Rubio |
 | [#346](https://github.com/KeaKit/KeaKit/issues/346)  | Endpoints backend para ciudades y países | High | 2 | Done | Adrián Chabrera Rubio |
 

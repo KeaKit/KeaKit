@@ -19,13 +19,13 @@ public class DefaultKitController {
     private DefaultKitService defaultKitService;
 
     @GetMapping
-    public ResponseEntity<List<DefaultKit>> getAllDefaultKits() {
+    public ResponseEntity<List<DefaultKitResponse>> getAllDefaultKits() {
         return ResponseEntity.ok(defaultKitService.getAllDefaultKits());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DefaultKit> getDefaultKitById(@PathVariable Long id) {
-        return ResponseEntity.ok(defaultKitService.getDefaultKitById(id));
+    public ResponseEntity<DefaultKitResponse> getDefaultKitById(@PathVariable Long id) {
+        return ResponseEntity.ok(defaultKitService.findDefaultKitById(id));
     }
 
     @PostMapping
@@ -35,8 +35,8 @@ public class DefaultKitController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DefaultKit> updateDefaultKit(@PathVariable Long id, @RequestBody DefaultKitCreateRequest request) {
-        DefaultKit updated = defaultKitService.updateDefaultKit(id, request);
+    public ResponseEntity<DefaultKitResponse> updateDefaultKit(@PathVariable Long id, @RequestBody DefaultKitCreateRequest request) {
+        DefaultKitResponse updated = defaultKitService.updateDefaultKit(id, request);
         return ResponseEntity.ok(updated);
     }
 

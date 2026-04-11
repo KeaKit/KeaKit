@@ -27,7 +27,8 @@ import AdminUsersScreen from "../screens/admin/AdminUsersScreen";
 import MyKitsHistoryScreen from "../screens/kit/MyKitsHistoryScreen";
 import UserRatingsScreen from "../screens/ratings/UserRatingsScreen";
 import CommissionScreen from "../screens/commission/CommissionScreen";
-import DefaultKitsScreen from "../screens/kit/DefaultKitsScreen";
+import DefaultKitsScreen from "../screens/deafaultKit/tenant/DefaultKitsScreen";
+import DefaultKitsAdminScreen from "../screens/deafaultKit/admin/DefaultKitsAdminScreen";
 
 // Detail/Creation Screens (without Navbar)
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
@@ -59,7 +60,7 @@ import NotificationsScreen from "../screens/notifications/NotificationsScreen";
 
 import { RootStackParamList } from "../types";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
-import PurchaseDefaultKitScreen from '../screens/deafaultKit/PurchaseDefaultKitScreen';
+import PurchaseDefaultKitScreen from '../screens/deafaultKit/tenant/PurchaseDefaultKitScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -91,6 +92,18 @@ const AppNavigator: React.FC = () => {
                         <AdminHomeScreen />
                       ) : (
                         <HomeScreen />
+                      )}
+                    </MainLayout>
+                  )}
+                </Stack.Screen>
+
+                <Stack.Screen name="DefaultKits">
+                  {() => (
+                    <MainLayout>
+                      {user.role === "ADMIN" ? (
+                        <DefaultKitsAdminScreen />
+                      ) : (
+                        <DefaultKitsScreen />
                       )}
                     </MainLayout>
                   )}

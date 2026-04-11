@@ -207,7 +207,9 @@ export default function CheckoutScreen({ route }: Props) {
       let errorMessage =
         "Ha ocurrido un error durante el proceso de pago.\n" +
         (error as Error).message;
-      if (errorMessage.includes("ya no está disponible")) {
+      if (errorMessage.includes("ya no está disponible") || 
+          errorMessage.includes("unidades"))
+        {
           errorMessage = errorMessage + "\n\nPor favor, vuelve atrás y elimina el artículo no disponible o modifica las fechas del kit.";
         } else if (errorMessage.includes("payment_intent")) {
           errorMessage += "\n\n¿Eres desarrollador? Este error es conocido.\nRevisa el foro de incidencias de Teams.";

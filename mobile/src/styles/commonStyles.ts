@@ -14,6 +14,15 @@ export const commonStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundWhite,
   },
+  
+  contentContainer: {
+    flex: 1,
+    backgroundColor: Colors.backgroundGray,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    padding: Spacing.lg,
+    gap: Spacing.lg
+  },
 
   screenPadding: {
     paddingHorizontal: Spacing.lg,
@@ -218,6 +227,12 @@ export const commonStyles = StyleSheet.create({
     height: 2,
     backgroundColor: Colors.border,
     marginVertical: Spacing.lg,
+  },
+
+  dividerSmall: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.sm,
   },
 
   // Mensajes de error
