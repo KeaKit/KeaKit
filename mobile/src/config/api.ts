@@ -4,6 +4,9 @@ export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
   LOGIN:    `${BASE_URL}/api/users/login`,
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
+  // Update profile image endpoint
+  UPLOAD_PROFILE_IMAGE: `${BASE_URL}/api/users/profile/image`,
+
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   GET_ADMIN_ALL_USERS: `${BASE_URL}/api/admin/users/no-self`,

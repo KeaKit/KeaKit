@@ -38,3 +38,14 @@ export async function updateProfile(
   });
   return handleResponse<UserResponse>(res);
 }
+
+export const uploadProfileImage = async (image: File, token: string): Promise<UserResponse> => {
+  const formData = new FormData();
+  formData.append('image', image);
+  const res = await fetch(API_ROUTES.UPLOAD_PROFILE_IMAGE, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  return handleResponse<UserResponse>(res);
+};
