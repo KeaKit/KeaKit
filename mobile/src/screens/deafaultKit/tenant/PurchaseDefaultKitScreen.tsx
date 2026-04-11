@@ -32,6 +32,7 @@ import {
   KitCreateRequest,
   KitStatus,
   DefaultKit,
+  KitPaymentDTO,
 } from "../../../types";
 import { Colors, commonStyles } from "../../../styles";
 
@@ -154,7 +155,7 @@ const PurchaseDefaultKitScreen: React.FC = () => {
     return selectedKit.basePrice * monthsBetween;
   }, [selectedKit, monthsBetween]);
 
-  const kitPayment = useMemo(() => {
+  const kitPayment : KitPaymentDTO = useMemo(() => {
     const subtotal = Math.round(totalPrice * 100);
     const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
     const platformfee = Math.round(subtotal * COMISION);
@@ -167,6 +168,7 @@ const PurchaseDefaultKitScreen: React.FC = () => {
       platformfee,
       courierPrice: courier,
       totalPrice: total,
+      discount: 0, // TODO: Añadir lógica de descuentos a esta pantalla si es necesario
     };
   }, [totalPrice, deliveryMethod]);
 

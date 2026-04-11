@@ -38,6 +38,7 @@ import {
   KitCreateRequest,
   KitStatus,
   ArticleNearby,
+  KitPaymentDTO,
 } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
@@ -288,7 +289,7 @@ const CreateKitScreen: React.FC = () => {
 
   const courierPrice = deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
-  const kitPayment = useMemo(() => {
+  const kitPayment : KitPaymentDTO = useMemo(() => {
     const subtotal = Math.round(totalPrice * 100); 
     const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
     const platformfee = Math.round(subtotal * COMISION);
@@ -301,6 +302,7 @@ const CreateKitScreen: React.FC = () => {
       platformfee: platformfee,
       courierPrice: courier,
       totalPrice: total,
+      discount: 0, // TODO: Añadir lógica de descuentos a esta pantalla si es necesario
     };
   }, [totalPrice, deliveryMethod]);
 
