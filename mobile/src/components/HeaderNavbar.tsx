@@ -23,7 +23,6 @@ import { getUserNotifications } from '../services/notificationService';
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
 
-
 const getLogoSize = () => {
   if (width < 480) {
     // Móviles pequeños
@@ -73,7 +72,6 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const bellAnim = useRef(new Animated.Value(1)).current;
   const totalNotifications = (unreadCount || 0) + (activityUnreadCount || 0);
 
-
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
       setScreenWidth(window.width);
@@ -95,7 +93,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     }
   }, []);
 
-  // Campana temporal (4s)
+    // Campana temporal (4s)
   useEffect(() => {
     if (unreadCount > 0) {
       setShowBadge(true);
@@ -104,7 +102,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     }
   }, [unreadCount]);
 
-  // Animación campana
+    // Animación campana
   useEffect(() => {
     if (unreadCount > 0) {
       Animated.sequence([
@@ -114,21 +112,21 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     }
   }, [unreadCount]);
 
-  // Cargar notificaciones de actividad sin leer
+    // Cargar notificaciones de actividad sin leer
   useFocusEffect(
-  useCallback(() => {
-    const loadActivityNotifications = async () => {
-      if (user?.id && user?.token) {
-        const notifications = await getUserNotifications(user.id, user.token);
-        const unread = notifications.filter(n => !n.read).length;
-        setActivityUnreadCount(unread); 
-      }
-    };
-    loadActivityNotifications();
-  }, [user])
-);
+    useCallback(() => {
+      const loadActivityNotifications = async () => {
+        if (user?.id && user?.token) {
+          const notifications = await getUserNotifications(user.id, user.token);
+          const unread = notifications.filter(n => !n.read).length;
+          setActivityUnreadCount(unread);
+        }
+      };
+      loadActivityNotifications();
+    }, [user])
+  );
 
-  // Items para usuarios normales
+    // Items para usuarios normales
   const userNavItems: NavbarHeaderItem[] = [
     { name: 'Artículos', icon: 'file-tray-full-outline', screen: 'MyArticles', requiresAuth: true },
     { name: 'Kits', icon: 'cube-outline', screen: 'MyKits', requiresAuth: true },
@@ -136,7 +134,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents', requiresAuth: true },
   ];
 
-  // Items para administradores
+    // Items para administradores
   const adminNavItems: NavbarHeaderItem[] = [
     { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers', requiresAdmin: true },
     { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories', requiresAdmin: true },
@@ -145,7 +143,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     { name: 'Kits Predeterminados', icon: 'cube-outline', screen: 'DefaultKits', requiresAdmin: true },
   ];
 
-  // Filtrar items según autenticación y rol
+    // Filtrar items según autenticación y rol
   const getVisibleItems = () => {
     if (!user) return [];
     if (user.role === 'ADMIN') {
@@ -174,7 +172,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     setMenuVisible(false);
   };
 
-  // Menú de usuario (avatar)
+    // Menú de usuario (avatar)
   const getUserMenuSections = (): HeaderMenuSection[] => {
     if (!user) return [];
 
@@ -214,7 +212,6 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         }
       ];
     }
-
 
     return [
       {
@@ -306,23 +303,35 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
 
         {/* Menú móvil modal */}
         <Modal
-          visible={menuVisible}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setMenuVisible(false)}
-        >
-          <TouchableOpacity 
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setMenuVisible(false)}
+            visible={menuVisible}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setMenuVisible(false)}
           >
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Image source={require('../../assets/logo.png')} style={styles.modalLogo} />
-                <TouchableOpacity onPress={() => setMenuVisible(false)}>
-                  <Ionicons name="close" size={28} color={Colors.primaryHome} />
-                </TouchableOpacity>
-              </View>
+            <TouchableOpacity 
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setMenuVisible(false)}
+            >
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  {/* Reemplazamos el logo por la foto de perfil o inicial */}
+                  {user && (
+                    user.profileImageUrl ? (
+                      <Image
+                        source={{ uri: user.profileImageUrl }}
+                        style={styles.modalAvatar}
+                      />
+                    ) : (
+                      <View style={[styles.modalInitialCircle, { backgroundColor: Colors.primaryHome }]}>
+                        <Text style={styles.modalInitialText}>{user.name.charAt(0).toUpperCase()}</Text>
+                      </View>
+                    )
+                  )}
+                  <TouchableOpacity onPress={() => setMenuVisible(false)}>
+                    <Ionicons name="close" size={28} color={Colors.primaryHome} />
+                  </TouchableOpacity>
+                </View>
 
               <ScrollView style={styles.modalScroll}>
                 {user && (
@@ -408,14 +417,23 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
 
         {user && (
           <TouchableOpacity
-            style={[styles.userMenuTrigger, { backgroundColor: Colors.primaryHome }]}
+            style={styles.userMenuTrigger}
             onPress={() => setUserMenuVisible(!userMenuVisible)}
           >
-            <Text style={styles.userInitial}>{user.name.charAt(0).toUpperCase()}</Text>
+            {user.profileImageUrl ? (
+              <Image
+                source={{ uri: user.profileImageUrl }}
+                style={{ width: 36, height: 36, borderRadius: 18 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.userInitialCircle, { backgroundColor: Colors.primaryHome }]}>
+                <Text style={styles.userInitial}>{user.name.charAt(0).toUpperCase()}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         )}
 
-        {/* Dropdown usuario */}
         {userMenuVisible && (
           <View style={styles.userDropdown}>
             {getUserMenuSections().map((section, index) => (
@@ -462,7 +480,7 @@ const styles = StyleSheet.create({
     borderRadius: 4.5,
     backgroundColor: "#ff3b30",
     borderWidth: 1.5,
-    borderColor: "#ffffff", // Borde blanco para que resalte sobre el icono
+    borderColor: "#ffffff",
   },
   logoContainer: {
     flexDirection: 'row',
@@ -522,18 +540,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
   },
-  userMenuTrigger: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  userInitial: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 16,
-  },
   userDropdown: {
     position: 'absolute',
     top: 54,
@@ -583,8 +589,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#777',
   },
-
-  // Mobile
   mobileHeader: {
     backgroundColor: '#fff',
     paddingHorizontal: 12,
@@ -608,8 +612,6 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 4,
   },
-
-  // Modal móvil
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.25)',
@@ -658,6 +660,41 @@ const styles = StyleSheet.create({
   },
   modalItemDisabled: {
     opacity: 0.5,
+  },
+  userMenuTrigger: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  userInitialCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userInitial: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  modalAvatar: {
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  },
+  modalInitialCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalInitialText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 22,
   },
 });
 
