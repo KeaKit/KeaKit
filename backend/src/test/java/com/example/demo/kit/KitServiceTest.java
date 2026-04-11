@@ -8,6 +8,8 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +20,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -215,6 +218,51 @@ public class KitServiceTest {
         assertEquals(KitStatus.ACTIVE, kit.getStatus());
     }
 
+    @Test
+    void confirmKitStatus_when_idNotExists_throwsException() {
+        when(kitRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> kitService.confirmKitStatus(99L));
+    }
+
+    @Test
+    void confirmKitStatus_when_statusNotPaid_throwsExceptionWithCorrectMessage() {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.DRAFT);
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
+
+        assertEquals("The kit can only be confirmed if its status is PAID", exception.getMessage());
+    }
+
+    @Test
+    void confirmKitStatus_calls_save_repository() {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.PAID);
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        kitService.confirmKitStatus(1L);
+
+        verify(kitRepository, times(1)).save(any(Kit.class)); 
+    }
+
+    @Test
+    void confirmKitStatus_savesWithCorrectStatus() {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.PAID);
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        kitService.confirmKitStatus(1L);
+
+        ArgumentCaptor<Kit> kitCaptor = ArgumentCaptor.forClass(Kit.class);
+        verify(kitRepository).save(kitCaptor.capture());
+        
+        assertEquals(KitStatus.ACTIVE, kitCaptor.getValue().getStatus());
+    }
+
 // ==========================================
     // TESTS DE DISPONIBILIDAD (CONCURRENCIA)
     // ==========================================
@@ -223,7 +271,6 @@ public class KitServiceTest {
     void createKit_itemUnavailable_throwsException() {
         User tenant = createTestUser(1L, "Tenant");
         User owner = createTestUser(2L, "Owner");
-        // Nota: asumiendo que tu método getTitle() del modelo Article/Item devuelve el nombre.
         Article article = createTestArticle(100L, "MacBook Pro", 1, owner);
 
         KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 1, 50.0);
@@ -233,11 +280,20 @@ public class KitServiceTest {
         when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
         when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
         
-        // Simulamos que el artículo ya está alquilado en estas fechas
-        when(kitRepository.isItemUnavailableForDates(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList())).thenReturn(true);
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        snap.setSelectedUnits(1);
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.create(req));
-        assertEquals("El artículo 'MacBook Pro' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+        // Mensaje actualizado
+        assertEquals("El artículo 'MacBook Pro' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
     }
 
     @Test
@@ -250,18 +306,28 @@ public class KitServiceTest {
         kit.setEndDate(LocalDate.now().plusDays(5));
         
         ItemMemento snapshot = createTestSnapshot(100L, user);
+        snapshot.setSelectedUnits(1);
         kit.setSnapshots(new ArrayList<>(List.of(snapshot)));
 
         Article article = createTestArticle(100L, "Cámara Sony", 1, user);
 
         when(kitRepository.findById(10L)).thenReturn(Optional.of(kit));
         
-        // Simulamos que el artículo ya no está disponible
-        when(kitRepository.isItemUnavailableForDates(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList())).thenReturn(true);
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        snap.setSelectedUnits(1);
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
         when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.markAsPaid(10L));
-        assertEquals("El artículo 'Cámara Sony' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+        // Mensaje actualizado
+        assertEquals("El artículo 'Cámara Sony' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
     }
     
     @Test
@@ -273,18 +339,32 @@ public class KitServiceTest {
         kit.setEndDate(LocalDate.now().plusDays(5));
         kit.setSnapshots(new ArrayList<>());
         
+        // Creamos un taladro con 5 unidades de stock
         Article article = createTestArticle(100L, "Taladro", 5, createTestUser(2L, "Owner"));
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
         
-        // Aquí necesitamos mockear ambos comportamientos de findById (para sacar el item original, y luego para la validación)
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        // TRUCO: Ocupamos las 5 unidades en el alquiler previo.
+        // Así, al pedir 1 nueva, saltará el error por superar el stock (5 + 1 > 5).
+        snap.setSelectedUnits(5); 
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
+
         when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
-        when(kitRepository.isItemUnavailableForDates(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList())).thenReturn(true);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> 
             kitService.addItemToKit(kit.getId(), article.getId(), user.getId()));
-        assertEquals("El artículo 'Taladro' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+            
+        // Mensaje actualizado
+        assertEquals("El artículo 'Taladro' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
     }
 
     @Test
@@ -297,6 +377,7 @@ public class KitServiceTest {
         kit.setEndDate(LocalDate.now().plusDays(5));
         
         ItemMemento snapshot = createTestSnapshot(100L, user);
+        snapshot.setSelectedUnits(1);
         kit.setSnapshots(new ArrayList<>(List.of(snapshot)));
 
         Kit updateData = new Kit();
@@ -305,13 +386,22 @@ public class KitServiceTest {
         
         Article article = createTestArticle(100L, "Monitor", 1, user);
 
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        snap.setSelectedUnits(1);
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
         when(kitRepository.findById(10L)).thenReturn(Optional.of(kit));
-        // Simulamos que para las nuevas fechas solicitadas en el update ya está ocupado
-        when(kitRepository.isItemUnavailableForDates(eq(100L), eq(updateData.getStartDate()), eq(updateData.getEndDate()), anyList())).thenReturn(true);
         when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.update(10L, updateData));
-        assertEquals("El artículo 'Monitor' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+        // Mensaje actualizado
+        assertEquals("El artículo 'Monitor' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
     }
 
     // ==========================================

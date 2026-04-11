@@ -17,7 +17,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   React.useEffect(() => {
     const checkIsMobile = () => {
       const { width } = Dimensions.get('window');
-      setIsMobile(width < 768);
+      setIsMobile(width < 1116);
     };
 
     checkIsMobile();

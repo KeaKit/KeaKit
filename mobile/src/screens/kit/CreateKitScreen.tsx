@@ -606,8 +606,11 @@ const CreateKitScreen: React.FC = () => {
       const errorMsg = error.response?.data?.message || error.message || "";
 
       // 3. Aplicamos tu lógica de validación
-      if (errorMsg.includes("ya no está disponible")) {
+      if (errorMsg.includes("ya no está disponible") || 
+                errorMsg.includes("unidades"))
+      {
         setErrors({ items: errorMsg }); // Se mostrará debajo de la lista de artículos
+
       } else {
         setErrors({ general: "Ha ocurrido un error al procesar el kit o el pago." });
       }

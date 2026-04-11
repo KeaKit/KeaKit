@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,35 +10,20 @@ import {
   ScrollView,
   Dimensions,
   Animated,
-} from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../styles/theme';
-import { RootStackParamList, NavbarHeaderScreen, AuthUser, NavbarHeaderItem } from '../types';
-import { useAuth } from '../context/AuthContext';
-import { useTrackingNotifications } from '../context/TrackingNotificationContext';
-import { getUserNotifications } from '../services/notificationService';
-
-const { width } = Dimensions.get('window');
-const isMobile = width < 768;
-
-
-const getLogoSize = () => {
-  if (width < 480) {
-    // Móviles pequeños
-    return { width: 70, height: 22 };
-  } else if (width < 768) {
-    // Móviles medianos y grandes
-    return { width: 85, height: 27 };
-  } else if (width < 1024) {
-    // Tablets
-    return { width: 100, height: 32 };
-  } else {
-    // Desktop
-    return { width: 120, height: 38 };
-  }
-};
+} from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors, Shadows } from "../styles/theme";
+import {
+  RootStackParamList,
+  NavbarHeaderScreen,
+  AuthUser,
+  NavbarHeaderItem,
+} from "../types";
+import { useAuth } from "../context/AuthContext";
+import { useTrackingNotifications } from "../context/TrackingNotificationContext";
+import { getUserNotifications } from "../services/notificationService";
 
 interface HeaderNavbarProps {
   user: AuthUser | null;
@@ -61,7 +46,8 @@ interface HeaderMenuSection {
 }
 
 const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut } = useAuth();
   const { unreadCount } = useTrackingNotifications();
 
@@ -69,29 +55,55 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
   const [activityUnreadCount, setActivityUnreadCount] = useState(0);
-  const [screenWidth, setScreenWidth] = useState(width);
+  const [windowWidth, setWindowWidth] = useState(
+    Dimensions.get("window").width,
+  );
+  const [isMobile, setIsMobile] = useState(
+    Dimensions.get("window").width < 1116,
+  );
   const bellAnim = useRef(new Animated.Value(1)).current;
   const totalNotifications = (unreadCount || 0) + (activityUnreadCount || 0);
 
+  const getLogoSize = () => {
+    if (windowWidth < 480) {
+      // Móviles pequeños
+      return { width: 70, height: 22 };
+    } else if (windowWidth < 768) {
+      // Móviles medianos y grandes
+      return { width: 85, height: 27 };
+    } else if (windowWidth < 1024) {
+      // Tablets
+      return { width: 100, height: 32 };
+    } else {
+      // Desktop
+      return { width: 120, height: 38 };
+    }
+  };
 
   useEffect(() => {
-    const subscription = Dimensions.addEventListener('change', ({ window }) => {
-      setScreenWidth(window.width);
+    const subscription = Dimensions.addEventListener("change", ({ window }) => {
+      setWindowWidth(window.width);
+      setIsMobile(window.width < 1116);
+      console.log("Window width:", window.width);
     });
+
     return () => subscription?.remove();
   }, []);
 
   // Cerrar dropdown cuando se hace click fuera (solo web)
   useEffect(() => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === "web") {
       const handleClickOutside = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
-        if (!target.closest('.user-menu-trigger') && !target.closest('.user-dropdown')) {
+        if (
+          !target.closest(".user-menu-trigger") &&
+          !target.closest(".user-dropdown")
+        ) {
           setUserMenuVisible(false);
         }
       };
-      window.addEventListener('click', handleClickOutside);
-      return () => window.removeEventListener('click', handleClickOutside);
+      window.addEventListener("click", handleClickOutside);
+      return () => {window.removeEventListener("click", handleClickOutside)};
     }
   }, []);
 
@@ -108,54 +120,107 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   useEffect(() => {
     if (unreadCount > 0) {
       Animated.sequence([
-        Animated.timing(bellAnim, { toValue: 1.15, duration: 200, useNativeDriver: true }),
-        Animated.timing(bellAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(bellAnim, {
+          toValue: 1.15,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bellAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
       ]).start();
     }
   }, [unreadCount]);
 
   // Cargar notificaciones de actividad sin leer
   useFocusEffect(
-  useCallback(() => {
-    const loadActivityNotifications = async () => {
-      if (user?.id && user?.token) {
-        const notifications = await getUserNotifications(user.id, user.token);
-        const unread = notifications.filter(n => !n.read).length;
-        setActivityUnreadCount(unread); 
-      }
-    };
-    loadActivityNotifications();
-  }, [user])
-);
+    useCallback(() => {
+      const loadActivityNotifications = async () => {
+        if (user?.id && user?.token) {
+          const notifications = await getUserNotifications(user.id, user.token);
+          const unread = notifications.filter((n) => !n.read).length;
+          setActivityUnreadCount(unread);
+        }
+      };
+      loadActivityNotifications();
+    }, [user]),
+  );
 
   // Items para usuarios normales
   const userNavItems: NavbarHeaderItem[] = [
-    { name: 'Artículos', icon: 'file-tray-full-outline', screen: 'MyArticles', requiresAuth: true },
-    { name: 'Kits', icon: 'cube-outline', screen: 'MyKits', requiresAuth: true },
-    { name: 'Servicios', icon: 'construct-outline', screen: 'MyServices', requiresAuth: true },
-    { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents', requiresAuth: true },
+    {
+      name: "Artículos",
+      icon: "file-tray-full-outline",
+      screen: "MyArticles",
+      requiresAuth: true,
+    },
+    {
+      name: "Kits",
+      icon: "cube-outline",
+      screen: "MyKits",
+      requiresAuth: true,
+    },
+    {
+      name: "Servicios",
+      icon: "construct-outline",
+      screen: "MyServices",
+      requiresAuth: true,
+    },
+    {
+      name: "Incidencias",
+      icon: "warning-outline",
+      screen: "MyIncidents",
+      requiresAuth: true,
+    },
   ];
 
   // Items para administradores
   const adminNavItems: NavbarHeaderItem[] = [
-    { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers', requiresAdmin: true },
-    { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories', requiresAdmin: true },
-    { name: 'Comisión de Plataforma', icon: 'cash', screen: 'Commission', requiresAdmin: true },
-    { name: 'Incidencias', icon: 'warning-outline', screen: 'AdminIncidents', requiresAdmin: true },
-    { name: 'Kits Predeterminados', icon: 'cube-outline', screen: 'DefaultKits', requiresAdmin: true },
+    {
+      name: "Usuarios",
+      icon: "people-outline",
+      screen: "AdminUsers",
+      requiresAdmin: true,
+    },
+    {
+      name: "Categorías",
+      icon: "folder-open-outline",
+      screen: "Categories",
+      requiresAdmin: true,
+    },
+    {
+      name: "Comisión de Plataforma",
+      icon: "cash",
+      screen: "Commission",
+      requiresAdmin: true,
+    },
+    {
+      name: "Incidencias",
+      icon: "warning-outline",
+      screen: "AdminIncidents",
+      requiresAdmin: true,
+    },
+    {
+      name: "Kits Predeterminados",
+      icon: "cube-outline",
+      screen: "DefaultKits",
+      requiresAdmin: true,
+    },
   ];
 
   // Filtrar items según autenticación y rol
   const getVisibleItems = () => {
     if (!user) return [];
-    if (user.role === 'ADMIN') {
-      return adminNavItems.filter(item => {
-        if (item.requiresAdmin && user.role !== 'ADMIN') return false;
+    if (user.role === "ADMIN") {
+      return adminNavItems.filter((item) => {
+        if (item.requiresAdmin && user.role !== "ADMIN") return false;
         if (item.requiresAuth && !user) return false;
         return true;
       });
     }
-    return userNavItems.filter(item => {
+    return userNavItems.filter((item) => {
       if (item.requiresAdmin) return false;
       if (item.requiresAuth && !user) return false;
       return true;
@@ -168,8 +233,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     setUserMenuVisible(false);
   };
 
-  const handleLogout = async () => {
-    await signOut();
+  const handleLogout = () => {
+    signOut().catch(console.error);
     setUserMenuVisible(false);
     setMenuVisible(false);
   };
@@ -178,69 +243,141 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const getUserMenuSections = (): HeaderMenuSection[] => {
     if (!user) return [];
 
-    if (user.role === 'USER') {
+    if (user.role === "USER") {
       return [
         {
-          title: 'Mi cuenta',
+          title: "Mi cuenta",
           items: [
-            { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
-            { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
-            { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications', badge: activityUnreadCount > 0 ? String(activityUnreadCount) : undefined },
-            { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications', badge: unreadCount > 0 ? String(unreadCount) : undefined },
-          ]
+            { name: "Ver Perfil", icon: "person", screen: "Profile" },
+            {
+              name: "Mis Valoraciones",
+              icon: "star",
+              screen: "UserRatings",
+              params: { userId: user.id, userName: user.name },
+            },
+            {
+              name: "Notificaciones de actividad",
+              icon: "notifications",
+              screen: "ActivityNotifications",
+              badge:
+                activityUnreadCount > 0
+                  ? String(activityUnreadCount)
+                  : undefined,
+            },
+            {
+              name: "Notificaciones de seguimiento",
+              icon: "navigate",
+              screen: "TrackingNotifications",
+              badge: unreadCount > 0 ? String(unreadCount) : undefined,
+            },
+          ],
         },
         {
           items: [
-            { name: 'Cerrar Sesión', icon: 'log-out', danger: true, onPress: handleLogout }
-          ]
-        }
+            {
+              name: "Cerrar Sesión",
+              icon: "log-out",
+              danger: true,
+              onPress: handleLogout,
+            },
+          ],
+        },
       ];
     }
 
-    if (user.role === 'COURIER') {
+    if (user.role === "COURIER") {
       return [
         {
-          title: 'Mi cuenta',
+          title: "Mi cuenta",
           items: [
-            { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
-            { name: 'Kits asignados', icon: 'cube-outline', screen: 'AssignedKits' },
-            { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications' },
-          ]
+            { name: "Ver Perfil", icon: "person", screen: "Profile" },
+            {
+              name: "Kits asignados",
+              icon: "cube-outline",
+              screen: "AssignedKits",
+            },
+            {
+              name: "Notificaciones de seguimiento",
+              icon: "navigate",
+              screen: "TrackingNotifications",
+            },
+          ],
         },
         {
           items: [
-            { name: 'Cerrar Sesión', icon: 'log-out', danger: true, onPress: handleLogout }
-          ]
-        }
+            {
+              name: "Cerrar Sesión",
+              icon: "log-out",
+              danger: true,
+              onPress: handleLogout,
+            },
+          ],
+        },
       ];
     }
-
 
     return [
       {
-        title: 'Mi cuenta',
+        title: "Mi cuenta",
         items: [
-          { name: 'Ver Perfil', icon: 'person', screen: 'Profile' },
-          { name: 'Mis Valoraciones', icon: 'star', screen: 'UserRatings', params: { userId: user.id, userName: user.name } },
-          { name: 'Notificaciones de actividad', icon: 'notifications', screen: 'ActivityNotifications', badge: activityUnreadCount > 0 ? String(activityUnreadCount) : undefined },
-          { name: 'Notificaciones de seguimiento', icon: 'navigate', screen: 'TrackingNotifications', badge: unreadCount > 0 ? String(unreadCount) : undefined },
-          { name: 'Política de Privacidad', icon: 'document-text', screen: 'EditPolicy' },
-        ]
+          { name: "Ver Perfil", icon: "person", screen: "Profile" },
+          {
+            name: "Mis Valoraciones",
+            icon: "star",
+            screen: "UserRatings",
+            params: { userId: user.id, userName: user.name },
+          },
+          {
+            name: "Notificaciones de actividad",
+            icon: "notifications",
+            screen: "ActivityNotifications",
+            badge:
+              activityUnreadCount > 0 ? String(activityUnreadCount) : undefined,
+          },
+          {
+            name: "Notificaciones de seguimiento",
+            icon: "navigate",
+            screen: "TrackingNotifications",
+            badge: unreadCount > 0 ? String(unreadCount) : undefined,
+          },
+          { name: "Política de Privacidad", icon: "document-text", screen: "EditPolicy" },
+        ],
       },
       {
-        title: 'Próximamente',
+        title: "Próximamente",
         items: [
-          { name: 'Tipos de Objetos', icon: 'cube', disabled: true, badge: 'Próximamente' },
-          { name: 'Rangos de Precios', icon: 'pricetags', disabled: true, badge: 'Próximamente' },
-          { name: 'Estadísticas', icon: 'bar-chart', disabled: true, badge: 'Próximamente' },
-        ]
+          {
+            name: "Tipos de Objetos",
+            icon: "cube",
+            disabled: true,
+            badge: "Próximamente",
+          },
+          {
+            name: "Rangos de Precios",
+            icon: "pricetags",
+            disabled: true,
+            badge: "Próximamente",
+          },
+          {
+            name: "Estadísticas",
+            icon: "bar-chart",
+            disabled: true,
+            badge: "Próximamente",
+          },
+        ],
       },
       {
         items: [
-          { name: 'Cerrar Sesión', icon: 'log-out', danger: true, onPress: handleLogout }
-        ]
-      }
+          {
+            name: "Cerrar Sesión",
+            icon: "log-out",
+            danger: true,
+            onPress: handleLogout,
+          },
+        ],
+      },
     ];
+
   };
 
   const handleMenuItemPress = (item: HeaderMenuItem) => {
@@ -264,9 +401,9 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     return (
       <View style={styles.mobileHeader}>
         <View style={styles.mobileLeft}>
-          <TouchableOpacity onPress={() => navigateToScreen('Home')}>
-            <Image 
-              source={require('../../assets/logo.png')} 
+          <TouchableOpacity onPress={() => { navigateToScreen("Home") }}>
+            <Image
+              source={require("../../assets/logo.png")}
               style={styles.mobileLogo}
               resizeMode="contain"
             />
@@ -277,10 +414,14 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           {user && (
             <TouchableOpacity
               style={styles.bellButton}
-              onPress={() => navigateToScreen('Notifications')}
+              onPress={() => { navigateToScreen("Notifications") }}
             >
               <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
-                <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
+                <Ionicons
+                  name="notifications"
+                  size={22}
+                  color={Colors.primaryHome}
+                />
               </Animated.View>
               {totalNotifications > 0 && (
                 <View style={styles.notificationDot} />
@@ -289,19 +430,27 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           )}
 
           {user && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => navigateToScreen('Wallet')}
+              onPress={() => { navigateToScreen("Wallet") }}
             >
-              <Ionicons name="wallet-outline" size={24} color={Colors.primaryHome} />
+              <Ionicons
+                name="wallet-outline"
+                size={24}
+                color={Colors.primaryHome}
+              />
             </TouchableOpacity>
           )}
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.menuButton}
             onPress={() => setMenuVisible(true)}
           >
-            <Ionicons name="menu-outline" size={28} color={Colors.primaryHome} />
+            <Ionicons
+              name="menu-outline"
+              size={28}
+              color={Colors.primaryHome}
+            />
           </TouchableOpacity>
         </View>
 
@@ -312,14 +461,17 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           transparent={true}
           onRequestClose={() => setMenuVisible(false)}
         >
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.modalOverlay}
             activeOpacity={1}
             onPress={() => setMenuVisible(false)}
           >
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Image source={require('../../assets/logo.png')} style={styles.modalLogo} />
+                <Image
+                  source={require("../../assets/logo.png")}
+                  style={styles.modalLogo}
+                />
                 <TouchableOpacity onPress={() => setMenuVisible(false)}>
                   <Ionicons name="close" size={28} color={Colors.primaryHome} />
                 </TouchableOpacity>
@@ -335,7 +487,11 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
                         style={styles.modalItem}
                         onPress={() => navigateToScreen(item.screen)}
                       >
-                        <Ionicons name={item.icon} size={24} color={Colors.primaryHome} />
+                        <Ionicons
+                          name={item.icon}
+                          size={24}
+                          color={Colors.primaryHome}
+                        />
                         <Text style={styles.modalItemText}>{item.name}</Text>
                       </TouchableOpacity>
                     ))}
@@ -344,16 +500,36 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
 
                 {getUserMenuSections().map((section, index) => (
                   <View key={index} style={styles.modalSection}>
-                    {section.title && <Text style={styles.modalSectionTitle}>{section.title}</Text>}
+                    {section.title && (
+                      <Text style={styles.modalSectionTitle}>
+                        {section.title}
+                      </Text>
+                    )}
                     {section.items.map((item, idx) => (
                       <TouchableOpacity
                         key={`${item.name}-${idx}`}
-                        style={[styles.modalItem, item.disabled && styles.modalItemDisabled]}
+                        style={[
+                          styles.modalItem,
+                          item.disabled && styles.modalItemDisabled,
+                        ]}
                         onPress={() => handleMenuItemPress(item)}
                       >
-                        <Ionicons name={item.icon} size={24} color={item.danger ? '#d9534f' : Colors.primaryHome} />
-                        <Text style={[styles.modalItemText, item.danger && styles.dangerText]}>{item.name}</Text>
-                        {item.badge && <Text style={styles.badgeChip}>{item.badge}</Text>}
+                        <Ionicons
+                          name={item.icon}
+                          size={24}
+                          color={item.danger ? "#d9534f" : Colors.primaryHome}
+                        />
+                        <Text
+                          style={[
+                            styles.modalItemText,
+                            item.danger && styles.dangerText,
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
+                        {item.badge && (
+                          <Text style={styles.badgeChip}>{item.badge}</Text>
+                        )}
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -369,8 +545,18 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   // Versión desktop/tablet
   return (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigateToScreen('Home')} style={styles.logoContainer}>
-        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+      <TouchableOpacity
+        onPress={() => {navigateToScreen("Home")}}
+        style={styles.logoContainer}
+      >
+        <Image
+          source={require("../../assets/logo.png")}
+          style={[
+            styles.logo,
+            { width: getLogoSize().width, height: getLogoSize().height },
+          ]}
+          resizeMode="contain"
+        />
       </TouchableOpacity>
 
       <View style={styles.navItems}>
@@ -389,30 +575,37 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
       <View style={styles.rightActions}>
         {user && (
           <Text style={styles.greetingText}>
-            Hola, {user.name.split(' ')[0]}
+            Hola, {user.name.split(" ")[0]}
           </Text>
         )}
 
         {user && (
           <TouchableOpacity
             style={styles.bellButton}
-            onPress={() => navigateToScreen('Notifications')}
+            onPress={() => navigateToScreen("Notifications")}
           >
             <Animated.View style={{ transform: [{ scale: bellAnim }] }}>
-              <Ionicons name="notifications" size={22} color={Colors.primaryHome} />
+              <Ionicons
+                name="notifications"
+                size={22}
+                color={Colors.primaryHome}
+              />
             </Animated.View>
-            {totalNotifications > 0 && (
-              <View style={styles.notificationDot} />
-            )}
+            {totalNotifications > 0 && <View style={styles.notificationDot} />}
           </TouchableOpacity>
         )}
 
         {user && (
           <TouchableOpacity
-            style={[styles.userMenuTrigger, { backgroundColor: Colors.primaryHome }]}
+            style={[
+              styles.userMenuTrigger,
+              { backgroundColor: Colors.primaryHome },
+            ]}
             onPress={() => setUserMenuVisible(!userMenuVisible)}
           >
-            <Text style={styles.userInitial}>{user.name.charAt(0).toUpperCase()}</Text>
+            <Text style={styles.userInitial}>
+              {user.name.charAt(0).toUpperCase()}
+            </Text>
           </TouchableOpacity>
         )}
 
@@ -421,16 +614,34 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           <View style={styles.userDropdown}>
             {getUserMenuSections().map((section, index) => (
               <View key={index} style={styles.dropdownSection}>
-                {section.title && <Text style={styles.dropdownTitle}>{section.title}</Text>}
+                {section.title && (
+                  <Text style={styles.dropdownTitle}>{section.title}</Text>
+                )}
                 {section.items.map((item, idx) => (
                   <TouchableOpacity
                     key={`${item.name}-${idx}`}
-                    style={[styles.dropdownItem, item.disabled && styles.dropdownItemDisabled]}
+                    style={[
+                      styles.dropdownItem,
+                      item.disabled && styles.dropdownItemDisabled,
+                    ]}
                     onPress={() => handleMenuItemPress(item)}
                   >
-                    <Ionicons name={item.icon} size={18} color={item.danger ? '#d9534f' : Colors.primaryHome} />
-                    <Text style={[styles.dropdownItemText, item.danger && styles.dangerText]}>{item.name}</Text>
-                    {item.badge && <Text style={styles.badgeChip}>{item.badge}</Text>}
+                    <Ionicons
+                      name={item.icon}
+                      size={18}
+                      color={item.danger ? "#d9534f" : Colors.primaryHome}
+                    />
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        item.danger && styles.dangerText,
+                      ]}
+                    >
+                      {item.name}
+                    </Text>
+                    {item.badge && (
+                      <Text style={styles.badgeChip}>{item.badge}</Text>
+                    )}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -442,16 +653,21 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   );
 };
 
+const baseHeaderStyle = {
+  backgroundColor: "#fff",
+  flexDirection: "row" as const,
+  alignItems: "center" as const,
+  justifyContent: "space-between" as const,
+  ...Shadows.medium,
+};
+
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#fff',
+    ...baseHeaderStyle,
     paddingHorizontal: 24,
     paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
     zIndex: 10,
   },
   notificationDot: {
@@ -466,41 +682,39 @@ const styles = StyleSheet.create({
     borderColor: "#ffffff", // Borde blanco para que resalte sobre el icono
   },
   logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   logo: {
-    width: getLogoSize().width,
-    height: getLogoSize().height,
-    maxWidth: '500%',
+    maxWidth: "500%",
   },
   mobileLogo: {
     width: 40,
     height: 40,
   },
   navItems: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 18,
   },
   navItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   navItemText: {
     fontSize: 14,
     color: Colors.primaryHome,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   rightActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
   },
   greetingText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Colors.primaryHome,
   },
   bellButton: {
@@ -527,22 +741,22 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   userInitial: {
-    color: '#fff',
-    fontWeight: '800',
+    color: "#fff",
+    fontWeight: "800",
     fontSize: 16,
   },
   userDropdown: {
-    position: 'absolute',
+    position: "absolute",
     top: 54,
     right: 0,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 5,
@@ -554,14 +768,14 @@ const styles = StyleSheet.create({
   },
   dropdownTitle: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#888',
+    fontWeight: "700",
+    color: "#888",
     marginBottom: 6,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     paddingVertical: 6,
   },
@@ -573,34 +787,31 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   dangerText: {
-    color: '#d9534f',
+    color: "#d9534f",
   },
   badgeChip: {
-    marginLeft: 'auto',
-    backgroundColor: '#eee',
+    marginLeft: "auto",
+    backgroundColor: "#eee",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
     fontSize: 10,
-    color: '#777',
+    color: "#777",
   },
 
   // Mobile
   mobileHeader: {
-    backgroundColor: '#fff',
+    ...baseHeaderStyle,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   mobileLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   mobileRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   menuButton: {
@@ -613,20 +824,20 @@ const styles = StyleSheet.create({
   // Modal móvil
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0,0,0,0.25)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 20,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   modalLogo: {
@@ -641,21 +852,21 @@ const styles = StyleSheet.create({
   },
   modalSectionTitle: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#888',
+    fontWeight: "700",
+    color: "#888",
     marginBottom: 8,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   modalItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     paddingVertical: 8,
   },
   modalItemText: {
     fontSize: 14,
     color: Colors.primaryHome,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalItemDisabled: {
     opacity: 0.5,
