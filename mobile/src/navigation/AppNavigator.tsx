@@ -27,8 +27,6 @@ import AdminUsersScreen from "../screens/admin/AdminUsersScreen";
 import MyKitsHistoryScreen from "../screens/kit/MyKitsHistoryScreen";
 import UserRatingsScreen from "../screens/ratings/UserRatingsScreen";
 import CommissionScreen from "../screens/commission/CommissionScreen";
-import DefaultKitsScreen from "../screens/deafaultKit/tenant/DefaultKitsScreen";
-import DefaultKitsAdminScreen from "../screens/deafaultKit/admin/DefaultKitsAdminScreen";
 
 // Detail/Creation Screens (without Navbar)
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
@@ -36,7 +34,7 @@ import UploadArticleScreen from '../screens/profile/UploadArticleScreen';
 import CheckoutScreen from '../screens/kit/CheckoutScreen';
 import CreateRatingScreen from '../screens/ratings/CreateRatingScreen';
 import CreateKitScreen from '../screens/kit/CreateKitScreen';
-import EditDefaultKitScreen from '../screens/deafaultKit/tenant/EditDefaultKitScreen';
+
 import DefaultKitFormScreen from '../screens/deafaultKit/admin/DefaultKitFormScreen';
 import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
 import EditArticleScreen from '../screens/profile/EditArticleScreen';
@@ -60,7 +58,11 @@ import NotificationsScreen from "../screens/notifications/NotificationsScreen";
 
 import { RootStackParamList } from "../types";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
+// Default kits
 import PurchaseDefaultKitScreen from '../screens/deafaultKit/tenant/PurchaseDefaultKitScreen';
+import EditDefaultKitScreen from '../screens/deafaultKit/tenant/EditDefaultKitScreen';
+import DefaultKitsScreen from "../screens/deafaultKit/tenant/DefaultKitsScreen";
+import DefaultKitsAdminScreen from "../screens/deafaultKit/admin/DefaultKitsAdminScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -205,14 +207,6 @@ const AppNavigator: React.FC = () => {
                       {() => (
                         <MainLayout>
                           <CommissionScreen />
-                        </MainLayout>
-                      )}
-                    </Stack.Screen>
-
-                    <Stack.Screen name="DefaultKits">
-                      {() => (
-                        <MainLayout>
-                          <DefaultKitsScreen />
                         </MainLayout>
                       )}
                     </Stack.Screen>
