@@ -26,10 +26,9 @@ import {
   upsertSelectedQuantity
 } from "../../kit/createKitSelection";
 import { createDefaultKit, updateDefaultKit } from "../../../services/defaultKitService";
-import { categoryFormScreenStyles } from '../../../styles/categoryFormScreenStyles';
 import DefaultKitItemComponent from "../../../components/DefaultKitItemComponent";
+import { KeakitButton } from "../../../components";
 
-const { saveButton, saveButtonText, editButton } = categoryFormScreenStyles;
 
 type CreateDefaultKitNav = NativeStackNavigationProp<RootStackParamList, "DefaultKitForm">;
 type DefaultKitFormRoute = RouteProp<RootStackParamList, 'DefaultKitForm'>;
@@ -378,20 +377,19 @@ const DefaultKitFormScreen: React.FC = () => {
         {/* FOOTER BOTONES */}
         <View style={{ padding: 16, backgroundColor: Colors.backgroundWhite }}>
           {formMode === 'view' ? (
-            <TouchableOpacity style={editButton} onPress={() => setFormMode('edit')}>
-              <Ionicons name="pencil" size={18} color={Colors.textWhite} style={{ marginRight: 6 }} />
-              <Text style={saveButtonText}>Editar Kit</Text>
-            </TouchableOpacity>
+            <KeakitButton
+              title="Editar Kit"
+              onPress={() => { setFormMode('edit') }}
+              icon="pencil"
+            />
           ) : (
-            <TouchableOpacity style={saveButton} onPress={handleSubmit} disabled={submitting}>
-              {submitting ? (
-                <ActivityIndicator color={Colors.textWhite} size="small" />
-              ) : (
-                <Text style={saveButtonText}>
-                  {formMode === 'edit' ? 'Confirmar cambios' : 'Crear kit predeterminado'}
-                </Text>
-              )}
-            </TouchableOpacity>
+            <KeakitButton
+              title={formMode === 'edit' ? 'Confirmar cambios' : 'Crear kit predeterminado'}
+              onPress={handleSubmit}
+              icon={formMode === 'edit' ? "check" : "plus"}
+              loading={submitting}
+              disabled={submitting}
+            />
           )}
         </View>
 
