@@ -385,7 +385,7 @@ public class KitControllerTest {
     @Test
     void getKitPaymentById_success_returnsOkAndPaymentDto() throws Exception {
         KitPaymentDTO paymentDTO = new KitPaymentDTO(12459, 9550, 1910, 999, 0);
-        when(kitService.getKitPayment(77L)).thenReturn(paymentDTO);
+        when(kitService.getKitPayment(77L, null, null)).thenReturn(paymentDTO);
 
         mockMvc.perform(get("/api/kits/payment/77"))
             .andExpect(status().isOk())
@@ -397,7 +397,7 @@ public class KitControllerTest {
 
     @Test
     void getKitPaymentById_whenKitNotFound_returnsNotFound() throws Exception {
-        when(kitService.getKitPayment(999L)).thenThrow(new RuntimeException("Kit not found"));
+        when(kitService.getKitPayment(999L, null, null)).thenThrow(new RuntimeException("Kit not found"));
 
         mockMvc.perform(get("/api/kits/payment/999"))
             .andExpect(status().isNotFound())

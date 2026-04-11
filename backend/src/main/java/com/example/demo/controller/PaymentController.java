@@ -68,7 +68,9 @@ public class PaymentController {
             paymentService.processPayment(kitId, true, promoCode, email); // El pago se hizo con wallet
             return ResponseEntity.ok("Pago con billetera procesado correctamente");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al procesar el pago con billetera: " + e.getMessage());
+
         }
     }
 
