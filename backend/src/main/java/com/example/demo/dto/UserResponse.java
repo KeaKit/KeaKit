@@ -14,6 +14,7 @@ public class UserResponse {
     private String country;
     private boolean founderBadge;
     private String token;
+    private String profileImageUrl;
 
     public UserResponse(User user) {
         this.id = user.getId();
@@ -25,6 +26,7 @@ public class UserResponse {
         this.city = user.getCity();
         this.country = user.getCountry();
         this.founderBadge = user.isFounderBadge();
+        this.profileImageUrl = user.getProfileImageUrl();
     }
 
     public UserResponse(User user, String token) {
@@ -37,6 +39,7 @@ public class UserResponse {
         this.city = user.getCity();
         this.country = user.getCountry();
         this.founderBadge = user.isFounderBadge(); 
+        this.profileImageUrl = user.getProfileImageUrl();
         this.token = token;
     }
 
@@ -87,4 +90,9 @@ public class UserResponse {
     public void setToken(String token) {
         this.token = token;
     }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
 }

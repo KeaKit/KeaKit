@@ -49,6 +49,9 @@ public class User {
     @Column(nullable = false)
     private boolean founderBadge = false;
 
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
 
     public User() {}
 
@@ -142,4 +145,13 @@ public class User {
     public void setFounderBadge(boolean founderBadge) { 
         this.founderBadge = founderBadge; 
     }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
 }
