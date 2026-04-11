@@ -72,7 +72,7 @@ export const ProfileImageWithBadge: React.FC<ProfileImageWithBadgeProps> = ({
           <Image
             source={{ uri: badgeImageUrl }}
             style={{ width: finalBadgeSize, height: finalBadgeSize, borderRadius: finalBadgeSize / 2 }}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         </View>
       )}
@@ -91,15 +91,9 @@ const styles = StyleSheet.create({
   },
   badgeContainer: {
     position: 'absolute',
-    backgroundColor: 'transparent', // o blanco si tu insignia no es circular
+    backgroundColor: 'transparent', 
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    // Opcional: sombra si quieres
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 1 },
-    // shadowOpacity: 0.2,
-    // shadowRadius: 2,
-    // elevation: 2,
   },
 });
