@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.PublicUserProfileDto;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserUpdateData;
@@ -138,5 +139,11 @@ public class UserService {
         String imageUrl = cloudinaryService.uploadImage(image);
         user.setProfileImageUrl(imageUrl);
         return userRepository.save(user);
+    }
+
+    public PublicUserProfileDto getPublicUserProfile(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return new PublicUserProfileDto(user);
     }
 }

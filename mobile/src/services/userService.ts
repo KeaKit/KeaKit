@@ -49,3 +49,16 @@ export const uploadProfileImage = async (image: File, token: string): Promise<Us
   });
   return handleResponse<UserResponse>(res);
 };
+
+export interface PublicUserProfile {
+  profileImageUrl?: string;
+  founderBadge: boolean;
+}
+
+export const getPublicUserProfile = async (userId: number): Promise<PublicUserProfile> => {
+  const res = await fetch(API_ROUTES.GET_PUBLIC_USER_PROFILE(userId), {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return handleResponse<PublicUserProfile>(res);
+};

@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.PublicUserProfileDto;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserUpdateData;
@@ -117,5 +118,11 @@ public class UserController {
         User currentUser = userService.findByEmail(authentication.getName());
         User updated = userService.updateProfileImage(currentUser.getId(), image);
         return ResponseEntity.ok(new UserResponse(updated));
+    }
+
+    // UserController.java
+    @GetMapping("/{id}/public-profile")
+    public ResponseEntity<PublicUserProfileDto> getPublicUserProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getPublicUserProfile(id));
     }
 }
