@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -194,16 +195,10 @@ public class KitService {
     }
 
     private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
-        int years = end.getYear() - start.getYear();
-        int months = end.getMonthValue() - start.getMonthValue();
-        int days = end.getDayOfMonth() - start.getDayOfMonth() + 1; // +1 para incluir el día de inicio
+        long diffDays = ChronoUnit.DAYS.between(start, end) + 1;
+        return diffDays / 30.0;
 
-        int totalMonths = years * 12 + months;
-
-        int daysInMonth = 30;
-        double monthFraction = (double) days / daysInMonth;
-
-        return totalMonths + monthFraction;
+        // con el backend de antes daba problemas esta función, por ejemplo, si era 15 enero-14 de febrero, daba 0 days, porque hacía 14-15+1; y debería ser 1 mes y 31 días, no 1 mes y 0 días
     }
 
     public KitResponse update(Long id, Kit updateData) {

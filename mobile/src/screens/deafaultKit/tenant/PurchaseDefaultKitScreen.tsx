@@ -34,11 +34,11 @@ import {
   DefaultKit,
 } from "../../../types";
 import { Colors, commonStyles } from "../../../styles";
-import { formatRentalDuration } from "../../../utils/duration";
 
 // Componentes
 import { SelectPicker } from "../../../components/SelectPicker";
 import { KitPaymentResumeComponent } from "../../../components/KitPaymentResumeComponent";
+import { formatRentalDuration, calculateMonthsBetween } from "../../../utils/duration";
 
 const COMISION = 0;
 const GUARANTEE_PERCENTAGE = 0.2;
@@ -57,14 +57,6 @@ type FormErrors = {
   general?: string;
 };
 
-function calculateMonthsBetween(start: Date, end: Date): number {
-  const MS_PER_DAY = 24 * 60 * 60 * 1000; 
-  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()); 
-  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
-  const totalDays = Math.max(0, Math.round((endUtc - startUtc) / MS_PER_DAY)) + 1;
-  
-  return totalDays / 30.0;
-}
 
 const PurchaseDefaultKitScreen: React.FC = () => {
   const navigation = useNavigation<PurchaseDefaultKitNav>();
@@ -150,9 +142,7 @@ const PurchaseDefaultKitScreen: React.FC = () => {
   
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
-    const start = new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()));
-    const end = new Date(Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()));
-    return calculateMonthsBetween(start, end);
+    return calculateMonthsBetween(startDate, endDate);
   }, [startDate, endDate]);
 
   const clearFieldError = (field: keyof FormErrors) => {

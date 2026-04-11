@@ -41,7 +41,6 @@ import {
 } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
-import { formatRentalDuration } from "../../utils/duration";
 
 // Componentes
 import { SelectPicker } from "../../components/SelectPicker";
@@ -53,6 +52,7 @@ import {
   upsertSelectedQuantity,
 } from "./createKitSelection";
 import { styles } from "../../styles/uploadArticleScreenStyles";
+import { formatRentalDuration, calculateMonthsBetween } from "../../utils/duration";
 
 const COMISION = 0; // todos son usuarios pilotos y no se cobra comision
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
@@ -94,16 +94,6 @@ type CatalogProduct = {
   cityLat?: number;
   cityLng?: number;
 };
-
-function calculateMonthsBetween(start: Date, end: Date): number {
-  const MS_PER_DAY = 24 * 60 * 60 * 1000; // misma logica que en duration.ts para mantener consistencia, 
-  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()); // esto devuelve milisegundos, al restar fechas en JS obtienes la diferencia en milisegundos, por eso convertimos ambas fechas a UTC sin hora para luego restarlas y dividir por los milisegundos que tiene un día, así obtenemos la cantidad de días entre ambas fechas.
-  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
-  const totalDays = Math.max(0, Math.round((endUtc - startUtc) / MS_PER_DAY)) + 1;
-  
-  return totalDays / 30.0;
-
-}
 
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
@@ -184,15 +174,7 @@ const CreateKitScreen: React.FC = () => {
 
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
-
-    const start = new Date(
-      Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()),
-    );
-    const end = new Date(
-      Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()),
-    );
-
-    return calculateMonthsBetween(start, end);
+    return calculateMonthsBetween(startDate, endDate);
   }, [startDate, endDate]);
 
   const clearFieldError = (field: keyof FormErrors) => {

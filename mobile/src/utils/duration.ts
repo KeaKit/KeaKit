@@ -30,3 +30,10 @@ export function formatRentalDuration(start: Date, end: Date): string {
   return `${pluralize(months, "mes", "meses")} y ${pluralize(days, "d\u00eda", "d\u00edas")}`;
 }
 
+export function calculateMonthsBetween(start: Date, end: Date): number {
+  const startUtc = toUtcDateOnly(start);
+  const endUtc = toUtcDateOnly(end);
+  const diffDays = Math.max(0, Math.round((endUtc - startUtc) / MS_PER_DAY)) + 1;
+
+  return diffDays / BILLING_MONTH_DAYS;
+}
