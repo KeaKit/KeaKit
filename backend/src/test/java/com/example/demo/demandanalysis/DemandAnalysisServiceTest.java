@@ -156,4 +156,26 @@ class DemandAnalysisServiceTest {
         assertNull(result.get(0).getImageUrl());
         assertEquals(1L, result.get(0).getTotalTimesRented());
     }
+
+    // Cubre la rama donde el límite es exactamente 0 para la búsqueda por categoría
+    @Test
+    void getTopDemandedItemsByCategory_zeroLimit_usesDefault() {
+        when(itemMementoRepository.findTopDemandedItemsByCategory(eq("Herramientas"), any()))
+                .thenReturn(Collections.emptyList());
+
+        demandAnalysisService.getTopDemandedItemsByCategory("Herramientas", 0);
+
+        verify(itemMementoRepository).findTopDemandedItemsByCategory(eq("Herramientas"), eq(PageRequest.of(0, 10)));
+    }
+
+    // Cubre la rama donde el límite es negativo para la búsqueda por categoría
+    @Test
+    void getTopDemandedItemsByCategory_negativeLimit_usesDefault() {
+        when(itemMementoRepository.findTopDemandedItemsByCategory(eq("Herramientas"), any()))
+                .thenReturn(Collections.emptyList());
+
+        demandAnalysisService.getTopDemandedItemsByCategory("Herramientas", -5);
+
+        verify(itemMementoRepository).findTopDemandedItemsByCategory(eq("Herramientas"), eq(PageRequest.of(0, 10)));
+    }
 }
