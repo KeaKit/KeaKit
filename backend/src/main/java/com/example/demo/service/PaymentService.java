@@ -113,7 +113,10 @@ public class PaymentService {
         }
 
         processGuarantee(paymentInfo.guarantee());
-        kit.getItems().forEach(this::processItemPaymentToOwner);
+
+        double months = kitService.calculateMonthsBetween(kit.getStartDate(), kit.getEndDate());
+
+        kit.getItems().forEach(item -> processItemPaymentToOwner(item, months));
 
         kitService.markAsPaid(kitId);
         Kit kitEntity = kitRepository.findById(kitId)
@@ -145,14 +148,14 @@ public class PaymentService {
         transactionRepository.save(guaranteeTransaction);
     }
 
-    private void processItemPaymentToOwner(KitItemResponse item) throws ResourceNotFoundException {
+    private void processItemPaymentToOwner(KitItemResponse item, double months) throws ResourceNotFoundException {
         Long ownerId = item.getOwnerId();
         if (ownerId == null) {
             Item itemDetails = itemService.findById(item.getItemId());
             ownerId = itemDetails.getOwner().getId();
         }
 
-        double basePrice = item.getPricePerMonth() * item.getQuantity();
+        double basePrice = item.getPricePerMonth() * item.getQuantity() * months;
         Double finalPrice = calculateFinalOwnerPrice(basePrice);
 
         Transaction payOwnerTransaction = payItemToOwner(ownerId, finalPrice);
