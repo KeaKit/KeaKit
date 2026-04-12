@@ -108,6 +108,9 @@ const UploadArticleScreen: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<{ uri: string; name: string } | null>(null);
   const [purchaseDate, setPurchaseDate] = useState('');
   const [ownerCommissionPromoCode, setOwnerCommissionPromoCode] = useState('');
+  const [appliedOwnerPromoCode, setAppliedOwnerPromoCode] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoMessage, setPromoMessage] = useState<{ text: string; valid: boolean } | null>(null);
   const [condition, setCondition] = useState<'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN' | ''>('');
 
   const conditionOptions: { value: 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN'; label: string }[] = [
@@ -195,6 +198,40 @@ const UploadArticleScreen: React.FC = () => {
 
   const clearError = (key: string) => setErrors((prev) => ({ ...prev, [key]: '' }));
 
+  const handleApplyPromo = async () => {
+    const code = ownerCommissionPromoCode.trim().toUpperCase();
+    if (!code || !user?.email || !user?.token) return;
+
+    setPromoLoading(true);
+    try {
+      const result = await validatePromoCode(
+        user.token,
+        code,
+        user.email,
+        'OWNER_COMMISSION_REDUCTION',
+      );
+
+      if (result.valid) {
+        setAppliedOwnerPromoCode(code);
+        setPromoMessage({ text: `Realizado: ${result.message}`, valid: true });
+      } else {
+        setAppliedOwnerPromoCode(null);
+        setPromoMessage({ text: result.message, valid: false });
+      }
+    } catch {
+      setAppliedOwnerPromoCode(null);
+      setPromoMessage({ text: 'Error al validar el código', valid: false });
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setOwnerCommissionPromoCode('');
+    setAppliedOwnerPromoCode(null);
+    setPromoMessage(null);
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -241,19 +278,10 @@ const UploadArticleScreen: React.FC = () => {
     setLoading(true);
     try {
       const trimmedOwnerPromoCode = ownerCommissionPromoCode.trim();
-      if (trimmedOwnerPromoCode && user.email) {
-        const ownerPromoValidation = await validatePromoCode(
-          user.token,
-          trimmedOwnerPromoCode,
-          user.email,
-          'OWNER_COMMISSION_REDUCTION',
-        );
-
-        if (!ownerPromoValidation.valid) {
-          showNotification(ownerPromoValidation.message || 'Código promocional no válido para arrendador', 'error');
-          setLoading(false);
-          return;
-        }
+      if (trimmedOwnerPromoCode && appliedOwnerPromoCode !== trimmedOwnerPromoCode.toUpperCase()) {
+        showNotification('Debes pulsar Aplicar para validar el código promocional', 'error');
+        setLoading(false);
+        return;
       }
 
       const payload: ArticlePayload = {
@@ -267,7 +295,7 @@ const UploadArticleScreen: React.FC = () => {
         status:        'AVAILABLE',
         ...(condition           && { condition:    condition as ArticleCondition }),
         ...(purchaseDate.trim() && { purchaseDate: purchaseDate.trim() }),
-        ...(trimmedOwnerPromoCode && { ownerCommissionPromoCode: trimmedOwnerPromoCode }),
+        ...(appliedOwnerPromoCode && { ownerCommissionPromoCode: appliedOwnerPromoCode }),
       };
       if (selectedImage) {
         await uploadArticleWithImage(user.id, selectedCategory!.id, user.token, payload, selectedImage.uri, selectedImage.name);
@@ -434,16 +462,64 @@ const UploadArticleScreen: React.FC = () => {
               <Text style={styles.helperText}>{`Precio entre ${selectedCategory.minPrice}€ y ${selectedCategory.maxPrice}€`}</Text>
             )}
 
-            <Field
-              label="Código promo de comisión"
-              value={ownerCommissionPromoCode}
-              onChange={(t) => setOwnerCommissionPromoCode(t.toUpperCase())}
-              placeholder="Ej: OWNER10"
-              optional
-            />
-            <Text style={styles.helperText}>
-              Opcional. Solo admite códigos de tipo comisión para arrendadores.
-            </Text>
+            <View style={styles.fieldContainer}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Código promo de comisión</Text>
+                <Text style={styles.optional}> (opcional)</Text>
+              </View>
+
+              {appliedOwnerPromoCode ? (
+                <View style={styles.promoAppliedRow}>
+                  <View style={styles.promoAppliedBadge}>
+                    <Ionicons name="pricetag" size={14} color="#4caf7d" />
+                    <Text style={styles.promoAppliedCode}>{appliedOwnerPromoCode}</Text>
+                  </View>
+                  <TouchableOpacity onPress={handleRemovePromo} style={styles.promoRemoveBtn}>
+                    <Ionicons name="close-circle" size={20} color="#e74c3c" />
+                    <Text style={styles.promoRemoveText}>Quitar</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.promoInputRow}>
+                    <TextInput
+                      style={[
+                        styles.promoInput,
+                        promoMessage?.valid === false && styles.promoInputError,
+                      ]}
+                      value={ownerCommissionPromoCode}
+                      onChangeText={(t) => {
+                        setOwnerCommissionPromoCode(t.toUpperCase());
+                        setPromoMessage(null);
+                      }}
+                      placeholder="OWNER10"
+                      placeholderTextColor="#aaa"
+                      autoCapitalize="characters"
+                      editable={!loading}
+                    />
+                    <TouchableOpacity
+                      style={[styles.promoBtn, (!ownerCommissionPromoCode.trim() || promoLoading) && styles.promoBtnDisabled]}
+                      onPress={handleApplyPromo}
+                      disabled={!ownerCommissionPromoCode.trim() || promoLoading || loading}
+                    >
+                      {promoLoading
+                        ? <ActivityIndicator color="#fff" size="small" />
+                        : <Text style={styles.promoBtnText}>Aplicar</Text>
+                      }
+                    </TouchableOpacity>
+                  </View>
+                  {promoMessage && (
+                    <Text style={promoMessage.valid ? styles.promoSuccess : styles.promoError}>
+                      {promoMessage.text}
+                    </Text>
+                  )}
+                </>
+              )}
+
+              <Text style={styles.helperText}>
+                Solo admite códigos de tipo comisión para arrendadores.
+              </Text>
+            </View>
 
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Periodo de disponibilidad</Text>
@@ -721,6 +797,86 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontStyle: 'italic',
     marginTop: -4,
+  },
+  promoInputRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  promoInput: {
+    flex: 1,
+    height: 48,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2d6e91',
+    backgroundColor: '#f8fbff',
+    letterSpacing: 1,
+  },
+  promoInputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#fef2f2',
+  },
+  promoBtn: {
+    height: 48,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    backgroundColor: '#2d6e91',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promoBtnDisabled: {
+    opacity: 0.45,
+  },
+  promoBtnText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  promoSuccess: {
+    fontSize: 13,
+    color: '#10B981',
+    fontWeight: '600',
+  },
+  promoError: {
+    fontSize: 13,
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  promoAppliedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f0fdf4',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: '#10B981',
+  },
+  promoAppliedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  promoAppliedCode: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1e526e',
+    letterSpacing: 1,
+  },
+  promoRemoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  promoRemoveText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#e74c3c',
   },
 
   // ── Date selectors ────────────────────────────────────────────────────────

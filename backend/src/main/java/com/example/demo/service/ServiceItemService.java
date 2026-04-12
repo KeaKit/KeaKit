@@ -49,6 +49,7 @@ public class ServiceItemService {
         validateServiceData(service, true);
         normalizeOwnerCommissionPromoState(service, false);
         validateOwnerCommissionPromoCode(service.getOwnerCommissionPromoCode(), owner.getEmail());
+        promoCodeService.reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), owner.getEmail());
 
         service.setOwner(owner);
         service.setCategory(category);
@@ -104,6 +105,7 @@ public class ServiceItemService {
 
         validateServiceData(service, startMonthChanged);
         validateOwnerCommissionPromoCode(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
+        promoCodeService.reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
 
         return serviceRepository.save(service);
     }
@@ -224,7 +226,7 @@ public class ServiceItemService {
         }
 
         PromoCodeValidationResponse validation = promoCodeService
-                .validateForOwnerCommissionReduction(promoCode.trim(), ownerEmail);
+            .validateForOwnerCommissionReductionAllowReservedByUser(promoCode.trim(), ownerEmail);
 
         if (!validation.isValid()) {
             throw new RuntimeException(validation.getMessage());

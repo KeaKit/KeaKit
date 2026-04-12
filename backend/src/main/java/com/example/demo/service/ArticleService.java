@@ -141,6 +141,7 @@ public class ArticleService {
         normalizeOwnerCommissionPromoState(article, false);
 
         validateOwnerCommissionPromoCode(article.getOwnerCommissionPromoCode(), owner.getEmail());
+        promoCodeService.reserveOwnerSingleUseIfNeeded(article.getOwnerCommissionPromoCode(), owner.getEmail());
 
         defaultKitService.removeItemFromAllDefaultKits(article.getId());
         return articleRepository.save(article);
@@ -234,6 +235,7 @@ public class ArticleService {
         }
 
         validateOwnerCommissionPromoCode(article.getOwnerCommissionPromoCode(), owner.getEmail());
+        promoCodeService.reserveOwnerSingleUseIfNeeded(article.getOwnerCommissionPromoCode(), owner.getEmail());
 
         return articleRepository.save(article);
     }
@@ -248,7 +250,7 @@ public class ArticleService {
         }
 
         PromoCodeValidationResponse validation = promoCodeService
-            .validateForOwnerCommissionReduction(promoCode.trim(), ownerEmail);
+            .validateForOwnerCommissionReductionAllowReservedByUser(promoCode.trim(), ownerEmail);
 
         if (!validation.isValid()) {
             throw new RuntimeException(validation.getMessage());

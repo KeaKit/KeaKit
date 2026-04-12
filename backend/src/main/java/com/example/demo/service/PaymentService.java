@@ -175,28 +175,36 @@ public class PaymentService {
             ownerPromoCodeToApply = null;
         }
 
-        boolean itemOwnerPromoWasValid = canUseItemOwnerPromo
-            && isValidOwnerCommissionPromoForOwner(ownerPromoCodeToApply, ownerId);
+        boolean ownerPromoWasValidForOwner = isValidOwnerCommissionPromoForOwner(
+            ownerPromoCodeToApply,
+            ownerId,
+            canUseItemOwnerPromo
+        );
 
         double basePrice = item.getPricePerMonth() * item.getQuantity();
-        Double finalPrice = calculateFinalOwnerPrice(basePrice, ownerId, ownerPromoCodeToApply);
+        Double finalPrice = calculateFinalOwnerPrice(basePrice, ownerId, ownerPromoCodeToApply, canUseItemOwnerPromo);
 
         Transaction payOwnerTransaction = payItemToOwner(ownerId, finalPrice);
         transactionRepository.save(payOwnerTransaction);
 
-        if (itemOwnerPromoWasValid) {
+        if (ownerPromoWasValidForOwner && !canUseItemOwnerPromo) {
+            // Consume promo globally as soon as it is effectively applied in a successful owner payout.
+            markOwnerPromoAsUsed(ownerPromoCodeToApply, ownerId);
+        }
+
+        if (canUseItemOwnerPromo && ownerPromoWasValidForOwner) {
             itemDetails.setOwnerCommissionPromoConsumed(true);
         }
     }
 
-    private Double calculateFinalOwnerPrice(double basePrice, Long ownerId, String promoCode) {
+    private Double calculateFinalOwnerPrice(double basePrice, Long ownerId, String promoCode, boolean fromItemAssignedPromo) {
         boolean isPilotUser = isPilotUser(ownerId);
         if (isPilotUser) {
             return toMoney(basePrice);
         }
 
         double commissionRate = normalizeRate(platformConfigService.getCommissionRate());
-        double ownerCommissionReductionRate = resolveOwnerCommissionReductionRate(promoCode, ownerId);
+        double ownerCommissionReductionRate = resolveOwnerCommissionReductionRate(promoCode, ownerId, fromItemAssignedPromo);
         double effectiveCommissionRate = Math.max(0.0, commissionRate - ownerCommissionReductionRate);
         Double feeAmount = toMoney(basePrice * effectiveCommissionRate);
 
@@ -207,7 +215,7 @@ public class PaymentService {
         return toMoney(basePrice - feeAmount);
     }
 
-    private double resolveOwnerCommissionReductionRate(String promoCode, Long ownerId) {
+    private double resolveOwnerCommissionReductionRate(String promoCode, Long ownerId, boolean fromItemAssignedPromo) {
         if (promoCode == null || promoCode.isBlank() || ownerId == null) {
             return 0.0;
         }
@@ -217,8 +225,14 @@ public class PaymentService {
             return 0.0;
         }
 
-        PromoCodeValidationResponse validation = promoCodeService
-                .validateForOwnerCommissionReduction(promoCode, owner.getEmail());
+        PromoCodeValidationResponse validation;
+        if (fromItemAssignedPromo) {
+            validation = promoCodeService
+                .validateForOwnerCommissionReductionAllowReservedByUser(promoCode, owner.getEmail());
+        } else {
+            validation = promoCodeService
+                .validateForOwnerCommissionReductionAndConsumeSingleUse(promoCode, owner.getEmail());
+        }
         if (!validation.isValid() || validation.getDiscountRate() == null) {
             return 0.0;
         }
@@ -262,6 +276,17 @@ public class PaymentService {
         Set<String> processedOwnerEmails = new HashSet<>();
         for (KitItemResponse item : kit.getItems()) {
             Long ownerId = item.getOwnerId();
+            if (ownerId == null) {
+                try {
+                    Item itemDetails = itemService.findById(item.getItemId());
+                    if (itemDetails.getOwner() != null) {
+                        ownerId = itemDetails.getOwner().getId();
+                    }
+                } catch (Exception ignored) {
+                    continue;
+                }
+            }
+
             if (ownerId == null) {
                 continue;
             }
@@ -326,7 +351,7 @@ public class PaymentService {
         }
     }
 
-    private boolean isValidOwnerCommissionPromoForOwner(String promoCode, Long ownerId) {
+    private boolean isValidOwnerCommissionPromoForOwner(String promoCode, Long ownerId, boolean allowReservedBySameUser) {
         if (promoCode == null || promoCode.isBlank() || ownerId == null) {
             return false;
         }
@@ -336,10 +361,29 @@ public class PaymentService {
             return false;
         }
 
-        PromoCodeValidationResponse validation = promoCodeService
+        PromoCodeValidationResponse validation;
+        if (allowReservedBySameUser) {
+            validation = promoCodeService
+                .validateForOwnerCommissionReductionAllowReservedByUser(promoCode, owner.getEmail());
+        } else {
+            validation = promoCodeService
                 .validateForOwnerCommissionReduction(promoCode, owner.getEmail());
+        }
 
         return validation.isValid();
+    }
+
+    private void markOwnerPromoAsUsed(String promoCode, Long ownerId) {
+        if (promoCode == null || promoCode.isBlank() || ownerId == null) {
+            return;
+        }
+
+        UserResponse owner = userService.getUserById(ownerId);
+        if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+            return;
+        }
+
+        promoCodeService.markAsUsed(promoCode, owner.getEmail());
     }
 
     private void completeOrder(Long kitId) throws ResourceNotFoundException {

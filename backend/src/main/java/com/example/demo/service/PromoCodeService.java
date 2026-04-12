@@ -9,6 +9,7 @@ import com.example.demo.model.PromoCodeType;
 import com.example.demo.repository.PromoCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -71,9 +72,50 @@ public class PromoCodeService {
         return validateByType(code, userEmail, PromoCodeType.OWNER_COMMISSION_REDUCTION);
     }
 
+    public PromoCodeValidationResponse validateForOwnerCommissionReductionAllowReservedByUser(String code, String userEmail) {
+        return validateByType(code, userEmail, PromoCodeType.OWNER_COMMISSION_REDUCTION, true);
+    }
+
+    @Transactional
+    public PromoCodeValidationResponse validateForOwnerCommissionReductionAndConsumeSingleUse(String code, String userEmail) {
+        PromoCode promoCode = promoCodeRepository.findByCodeIgnoreCaseForUpdate(code)
+                .orElse(null);
+
+        PromoCodeValidationResponse validation = validatePromoEntityByType(promoCode, userEmail, PromoCodeType.OWNER_COMMISSION_REDUCTION);
+        if (!validation.isValid()) {
+            return validation;
+        }
+
+        if (promoCode != null && promoCode.isSingleUse()) {
+            String marker = (userEmail != null && !userEmail.isBlank())
+                    ? userEmail.toLowerCase()
+                    : "__single_use_consumed__";
+
+            if (!promoCode.getUsedByEmails().contains(marker)) {
+                promoCode.getUsedByEmails().add(marker);
+                promoCodeRepository.save(promoCode);
+            }
+        }
+
+        return validation;
+    }
+
     private PromoCodeValidationResponse validateByType(String code, String userEmail, PromoCodeType expectedType) {
+        return validateByType(code, userEmail, expectedType, false);
+    }
+
+    private PromoCodeValidationResponse validateByType(String code, String userEmail, PromoCodeType expectedType, boolean allowSingleUseIfReservedBySameUser) {
         PromoCode promoCode = promoCodeRepository.findByCodeIgnoreCase(code)
                 .orElse(null);
+
+        return validatePromoEntityByType(promoCode, userEmail, expectedType, allowSingleUseIfReservedBySameUser);
+    }
+
+    private PromoCodeValidationResponse validatePromoEntityByType(PromoCode promoCode, String userEmail, PromoCodeType expectedType) {
+        return validatePromoEntityByType(promoCode, userEmail, expectedType, false);
+    }
+
+    private PromoCodeValidationResponse validatePromoEntityByType(PromoCode promoCode, String userEmail, PromoCodeType expectedType, boolean allowSingleUseIfReservedBySameUser) {
 
         if (promoCode == null) {
             return new PromoCodeValidationResponse(false, null, "Código promocional no válido");
@@ -102,6 +144,13 @@ public class PromoCodeService {
             }
         } else if (promoCode.isSingleUse()) {
             if (!promoCode.getUsedByEmails().isEmpty()) {
+                if (allowSingleUseIfReservedBySameUser && userEmail != null && !userEmail.isBlank()) {
+                    boolean reservedBySameUser = promoCode.getUsedByEmails().stream()
+                            .anyMatch(e -> e.equalsIgnoreCase(userEmail));
+                    if (reservedBySameUser) {
+                        return new PromoCodeValidationResponse(true, promoCode.getDiscountRate(), "Código aplicado correctamente");
+                    }
+                }
                 return new PromoCodeValidationResponse(false, null, "Código promocional ya utilizado");
             }
         }
@@ -115,11 +164,54 @@ public class PromoCodeService {
 
     public void markAsUsed(String code, String userEmail) {
         promoCodeRepository.findByCodeIgnoreCase(code).ifPresent(promoCode -> {
-            if (!promoCode.getUsedByEmails().contains(userEmail.toLowerCase())) {
-                promoCode.getUsedByEmails().add(userEmail.toLowerCase());
+            String marker;
+            if (userEmail != null && !userEmail.isBlank()) {
+                marker = userEmail.toLowerCase();
+            } else if (promoCode.isSingleUse()) {
+                marker = "__single_use_consumed__";
+            } else {
+                marker = null;
             }
+
+            if (marker != null && !promoCode.getUsedByEmails().contains(marker)) {
+                promoCode.getUsedByEmails().add(marker);
+            }
+
             promoCodeRepository.save(promoCode);
         });
+    }
+
+    @Transactional
+    public void reserveOwnerSingleUseIfNeeded(String code, String userEmail) {
+        if (code == null || code.isBlank()) {
+            return;
+        }
+
+        PromoCode promoCode = promoCodeRepository.findByCodeIgnoreCaseForUpdate(code)
+                .orElseThrow(() -> new RuntimeException("Código promocional no válido"));
+
+        PromoCodeValidationResponse validation = validatePromoEntityByType(
+                promoCode,
+                userEmail,
+                PromoCodeType.OWNER_COMMISSION_REDUCTION,
+                true);
+
+        if (!validation.isValid()) {
+            throw new RuntimeException(validation.getMessage());
+        }
+
+        if (!promoCode.isSingleUse()) {
+            return;
+        }
+
+        String marker = (userEmail != null && !userEmail.isBlank())
+                ? userEmail.toLowerCase()
+                : "__single_use_consumed__";
+
+        if (!promoCode.getUsedByEmails().contains(marker)) {
+            promoCode.getUsedByEmails().add(marker);
+            promoCodeRepository.save(promoCode);
+        }
     }
 
     private void mapRequestToEntity(PromoCodeRequest request, PromoCode promoCode) {
