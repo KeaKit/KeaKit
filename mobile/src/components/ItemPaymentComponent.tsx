@@ -3,6 +3,7 @@ import { KitItemResponse } from "../types";
 import { StyleSheet } from "react-native";
 import { Colors, Spacing } from "../styles/theme";
 import { Icon } from "react-native-paper";
+import { calculateMonthsBetween } from "../utils/duration";
 
 interface ItemPaymentComponentProps {
   item: KitItemResponse;
@@ -16,26 +17,13 @@ export const ItemPaymentComponent = ({
   endDate,
 }: ItemPaymentComponentProps) => {
   const calculateItemTotal = () => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
-    // Calculate rental duration in days and prorate monthly price.
-    // Previously we used only months difference which becomes 0 for short
-    // rentals (e.g. < 1 month) and produced a total of 0. Use days-based
-    // proration so short periods (like a few days) produce a proportional
-    // amount.
-    const msPerDay = 24 * 60 * 60 * 1000;
-    // Use Math.ceil so a partial day counts as a full rental day.
-    let days = Math.ceil((end.getTime() - start.getTime()) / msPerDay);
-    if (days <= 0) days = 1;
+  const months = calculateMonthsBetween(start, end);
 
-    // Business decision: prorrate month price by days/30.0 (consistent with
-    // backend behaviour). Adjust if you prefer days/actualDaysInMonth.
-    const factor = days / 30.0;
-    const perUnit = item.pricePerMonth * factor;
-
-    return perUnit * item.quantity;
-  };
+  return item.pricePerMonth * months * item.quantity;
+};
 
   return (
     <View style={styles.container}>
