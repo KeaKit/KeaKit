@@ -17,7 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
+import org.springframework.security.config.Customizer;
 import java.util.Arrays;
 
 @Configuration
@@ -36,7 +36,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(cors -> Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/swagger-ui.html","/swagger-ui/**","/v3/api-docs/**").permitAll()
@@ -58,7 +58,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/users/**").authenticated()
                 .requestMatchers("/api/ratings/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/category", "/api/category/**").permitAll()
-                .anyRequest().authenticated()
+                .requestMatchers("/error").permitAll()
+		.anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -73,17 +74,23 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        
-        configuration.setAllowedOrigins(Arrays.asList("https://keakitv2.web.app", "http://localhost:8081", "https://keakitv3.web.app")); 
-        
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(false);
+    	CorsConfiguration configuration = new CorsConfiguration();
+    
+    // 1. Permitir CUALQUIER origen temporalmente para descartar errores de tipeo o barras finales
+    	configuration.setAllowedOriginPatterns(Arrays.asList("*")); 
+    
+    // 2. Permitir todos los métodos
+    	configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+    
+    // 3. Permitir CUALQUIER cabecera (es posible que el frontend mande algo que no teníamos en la lista)
+    	configuration.setAllowedHeaders(Arrays.asList("*"));
+    
+    // 4. Debe ser false si usamos "*" en originPatterns
+    	configuration.setAllowCredentials(false); 
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+	UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    	source.registerCorsConfiguration("/**", configuration);
+    	return source;
     }
 
     @Bean
