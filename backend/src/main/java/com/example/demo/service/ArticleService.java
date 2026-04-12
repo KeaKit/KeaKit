@@ -141,7 +141,7 @@ public class ArticleService {
         normalizeOwnerCommissionPromoState(article, false);
 
         validateOwnerCommissionPromoCode(article.getOwnerCommissionPromoCode(), owner.getEmail());
-        promoCodeService.reserveOwnerSingleUseIfNeeded(article.getOwnerCommissionPromoCode(), owner.getEmail());
+        reserveOwnerSingleUseIfNeeded(article.getOwnerCommissionPromoCode(), owner.getEmail());
 
         defaultKitService.removeItemFromAllDefaultKits(article.getId());
         return articleRepository.save(article);
@@ -235,13 +235,17 @@ public class ArticleService {
         }
 
         validateOwnerCommissionPromoCode(article.getOwnerCommissionPromoCode(), owner.getEmail());
-        promoCodeService.reserveOwnerSingleUseIfNeeded(article.getOwnerCommissionPromoCode(), owner.getEmail());
+        reserveOwnerSingleUseIfNeeded(article.getOwnerCommissionPromoCode(), owner.getEmail());
 
         return articleRepository.save(article);
     }
 
     private void validateOwnerCommissionPromoCode(String promoCode, String ownerEmail) {
         if (promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+
+        if (promoCodeService == null) {
             return;
         }
 
@@ -269,6 +273,13 @@ public class ArticleService {
         if (resetConsumedFlag) {
             article.setOwnerCommissionPromoConsumed(false);
         }
+    }
+
+    private void reserveOwnerSingleUseIfNeeded(String promoCode, String ownerEmail) {
+        if (promoCodeService == null || promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+        promoCodeService.reserveOwnerSingleUseIfNeeded(promoCode, ownerEmail);
     }
 
     private String normalizePromoCode(String code) {

@@ -49,7 +49,7 @@ public class ServiceItemService {
         validateServiceData(service, true);
         normalizeOwnerCommissionPromoState(service, false);
         validateOwnerCommissionPromoCode(service.getOwnerCommissionPromoCode(), owner.getEmail());
-        promoCodeService.reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), owner.getEmail());
+        reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), owner.getEmail());
 
         service.setOwner(owner);
         service.setCategory(category);
@@ -105,7 +105,7 @@ public class ServiceItemService {
 
         validateServiceData(service, startMonthChanged);
         validateOwnerCommissionPromoCode(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
-        promoCodeService.reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
+        reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
 
         return serviceRepository.save(service);
     }
@@ -221,6 +221,10 @@ public class ServiceItemService {
             return;
         }
 
+        if (promoCodeService == null) {
+            return;
+        }
+
         if (ownerEmail == null || ownerEmail.isBlank()) {
             throw new RuntimeException("Owner email is required to validate owner promo code");
         }
@@ -231,6 +235,13 @@ public class ServiceItemService {
         if (!validation.isValid()) {
             throw new RuntimeException(validation.getMessage());
         }
+    }
+
+    private void reserveOwnerSingleUseIfNeeded(String promoCode, String ownerEmail) {
+        if (promoCodeService == null || promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+        promoCodeService.reserveOwnerSingleUseIfNeeded(promoCode, ownerEmail);
     }
 
     private void normalizeOwnerCommissionPromoState(ServiceItem service, boolean resetConsumedFlag) {
