@@ -27,7 +27,9 @@ export interface UserResponse {
   address: string;
   city: string;
   country: string;
+  founderBadge: boolean; 
   token?: string;
+  profileImageUrl?: string;
 }
 
 export interface AuthUser {
@@ -39,6 +41,8 @@ export interface AuthUser {
   address: string;
   city: string;
   country: string;
+  founderBadge: boolean; 
+  profileImageUrl?: string;
   token: string;
 }
 

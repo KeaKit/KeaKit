@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.PublicUserProfileDto;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserUpdateData;
@@ -18,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile; 
+import java.io.IOException; 
+
 import java.util.Optional;
 
 @Service
@@ -34,6 +38,9 @@ public class UserService {
 
     @Autowired
     private WalletRepository walletRepository;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     public UserResponse register(RegisterRequest request) {
         String normalizedEmail = request.getEmail().toLowerCase().trim();
@@ -122,5 +129,24 @@ public class UserService {
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return new UserResponse(user);
+    }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+    }
+
+    public User updateProfileImage(Long userId, MultipartFile image) throws IOException {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        String imageUrl = cloudinaryService.uploadImage(image);
+        user.setProfileImageUrl(imageUrl);
+        return userRepository.save(user);
+    }
+
+    public PublicUserProfileDto getPublicUserProfile(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return new PublicUserProfileDto(user);
     }
 }
