@@ -17,7 +17,7 @@ export const DefaultKitCard = ({
   kit,
   isAdmin = false,
   setKitToDelete,
-  setConfirmDeleteMessage
+  setConfirmDeleteMessage,
 }: {
   kit: DefaultKit;
   isAdmin?: boolean;
@@ -26,40 +26,57 @@ export const DefaultKitCard = ({
 }) => {
   const navigation = useNavigation<DefaultKitCardNav>();
 
-  const onDelete = () =>{
+  const onDelete = () => {
     setKitToDelete(kit);
-    setConfirmDeleteMessage(`¿Deseas eliminar el kit predeterminado "${kit.name}"?`);
-  }
-  
+    setConfirmDeleteMessage(
+      `¿Deseas eliminar el kit predeterminado "${kit.name}"?`,
+    );
+  };
+
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={()=>{navigation.navigate("DefaultKitDetails", { kitId: kit.id })}}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.9}
+      onPress={() => {
+        navigation.navigate("DefaultKitDetails", { kitId: kit.id });
+      }}
+    >
       <View style={styles.cardIcon}>
         <Icon source="cube-outline" size={32} color={Colors.primaryHome} />
       </View>
       <View style={styles.cardInfo}>
-        <Text style={commonStyles.bodyStrong} numberOfLines={1}>
+        <Text
+          style={[commonStyles.bodyStrong, { color: Colors.primaryHome }]}
+          numberOfLines={1}
+        >
           {kit.name}
         </Text>
         <Text style={commonStyles.caption}>
           {kit.items?.length || 0} artículos incluidos
         </Text>
       </View>
-      {!isAdmin? 
+      {!isAdmin ? (
         <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        :
-        <View style={{flexDirection: "row", gap: Spacing.sm}}>
-        <KeakitCRUDButton
-          type="edit"
-          onPress={() => {navigation.navigate("DefaultKitForm", {defaultKit: kit, mode: "edit"});}}
-        />
-        <KeakitCRUDButton
-          type="delete"
-          onPress={() => {onDelete()}}
-          variant="violet"
-        />
+      ) : (
+        <View style={{ flexDirection: "row", gap: Spacing.sm }}>
+          <KeakitCRUDButton
+            type="edit"
+            onPress={() => {
+              navigation.navigate("DefaultKitForm", {
+                defaultKit: kit,
+                mode: "edit",
+              });
+            }}
+          />
+          <KeakitCRUDButton
+            type="delete"
+            onPress={() => {
+              onDelete();
+            }}
+            variant="violet"
+          />
         </View>
-        }
-      
+      )}
     </TouchableOpacity>
   );
 };
@@ -69,7 +86,7 @@ const styles = StyleSheet.create({
     ...commonStyles.cardSmall,
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.base
+    gap: Spacing.base,
   },
   cardIcon: {
     width: 50,
@@ -81,6 +98,6 @@ const styles = StyleSheet.create({
   },
   cardInfo: {
     flex: 1,
-    gap: Spacing.xs
-    },
+    gap: Spacing.xs,
+  },
 });

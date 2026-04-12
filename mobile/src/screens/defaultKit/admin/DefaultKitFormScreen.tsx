@@ -1,37 +1,47 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Platform, ScrollView, TouchableOpacity, View } from "react-native";
-import { ActivityIndicator, Modal, Text } from "react-native-paper";
+import { FlatList, View, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, Text } from "react-native-paper";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
-import { es, registerTranslation } from "react-native-paper-dates";
 import {
   Provider as PaperProvider,
   MD3LightTheme,
   TextInput as PaperTextInput,
-  Button,
-  Portal,
 } from "react-native-paper";
-
-registerTranslation("es", es);
-
 import { useAuth } from "../../../context/AuthContext";
-import { API_ROUTES } from "../../../config/api";
+
+import {
+  FontWeights,
+  FontSizes,
+  BorderRadius,
+  Colors,
+  commonStyles,
+  Spacing,
+} from "../../../styles";
 import { RootStackParamList, DefaultKitCreateRequest } from "../../../types";
-import { Colors, commonStyles, componentStyles } from "../../../styles";
-import { createKitStyles } from "../../../styles/createKitStyles";
-import { ProductSelectionModal } from "../../../components/ProductSelectionModal";
 import {
   removeSelectedQuantity,
-  upsertSelectedQuantity
+  upsertSelectedQuantity,
 } from "../../kit/createKitSelection";
-import { createDefaultKit, updateDefaultKit } from "../../../services/defaultKitService";
-import DefaultKitItemComponent from "../../../components/DefaultKitItemComponent";
-import { KeakitButton } from "../../../components";
+import {
+  Header,
+  KeakitButton,
+  KeakitModal,
+  DefaultKitItemComponent,
+  ProductSelectionModal,
+} from "../../../components";
+import {
+  createDefaultKit,
+  updateDefaultKit,
+} from "../../../services/defaultKitService";
+import { fetchItemsForRent } from "../../../services/itemService";
 
-
-type CreateDefaultKitNav = NativeStackNavigationProp<RootStackParamList, "DefaultKitForm">;
-type DefaultKitFormRoute = RouteProp<RootStackParamList, 'DefaultKitForm'>;
+type CreateDefaultKitNav = NativeStackNavigationProp<
+  RootStackParamList,
+  "DefaultKitForm"
+>;
+type DefaultKitFormRoute = RouteProp<RootStackParamList, "DefaultKitForm">;
 
 type CatalogProduct = {
   id: number;
@@ -54,19 +64,24 @@ type CatalogProduct = {
 const DefaultKitFormScreen: React.FC = () => {
   const navigation = useNavigation<CreateDefaultKitNav>();
   const route = useRoute<DefaultKitFormRoute>();
-
   const { user } = useAuth();
-
-  const initialMode = route.params?.mode || 'create';
-  const [formMode, setFormMode] = useState<'view' | 'edit' | 'create'>(initialMode);
+  const token = user?.token || null;
+  const mode = route.params?.mode || "create";
   const defaultKitToEdit = route.params?.defaultKit;
 
   const [name, setName] = useState(defaultKitToEdit?.name || "");
-  const [description, setDescription] = useState(defaultKitToEdit?.description || "");
-  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>([]);
-  
-  const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
-  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
+  const [description, setDescription] = useState(
+    defaultKitToEdit?.description || "",
+  );
+  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
+    [],
+  );
+  const [selectedQuantities, setSelectedQuantities] = useState<
+    Record<number, number>
+  >({});
+  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<
+    Record<number, number>
+  >({});
 
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
@@ -77,43 +92,30 @@ const DefaultKitFormScreen: React.FC = () => {
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errorModalVisible, setErrorModalVisible] = useState(false);
-
-  const isEditable = formMode !== 'view';
-
-  const showErrorModal = (message: string) => {
-    setError(message);
-    setErrorModalVisible(true);
-  };
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const loadCatalog = useCallback(async () => {
-    if (!user?.token) {
+    if (!user?.id || !token) {
       setAvailableProducts([]);
       setLoadingCatalog(false);
-      showErrorModal("Necesitas iniciar sesión.");
+      setError("Necesitas iniciar sesión.");
       return;
     }
 
     try {
       setLoadingCatalog(true);
-      const res = await fetch(API_ROUTES.ITEMS_FOR_RENT(user.id), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
+      const res = await fetchItemsForRent(user.id, token);
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const raw = await res.json();
-
-      const mapped: CatalogProduct[] = (raw ?? []).map((p: any) => ({
+      const mapped: CatalogProduct[] = (res ?? []).map((p: any) => ({
         id: Number(p.id),
         itemType: String(p.itemType ?? "ARTICLE"),
         title: p.title ?? "Sin título",
         pricePerMonth: Number(p.pricePerMonth ?? 0),
         status: String(p.status ?? "AVAILABLE"),
-        category: typeof p.category === "string" ? p.category : (p.category?.name ?? ""),
+        category:
+          typeof p.category === "string"
+            ? p.category
+            : (p.category?.name ?? ""),
         city: p.city ?? "",
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
@@ -123,13 +125,16 @@ const DefaultKitFormScreen: React.FC = () => {
 
       setAvailableProducts(mapped);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo cargar el catálogo.";
-      showErrorModal(message);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No se pudo cargar el catálogo.";
+      setError(message);
       setAvailableProducts([]);
     } finally {
       setLoadingCatalog(false);
     }
-  }, [user?.token]);
+  }, [token]);
 
   useEffect(() => {
     loadCatalog();
@@ -138,7 +143,7 @@ const DefaultKitFormScreen: React.FC = () => {
   useEffect(() => {
     if (defaultKitToEdit && defaultKitToEdit.items) {
       const initialQuantities: Record<number, number> = {};
-      defaultKitToEdit.items.forEach(kitItem => {
+      defaultKitToEdit.items.forEach((kitItem) => {
         const itemId = kitItem.item?.id;
         if (itemId) {
           initialQuantities[itemId] = (initialQuantities[itemId] || 0) + 1;
@@ -148,20 +153,31 @@ const DefaultKitFormScreen: React.FC = () => {
     }
   }, [defaultKitToEdit]);
 
-  const selectedIds = useMemo(() => Object.keys(selectedQuantities).map(Number), [selectedQuantities]);
-  
+  const selectedIds = useMemo(
+    () => Object.keys(selectedQuantities).map(Number),
+    [selectedQuantities],
+  );
+
   const selectedProducts = useMemo(
     () => availableProducts.filter((p) => selectedIds.includes(p.id)),
-    [availableProducts, selectedIds]
+    [availableProducts, selectedIds],
   );
 
   const selectedItemsCount = useMemo(
-    () => Object.values(selectedQuantities).reduce((sum, quantity) => sum + quantity, 0),
-    [selectedQuantities]
+    () =>
+      Object.values(selectedQuantities).reduce(
+        (sum, quantity) => sum + quantity,
+        0,
+      ),
+    [selectedQuantities],
   );
 
   const categories = useMemo(() => {
-    const set = new Set(availableProducts.map((p) => p.category?.trim()).filter((c): c is string => Boolean(c)));
+    const set = new Set(
+      availableProducts
+        .map((p) => p.category?.trim())
+        .filter((c): c is string => Boolean(c)),
+    );
     return ["ALL", ...Array.from(set)];
   }, [availableProducts]);
 
@@ -169,8 +185,12 @@ const DefaultKitFormScreen: React.FC = () => {
     const q = searchText.trim().toLowerCase();
     return availableProducts.filter((p) => {
       const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
-      const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
-      const bySearch = q.length === 0 || p.title.toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q);
+      const byCategory =
+        categoryFilter === "ALL" || p.category === categoryFilter;
+      const bySearch =
+        q.length === 0 ||
+        p.title.toLowerCase().includes(q) ||
+        (p.category ?? "").toLowerCase().includes(q);
       return notInactive && byCategory && bySearch;
     });
   }, [availableProducts, searchText, categoryFilter]);
@@ -190,9 +210,15 @@ const DefaultKitFormScreen: React.FC = () => {
     });
   };
 
-  const changeTempQuantity = (id: number, nextQuantity: number, maxQuantity: number) => {
+  const changeTempQuantity = (
+    id: number,
+    nextQuantity: number,
+    maxQuantity: number,
+  ) => {
     const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
-    setTempSelectedQuantities((prev) => upsertSelectedQuantity(prev, id, safeQuantity));
+    setTempSelectedQuantities((prev) =>
+      upsertSelectedQuantity(prev, id, safeQuantity),
+    );
   };
 
   const confirmSelection = () => {
@@ -201,33 +227,40 @@ const DefaultKitFormScreen: React.FC = () => {
   };
 
   const removeSelectedItem = (id: number) => {
-    if (!isEditable) return;
     setSelectedQuantities((prev) => removeSelectedQuantity(prev, id));
   };
 
   const incrementSelectedQuantity = (id: number) => {
-    if (!isEditable) return;
     const product = availableProducts.find((p) => p.id === id);
     if (!product) return;
     const current = selectedQuantities[id] ?? 1;
-    setSelectedQuantities((prev) => upsertSelectedQuantity(prev, id, Math.min(current + 1, product.totalUnits)));
+    setSelectedQuantities((prev) =>
+      upsertSelectedQuantity(
+        prev,
+        id,
+        Math.min(current + 1, product.totalUnits),
+      ),
+    );
   };
 
   const decrementSelectedQuantity = (id: number) => {
-    if (!isEditable) return;
     const product = availableProducts.find((p) => p.id === id);
     if (!product) return;
     const current = selectedQuantities[id] ?? 1;
-    setSelectedQuantities((prev) => upsertSelectedQuantity(prev, id, Math.max(current - 1, 1)));
+    setSelectedQuantities((prev) =>
+      upsertSelectedQuantity(prev, id, Math.max(current - 1, 1)),
+    );
   };
 
   const handleSubmit = async () => {
-    if (!user?.id || !user.token) {
-      showErrorModal("Necesitas iniciar sesión para crear un kit.");
+    if (!user?.id || !token) {
+      setError("Necesitas iniciar sesión para crear un kit.");
       return;
     }
     if (!name || !description || selectedProducts.length === 0) {
-      showErrorModal("Error: Por favor rellena todos los campos y añade al menos un producto.");
+      setError(
+        "Error: Por favor rellena todos los campos y añade al menos un producto.",
+      );
       return;
     }
 
@@ -239,38 +272,31 @@ const DefaultKitFormScreen: React.FC = () => {
         for (let i = 0; i < qty; i++) itemIds.push(Number(id));
       });
 
-      const payload: Partial<DefaultKitCreateRequest> = { 
-        name, 
-        description, 
-        itemsIds: itemIds 
+      const payload: Partial<DefaultKitCreateRequest> = {
+        name,
+        description,
+        itemsIds: itemIds,
       };
-      
-      const successMessage = formMode === 'edit' ? 'Kit predeterminado actualizado' : 'Kit predeterminado creado';
 
-      if (formMode === 'edit' && defaultKitToEdit) {
-        await updateDefaultKit(defaultKitToEdit.id, payload, user.token);
+      const successMessage =
+        mode === "edit"
+          ? "Kit predeterminado actualizado correctamente."
+          : "Kit predeterminado creado correctamente.";
+
+      if (mode === "edit" && defaultKitToEdit) {
+        await updateDefaultKit(defaultKitToEdit.id, payload, token);
       } else {
-        await createDefaultKit(payload, user.token);
+        await createDefaultKit(payload, token);
       }
 
-      if (Platform.OS === 'web') {
-        window.alert(successMessage);
-        navigation.goBack();
-      } else {
-        Alert.alert('Éxito', successMessage, [{ text: 'OK', onPress: () => navigation.goBack() }]);
-      }
+      setSuccessMessage(successMessage);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      showErrorModal("ERROR al guardar kit: " + errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      setError("Error al guardar kit: " + errorMessage);
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const getHeaderTitle = () => {
-    if (formMode === 'view') return 'Detalles del Kit';
-    if (formMode === 'edit') return 'Editar Kit';
-    return 'Crear Kit Predeterminado';
   };
 
   const customTheme = {
@@ -290,28 +316,37 @@ const DefaultKitFormScreen: React.FC = () => {
 
   return (
     <PaperProvider theme={customTheme}>
-      <View style={commonStyles.container}>
-        <ScrollView contentContainerStyle={createKitStyles.content} keyboardShouldPersistTaps="handled">
-          
-          {/* HEADER */}
-          <View style={createKitStyles.headerRow}>
-            <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-            </TouchableOpacity>
-            <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
-              {getHeaderTitle()}
-            </Text>
-            <View style={componentStyles.iconButton} />
-          </View>
-
+      <SafeAreaView style={commonStyles.containerWhite}>
+        <Header
+          title={mode === "edit" ? "Editar Kit" : "Crear Kit Predeterminado"}
+          showBack
+          onBack={() => navigation.goBack()}
+        />
+        <KeakitModal
+          visible={!!error}
+          onDismiss={() => {
+            setError(null);
+          }}
+          message={error ?? "Ha ocurrido un error."}
+          variant="error"
+        />
+        <KeakitModal
+          visible={!!successMessage}
+          onDismiss={() => {
+            setSuccessMessage(null);
+            navigation.goBack();
+          }}
+          message={successMessage ?? "Operación exitosa."}
+          variant="info"
+        />
+        <View style={commonStyles.contentContainer}>
           {/* FORMULARIO */}
           <PaperTextInput
             mode="outlined"
             label="Nombre del Kit"
             value={name}
             onChangeText={setName}
-            editable={isEditable}
-            style={{ backgroundColor: Colors.backgroundWhite, marginBottom: 12 }}
+            style={{ backgroundColor: Colors.backgroundWhite }}
             outlineColor={Colors.border}
             activeOutlineColor={Colors.primary}
           />
@@ -320,7 +355,6 @@ const DefaultKitFormScreen: React.FC = () => {
             label="Descripción"
             value={description}
             onChangeText={setDescription}
-            editable={isEditable}
             multiline
             style={{ backgroundColor: Colors.backgroundWhite }}
             outlineColor={Colors.border}
@@ -328,69 +362,87 @@ const DefaultKitFormScreen: React.FC = () => {
           />
 
           {/* SECCIÓN DE PRODUCTOS */}
-          <View style={createKitStyles.productsHeader}>
-            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
-              Productos incluidos
-            </Text>
-            {isEditable && (
-              <Button
-                mode="contained"
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: Spacing.md,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: Spacing.sm,
+              }}
+            >
+              <Text style={[commonStyles.subtitle, { marginBottom: 0 }]}>
+                Productos seleccionados
+              </Text>
+              <View style={styles.statCircle}>
+                <Text style={styles.statNumber}>{selectedItemsCount}</Text>
+              </View>
+            </View>
+
+            <View style={{ minWidth: 165 }}>
+              <KeakitButton
+                title="Añadir productos"
                 onPress={openAddProductModal}
                 icon="plus"
-                compact
-                style={{ borderRadius: 8 }}
-              >
-                Añadir Producto
-              </Button>
-            )}
-          </View>
-
-          <View style={createKitStyles.counterBadge}>
-            <Text style={createKitStyles.counterBadgeText}>
-              Seleccionados: {selectedItemsCount}
-            </Text>
+              />
+            </View>
           </View>
 
           {loadingCatalog ? (
-            <View style={createKitStyles.loaderArea}>
+            <View
+              style={{
+                paddingVertical: Spacing.xl,
+                alignItems: "center",
+              }}
+            >
               <ActivityIndicator color={Colors.primary} />
             </View>
           ) : selectedProducts.length === 0 ? (
-            <Text style={commonStyles.bodySecondary}>
+            <Text
+              style={[
+                commonStyles.bodySecondary,
+                { flex: 1, textAlign: "center", marginTop: 50 },
+              ]}
+            >
               Aún no hay productos en este kit.
             </Text>
           ) : (
-            selectedProducts.map((item) => (
-              <DefaultKitItemComponent
-                key={item.id}
-                item={item}
-                quantity={selectedQuantities[item.id] ?? 1}
-                maxQuantity={item.totalUnits}
-                onIncrease={isEditable ? incrementSelectedQuantity : undefined}
-                onDecrease={isEditable ? decrementSelectedQuantity : undefined}
-                onRemove={isEditable ? removeSelectedItem : undefined}
-              />
-            ))
+            <FlatList
+              data={selectedProducts}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <DefaultKitItemComponent
+                  key={item.id}
+                  item={item}
+                  quantity={selectedQuantities[item.id] ?? 1}
+                  maxQuantity={item.totalUnits}
+                  onIncrease={incrementSelectedQuantity}
+                  onDecrease={decrementSelectedQuantity}
+                  onRemove={removeSelectedItem}
+                />
+              )}
+              contentContainerStyle={{ gap: Spacing.sm, flex: 1 }}
+            />
           )}
-        </ScrollView>
+        </View>
 
-        {/* FOOTER BOTONES */}
-        <View style={{ padding: 16, backgroundColor: Colors.backgroundWhite }}>
-          {formMode === 'view' ? (
-            <KeakitButton
-              title="Editar Kit"
-              onPress={() => { setFormMode('edit') }}
-              icon="pencil"
-            />
-          ) : (
-            <KeakitButton
-              title={formMode === 'edit' ? 'Confirmar cambios' : 'Crear kit predeterminado'}
-              onPress={async () => await handleSubmit()}
-              icon={formMode === 'edit' ? "check" : "plus"}
-              loading={submitting}
-              disabled={submitting}
-            />
-          )}
+        {/* FOOTER */}
+        <View style={commonStyles.footerContainer}>
+          <KeakitButton
+            title={
+              mode === "edit" ? "Confirmar cambios" : "Crear kit predeterminado"
+            }
+            onPress={async () => await handleSubmit()}
+            icon={"check"}
+            loading={submitting}
+            disabled={submitting}
+          />
         </View>
 
         <ProductSelectionModal
@@ -414,29 +466,26 @@ const DefaultKitFormScreen: React.FC = () => {
           onToggleExpandedSearch={() => {}}
           loadingNearby={false}
         />
-      </View>
-
-      <Portal>
-        <Modal
-          visible={errorModalVisible}
-          onDismiss={() => setErrorModalVisible(false)}
-          contentContainerStyle={commonStyles.errorContainer}
-        >
-          <Text variant="titleMedium" style={commonStyles.subtitle}>Error</Text>
-          <Text style={commonStyles.errorText}>{error ?? "Ha ocurrido un error."}</Text>
-          <Button
-            mode="contained"
-            onPress={() => setErrorModalVisible(false)}
-            style={commonStyles.primaryButton}
-            buttonColor="#1A3A52"
-            textColor="#FFFFFF"
-          >
-            Entendido
-          </Button>
-        </Modal>
-      </Portal>
+      </SafeAreaView>
     </PaperProvider>
   );
 };
 
 export default DefaultKitFormScreen;
+
+const styles = StyleSheet.create({
+  statCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.primaryHome,
+  },
+
+  statNumber: {
+    fontSize: FontSizes.sm,
+    fontWeight: FontWeights.bold,
+    color: Colors.textWhite,
+  },
+});

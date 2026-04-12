@@ -420,7 +420,7 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
-  DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
+  DefaultKitForm: { defaultKit?: DefaultKit; mode: "edit" | "create" };
   Commission: undefined;
   Wallet: undefined;
   WithdrawMoney: undefined;
