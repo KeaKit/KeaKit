@@ -164,18 +164,6 @@ const NotificationsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
-      <View style={commonStyles.header}>
-        <TouchableOpacity
-          style={componentStyles.iconButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={22} color={Colors.primary} />
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>Notificaciones</Text>
-
-        <View style={componentStyles.iconButton} />
-      </View>
 
       {loading ? (
         <View style={styles.centerContent}>
