@@ -80,7 +80,6 @@ import CreateServiceScreen from "../screens/service/CreateServiceScreen";
 import EditServiceScreen from "../screens/service/EditServiceScreen";
 
 // Default kits
-import PurchaseDefaultKitScreen from "../screens/defaultKit/tenant/PurchaseDefaultKitScreen";
 import DefaultKitsScreen from "../screens/defaultKit/tenant/DefaultKitsScreen";
 import DefaultKitsAdminScreen from "../screens/defaultKit/admin/DefaultKitsAdminScreen";
 import DefaultKitFormScreen from "../screens/defaultKit/admin/DefaultKitFormScreen";
@@ -268,11 +267,6 @@ const AppNavigator: React.FC = () => {
                 <Stack.Screen
                   name="DefaultKitForm"
                   component={DefaultKitFormScreen}
-                />
-                <Stack.Screen
-                  name="PurchaseDefaultKit"
-                  component={PurchaseDefaultKitScreen}
-                  options={{ headerShown: false }}
                 />
 
                 {/* Valoraciones */}

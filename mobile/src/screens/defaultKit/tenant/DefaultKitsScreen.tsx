@@ -16,7 +16,6 @@ import {
   Header,
   KeakitModal,
   DefaultKitCard,
-  DefaultKitDetails,
 } from "../../../components";
 
 type DefaultKitsNav = NativeStackNavigationProp<
@@ -96,12 +95,6 @@ const DefaultKitsScreen: React.FC = () => {
           />
         )}
 
-        {selectedKit && (
-          <DefaultKitDetails
-            selectedKit={selectedKit}
-            setSelectedKit={setSelectedKit}
-          />
-        )}
       </View>
     </SafeAreaView>
   );
