@@ -18,6 +18,7 @@ import com.example.demo.dto.ArticleRecordDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
+import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.User;
@@ -42,12 +43,14 @@ public class ArticleService {
     private final CloudinaryService cloudinaryService;
     private final CityService cityService;
     private final ArticleAvailabilityRequestService availabilityRequestService;
+    private final PromoCodeService promoCodeService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
                           KitRepository kitRepository, CategoryRepository categoryRepository,
                           PaymentService paymentService,
                           CloudinaryService cloudinaryService, DefaultKitService defaultKitService,
-                          CityService cityService, ArticleAvailabilityRequestService availabilityRequestService) {
+                          CityService cityService, ArticleAvailabilityRequestService availabilityRequestService,
+                          PromoCodeService promoCodeService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.kitRepository = kitRepository;
@@ -57,6 +60,7 @@ public class ArticleService {
         this.paymentService = paymentService;
         this.cityService = cityService;
         this.availabilityRequestService = availabilityRequestService; // Se inyecta manualmente para evitar dependencia circular
+        this.promoCodeService = promoCodeService;
     }
 
 
@@ -133,6 +137,11 @@ public class ArticleService {
             throw new RuntimeException("Owner (with valid id) is required");
         userRepository.findById(owner.getId())
             .orElseThrow(() -> new RuntimeException("Owner not found"));
+
+        normalizeOwnerCommissionPromoState(article, false);
+
+        validateOwnerCommissionPromoCode(article.getOwnerCommissionPromoCode(), owner.getEmail());
+
         defaultKitService.removeItemFromAllDefaultKits(article.getId());
         return articleRepository.save(article);
     }
@@ -218,7 +227,66 @@ public class ArticleService {
 
         if (updateData.getCondition() != null) article.setCondition(updateData.getCondition());
 
+        if (updateData.getOwnerCommissionPromoCode() != null) {
+            String previousCode = article.getOwnerCommissionPromoCode();
+            article.setOwnerCommissionPromoCode(updateData.getOwnerCommissionPromoCode());
+            normalizeOwnerCommissionPromoState(article, !sameCode(previousCode, article.getOwnerCommissionPromoCode()));
+        }
+
+        validateOwnerCommissionPromoCode(article.getOwnerCommissionPromoCode(), owner.getEmail());
+
         return articleRepository.save(article);
+    }
+
+    private void validateOwnerCommissionPromoCode(String promoCode, String ownerEmail) {
+        if (promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+
+        if (ownerEmail == null || ownerEmail.isBlank()) {
+            throw new RuntimeException("Owner email is required to validate owner promo code");
+        }
+
+        PromoCodeValidationResponse validation = promoCodeService
+            .validateForOwnerCommissionReduction(promoCode.trim(), ownerEmail);
+
+        if (!validation.isValid()) {
+            throw new RuntimeException(validation.getMessage());
+        }
+    }
+
+    private void normalizeOwnerCommissionPromoState(Article article, boolean resetConsumedFlag) {
+        String normalized = normalizePromoCode(article.getOwnerCommissionPromoCode());
+        article.setOwnerCommissionPromoCode(normalized);
+
+        if (normalized == null) {
+            article.setOwnerCommissionPromoConsumed(false);
+            return;
+        }
+
+        if (resetConsumedFlag) {
+            article.setOwnerCommissionPromoConsumed(false);
+        }
+    }
+
+    private String normalizePromoCode(String code) {
+        if (code == null) {
+            return null;
+        }
+        String normalized = code.trim().toUpperCase();
+        return normalized.isBlank() ? null : normalized;
+    }
+
+    private boolean sameCode(String left, String right) {
+        String l = normalizePromoCode(left);
+        String r = normalizePromoCode(right);
+        if (l == null && r == null) {
+            return true;
+        }
+        if (l == null || r == null) {
+            return false;
+        }
+        return l.equals(r);
     }
 
     public void deleteById(Long id, Long ownerId) {

@@ -5,6 +5,7 @@ import com.example.demo.dto.PromoCodeResponse;
 import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.PromoCode;
+import com.example.demo.model.PromoCodeType;
 import com.example.demo.repository.PromoCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -59,12 +60,30 @@ public class PromoCodeService {
     }
 
     public PromoCodeValidationResponse validate(String code, String userEmail) {
+        return validateForTenantDiscount(code, userEmail);
+    }
+
+    public PromoCodeValidationResponse validateForTenantDiscount(String code, String userEmail) {
+        return validateByType(code, userEmail, PromoCodeType.TENANT_DISCOUNT);
+    }
+
+    public PromoCodeValidationResponse validateForOwnerCommissionReduction(String code, String userEmail) {
+        return validateByType(code, userEmail, PromoCodeType.OWNER_COMMISSION_REDUCTION);
+    }
+
+    private PromoCodeValidationResponse validateByType(String code, String userEmail, PromoCodeType expectedType) {
         PromoCode promoCode = promoCodeRepository.findByCodeIgnoreCase(code)
                 .orElse(null);
 
         if (promoCode == null) {
             return new PromoCodeValidationResponse(false, null, "Código promocional no válido");
         }
+
+        PromoCodeType promoType = resolvePromoType(promoCode);
+        if (promoType != expectedType) {
+            return new PromoCodeValidationResponse(false, null, "Código promocional no válido");
+        }
+
         if (!promoCode.isActive()) {
             return new PromoCodeValidationResponse(false, null, "Este código promocional no está activo");
         }
@@ -90,6 +109,10 @@ public class PromoCodeService {
         return new PromoCodeValidationResponse(true, promoCode.getDiscountRate(), "Código aplicado correctamente");
     }
 
+    private PromoCodeType resolvePromoType(PromoCode promoCode) {
+        return promoCode.getType() != null ? promoCode.getType() : PromoCodeType.TENANT_DISCOUNT;
+    }
+
     public void markAsUsed(String code, String userEmail) {
         promoCodeRepository.findByCodeIgnoreCase(code).ifPresent(promoCode -> {
             if (!promoCode.getUsedByEmails().contains(userEmail.toLowerCase())) {
@@ -109,6 +132,7 @@ public class PromoCodeService {
         promoCode.setDiscountRate(request.discountRate());
         promoCode.setActive(request.active());
         promoCode.setSingleUse(request.singleUse());
+        promoCode.setType(request.type() != null ? request.type() : PromoCodeType.TENANT_DISCOUNT);
         promoCode.setPilotUserOnly(request.pilotUserOnly());
         promoCode.setPilotEmails(request.pilotEmails() != null
                 ? request.pilotEmails().stream()

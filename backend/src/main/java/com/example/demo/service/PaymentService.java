@@ -14,16 +14,20 @@ import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.KitResponse.KitItemResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.dto.KitPaymentDTO;
+import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.repository.TransactionRepository;
 import com.example.demo.repository.KitRepository;
+import com.example.demo.repository.PilotUserRepository;
 
 import com.stripe.Stripe;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.exception.StripeException;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import com.stripe.model.Payout;
 
 import com.example.demo.exception.UserNotFoundException;
@@ -65,6 +69,9 @@ public class PaymentService {
 
     @Autowired
     private PromoCodeService promoCodeService;
+
+    @Autowired
+    private PilotUserRepository pilotUserRepository;
 
 
     @Value("${stripe.api.key}")
@@ -113,7 +120,7 @@ public class PaymentService {
         }
 
         processGuarantee(paymentInfo.guarantee());
-        kit.getItems().forEach(this::processItemPaymentToOwner);
+        kit.getItems().forEach(item -> processItemPaymentToOwner(item, promoCode));
 
         kitService.markAsPaid(kitId);
         Kit kitEntity = kitRepository.findById(kitId)
@@ -122,9 +129,10 @@ public class PaymentService {
         double discountEuros = paymentInfo.discount() != null ? paymentInfo.discount() / 100.0 : 0.0;
         emailService.sendOrderConfirmation(kitEntity, discountEuros, promoCode);
 
-        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
-            promoCodeService.markAsUsed(promoCode, userEmail);
+        if (promoCode != null && !promoCode.isBlank()) {
+            markPromoAsUsedForAppliedContext(promoCode, userEmail, kit);
         }
+        markOwnerPromosAsUsedFromItems(kit);
     }
 
     @Transactional
@@ -145,32 +153,193 @@ public class PaymentService {
         transactionRepository.save(guaranteeTransaction);
     }
 
-    private void processItemPaymentToOwner(KitItemResponse item) throws ResourceNotFoundException {
+    private void processItemPaymentToOwner(KitItemResponse item, String promoCode) throws ResourceNotFoundException {
+        Item itemDetails = itemService.findById(item.getItemId());
+
         Long ownerId = item.getOwnerId();
-        if (ownerId == null) {
-            Item itemDetails = itemService.findById(item.getItemId());
+        if (ownerId == null && itemDetails.getOwner() != null) {
             ownerId = itemDetails.getOwner().getId();
         }
 
+        String ownerPromoCode = itemDetails.getOwnerCommissionPromoCode();
+        boolean canUseItemOwnerPromo = ownerPromoCode != null
+            && !ownerPromoCode.isBlank()
+            && !itemDetails.isOwnerCommissionPromoConsumed();
+
+        String ownerPromoCodeToApply;
+        if (canUseItemOwnerPromo) {
+            ownerPromoCodeToApply = ownerPromoCode.trim();
+        } else if (ownerPromoCode == null || ownerPromoCode.isBlank()) {
+            ownerPromoCodeToApply = promoCode;
+        } else {
+            ownerPromoCodeToApply = null;
+        }
+
+        boolean itemOwnerPromoWasValid = canUseItemOwnerPromo
+            && isValidOwnerCommissionPromoForOwner(ownerPromoCodeToApply, ownerId);
+
         double basePrice = item.getPricePerMonth() * item.getQuantity();
-        Double finalPrice = calculateFinalOwnerPrice(basePrice);
+        Double finalPrice = calculateFinalOwnerPrice(basePrice, ownerId, ownerPromoCodeToApply);
 
         Transaction payOwnerTransaction = payItemToOwner(ownerId, finalPrice);
         transactionRepository.save(payOwnerTransaction);
+
+        if (itemOwnerPromoWasValid) {
+            itemDetails.setOwnerCommissionPromoConsumed(true);
+        }
     }
 
-    private Double calculateFinalOwnerPrice(double basePrice) {
-        // TODO: Añadir lógica real para determinar si el usuario es piloto o no, y obtener la tasa de comisión real desde la configuración
-        boolean isPilotUser = true;
+    private Double calculateFinalOwnerPrice(double basePrice, Long ownerId, String promoCode) {
+        boolean isPilotUser = isPilotUser(ownerId);
         if (isPilotUser) {
             return toMoney(basePrice);
         }
 
-        double rate = platformConfigService.getCommissionRate();
-        Double feeAmount = toMoney(basePrice * rate);
+        double commissionRate = normalizeRate(platformConfigService.getCommissionRate());
+        double ownerCommissionReductionRate = resolveOwnerCommissionReductionRate(promoCode, ownerId);
+        double effectiveCommissionRate = Math.max(0.0, commissionRate - ownerCommissionReductionRate);
+        Double feeAmount = toMoney(basePrice * effectiveCommissionRate);
 
-        transactionRepository.save(transferFee(feeAmount));
-        return toMoney(basePrice * (1 - rate));
+        if (feeAmount > 0) {
+            transactionRepository.save(transferFee(feeAmount));
+        }
+
+        return toMoney(basePrice - feeAmount);
+    }
+
+    private double resolveOwnerCommissionReductionRate(String promoCode, Long ownerId) {
+        if (promoCode == null || promoCode.isBlank() || ownerId == null) {
+            return 0.0;
+        }
+
+        UserResponse owner = userService.getUserById(ownerId);
+        if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+            return 0.0;
+        }
+
+        PromoCodeValidationResponse validation = promoCodeService
+                .validateForOwnerCommissionReduction(promoCode, owner.getEmail());
+        if (!validation.isValid() || validation.getDiscountRate() == null) {
+            return 0.0;
+        }
+
+        return normalizeRate(validation.getDiscountRate());
+    }
+
+    private boolean isPilotUser(Long userId) {
+        if (userId == null) {
+            return false;
+        }
+
+        UserResponse owner = userService.getUserById(userId);
+        if (owner == null || owner.getEmail() == null) {
+            return false;
+        }
+
+        return pilotUserRepository.findByEmailIgnoreCase(owner.getEmail())
+                .map(p -> p.isActive())
+                .orElse(false);
+    }
+
+    private double normalizeRate(Double rate) {
+        if (rate == null) {
+            return 0.0;
+        }
+
+        return Math.max(0.0, Math.min(1.0, rate));
+    }
+
+    private void markPromoAsUsedForAppliedContext(String promoCode, String tenantEmail, KitResponse kit) {
+        if (tenantEmail != null && !tenantEmail.isBlank()) {
+            PromoCodeValidationResponse tenantValidation = promoCodeService
+                    .validateForTenantDiscount(promoCode, tenantEmail);
+            if (tenantValidation.isValid()) {
+                promoCodeService.markAsUsed(promoCode, tenantEmail);
+                return;
+            }
+        }
+
+        Set<String> processedOwnerEmails = new HashSet<>();
+        for (KitItemResponse item : kit.getItems()) {
+            Long ownerId = item.getOwnerId();
+            if (ownerId == null) {
+                continue;
+            }
+
+            UserResponse owner = userService.getUserById(ownerId);
+            if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+                continue;
+            }
+
+            String ownerEmail = owner.getEmail().toLowerCase().trim();
+            if (!processedOwnerEmails.add(ownerEmail)) {
+                continue;
+            }
+
+            PromoCodeValidationResponse ownerValidation = promoCodeService
+                    .validateForOwnerCommissionReduction(promoCode, ownerEmail);
+            if (ownerValidation.isValid()) {
+                promoCodeService.markAsUsed(promoCode, ownerEmail);
+            }
+        }
+    }
+
+    private void markOwnerPromosAsUsedFromItems(KitResponse kit) {
+        Set<String> processedOwnerCodePairs = new HashSet<>();
+
+        for (KitItemResponse item : kit.getItems()) {
+            try {
+                Item itemDetails = itemService.findById(item.getItemId());
+                String ownerPromoCode = itemDetails.getOwnerCommissionPromoCode();
+                if (ownerPromoCode == null || ownerPromoCode.isBlank()) {
+                    continue;
+                }
+
+                Long ownerId = item.getOwnerId();
+                if (ownerId == null && itemDetails.getOwner() != null) {
+                    ownerId = itemDetails.getOwner().getId();
+                }
+                if (ownerId == null) {
+                    continue;
+                }
+
+                UserResponse owner = userService.getUserById(ownerId);
+                if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+                    continue;
+                }
+
+                String ownerEmail = owner.getEmail().toLowerCase().trim();
+                String code = ownerPromoCode.trim();
+                String pairKey = code.toLowerCase() + "|" + ownerEmail;
+                if (!processedOwnerCodePairs.add(pairKey)) {
+                    continue;
+                }
+
+                PromoCodeValidationResponse ownerValidation = promoCodeService
+                        .validateForOwnerCommissionReduction(code, ownerEmail);
+                if (ownerValidation.isValid()) {
+                    promoCodeService.markAsUsed(code, ownerEmail);
+                }
+            } catch (Exception ignored) {
+                // If item or owner cannot be resolved, skip promo usage marking for that item.
+            }
+        }
+    }
+
+    private boolean isValidOwnerCommissionPromoForOwner(String promoCode, Long ownerId) {
+        if (promoCode == null || promoCode.isBlank() || ownerId == null) {
+            return false;
+        }
+
+        UserResponse owner = userService.getUserById(ownerId);
+        if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+            return false;
+        }
+
+        PromoCodeValidationResponse validation = promoCodeService
+                .validateForOwnerCommissionReduction(promoCode, owner.getEmail());
+
+        return validation.isValid();
     }
 
     private void completeOrder(Long kitId) throws ResourceNotFoundException {

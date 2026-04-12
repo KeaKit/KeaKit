@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { uploadArticle, uploadArticleWithImage } from '../../services/articleService';
 import { fetchAllCategories } from '../../services/categoryService';
+import { validatePromoCode } from '../../services/promoCodeService';
 import { ArticlePayload, ArticleCondition, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
@@ -106,6 +107,7 @@ const UploadArticleScreen: React.FC = () => {
   const [availableUntil, setAvailableUntil] = useState('');
   const [selectedImage, setSelectedImage] = useState<{ uri: string; name: string } | null>(null);
   const [purchaseDate, setPurchaseDate] = useState('');
+  const [ownerCommissionPromoCode, setOwnerCommissionPromoCode] = useState('');
   const [condition, setCondition] = useState<'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN' | ''>('');
 
   const conditionOptions: { value: 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN'; label: string }[] = [
@@ -238,6 +240,22 @@ const UploadArticleScreen: React.FC = () => {
     }
     setLoading(true);
     try {
+      const trimmedOwnerPromoCode = ownerCommissionPromoCode.trim();
+      if (trimmedOwnerPromoCode && user.email) {
+        const ownerPromoValidation = await validatePromoCode(
+          user.token,
+          trimmedOwnerPromoCode,
+          user.email,
+          'OWNER_COMMISSION_REDUCTION',
+        );
+
+        if (!ownerPromoValidation.valid) {
+          showNotification(ownerPromoValidation.message || 'Código promocional no válido para arrendador', 'error');
+          setLoading(false);
+          return;
+        }
+      }
+
       const payload: ArticlePayload = {
         title:         title.trim(),
         description:   description.trim(),
@@ -249,6 +267,7 @@ const UploadArticleScreen: React.FC = () => {
         status:        'AVAILABLE',
         ...(condition           && { condition:    condition as ArticleCondition }),
         ...(purchaseDate.trim() && { purchaseDate: purchaseDate.trim() }),
+        ...(trimmedOwnerPromoCode && { ownerCommissionPromoCode: trimmedOwnerPromoCode }),
       };
       if (selectedImage) {
         await uploadArticleWithImage(user.id, selectedCategory!.id, user.token, payload, selectedImage.uri, selectedImage.name);
@@ -414,6 +433,17 @@ const UploadArticleScreen: React.FC = () => {
             {selectedCategory && (
               <Text style={styles.helperText}>{`Precio entre ${selectedCategory.minPrice}€ y ${selectedCategory.maxPrice}€`}</Text>
             )}
+
+            <Field
+              label="Código promo de comisión"
+              value={ownerCommissionPromoCode}
+              onChange={(t) => setOwnerCommissionPromoCode(t.toUpperCase())}
+              placeholder="Ej: OWNER10"
+              optional
+            />
+            <Text style={styles.helperText}>
+              Opcional. Solo admite códigos de tipo comisión para arrendadores.
+            </Text>
 
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Periodo de disponibilidad</Text>
