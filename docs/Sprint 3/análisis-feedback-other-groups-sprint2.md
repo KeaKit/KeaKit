@@ -232,6 +232,8 @@ El objetivo es identificar problemas residuales, funcionalidades no implementada
 | Refactorización frontend de kits predeterminados | Equipo 1 | 00/00/2026 | In progress |
 | [BUG] No permite pago con wallet  | Equipo 3 | 00/00/2026 | In Review |
 | [BUG] Alquiler de artículos ya alquilados  | Equipo 2 | 00/00/2026 | In Review |
+| [BUG] Valoración única de un artículo del kit  | Equipo - | 00/00/2026 | To Do |
+| [BUG] Al crear un artículo, este aparece en el listado de productos para crear un kit, pero no en el mapa.  | Equipo - | 00/00/2026 | To Do |
 
 ## 7. Historial de versiones
 
