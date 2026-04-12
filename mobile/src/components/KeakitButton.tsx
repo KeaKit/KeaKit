@@ -95,10 +95,11 @@ export const KeakitButton = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     borderRadius: BorderRadius.md,
+    width: '100%',
   },
   button: {
+    flex: 1,
     paddingVertical: 14,
     borderRadius: BorderRadius.md,
     alignItems: "center",

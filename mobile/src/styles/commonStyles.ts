@@ -37,13 +37,12 @@ export const commonStyles = StyleSheet.create({
     padding: 50,
     paddingTop: 30,
     paddingBottom: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    ...Shadows.header,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
     elevation: 5,
   },
-
+    
   // Headers
   header: {
     flexDirection: 'row',

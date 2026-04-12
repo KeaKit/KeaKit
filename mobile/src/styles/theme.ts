@@ -111,6 +111,12 @@ export const Shadows = {
     shadowRadius: 16,
     elevation: 8,
   },
+  header: {
+    shadowColor: Colors.shadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  }
 } as const;
 
 export const Layout = {
