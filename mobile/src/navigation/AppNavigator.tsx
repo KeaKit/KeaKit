@@ -82,7 +82,6 @@ import EditServiceScreen from "../screens/service/EditServiceScreen";
 
 // Default kits
 import DefaultKitsScreen from "../screens/defaultKit/tenant/DefaultKitsScreen";
-import DefaultKitsAdminScreen from "../screens/defaultKit/admin/DefaultKitsAdminScreen";
 import DefaultKitFormScreen from "../screens/defaultKit/admin/DefaultKitFormScreen";
 import DefaultKitDetailScreen from "../screens/defaultKit/tenant/DefaultKitDetailsScreen";
 
@@ -138,10 +137,8 @@ const AppNavigator: React.FC = () => {
 
                 <Stack.Screen
                   name="DefaultKits"
-                  component={withLayoutAndRole(
-                    DefaultKitsAdminScreen,
-                    DefaultKitsScreen,
-                    user.role,
+                  component={withLayout(
+                    DefaultKitsScreen
                   )}
                 />
                 <Stack.Screen
