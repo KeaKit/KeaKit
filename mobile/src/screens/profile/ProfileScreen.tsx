@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { getWalletByUserId } from '../../services/walletService';
+import { ProfileImageWithBadge } from '../../components/ProfileImageWithBadge';
 
 type ProfileNav = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 
@@ -143,7 +144,11 @@ const ProfileScreen: React.FC = () => {
 
       <View style={styles.headerCard}>
         <View style={styles.avatarSection}>
-            <Image source={require('../../../assets/logo.png')} style={styles.logo} />
+          <ProfileImageWithBadge
+            imageUrl={user.profileImageUrl}
+            size={100}
+            founderBadge={user.founderBadge}
+          />
           <Text style={styles.title}>Perfil</Text>
           <Text style={styles.subtitle}>{user.email}</Text>
           <View style={styles.balanceContainer}>

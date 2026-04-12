@@ -4,6 +4,9 @@ export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
   LOGIN:    `${BASE_URL}/api/users/login`,
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
+  // Update profile image endpoint
+  UPLOAD_PROFILE_IMAGE: `${BASE_URL}/api/users/profile/image`,
+
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   GET_ADMIN_ALL_USERS: `${BASE_URL}/api/admin/users/no-self`,
@@ -14,6 +17,7 @@ export const API_ROUTES = {
   GET_RATINGS_FOR_USER:  (userId: number) => `${BASE_URL}/api/ratings/user/${userId}`,
   GET_RATINGS_BY_USER:   (userId: number) => `${BASE_URL}/api/ratings/given/${userId}`,
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
+  GET_PUBLIC_USER_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}/public-profile`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   HAS_REVIEWED_ITEMS: `${BASE_URL}/api/ratings/has-reviewed`,
   HAS_REVIEWED_ITEM_IN_KITS: `${BASE_URL}/api/ratings/has-reviewed-kit`,
@@ -146,7 +150,10 @@ export const API_ROUTES = {
     `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`,
 
   // Article history
-  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`
+  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`,
+
+  // Insignia
+  TOGGLE_FOUNDER_BADGE: (id: number) => `${BASE_URL}/api/admin/users/${id}/founder-badge`,
 
 } as const;
 
