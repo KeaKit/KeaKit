@@ -81,10 +81,10 @@ import EditServiceScreen from "../screens/service/EditServiceScreen";
 
 // Default kits
 import PurchaseDefaultKitScreen from "../screens/defaultKit/tenant/PurchaseDefaultKitScreen";
-import EditDefaultKitScreen from "../screens/defaultKit/tenant/EditDefaultKitScreen";
 import DefaultKitsScreen from "../screens/defaultKit/tenant/DefaultKitsScreen";
 import DefaultKitsAdminScreen from "../screens/defaultKit/admin/DefaultKitsAdminScreen";
 import DefaultKitFormScreen from "../screens/defaultKit/admin/DefaultKitFormScreen";
+import DefaultKitDetailScreen from "../screens/defaultKit/tenant/DefaultKitDetailsScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -142,6 +142,10 @@ const AppNavigator: React.FC = () => {
                     DefaultKitsScreen,
                     user.role,
                   )}
+                />
+                <Stack.Screen
+                  name="DefaultKitDetails"
+                  component={DefaultKitDetailScreen}
                 />
 
                 <Stack.Screen
@@ -261,10 +265,6 @@ const AppNavigator: React.FC = () => {
                 <Stack.Screen name="CreateKit" component={CreateKitScreen} />
                 <Stack.Screen name="KitDetail" component={KitDetailScreen} />
                 <Stack.Screen name="Checkout" component={CheckoutScreen} />
-                <Stack.Screen
-                  name="EditDefaultKit"
-                  component={EditDefaultKitScreen}
-                />
                 <Stack.Screen
                   name="DefaultKitForm"
                   component={DefaultKitFormScreen}

@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
@@ -97,7 +97,12 @@ type CatalogProduct = {
 
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
+  const route = useRoute<any>();
   const { user } = useAuth();
+  
+  // Obtener kitToCreate de los parámetros de ruta
+  const kitToCreate : Partial<KitCreateRequest> | null = route.params?.kitToCreate;
+  const isEditable : boolean = route.params?.isEditable ?? true;
 
   const {
     selectedCountry,
@@ -109,6 +114,7 @@ const CreateKitScreen: React.FC = () => {
     onCountryChange,
   } = useLocationPicker();
 
+  
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -142,6 +148,35 @@ const CreateKitScreen: React.FC = () => {
 
   // Estado para saber si pagamos con wallet o con stripe
   const [paymentType, setPaymentType] = useState<"WALLET" | "NORMAL">("NORMAL");
+  
+  // Prerrellenado de campos inicial - usar useEffect
+  useEffect(() => {
+    if (kitToCreate) {
+      if (kitToCreate.name) setName(kitToCreate.name);
+      if (kitToCreate.itemSelections) {
+        const initialQuantities: Record<number, number> = {};
+        kitToCreate.itemSelections.forEach((selection: any) => {
+          initialQuantities[selection.itemId] = selection.quantity;
+        });
+        setSelectedQuantities(initialQuantities);
+      }
+    }
+  }, [kitToCreate]);
+
+  // Establecer país y ciudad del usuario cuando estén disponibles
+  useEffect(() => {
+    if (user?.country) {
+      setCountry(user.country);
+      onCountryChange(user.country);
+    }
+
+    if (user?.city) {
+      setCity(user.city);
+
+      setSelectedCity(user.city);
+    }
+  }, []);
+
 
   useEffect(() => {
     if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
@@ -301,6 +336,7 @@ const CreateKitScreen: React.FC = () => {
       platformfee: platformfee,
       courierPrice: courier,
       totalPrice: total,
+      discount: 0,
     };
   }, [totalPrice, deliveryMethod]);
 
@@ -425,6 +461,7 @@ const CreateKitScreen: React.FC = () => {
 
   const removeSelectedItem = (id: number) => {
     setSelectedQuantities((prev) => removeSelectedQuantity(prev, id));
+    setErrors((prev) => ({ ...prev, items: undefined, general: undefined }));
   };
 
   const changeSelectedQuantity = (id: number, nextQuantity: number, maxQuantity: number) => {
@@ -633,7 +670,7 @@ const CreateKitScreen: React.FC = () => {
             </TouchableOpacity>
 
             <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
-              Crea un Kit
+              {kitToCreate ? "Personaliza tu kit" : "Crea un kit"}
             </Text>
 
             {/* Mantener espacio a la derecha para centrar el título */}
@@ -906,6 +943,7 @@ const CreateKitScreen: React.FC = () => {
             <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
               Tus Productos
             </Text>
+            {isEditable && (
             <Button
               mode="contained"
               onPress={openAddProductModal}
@@ -913,8 +951,9 @@ const CreateKitScreen: React.FC = () => {
               compact
               style={{ borderRadius: 8 }}
             >
-              Añadir Producto
+              {selectedItemsCount > 0? "Añadir más productos":"Añadir producto"}
             </Button>
+            )}
           </View>
 
           <View style={createKitStyles.counterBadge}>
@@ -943,6 +982,7 @@ const CreateKitScreen: React.FC = () => {
                 onIncrease={incrementSelectedQuantity}
                 onDecrease={decrementSelectedQuantity}
                 onRemove={removeSelectedItem}
+                isEditable={isEditable}
               />
             ))
           )}

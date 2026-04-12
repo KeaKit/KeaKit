@@ -56,7 +56,7 @@ const DefaultKitsScreen: React.FC = () => {
   }, [token]);
 
   const renderKitCard = ({ item }: { item: DefaultKit }) => (
-    <DefaultKitCard kit={item} onPress={() => setSelectedKit(item)} />
+    <DefaultKitCard kit={item} onPress={() => {navigation.navigate("DefaultKitDetails", { kitId: item.id });}} />
   );
 
   return (
