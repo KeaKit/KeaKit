@@ -11,7 +11,7 @@ A efectos prácticos, se ha decidido finalmente que solo existan dos roles `USER
 
 En el siguiente enlace, se puede acceder al prototipo funcional de la aplicación: [Prototipo funcional inicial](https://keakit-prototype.netlify.app/)
 
-En caso de querer empezar la navegación desde 0, pulsar sobre el logo de la aplicaicón en cualquiera de las pantallas (borrará los datos registrados en el navegador, para poder reiniciar el prototoipo).
+En caso de querer empezar la navegación desde 0, pulsar sobre el logo de la aplicación en cualquiera de las pantallas (borrará los datos registrados en el navegador, para poder reiniciar el prototipo).
 
 ## Índice
 

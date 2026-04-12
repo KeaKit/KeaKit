@@ -521,7 +521,7 @@
 | **ID**             | CU-ADMIN-05 |
 | **Nombre**         | Configuración modelo negocio (% transacción)  |
 | **Actores**        | Administrador |
-| **Objetivo**       | Los administradores deben poder configurar el porcentaje que se lleva la aplicaicón por kit alquilado|
+| **Objetivo**       | Los administradores deben poder configurar el porcentaje que se lleva la aplicación por kit alquilado|
 | **Precondiciones** | - |
 | **Flujo principal**| 1. Acceder al apartado "Configuraciones" <br> 2. Acceder al apartado "% por transacción" <br> 3. Editar el porcentaje por transacción |
 | **Excepciones**    | - |
