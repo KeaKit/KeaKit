@@ -348,8 +348,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         {user?.founderBadge ? (
           <Image
             source={{ uri: FOUNDER_BADGE_URL }}
-            style={[styles.badgeLogo, { width: getLogoSize().width, height: getLogoSize().height }]}
-            resizeMode="contain"   
+            style={[styles.badgeLogo, { width: 44, height: 44 }]}
+            resizeMode="cover"   
           />
         ) : (
           <Image
