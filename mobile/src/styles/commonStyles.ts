@@ -21,7 +21,7 @@ export const commonStyles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "space-between",
     padding: Spacing.lg,
-    gap: Spacing.lg
+    gap: Spacing.lg,
   },
 
   screenPadding: {
@@ -125,6 +125,14 @@ export const commonStyles = StyleSheet.create({
     color: Colors.primary,
   },
 
+  buttonRow: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   // Cards
   card: {
     backgroundColor: Colors.backgroundCard,
@@ -175,13 +183,14 @@ export const commonStyles = StyleSheet.create({
     marginBottom: 15
   },
 
-  bodyPrimary: {
+  body: {
     fontSize: FontSizes.base,
     color: Colors.textPrimary,
   },
 
-  body: {
+  bodyStrong: {
     fontSize: FontSizes.base,
+    fontWeight: FontWeights.bold,
     color: Colors.textPrimary,
   },
 
@@ -192,6 +201,13 @@ export const commonStyles = StyleSheet.create({
 
   caption: {
     fontSize: FontSizes.sm,
+    color: Colors.textSecondary,
+  },
+
+  emptyText: {
+    fontSize: FontSizes.base,
+    textAlign: "center",
+    marginTop: Spacing.lg,
     color: Colors.textSecondary,
   },
 

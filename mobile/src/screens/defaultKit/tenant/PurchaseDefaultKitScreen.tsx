@@ -344,7 +344,7 @@ const PurchaseDefaultKitScreen: React.FC = () => {
         <ScrollView contentContainerStyle={commonStyles.screenPadding} keyboardShouldPersistTaps="handled">
           
           <View style={[commonStyles.cardSmall, commonStyles.marginTopLg, commonStyles.marginBottomLg, { backgroundColor: '#E3F2FD' }]}>
-            <Text style={[commonStyles.bodyPrimary, { fontWeight: 'bold', color: Colors.primary }]}>{selectedKit.name}</Text>
+            <Text style={[commonStyles.body, { fontWeight: 'bold', color: Colors.primary }]}>{selectedKit.name}</Text>
             <Text style={[commonStyles.bodySecondary, commonStyles.marginTopSm]}>
               Incluye {(selectedKit.items || selectedKit.items || []).length} productos preseleccionados listos para alquilar.
             </Text>
@@ -352,7 +352,7 @@ const PurchaseDefaultKitScreen: React.FC = () => {
 
           {/* País */}
           <View style={commonStyles.marginBottomMd}>
-            <Text style={[commonStyles.bodyPrimary, { fontWeight: 'bold', marginBottom: 5 }]}>País</Text>
+            <Text style={[commonStyles.body, { fontWeight: 'bold', marginBottom: 5 }]}>País</Text>
             <View style={[commonStyles.input, { paddingVertical: 0, paddingHorizontal: 0, flexDirection: 'row', alignItems: 'center' }, errors.country ? commonStyles.inputError : null]}>
               <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={{ marginLeft: 10 }} />
               <View style={{ flex: 1 }}>
@@ -379,7 +379,7 @@ const PurchaseDefaultKitScreen: React.FC = () => {
 
           {/* Ciudad */}
           <View style={commonStyles.marginBottomMd}>
-            <Text style={[commonStyles.bodyPrimary, { fontWeight: 'bold', marginBottom: 5 }]}>Ciudad</Text>
+            <Text style={[commonStyles.body, { fontWeight: 'bold', marginBottom: 5 }]}>Ciudad</Text>
             <View style={[commonStyles.input, { paddingVertical: 0, paddingHorizontal: 0, flexDirection: 'row', alignItems: 'center' }, errors.city ? commonStyles.inputError : null]}>
               <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={{ marginLeft: 10 }} />
               {loadingCities ? (
@@ -515,9 +515,9 @@ const PurchaseDefaultKitScreen: React.FC = () => {
             <View style={[commonStyles.cardSmall, { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }]}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Ionicons name="wallet-outline" size={20} color={Colors.primary} />
-                <Text style={commonStyles.bodyPrimary}>Saldo en cartera</Text>
+                <Text style={commonStyles.body}>Saldo en cartera</Text>
               </View>
-              <Text style={[commonStyles.bodyPrimary, { fontWeight: "bold" }]}>{walletBalance.toFixed(2)}€</Text>
+              <Text style={[commonStyles.body, { fontWeight: "bold" }]}>{walletBalance.toFixed(2)}€</Text>
             </View>
 
             <Button

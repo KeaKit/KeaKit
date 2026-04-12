@@ -976,9 +976,9 @@ const CreateKitScreen: React.FC = () => {
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Ionicons name="wallet-outline" size={20} color={Colors.primary} />
-                <Text style={commonStyles.bodyPrimary}>Saldo en cartera</Text>
+                <Text style={commonStyles.body}>Saldo en cartera</Text>
               </View>
-              <Text style={[commonStyles.bodyPrimary, { fontWeight: "bold" }]}>
+              <Text style={[commonStyles.body, { fontWeight: "bold" }]}>
                 {walletBalance.toFixed(2)}€
               </Text>
             </View>
