@@ -523,6 +523,21 @@ const CreateKitScreen: React.FC = () => {
     if (!name.trim()) nextErrors.name = "El nombre del kit es obligatorio.";
     if (!startDate) nextErrors.startDate = "Debes seleccionar una fecha inicial.";
     if (!endDate) nextErrors.endDate = "Debes seleccionar una fecha final.";
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (startDate && startDate < today) {
+      nextErrors.startDate = "La fecha de inicio no puede ser pasada.";
+    }
+
+    if (endDate && endDate < today) {
+      nextErrors.endDate = "La fecha de fin no puede ser pasada.";
+    }
+
+    if (startDate && endDate && endDate < startDate) {
+      nextErrors.endDate = "La fecha de fin debe ser posterior a la de inicio.";
+    }
+
 
     if (!isDraft) {
       if (!country.trim()) nextErrors.country = "El país es obligatorio.";
@@ -816,14 +831,15 @@ const CreateKitScreen: React.FC = () => {
             startDate={startDate || undefined}
             endDate={endDate || undefined}
             allowEditing={false}
-            // Busca el DatePickerModal y reemplaza el onConfirm:
-            onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
+            validRange={{
+              startDate: new Date(),
+            }}
+            onConfirm={(params) => {
               setShowDateRangePicker(false);
               if (params.startDate && params.endDate) {
                 const invalidItems = checkItemsAvailability(params.startDate, params.endDate);
-                
+
                 if (invalidItems.length > 0) {
-                  // Seteamos el error para que se vea el texto, pero el validate(true) lo ignorará
                   setErrors((prev) => ({
                     ...prev,
                     items: `Atención: Algunos productos no están disponibles en estas fechas: ${invalidItems.join(", ")}`,
@@ -838,7 +854,8 @@ const CreateKitScreen: React.FC = () => {
                 clearFieldError("endDate");
               }
             }}
-        />
+          />
+
           {errors.startDate ? (
             <Text style={commonStyles.errorText}>{errors.startDate}</Text>
           ) : null}
