@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
-import { getArticleRecord } from '../../services/articleService';
+import { getArticleRecord, processArticleReturn } from '../../services/articleService';
 import { RootStackParamList, ArticleRecordDTO, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -57,6 +57,20 @@ const loadRecords = async () => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const handleProcessReturn = async (articleId: number) => {
+    try {
+      if (!user) return;
+      await processArticleReturn(articleId, user?.id, user?.token, {
+        reason: "Devolución confirmada",
+      });
+
+      alert("Devolución procesada correctamente");
+      loadRecords();
+    } catch (e: any) {
+      alert(e.message);
     }
   };
 
@@ -146,20 +160,37 @@ const loadRecords = async () => {
             </TouchableOpacity>
           )}
 
-          <View style={[styles.badge, { backgroundColor: config.bg }]}>
-            <Text style={[styles.badgeText, { color: config.color }]}>
-              {config.label}
-            </Text>
+            <View style={[styles.badge, { backgroundColor: config.bg }]}>
+              <Text style={[styles.badgeText, { color: config.color }]}>
+                {config.label}
+              </Text>
+            </View>
+
           </View>
-        </View>
 
         <View style={styles.cardFooter}>
+  
           <View style={styles.dateBlock}>
             <Text style={styles.label}>Periodo</Text>
-            <Text style={styles.value}>{formatDate(item.startDate)} - {formatDate(item.endDate)}</Text>
+            <Text style={styles.value}>
+              {formatDate(item.startDate)} - {formatDate(item.endDate)}
+            </Text>
           </View>
+
+          {item.status === 'ACTIVE' && (
+            <TouchableOpacity
+              onPress={() => handleProcessReturn(articleId)}
+              style={styles.returnButtonFooter}
+            >
+              <Ionicons name="checkmark-circle-outline" size={16} color="#fff" />
+              <Text style={styles.returnButtonText}>
+                Confirmar devolución
+              </Text>
+            </TouchableOpacity>
+          )}
+
         </View>
-      </View>
+        </View>
     );
   }
 
@@ -234,7 +265,16 @@ const styles = StyleSheet.create({
   locationText: { fontSize: 12, color: '#888' },
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   badgeText: { fontSize: 10, fontWeight: '800' },
-  cardFooter: { marginTop: Spacing.md, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: '#f9f9f9' },
+  cardFooter: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: '#f9f9f9',
+
+    flexDirection: 'row',       
+    justifyContent: 'space-between',
+    alignItems: 'center',        
+  },  
   dateBlock: { flexDirection: 'column' },
   label: { fontSize: 10, color: '#bbb', textTransform: 'uppercase', marginBottom: 2 },
   value: { fontSize: 13, color: '#444', fontWeight: '500' },
@@ -256,6 +296,36 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.primary,
     marginLeft: 4,
+  },
+
+  returnButton: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#28a745',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+
+  returnButtonText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+    marginLeft: 6,
+  },
+
+  rightColumn: {
+  flexDirection: 'column',
+  alignItems: 'flex-end',
+  },
+  returnButtonFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#28a745',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
 });
 

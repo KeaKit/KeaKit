@@ -288,3 +288,35 @@ export const getArticleRecord = async (articleId: number, token: string): Promis
 
   return await response.json();
 };
+
+export interface ReturnRequest {
+  reason?: string;
+  itemsToReturn?: number[];
+}
+
+export interface ReturnResponse {
+  articleId: number;
+  status: string;
+  message?: string;
+}
+
+export async function processArticleReturn(
+  articleId: number,
+  ownerId: number,
+  token: string,
+  request: ReturnRequest
+): Promise<ReturnResponse> {
+  const res = await fetch(
+    `${API_ROUTES.PROCESS_RETURN(articleId)}?ownerId=${ownerId}`,
+    {
+      method: 'PATCH',
+      headers: {
+        ...jsonHeaders,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(request),
+    }
+  );
+
+  return handleResponse<ReturnResponse>(res);
+}

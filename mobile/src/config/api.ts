@@ -32,6 +32,7 @@ export const API_ROUTES = {
   KIT_PAYMENT: `${BASE_URL}/api/kits/payment`,
   KIT_MARK_PAID: (id: number) => `${BASE_URL}/api/kits/${id}/pay`,
   KIT_CANCEL: (id: number) => `${BASE_URL}/api/kits/${id}/cancel`,
+  PROCESS_RETURN: (articleId: number) =>`${BASE_URL}/api/articles/${articleId}/process-return`,
   MY_ARTICLES: (userId: number) => `${BASE_URL}/api/article/my-articles/${userId}`,
   UPLOAD_ARTICLE: (ownerId: number,categoryId: number) => `${BASE_URL}/api/article/upload?ownerId=${ownerId}&categoryId=${categoryId}`,
   UPLOAD_ARTICLE_WITH_IMAGE: (ownerId: number, categoryId: number) => `${BASE_URL}/api/article/upload-with-image?ownerId=${ownerId}&categoryId=${categoryId}`,

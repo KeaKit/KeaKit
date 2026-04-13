@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.ArticleNearbyDTO;
 import com.example.demo.dto.ArticleRecordDTO;
+import com.example.demo.dto.ReturnRequest;
+import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
@@ -20,6 +22,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 
 @RestController
@@ -249,4 +254,12 @@ public class ArticleController {
         }
     }
 
+    @PatchMapping("/{id}/process-return")
+    public ReturnResponse processReturn(@PathVariable Long id, @RequestParam Long ownerId, @RequestBody ReturnRequest request) {
+
+        ReturnResponse article = articleService.processReturn(id, ownerId, request);
+
+        return article;
+    }
+    
 }
