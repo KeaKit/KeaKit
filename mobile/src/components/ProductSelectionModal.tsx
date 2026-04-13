@@ -41,6 +41,7 @@ type CatalogProduct = {
   distanceKm?: number;
   cityLat?: number;
   cityLng?: number;
+  availableUnits?: number;
 };
 
 type ProductSelectionModalProps = {
@@ -359,7 +360,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                 );
                 const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
                 // Cambio: Un producto se puede añadir si hay fechas válidas Y está AVAILABLE
-                const canBeAdded = p.isAvailable && p.status === 'AVAILABLE';
+                const canBeAdded = p.isAvailable && p.status === 'AVAILABLE' && (p.availableUnits ?? 1) > 0;
 
                 return (
                   <Pressable
@@ -428,7 +429,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                         {p.category ? `${p.category}` : ""}
                       </Text>
                       <Text style={commonStyles.caption}>
-                        Unidades disponibles: {p.totalUnits}
+                        Unidades disponibles: {p.availableUnits ?? p.totalUnits}
                       </Text>
                       {p.availabilityMessage && (
                         <Text

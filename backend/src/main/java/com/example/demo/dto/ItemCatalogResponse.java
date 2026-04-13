@@ -19,8 +19,12 @@ public class ItemCatalogResponse {
     private String status;   // solo para ARTICLE
     private String condition; // solo para ARTICLE
     private String imageUrl; // solo para ARTICLE
+    private Integer availableUnits;
 
     public ItemCatalogResponse() {}
+
+    public Integer getAvailableUnits() { return availableUnits; }
+    public void setAvailableUnits(Integer availableUnits) { this.availableUnits = availableUnits; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

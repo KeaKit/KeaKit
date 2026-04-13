@@ -14,7 +14,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
+import com.example.demo.repository.KitRepository;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -22,10 +25,13 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
     private final DefaultKitService defaultKitService;
+    private final KitRepository kitRepository;
 
-    public ItemService(ItemRepository itemRepository, DefaultKitService defaultKitService) {
+    public ItemService(ItemRepository itemRepository, DefaultKitService defaultKitService, KitRepository kitRepository) {
         this.itemRepository = itemRepository;
         this.defaultKitService = defaultKitService;
+        this.kitRepository = kitRepository;
+
     }
 
     public List<Item> findAll() {
@@ -67,11 +73,29 @@ public class ItemService {
         );
     }
 
-    public List<Item> findItemsForRent(Long ownerId) {
-        List<Item> allItemsForRent = itemRepository.findAll()
-            .stream().filter(x-> x.getOwner().getId() != ownerId).toList();
-        return allItemsForRent;
-    }
+    public List<ItemCatalogResponse> findItemsForRent(Long ownerId) {
+    List<KitStatus> activeStatuses = List.of(KitStatus.PAID, KitStatus.ACTIVE);
+    LocalDate today = LocalDate.now();
+
+    return itemRepository.findAll()
+        .stream()
+        .filter(item -> !item.getOwner().getId().equals(ownerId))
+        .map(item -> {
+            List<Kit> occupiedKits = kitRepository.findOverlappingKitsForItem(
+                item.getId(), today, today, activeStatuses);
+            int occupiedUnits = occupiedKits.stream()
+                .flatMap(k -> k.getSnapshots().stream())
+                .filter(s -> s.getOriginalItemId().equals(item.getId()))
+                .mapToInt(s -> s.getSelectedUnits())
+                .sum();
+            int totalUnits = item.getTotalUnits() != null ? item.getTotalUnits() : 1;
+            int availableUnits = Math.max(0, totalUnits - occupiedUnits);
+            ItemCatalogResponse dto = toCatalogResponse(item);
+            dto.setAvailableUnits(availableUnits);
+            return dto;
+        })
+        .toList();
+}
 
     public Item findById(Long id) throws ResourceNotFoundException {
         return itemRepository.findById(id)

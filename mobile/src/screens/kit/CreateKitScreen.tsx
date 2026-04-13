@@ -94,6 +94,7 @@ type CatalogProduct = {
   distanceKm?: number;
   cityLat?: number;
   cityLng?: number;
+  availableUnits?: number;
 };
 
 const CreateKitScreen: React.FC = () => {
@@ -263,6 +264,7 @@ const CreateKitScreen: React.FC = () => {
         totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
         availableFrom: p.availableFrom ?? null,
         availableUntil: p.availableUntil ?? null,
+        availableUnits: Math.max(0, Number(p.availableUnits ?? p.totalUnits ?? 1)),
       }));
 
       setAvailableProducts(mapped);

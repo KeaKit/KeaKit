@@ -129,10 +129,12 @@ public class KitService {
             for (KitCreateRequest.ItemSelectionRequest item : selections) {
                 Item foundItem = itemRepository.findById(item.itemId())
                         .orElseThrow(() -> new RuntimeException("Item not found: " + item.itemId()));
-                if (request.tenantId() == foundItem.getOwner().getId()) {
+                if (request.tenantId().equals(foundItem.getOwner().getId())) {
                     throw new RuntimeException("Tenant cannot select their own items");
                 }
-                validateItemAvailability(item.itemId(), item.quantity(), kit.getStartDate(), kit.getEndDate());
+                if (status != KitStatus.DRAFT) {
+                    validateItemAvailability(item.itemId(), item.quantity(), kit.getStartDate(), kit.getEndDate());
+                }
             }
         }
 
@@ -439,7 +441,10 @@ public class KitService {
         }
 
         // Como al añadir un artículo desde cero se mete 1 unidad por defecto
-        validateItemAvailability(itemId, 1, kit.getStartDate(), kit.getEndDate());
+        // Solo validamos disponibilidad si el kit no es un borrador (aún no pagado)
+        if (kit.getStatus() != KitStatus.DRAFT) {
+            validateItemAvailability(itemId, 1, kit.getStartDate(), kit.getEndDate());
+        }
 
         // 4. Creamos el Snapshot para el nuevo objeto
         ItemMemento newSnapshot = item.createSnapshot(

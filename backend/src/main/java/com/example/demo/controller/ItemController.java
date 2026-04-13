@@ -39,10 +39,7 @@ public class ItemController {
 
     @GetMapping("/for-rent/{ownerId}")
     public ResponseEntity<List<ItemCatalogResponse>> getAllItemsForRent(@PathVariable Long ownerId) {
-        List<ItemCatalogResponse> response = itemService.findItemsForRent(ownerId)
-            .stream()
-            .map(this::toCatalogResponse)
-            .toList();
+        List<ItemCatalogResponse> response = itemService.findItemsForRent(ownerId);
         return ResponseEntity.ok(response);
     }
 
