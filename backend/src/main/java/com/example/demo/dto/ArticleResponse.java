@@ -19,7 +19,8 @@ public class ArticleResponse {
     private String categoryName;
     private Long ownerId;
     private String ownerName;
-
+    private Integer totalUnits;
+    
     // Constructors
     public ArticleResponse() {}
 
@@ -134,5 +135,13 @@ public class ArticleResponse {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public Integer getTotalUnits() {
+        return totalUnits;
+    }
+
+    public void setTotalUnits(Integer totalUnits) {
+        this.totalUnits = totalUnits;
     }
 }

@@ -85,3 +85,37 @@ export async function processPaymentWithStripe(
   // Si fue OK, no intentamos hacer res.json() porque la respuesta es un String.
   return;
 }
+
+export async function processPaymentWithWalletPromo(
+  kitId: number,
+  token: string,
+  promoCode: string,
+  email: string,
+): Promise<void> {
+  const res = await fetchWithTimeout(
+    API_ROUTES.PROCESS_PAYMENT_WALLET_PROMO(kitId, promoCode, email),
+    {
+      method: 'POST',
+      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    },
+  );
+  return handleResponse(res);
+}
+
+export async function processPaymentWithStripePromo(
+  kitId: number,
+  token: string,
+  paymentIntentStatus: string,
+  promoCode: string,
+  email: string,
+): Promise<void> {
+  const res = await fetchWithTimeout(
+    API_ROUTES.PROCESS_PAYMENT_STRIPE_PROMO(kitId, promoCode, email),
+    {
+      method: 'POST',
+      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+      body: JSON.stringify(paymentIntentStatus),
+    },
+  );
+  if (!res.ok) return handleResponse(res);
+}

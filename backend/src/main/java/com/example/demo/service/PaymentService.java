@@ -63,6 +63,10 @@ public class PaymentService {
     @Autowired
     private KitRepository kitRepository;
 
+    @Autowired
+    private PromoCodeService promoCodeService;
+
+
     @Value("${stripe.api.key}")
     private String stripeApiKey;
 
@@ -98,25 +102,35 @@ public class PaymentService {
     }
 
     @Transactional
-    public void processPayment(Long kitId, Boolean payWithWallet) throws ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
-        // 1. Obtención de datos
-        
-        KitResponse kit = kitService.findById(kitId);
-        KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId);
+    public void processPayment(Long kitId, Boolean payWithWallet, String promoCode, String userEmail)
+            throws ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
 
-        // 2. Gestión del pago principal (Tenant)
+        KitResponse kit = kitService.findById(kitId);
+        KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId, promoCode, userEmail);
+
         if (payWithWallet) {
             processTenantPayment(kit.getTenantId(), paymentInfo);
         }
 
-        // 3. Gestión de la garantía
         processGuarantee(paymentInfo.guarantee());
-
-        // 4. Pago a propietarios
         kit.getItems().forEach(this::processItemPaymentToOwner);
 
-        // 5. Finalización del proceso
-        completeOrder(kitId);
+        kitService.markAsPaid(kitId);
+        Kit kitEntity = kitRepository.findById(kitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found for email confirmation"));
+
+        double discountEuros = paymentInfo.discount() != null ? paymentInfo.discount() / 100.0 : 0.0;
+        emailService.sendOrderConfirmation(kitEntity, discountEuros, promoCode);
+
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            promoCodeService.markAsUsed(promoCode, userEmail);
+        }
+    }
+
+    @Transactional
+    public void processPayment(Long kitId, Boolean payWithWallet)
+            throws ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
+        processPayment(kitId, payWithWallet, null, null);
     }
 
     private void processTenantPayment(Long tenantId, KitPaymentDTO paymentInfo) {
