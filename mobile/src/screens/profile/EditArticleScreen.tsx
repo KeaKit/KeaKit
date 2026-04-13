@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, TextInput, ActivityIndicator,
+  ScrollView, TextInput, ActivityIndicator, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
@@ -109,7 +110,7 @@ const EditArticleScreen: React.FC = () => {
   const [availableFrom,  setAvailableFrom]  = useState(article.availableFrom ?? '');
   const [availableUntil, setAvailableUntil] = useState(article.availableUntil ?? '');
   const [category,       setCategory]       = useState<Category | null>(article.category ?? null);
-  const [imageUrl,       setImageUrl]       = useState(article.imageUrl ?? '');
+  const [selectedImage, setSelectedImage] = useState<{ uri: string; name: string } | null>(null);
   const [purchaseDate,   setPurchaseDate]   = useState(article.purchaseDate ?? '');
   const [totalUnits, setTotalUnits] = useState(String(article.totalUnits ?? '1'));
   const [condition,      setCondition]      = useState<'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN' | ''>(article.condition ?? '');
@@ -157,6 +158,42 @@ const EditArticleScreen: React.FC = () => {
     };
     loadCategories();
   }, [user?.token]);
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets?.length > 0) {
+        const asset = result.assets[0];
+        setSelectedImage({ uri: asset.uri, name: asset.uri.split('/').pop() || 'image.jpg' });
+        clearError('image');
+      }
+    } catch {
+      showNotification('No se pudo seleccionar la imagen', 'error');
+    }
+  };
+
+  const takePicture = async () => {
+    try {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
+        showNotification('Se requiere acceso a la cámara para tomar fotos', 'error');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [4, 3], quality: 0.8 });
+      if (!result.canceled && result.assets?.length > 0) {
+        const asset = result.assets[0];
+        setSelectedImage({ uri: asset.uri, name: `photo_${Date.now()}.jpg` });
+        clearError('image');
+      }
+    } catch {
+      showNotification('No se pudo tomar la foto', 'error');
+    }
+  };
 
   const clearError = (key: string) => setErrors((prev) => ({ ...prev, [key]: '' }));
 
@@ -219,11 +256,23 @@ const EditArticleScreen: React.FC = () => {
         availableFrom,
         availableUntil,
         category:      { id: category!.id } as any,
-        ...(imageUrl.trim()     && { imageUrl:     imageUrl.trim() }),
         ...(condition           && { condition:    condition as ArticleCondition }),
         ...(purchaseDate.trim() && { purchaseDate: purchaseDate.trim() }),
       };
-      await updateArticle(article.id, user.id, user.token, payload);
+      
+      // Llamar a updateArticle con o sin imagen
+      if (selectedImage) {
+        await updateArticle(
+          article.id, 
+          user.id, 
+          user.token, 
+          payload, 
+          selectedImage.uri, 
+          selectedImage.name
+        );
+      } else {
+        await updateArticle(article.id, user.id, user.token, payload);
+      }
       
       showNotification('Artículo actualizado correctamente', 'success');
       navigation.goBack();
@@ -314,14 +363,10 @@ const EditArticleScreen: React.FC = () => {
                 {loadingCities ? (
                   <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
                 ) : !selectedCountry ? (
-                  /* Sin país: ciudad original en modo lectura */
-                  <>
-                    <Text style={styles.cityReadOnly}>
-                      {selectedCity || originalCity || 'Sin ciudad'}
-                    </Text>
-                  </>
+                  <Text style={styles.cityReadOnly}>
+                    {selectedCity || originalCity || 'Sin ciudad'}
+                  </Text>
                 ) : (
-                  /* Con país: selector normal */
                   <>
                     <SelectPicker
                       options={cities.map(c => ({ label: c, value: c }))}
@@ -333,7 +378,6 @@ const EditArticleScreen: React.FC = () => {
                         clearError('city');
                       }}
                     />
-                    {/* Flecha para restaurar la ciudad original */}
                     {originalCity && selectedCity !== originalCity && (
                       <TouchableOpacity
                         onPress={handleRestoreCity}
@@ -396,11 +440,6 @@ const EditArticleScreen: React.FC = () => {
                     {category?.id === cat.id && <Ionicons name="checkmark" size={18} color={Colors.primary} />}
                   </TouchableOpacity>
                 ))}
-              </View>
-            )}
-            {categoryOpen && dbCategories.length === 0 && !loadingCategories && (
-              <View style={[styles.categoryDropdown, { padding: Spacing.md }]}>
-                <Text style={commonStyles.bodySecondary}>No hay categorías disponibles.</Text>
               </View>
             )}
           </View>
@@ -482,14 +521,53 @@ const EditArticleScreen: React.FC = () => {
           {/* ── Información adicional ─────────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Información adicional</Text>
-            <Field
-              label="URL de imagen"
-              value={imageUrl}
-              onChange={(t) => { setImageUrl(t); clearError('imageUrl'); }}
-              placeholder="https://..."
-              optional
-              error={errors.imageUrl}
-            />
+            
+          {/* Sección de imagen mejorada */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Foto del artículo <Text style={styles.optional}>(opcional)</Text></Text>
+            
+            {/* Mostrar imagen actual o la nueva seleccionada */}
+            {(selectedImage || article.imageUrl) && (
+              <View style={styles.selectedImageContainer}>
+                <Image 
+                  source={{ uri: (selectedImage?.uri || article.imageUrl) ?? undefined }} 
+                  style={styles.imagePreview} 
+                />
+                {selectedImage && (
+                  <TouchableOpacity 
+                    style={styles.changeImageButton} 
+                    onPress={() => setSelectedImage(null)}
+                  >
+                    <Ionicons name="close-circle" size={24} color={Colors.error} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+            
+            {/* Placeholder cuando no hay imagen */}
+            {!selectedImage && !article.imageUrl && (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons name="image-outline" size={40} color={Colors.textSecondary} />
+                <Text style={styles.placeholderText}>No hay imagen seleccionada</Text>
+              </View>
+            )}
+            
+            {/* Botones para seleccionar imagen - SIEMPRE visibles debajo */}
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
+                <Ionicons name="images" size={20} color={Colors.primary} />
+                <Text style={styles.imageButtonText}>
+                  {selectedImage || article.imageUrl ? 'Cambiar imagen' : 'Galería'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.imageButton} onPress={takePicture}>
+                <Ionicons name="camera" size={20} color={Colors.primary} />
+                <Text style={styles.imageButtonText}>
+                  {selectedImage || article.imageUrl ? 'Tomar nueva' : 'Cámara'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Estado de conservación <Text style={styles.optional}>(opcional)</Text></Text>
@@ -583,7 +661,6 @@ const EditArticleScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  // ── Layout ────────────────────────────────────────────────────────────────
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -603,8 +680,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-
-  // ── Fields ────────────────────────────────────────────────────────────────
   fieldContainer: {
     gap: Spacing.xs,
   },
@@ -625,8 +700,6 @@ const styles = StyleSheet.create({
     height: 100,
     paddingTop: Spacing.md,
   },
-
-  // ── Location pickers ──────────────────────────────────────────────────────
   pickerWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -652,8 +725,6 @@ const styles = StyleSheet.create({
   restoreButton: {
     marginLeft: Spacing.sm,
   },
-
-  // ── Category dropdown ─────────────────────────────────────────────────────
   categorySelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -696,8 +767,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: -4,
   },
-
-  // ── Date selectors ────────────────────────────────────────────────────────
   dateSelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -713,8 +782,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-
-  // ── Submit ────────────────────────────────────────────────────────────────
   submitContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -723,8 +790,6 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.6,
   },
-
-  // ── Condition chips ───────────────────────────────────────────────────────
   conditionRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -758,6 +823,67 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 20,
     backgroundColor: Colors.primary + '10',
+  },
+  // Estilos para la imagen
+  selectedImageContainer: {
+    position: 'relative',
+    height: 250,
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: Spacing.sm,
+    backgroundColor: Colors.border,
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  changeImageButton: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 12,
+  },
+  imagePlaceholder: {
+    height: 180,
+    width: '100%',
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  placeholderText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    marginTop: Spacing.sm,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  imageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.base,
+    borderRadius: 8,
+    backgroundColor: Colors.border,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  imageButtonText: {
+    color: Colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
