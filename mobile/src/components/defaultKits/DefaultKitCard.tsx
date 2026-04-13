@@ -52,7 +52,7 @@ export const DefaultKitCard = ({
           {kit.name}
         </Text>
         <Text style={commonStyles.caption}>
-          {kit.items?.length || 0} artículos incluidos
+          {kit.items.length || 0} artículos incluidos
         </Text>
       </View>
       {!isAdmin ? (

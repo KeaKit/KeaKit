@@ -55,7 +55,7 @@ const DefaultKitsScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchData();
+      void fetchData();
     }, [token]),
   );
 
@@ -111,10 +111,10 @@ const DefaultKitsScreen: React.FC = () => {
         />
         <KeakitModal
           visible={!!confirmDeleteMessage}
-          onDismiss={() => setConfirmDeleteMessage(null)}
+          onDismiss={() => { setConfirmDeleteMessage(null); }}
           onConfirm={() => {
             if (confirmDeleteMessage) {
-              performDelete();
+              void performDelete();
             }
           }}
           message={confirmDeleteMessage || ""}

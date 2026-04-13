@@ -50,7 +50,7 @@ const DefaultKitDetailsScreen = () => {
         setLoading(false);
       }
     };
-    loadKitDetails();
+    void loadKitDetails();
   }, [token, kitId]);
 
   const handleSubmit = (isEditable: boolean) => {

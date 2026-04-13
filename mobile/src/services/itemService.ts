@@ -10,5 +10,5 @@ export async function fetchItemsForRent(
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
 
-  return handleResponse<any[]>(res);
+  return handleResponse<unknown[]>(res);
 }

@@ -168,7 +168,7 @@ const CreateKitScreen: React.FC = () => {
   useEffect(() => {
     if (user?.country) {
       setCountry(user.country);
-      onCountryChange(user.country);
+      void onCountryChange(user.country);
     }
 
     if (user?.city) {

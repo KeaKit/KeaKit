@@ -106,7 +106,7 @@ const DefaultKitFormScreen: React.FC = () => {
       setLoadingCatalog(true);
       const res = await fetchItemsForRent(user.id, token);
 
-      const mapped: CatalogProduct[] = (res ?? []).map((p: any) => ({
+      const mapped: CatalogProduct[] = res.map((p: any) => ({
         id: Number(p.id),
         itemType: String(p.itemType ?? "ARTICLE"),
         title: p.title ?? "Sin título",
@@ -137,7 +137,7 @@ const DefaultKitFormScreen: React.FC = () => {
   }, [token]);
 
   useEffect(() => {
-    loadCatalog();
+    void loadCatalog();
   }, [loadCatalog]);
 
   useEffect(() => {
@@ -233,6 +233,7 @@ const DefaultKitFormScreen: React.FC = () => {
   const incrementSelectedQuantity = (id: number) => {
     const product = availableProducts.find((p) => p.id === id);
     if (!product) return;
+    // eslint-disable-next-line security/detect-object-injection
     const current = selectedQuantities[id] ?? 1;
     setSelectedQuantities((prev) =>
       upsertSelectedQuantity(
@@ -438,7 +439,7 @@ const DefaultKitFormScreen: React.FC = () => {
             title={
               mode === "edit" ? "Confirmar cambios" : "Crear kit predeterminado"
             }
-            onPress={async () => await handleSubmit()}
+            onPress={async () => { await handleSubmit(); }}
             icon={"check"}
             loading={submitting}
             disabled={submitting}
@@ -447,7 +448,7 @@ const DefaultKitFormScreen: React.FC = () => {
 
         <ProductSelectionModal
           visible={catalogModalVisible}
-          onDismiss={() => setCatalogModalVisible(false)}
+          onDismiss={() => { setCatalogModalVisible(false); }}
           searchText={searchText}
           onSearchChange={setSearchText}
           categoryFilter={categoryFilter}
