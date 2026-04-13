@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
@@ -38,6 +38,7 @@ import {
   KitCreateRequest,
   KitStatus,
   ArticleNearby,
+  KitPaymentDTO,
 } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
@@ -52,6 +53,7 @@ import {
   upsertSelectedQuantity,
 } from "./createKitSelection";
 import { styles } from "../../styles/uploadArticleScreenStyles";
+import { formatRentalDuration, calculateMonthsBetween } from "../../utils/duration";
 
 const COMISION = 0; // todos son usuarios pilotos y no se cobra comision
 const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
@@ -94,22 +96,14 @@ type CatalogProduct = {
   cityLng?: number;
 };
 
-function calculateMonthsBetween(start: Date, end: Date): number {
-  const years = end.getUTCFullYear() - start.getUTCFullYear();
-  const months = end.getUTCMonth() - start.getUTCMonth();
-  const days = end.getUTCDate() - start.getUTCDate();
-
-  let totalMonths = years * 12 + months;
-
-  const daysInMonth = 30;
-  const monthFraction = days / daysInMonth;
-
-  return totalMonths + monthFraction;
-}
-
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
+  const route = useRoute<any>();
   const { user } = useAuth();
+  
+  // Obtener kitToCreate de los parámetros de ruta
+  const kitToCreate : Partial<KitCreateRequest> | null = route.params?.kitToCreate;
+  const isEditable : boolean = route.params?.isEditable ?? true;
 
   const {
     selectedCountry,
@@ -121,6 +115,7 @@ const CreateKitScreen: React.FC = () => {
     onCountryChange,
   } = useLocationPicker();
 
+  
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -154,6 +149,35 @@ const CreateKitScreen: React.FC = () => {
 
   // Estado para saber si pagamos con wallet o con stripe
   const [paymentType, setPaymentType] = useState<"WALLET" | "NORMAL">("NORMAL");
+  
+  // Prerrellenado de campos inicial - usar useEffect
+  useEffect(() => {
+    if (kitToCreate) {
+      if (kitToCreate.name) setName(kitToCreate.name);
+      if (kitToCreate.itemSelections) {
+        const initialQuantities: Record<number, number> = {};
+        kitToCreate.itemSelections.forEach((selection: any) => {
+          initialQuantities[selection.itemId] = selection.quantity;
+        });
+        setSelectedQuantities(initialQuantities);
+      }
+    }
+  }, [kitToCreate]);
+
+  // Establecer país y ciudad del usuario cuando estén disponibles
+  useEffect(() => {
+    if (user?.country) {
+      setCountry(user.country);
+      void onCountryChange(user.country);
+    }
+
+    if (user?.city) {
+      setCity(user.city);
+
+      setSelectedCity(user.city);
+    }
+  }, []);
+
 
   useEffect(() => {
     if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
@@ -186,15 +210,7 @@ const CreateKitScreen: React.FC = () => {
 
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
-
-    const start = new Date(
-      Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()),
-    );
-    const end = new Date(
-      Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()),
-    );
-
-    return calculateMonthsBetween(start, end);
+    return calculateMonthsBetween(startDate, endDate);
   }, [startDate, endDate]);
 
   const clearFieldError = (field: keyof FormErrors) => {
@@ -308,7 +324,7 @@ const CreateKitScreen: React.FC = () => {
 
   const courierPrice = deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
-  const kitPayment = useMemo(() => {
+  const kitPayment : KitPaymentDTO = useMemo(() => {
     const subtotal = Math.round(totalPrice * 100); 
     const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
     const platformfee = Math.round(subtotal * COMISION);
@@ -321,6 +337,8 @@ const CreateKitScreen: React.FC = () => {
       platformfee: platformfee,
       courierPrice: courier,
       totalPrice: total,
+      discount: 0, // TODO: Añadir lógica de descuentos a esta pantalla si es necesario
+
     };
   }, [totalPrice, deliveryMethod]);
 
@@ -445,6 +463,7 @@ const CreateKitScreen: React.FC = () => {
 
   const removeSelectedItem = (id: number) => {
     setSelectedQuantities((prev) => removeSelectedQuantity(prev, id));
+    setErrors((prev) => ({ ...prev, items: undefined, general: undefined }));
   };
 
   const changeSelectedQuantity = (id: number, nextQuantity: number, maxQuantity: number) => {
@@ -653,7 +672,7 @@ const CreateKitScreen: React.FC = () => {
             </TouchableOpacity>
 
             <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
-              Crea un Kit
+              {kitToCreate ? "Personaliza tu kit" : "Crea un kit"}
             </Text>
 
             {/* Mantener espacio a la derecha para centrar el título */}
@@ -831,7 +850,7 @@ const CreateKitScreen: React.FC = () => {
           {monthsBetween !== null && monthsBetween > 0 && (
             <View style={{ marginTop: 8, marginBottom: 16 }}>
               <Text style={commonStyles.bodySecondary}>
-                Duración: {monthsBetween.toFixed(2)} meses
+                Duración: {startDate && endDate ? formatRentalDuration(startDate, endDate) : ""}
               </Text>
             </View>
           )}
@@ -926,6 +945,7 @@ const CreateKitScreen: React.FC = () => {
             <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
               Tus Productos
             </Text>
+            {isEditable && (
             <Button
               mode="contained"
               onPress={openAddProductModal}
@@ -933,8 +953,9 @@ const CreateKitScreen: React.FC = () => {
               compact
               style={{ borderRadius: 8 }}
             >
-              Añadir Producto
+              {selectedItemsCount > 0? "Añadir más productos":"Añadir producto"}
             </Button>
+            )}
           </View>
 
           <View style={createKitStyles.counterBadge}>
@@ -963,6 +984,7 @@ const CreateKitScreen: React.FC = () => {
                 onIncrease={incrementSelectedQuantity}
                 onDecrease={decrementSelectedQuantity}
                 onRemove={removeSelectedItem}
+                isEditable={isEditable}
               />
             ))
           )}
@@ -996,9 +1018,9 @@ const CreateKitScreen: React.FC = () => {
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Ionicons name="wallet-outline" size={20} color={Colors.primary} />
-                <Text style={commonStyles.bodyPrimary}>Saldo en cartera</Text>
+                <Text style={commonStyles.body}>Saldo en cartera</Text>
               </View>
-              <Text style={[commonStyles.bodyPrimary, { fontWeight: "bold" }]}>
+              <Text style={[commonStyles.body, { fontWeight: "bold" }]}>
                 {walletBalance.toFixed(2)}€
               </Text>
             </View>

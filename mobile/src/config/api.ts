@@ -4,6 +4,9 @@ export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
   LOGIN:    `${BASE_URL}/api/users/login`,
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
+  // Update profile image endpoint
+  UPLOAD_PROFILE_IMAGE: `${BASE_URL}/api/users/profile/image`,
+
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   GET_ADMIN_ALL_USERS: `${BASE_URL}/api/admin/users/no-self`,
@@ -14,6 +17,7 @@ export const API_ROUTES = {
   GET_RATINGS_FOR_USER:  (userId: number) => `${BASE_URL}/api/ratings/user/${userId}`,
   GET_RATINGS_BY_USER:   (userId: number) => `${BASE_URL}/api/ratings/given/${userId}`,
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
+  GET_PUBLIC_USER_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}/public-profile`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   HAS_REVIEWED_ITEMS: `${BASE_URL}/api/ratings/has-reviewed`,
   HAS_REVIEWED_ITEM_IN_KITS: `${BASE_URL}/api/ratings/has-reviewed-kit`,
@@ -98,6 +102,24 @@ export const API_ROUTES = {
   GET_MY_WALLET:             `${BASE_URL}/api/wallet/my-wallet`,
   GET_MY_TRANSACTIONS:       `${BASE_URL}/api/wallet/my-wallet/transactions`,
 
+  // Promo Codes
+  PROMO_CODES:                `${BASE_URL}/api/admin/promo-codes`,
+  PROMO_CODE_BY_ID:           (id: number) => `${BASE_URL}/api/admin/promo-codes/${id}`,
+  VALIDATE_PROMO_CODE:        (code: string, email: string) =>
+      `${BASE_URL}/api/promo-codes/validate?code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
+  GET_KIT_PAYMENT_BY_ID_PROMO:(kitId: number, code: string, email: string) =>
+      `${BASE_URL}/api/kits/payment/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
+  PROCESS_PAYMENT_WALLET_PROMO:(kitId: number, code: string, email: string) =>
+      `${BASE_URL}/api/payments/process/wallet/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
+  PROCESS_PAYMENT_STRIPE_PROMO:(kitId: number, code: string, email: string) =>
+      `${BASE_URL}/api/payments/process/stripe/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
+
+  // Pilot Users
+  PILOT_USERS:              `${BASE_URL}/api/admin/pilot-users`,
+  PILOT_USER_BY_ID:         (id: number) => `${BASE_URL}/api/admin/pilot-users/${id}`,
+  PILOT_USERS_ACTIVE_EMAILS:`${BASE_URL}/api/admin/pilot-users/active-emails`,
+  PILOT_USERS_BULK_ACTIVE:  `${BASE_URL}/api/admin/pilot-users/bulk-active`,
+
   // Services
   ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,
   MY_SERVICES: (userId: number) => `${BASE_URL}/api/services/my-services?ownerId=${userId}`,
@@ -141,6 +163,8 @@ export const API_ROUTES = {
   // Admin RGPD
   ADMIN_CURRENT_POLICY: `${BASE_URL}/api/admin/rgpd/current`,
   ADMIN_CREATE_POLICY: `${BASE_URL}/api/admin/rgpd/policies`,
+  // Insignia
+  TOGGLE_FOUNDER_BADGE: (id: number) => `${BASE_URL}/api/admin/users/${id}/founder-badge`,
 
 } as const;
 

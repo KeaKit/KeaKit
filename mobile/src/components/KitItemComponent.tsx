@@ -15,9 +15,10 @@ type KitItemComponentProps = {
   duration?: number;
   quantity: number;
   maxQuantity?: number;
-  onIncrease: (id: number) => void;
-  onDecrease: (id: number) => void;
+  onIncrease?: (id: number) => void;
+  onDecrease?: (id: number) => void;
   onRemove: (id: number) => void;
+  isEditable?: boolean;
 };
 
 const KitItemComponent: React.FC<KitItemComponentProps> = ({
@@ -28,6 +29,7 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
   onIncrease,
   onDecrease,
   onRemove,
+  isEditable = true,
 }) => {
   const reachedMax =
     maxQuantity !== undefined &&
@@ -56,7 +58,7 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
 
         <Text style={commonStyles.caption}>
           Unidades seleccionadas: {quantity}
-          {item.totalUnits ? ` / ${item.totalUnits}` : ""}
+          {item.totalUnits && isEditable ? ` / ${item.totalUnits}` : ""}
         </Text>
       </View>
 
@@ -67,42 +69,46 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
             : "N/A"}
         </Text>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        {isEditable && onDecrease && onIncrease && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <TouchableOpacity
+              onPress={() => onDecrease(item.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`Reducir unidades de ${item.title}`}
+            >
+              <Ionicons
+                name="remove-circle-outline"
+                size={22}
+                color={Colors.primary}
+              />
+            </TouchableOpacity>
+
+            <Text style={createKitStyles.productTitle}>{quantity}</Text>
+
+            <TouchableOpacity
+              onPress={() => onIncrease(item.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`Aumentar unidades de ${item.title}`}
+            >
+              <Ionicons
+                name="add-circle-outline"
+                size={22}
+                color={reachedMax ? Colors.border : Colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        
           <TouchableOpacity
-            onPress={() => onDecrease(item.id)}
+            onPress={() => onRemove(item.id)}
+            style={createKitStyles.removeItemButton}
             accessibilityRole="button"
-            accessibilityLabel={`Reducir unidades de ${item.title}`}
+            accessibilityLabel={`Eliminar ${item.title} del kit`}
           >
-            <Ionicons
-              name="remove-circle-outline"
-              size={22}
-              color={Colors.primary}
-            />
+            <Ionicons name="trash-outline" size={20} color={Colors.error} />
           </TouchableOpacity>
-
-          <Text style={createKitStyles.productTitle}>{quantity}</Text>
-
-          <TouchableOpacity
-            onPress={() => onIncrease(item.id)}
-            accessibilityRole="button"
-            accessibilityLabel={`Aumentar unidades de ${item.title}`}
-          >
-            <Ionicons
-              name="add-circle-outline"
-              size={22}
-              color={reachedMax ? Colors.border : Colors.primary}
-            />
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => onRemove(item.id)}
-          style={createKitStyles.removeItemButton}
-          accessibilityRole="button"
-          accessibilityLabel={`Eliminar ${item.title} del kit`}
-        >
-          <Ionicons name="trash-outline" size={20} color={Colors.error} />
-        </TouchableOpacity>
+        
       </View>
     </View>
   );

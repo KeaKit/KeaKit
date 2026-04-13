@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +59,9 @@ public class KitService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private PromoCodeService promoCodeService;
 
     // TODO: Obtener la garantía de la configuración hecha por el admin
     private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2;
@@ -152,7 +156,7 @@ public class KitService {
         return savedKit;
     }
 
-    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+    public KitPaymentDTO getKitPayment(KitCreateRequest request, String promoCode, String userEmail) {
         double months = calculateMonthsBetween(request.startDate(), request.endDate());
         double subtotalPrice = request.itemSelections().stream()
             .mapToDouble(item -> item.pricePerMonth() * item.quantity() * months)
@@ -162,16 +166,30 @@ public class KitService {
         if (request.deliveryMethod() == DeliveryMethod.COURIER) {
             courierPrice = PLATFORM_COURIER_PRICE;
         }
-        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        double discount = 0.0;
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validate(promoCode, userEmail);
+            if (validation.isValid()) {
+                discount = subtotalPrice * validation.getDiscountRate();
+            }
+        }
+
+        double totalPrice = subtotalPrice + guarantee + courierPrice - discount;
 
         return new KitPaymentDTO(
                 toCents(totalPrice),
                 toCents(subtotalPrice),
                 toCents(guarantee),
-                toCents(courierPrice));
+                toCents(courierPrice),
+                toCents(discount));
     }
 
-    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException {
+    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+        return getKitPayment(request, null, null);
+    }
+
+    public KitPaymentDTO getKitPayment(Long kitId, String promoCode, String userEmail) throws ResourceNotFoundException {
         Kit kit = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
         double months = calculateMonthsBetween(kit.getStartDate(), kit.getEndDate());
@@ -180,13 +198,27 @@ public class KitService {
             .sum();
         double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
         double courierPrice = kit.getDeliveryMethod() == DeliveryMethod.COURIER ? PLATFORM_COURIER_PRICE : 0.0;
-        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        double discount = 0.0;
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validate(promoCode, userEmail);
+            if (validation.isValid()) {
+                discount = subtotalPrice * validation.getDiscountRate();
+            }
+        }
+
+        double totalPrice = subtotalPrice + guarantee + courierPrice - discount;
 
         return new KitPaymentDTO(
                 toCents(totalPrice),
                 toCents(subtotalPrice),
                 toCents(guarantee),
-                toCents(courierPrice));
+                toCents(courierPrice),
+                toCents(discount));
+    }
+
+    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException {
+        return getKitPayment(kitId, null, null);
     }
 
     private Integer toCents(Double amount) {
@@ -194,16 +226,10 @@ public class KitService {
     }
 
     private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
-        int years = end.getYear() - start.getYear();
-        int months = end.getMonthValue() - start.getMonthValue();
-        int days = end.getDayOfMonth() - start.getDayOfMonth();
+        long diffDays = ChronoUnit.DAYS.between(start, end) + 1;
+        return diffDays / 30.0;
 
-        int totalMonths = years * 12 + months;
-
-        int daysInMonth = 30;
-        double monthFraction = (double) days / daysInMonth;
-
-        return totalMonths + monthFraction;
+        // con el backend de antes daba problemas esta función, por ejemplo, si era 15 enero-14 de febrero, daba 0 days, porque hacía 14-15+1; y debería ser 1 mes y 31 días, no 1 mes y 0 días
     }
 
     public KitResponse update(Long id, Kit updateData) {

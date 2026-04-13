@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.PublicUserProfileDto;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserUpdateData;
@@ -19,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import com.example.demo.model.User; 
+import org.springframework.web.multipart.MultipartFile;  
+import java.io.IOException;  
 
 @RestController
 @RequestMapping("/api/users")
@@ -124,5 +129,20 @@ public class UserController {
             response.put("message", "Error processing logout: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @PatchMapping("/profile/image")
+    public ResponseEntity<UserResponse> updateProfileImage(
+            @RequestParam("image") MultipartFile image,
+            Authentication authentication) throws IOException {
+        User currentUser = userService.findByEmail(authentication.getName());
+        User updated = userService.updateProfileImage(currentUser.getId(), image);
+        return ResponseEntity.ok(new UserResponse(updated));
+    }
+
+    // UserController.java
+    @GetMapping("/{id}/public-profile")
+    public ResponseEntity<PublicUserProfileDto> getPublicUserProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getPublicUserProfile(id));
     }
 }

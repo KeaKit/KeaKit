@@ -11,3 +11,5 @@ export * from "./ratingService";
 export * from "./servicesService";
 export * from "./userService";
 export * from "./walletService";
+export * from './promoCodeService';
+export * from './pilotUserService';

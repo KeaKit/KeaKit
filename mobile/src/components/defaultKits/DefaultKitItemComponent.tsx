@@ -1,8 +1,8 @@
 import React from "react";
 import { TouchableOpacity, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors, commonStyles, componentStyles } from "../styles";
-import { createKitStyles } from "../styles/createKitStyles";
+import { Colors, commonStyles, componentStyles } from "../../styles";
+import { createKitStyles } from "../../styles/createKitStyles";
 
 type DefaultKitItemComponentProps = {
   item: {
@@ -19,14 +19,9 @@ type DefaultKitItemComponentProps = {
   onRemove?: (id: number) => void;
 };
 
-const DefaultKitItemComponent: React.FC<DefaultKitItemComponentProps> = ({
-  item,
-  quantity,
-  maxQuantity,
-  onIncrease,
-  onDecrease,
-  onRemove,
-}) => {
+export const DefaultKitItemComponent: React.FC<
+  DefaultKitItemComponentProps
+> = ({ item, quantity, maxQuantity, onIncrease, onDecrease, onRemove }) => {
   const reachedMax =
     maxQuantity !== undefined &&
     maxQuantity !== null &&
@@ -69,7 +64,9 @@ const DefaultKitItemComponent: React.FC<DefaultKitItemComponentProps> = ({
 
         {isEditable && (
           <>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
               <TouchableOpacity
                 onPress={() => onDecrease(item.id)}
                 accessibilityRole="button"
@@ -111,5 +108,3 @@ const DefaultKitItemComponent: React.FC<DefaultKitItemComponentProps> = ({
     </View>
   );
 };
-
-export default DefaultKitItemComponent;
