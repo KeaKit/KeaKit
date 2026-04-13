@@ -17,7 +17,6 @@ import {
   createPaymentIntent,
   confirmStripePayment,
   processPaymentWithStripe,
-  deleteKit,
 } from "../../services";
 import { getKitPaymentWithPromo } from "../../services/kitService";
 import {
@@ -241,15 +240,6 @@ export default function CheckoutScreen({ route }: Props) {
     }
   };
 
-
-  const handleKitDelete = async () => {
-    try {
-      await deleteKit(kitId, user?.token ?? "");
-    } catch (error) {
-      console.error('Error', 'No se pudo eliminar el kit.');
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -257,7 +247,6 @@ export default function CheckoutScreen({ route }: Props) {
         title="Pagar el kit"
         showBack={true}
         onBack={() => {
-          handleKitDelete();
           navigation.goBack()
         }}
       />
