@@ -36,7 +36,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> Customizer.withDefaults())
+            .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/swagger-ui.html","/swagger-ui/**","/v3/api-docs/**").permitAll()
@@ -61,9 +61,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/promo-codes/validate").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/category", "/api/category/**").permitAll()
                 .requestMatchers("/api/rgpd/current-policy").permitAll()
-                .anyRequest().authenticated()
                 .requestMatchers("/error").permitAll()
-		            .anyRequest().authenticated()
+		        .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
