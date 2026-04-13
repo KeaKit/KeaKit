@@ -111,6 +111,7 @@ const EditArticleScreen: React.FC = () => {
   const [category,       setCategory]       = useState<Category | null>(article.category ?? null);
   const [imageUrl,       setImageUrl]       = useState(article.imageUrl ?? '');
   const [purchaseDate,   setPurchaseDate]   = useState(article.purchaseDate ?? '');
+  const [totalUnits, setTotalUnits] = useState(String(article.totalUnits ?? '1'));
   const [condition,      setCondition]      = useState<'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN' | ''>(article.condition ?? '');
 
   const conditionOptions: { value: 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN'; label: string }[] = [
@@ -188,7 +189,9 @@ const EditArticleScreen: React.FC = () => {
       newErrors.availableUntil = 'Debe ser posterior a la fecha de inicio';
     if (purchaseDate && !isValidIsoDate(purchaseDate))
       newErrors.purchaseDate = 'Fecha de compra no válida';
-
+    if (!totalUnits || isNaN(Number(totalUnits)) || Number(totalUnits) < 1 || !Number.isInteger(Number(totalUnits))) {
+      newErrors.totalUnits = 'Introduce un número de unidades válido (mínimo 1)';
+    }
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
@@ -212,6 +215,7 @@ const EditArticleScreen: React.FC = () => {
         description:   description.trim(),
         city:          selectedCity,
         pricePerMonth: Number(pricePerMonth),
+        totalUnits:    Number(totalUnits),
         availableFrom,
         availableUntil,
         category:      { id: category!.id } as any,
@@ -404,6 +408,14 @@ const EditArticleScreen: React.FC = () => {
           {/* ── Precio y disponibilidad ───────────────────────────────── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Precio y disponibilidad</Text>
+            <Field
+              label="Unidades disponibles"
+              value={totalUnits}
+              onChange={(t) => { setTotalUnits(t); clearError('totalUnits'); }}
+              placeholder="Ej: 1"
+              keyboardType="numeric"
+              error={errors.totalUnits}
+            />
             <Field
               label="Precio por mes (€)"
               value={pricePerMonth}
