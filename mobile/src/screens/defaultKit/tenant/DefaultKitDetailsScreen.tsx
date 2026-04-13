@@ -20,6 +20,7 @@ import {
 const DefaultKitDetailsScreen = () => {
   const { user } = useAuth();
   const token = user?.token || null;
+  const isAdmin = user?.role === "ADMIN";
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { kitId } = route.params;
@@ -126,6 +127,8 @@ const DefaultKitDetailsScreen = () => {
         
       </View>
       <View style={commonStyles.footerContainer}>
+        {!isAdmin && (
+          <>         
         <KeakitButton
           title="Personalizar kit"
           onPress={() => {
@@ -140,6 +143,8 @@ const DefaultKitDetailsScreen = () => {
           }}
           icon="cart"
         />
+        </>)}
+
         <KeakitButton
           title="Volver a la lista de kits express"
           onPress={() => {
