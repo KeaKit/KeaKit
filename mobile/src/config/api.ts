@@ -152,6 +152,17 @@ export const API_ROUTES = {
   // Article history
   GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`,
 
+  // RGPD - Para usuarios autenticados
+  RGPD_CHECK: `${BASE_URL}/api/rgpd/check`,
+  RGPD_ACCEPT: `${BASE_URL}/api/rgpd/accept`,
+  RGPD_NEEDS_CONSENT: `${BASE_URL}/api/rgpd/needs-consent`,
+  
+  // RGPD - Política pública (sin autenticación)
+  RGPD_CURRENT_POLICY: `${BASE_URL}/api/rgpd/current-policy`,
+  
+  // Admin RGPD
+  ADMIN_CURRENT_POLICY: `${BASE_URL}/api/admin/rgpd/current`,
+  ADMIN_CREATE_POLICY: `${BASE_URL}/api/admin/rgpd/policies`,
   // Insignia
   TOGGLE_FOUNDER_BADGE: (id: number) => `${BASE_URL}/api/admin/users/${id}/founder-badge`,
 

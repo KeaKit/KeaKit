@@ -1,4 +1,3 @@
-// AppNavigator.tsx
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -71,7 +70,8 @@ import TrackingNotificationsScreen from "../screens/notifications/TrackingNotifi
 // Articles
 import MyArticlesScreen from "../screens/profile/MyArticlesScreen";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
-
+import RgpdPolicyScreen from "../screens/legal/RgpdPolicyScreen";
+import EditPolicyScreen from "../screens/admin/EditPolicyScreen";
 import UploadArticleScreen from "../screens/profile/UploadArticleScreen";
 import EditArticleScreen from "../screens/profile/EditArticleScreen";
 
@@ -297,6 +297,10 @@ const AppNavigator: React.FC = () => {
                   name="WithdrawMoney"
                   component={WithdrawMoneyScreen}
                 />
+                <Stack.Screen 
+                  name="EditPolicy" 
+                  component={EditPolicyScreen} 
+                />
 
                 {/*Tracking - Delivery*/}
 
@@ -333,6 +337,7 @@ const AppNavigator: React.FC = () => {
               <>
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="RgpdPolicy" component={RgpdPolicyScreen} />
               </>
             )}
           </Stack.Navigator>

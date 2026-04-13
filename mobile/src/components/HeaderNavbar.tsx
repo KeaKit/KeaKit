@@ -215,9 +215,27 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         title: "Mi cuenta",
         items: [
           { name: "Ver Perfil", icon: "person", screen: "Profile" },
-          { name: "Mis Valoraciones", icon: "star", screen: "UserRatings", params: { userId: user.id, userName: user.name } },
-          { name: "Notificaciones de actividad", icon: "notifications", screen: "ActivityNotifications", badge: activityUnreadCount > 0 ? String(activityUnreadCount) : undefined },
-          { name: "Notificaciones de seguimiento", icon: "navigate", screen: "TrackingNotifications", badge: unreadCount > 0 ? String(unreadCount) : undefined },
+
+          {
+            name: "Mis Valoraciones",
+            icon: "star",
+            screen: "UserRatings",
+            params: { userId: user.id, userName: user.name },
+          },
+          {
+            name: "Notificaciones de actividad",
+            icon: "notifications",
+            screen: "ActivityNotifications",
+            badge: activityUnreadCount > 0 ? String(activityUnreadCount) : undefined,
+          },
+          {
+            name: "Notificaciones de seguimiento",
+            icon: "navigate",
+            screen: "TrackingNotifications",
+            badge: unreadCount > 0 ? String(unreadCount) : undefined,
+          },
+
+          { name: "Política de Privacidad", icon: "document-text", screen: "EditPolicy" },
         ],
       },
       {
@@ -230,6 +248,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
       },
       { items: [{ name: "Cerrar Sesión", icon: "log-out", danger: true, onPress: handleLogout }] },
     ];
+
+
   };
 
   const handleMenuItemPress = (item: HeaderMenuItem) => {

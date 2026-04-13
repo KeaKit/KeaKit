@@ -11,6 +11,8 @@ export interface RegisterRequest {
   city: string;
   country: string;
   password: string;
+  acceptedPolicies?: boolean;
+  acceptedMarketing?: boolean;
 }
 
 export interface LoginRequest {
@@ -428,8 +430,10 @@ export type RootStackParamList = {
   TrackingNotifications: undefined;
   AssignedKits: undefined;
   Couriers: undefined;
-  CourierDetail: { courier: UserResponse, isBusy?: boolean };
-  ArticleRentals: { articleId: number, articleTitle: string };
+  CourierDetail: { courier: UserResponse; isBusy?: boolean };
+  ArticleRentals: { articleId: number; articleTitle: string };
+  RgpdPolicy: undefined;
+  EditPolicy: undefined;
   PromoCodes: undefined;
   PromoCodeForm: { promoCode?: PromoCodeFormData; mode: 'create' | 'edit' };
   PilotUsers: undefined;

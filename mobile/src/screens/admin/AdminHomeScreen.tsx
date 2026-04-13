@@ -57,7 +57,7 @@ type AdminSection = {
 };
 
 const ADMIN_SECTIONS: AdminSection[] = [
-  {
+{
     id: 'users',
     icon: 'people',
     label: 'Gestión de Usuarios',
@@ -110,6 +110,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     color: KC.blueDark,
     implemented: true,
     screen: 'DefaultKits',
+  },
+  {
+    id: 'privacy-policy',
+    icon: 'document-text',
+    label: 'Política de Privacidad',
+    description: 'Editar la política y gestionar versiones',
+    color: KC.lavender,
+    implemented: true,
+    screen: 'EditPolicy',
   },
   {
     id: 'pilot-users',
