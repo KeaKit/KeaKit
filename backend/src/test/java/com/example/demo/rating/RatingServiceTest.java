@@ -1,4 +1,4 @@
-package com.example.demo.service;
+package com.example.demo.rating;
 
 import com.example.demo.dto.RatingCreateRequest;
 import com.example.demo.dto.RatingResponse;
@@ -9,6 +9,7 @@ import com.example.demo.model.*;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.RatingRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.RatingService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
