@@ -523,22 +523,26 @@ const CreateKitScreen: React.FC = () => {
   const checkItemsAvailability = (start: Date, end: Date): string[] => {
     const invalidTitles: string[] = [];
 
-    const kitStartNum = start.getFullYear() * 10000 + (start.getMonth() + 1) * 100 + start.getDate();
-    const kitEndNum = end.getFullYear() * 10000 + (end.getMonth() + 1) * 100 + end.getDate();
+    // Normalizar fechas
+    const kitStart = new Date(start);
+    kitStart.setHours(0, 0, 0, 0);
+    
+    const kitEnd = new Date(end);
+    kitEnd.setHours(0, 0, 0, 0);
 
     selectedProducts.forEach((product) => {
-      if (!product.availableFrom || !product.availableUntil) return;
+      if (!product.availableFrom || !product.availableUntil) {
+        invalidTitles.push(product.title);
+        return;
+      }
 
-      const rawFrom = product.availableFrom.split('T')[0];
-      const rawUntil = product.availableUntil.split('T')[0];
+      const productFrom = new Date(product.availableFrom);
+      productFrom.setHours(0, 0, 0, 0);
+      
+      const productUntil = new Date(product.availableUntil);
+      productUntil.setHours(0, 0, 0, 0);
 
-      const fromParts = rawFrom.split('-');
-      const untilParts = rawUntil.split('-');
-
-      const pStartNum = parseInt(fromParts[0]) * 10000 + parseInt(fromParts[1]) * 100 + parseInt(fromParts[2]);
-      const pEndNum = parseInt(untilParts[0]) * 10000 + parseInt(untilParts[1]) * 100 + parseInt(untilParts[2]);
-
-      const isAvailable = (kitStartNum >= pStartNum) && (kitEndNum <= pEndNum);
+      const isAvailable = kitStart >= productFrom && kitEnd <= productUntil;
 
       if (!isAvailable) {
         invalidTitles.push(product.title);

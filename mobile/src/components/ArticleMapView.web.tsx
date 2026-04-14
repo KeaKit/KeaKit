@@ -10,6 +10,7 @@ type MapArticle = {
   distanceKm?: number;
   cityLat?: number;
   cityLng?: number;
+  isAvailableForDates?: boolean;  // ← NUEVA PROPIEDAD
 };
 
 type ArticleMapViewProps = {
@@ -58,11 +59,15 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
       isTarget: boolean;
       count: number;
       articles: MapArticle[];
+      hasUnavailable: boolean;  // ← NUEVO: indica si hay productos no disponibles en el grupo
     }[] = [];
 
     for (const [cityKey, groupArticles] of groups.entries()) {
       const firstArticle = groupArticles[0];
       const cityName = groupArticles[0].city || cityKey;
+      
+      // Verificar si algún artículo del grupo no está disponible
+      const hasUnavailable = groupArticles.some(a => a.isAvailableForDates === false);
       
       if (groupArticles.length === 1) {
         const a = groupArticles[0];
@@ -77,16 +82,19 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
           isTarget: false,
           count: 1,
           articles: groupArticles,
+          hasUnavailable: a.isAvailableForDates === false,
         });
       } else {
         const minPrice = Math.min(...groupArticles.map(a => a.pricePerMonth));
         const maxPrice = Math.max(...groupArticles.map(a => a.pricePerMonth));
+        const availableCount = groupArticles.filter(a => a.isAvailableForDates !== false).length;
+        
         result.push({
           id: null,
           lat: firstArticle.cityLat!,
           lng: firstArticle.cityLng!,
           title: `📦 ${groupArticles.length} artículos en ${cityName}`,
-          sub: `${groupArticles.length} productos disponibles`,
+          sub: `${groupArticles.length} productos (${availableCount} disponibles en estas fechas)`,
           price: minPrice === maxPrice 
             ? `${minPrice.toFixed(2)} €/mes`
             : `${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)} €/mes`,
@@ -94,6 +102,7 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
           isTarget: false,
           count: groupArticles.length,
           articles: groupArticles,
+          hasUnavailable: hasUnavailable,
         });
       }
     }
@@ -110,6 +119,7 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
         isTarget: true,
         count: 1,
         articles: [],
+        hasUnavailable: false,
       });
     }
 
@@ -168,6 +178,7 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
     .article-item:first-child { border-top: none; }
     .article-title { font-weight: 500; flex: 1; font-size: 12px; }
     .article-price { color: ${primaryColor}; font-weight: 600; font-size: 11px; white-space: nowrap; }
+    .article-unavailable { opacity: 0.5; background-color: #f5f5f5; }
     .btn-add {
       padding: 4px 12px;
       border: none;
@@ -179,6 +190,7 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
     }
     .btn-add.selected { background: #eee; color: #555; }
     .btn-add.unselected { background: ${primaryColor}; color: white; }
+    .btn-add.disabled { background: #ccc; color: #666; cursor: not-allowed; }
     .cluster-marker {
       background: ${primaryColor};
       border-radius: 50%;
@@ -194,6 +206,9 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       cursor: pointer;
     }
+    .cluster-marker-warning {
+      background: #F57F17;
+    }
     .single-marker {
       background: #F57F17;
       border-radius: 50%;
@@ -202,6 +217,10 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
       border: 2px solid white;
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
       cursor: pointer;
+    }
+    .single-marker-unavailable {
+      background: #ccc;
+      opacity: 0.6;
     }
     .target-marker {
       background: ${primaryColor};
@@ -242,10 +261,13 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
         for (var i = 0; i < m.articles.length; i++) {
           var a = m.articles[i];
           var isSel = selected.has(a.id);
-          html += '<div class="article-item">';
+          var isAvailable = a.isAvailableForDates !== false;
+          var btnClass = 'btn-add ' + (isSel ? 'selected' : 'unselected');
+          if (!isAvailable) btnClass += ' disabled';
+          html += '<div class="article-item' + (!isAvailable ? ' article-unavailable' : '') + '">';
           html += '<span class="article-title">' + a.title + '</span>';
           html += '<span class="article-price">' + a.pricePerMonth.toFixed(2) + '€/mes</span>';
-          html += '<button class="btn-add ' + (isSel ? 'selected' : 'unselected') + '" onclick="sendAddArticle(' + a.id + ')">'
+          html += '<button class="' + btnClass + '" ' + (!isAvailable ? 'disabled' : '') + ' onclick="' + (isAvailable ? 'sendAddArticle(' + a.id + ')' : '') + '">'
                 + (isSel ? 'Quitar' : 'Añadir') + '</button>';
           html += '</div>';
         }
@@ -253,9 +275,13 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
       } 
       // Si es un artículo individual
       else if (!m.isTarget && m.id != null) {
-        var isSel = selected.has(m.id);
+        var a = m.articles[0];
+        var isSel = selected.has(a.id);
+        var isAvailable = a.isAvailableForDates !== false;
+        var btnClass = 'btn-add ' + (isSel ? 'selected' : 'unselected');
+        if (!isAvailable) btnClass += ' disabled';
         html += '<div class="popup-divider"></div>';
-        html += '<button class="btn-add ' + (isSel ? 'selected' : 'unselected') + '" style="width:100%; margin-top:6px;" onclick="sendAddArticle(' + m.id + ')">'
+        html += '<button class="' + btnClass + '" style="width:100%; margin-top:6px;" ' + (!isAvailable ? 'disabled' : '') + ' onclick="' + (isAvailable ? 'sendAddArticle(' + m.id + ')' : '') + '">'
               + (isSel ? 'Quitar del kit' : 'Añadir al kit') + '</button>';
       }
       
@@ -269,13 +295,17 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
           className: '', iconSize: [14, 14], iconAnchor: [7, 7]
         });
       } else if (m.count > 1) {
+        var clusterClass = m.hasUnavailable ? 'cluster-marker cluster-marker-warning' : 'cluster-marker';
         return L.divIcon({
-          html: '<div class="cluster-marker">' + m.count + '</div>',
+          html: '<div class="' + clusterClass + '">' + m.count + '</div>',
           className: '', iconSize: [36, 36], iconAnchor: [18, 18]
         });
       } else {
+        var a = m.articles[0];
+        var isAvailable = a.isAvailableForDates !== false;
+        var markerClass = isAvailable ? 'single-marker' : 'single-marker-unavailable';
         return L.divIcon({
-          html: '<div class="single-marker"></div>',
+          html: '<div class="' + markerClass + '"></div>',
           className: '', iconSize: [14, 14], iconAnchor: [7, 7]
         });
       }
