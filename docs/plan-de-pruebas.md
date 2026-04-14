@@ -114,6 +114,21 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 | **P-03: Fallo - Correo no registrado** | **Correo electrónico:** "noexiste@email.com"<br><br>**Contraseña:** "password123" | El sistema impide el inicio de sesión y muestra un error indicando que no existe una cuenta con el correo indicado. | RN-USR-01<br>RN-USR-02<br>RN-SEG-01 |
 | **P-04: Fallo - Contraseña incorrecta** | **Correo electrónico:** "tenant@example.com"<br><br>**Contraseña:** "wrongpassword" | El sistema impide el inicio de sesión y muestra un error indicando que la contraseña es incorrecta. | RN-USR-09<br>RN-SEG-01<br>RN-SEG-06 |
 
+### 6.1 CU-GENERAL-02 - Edición de perfil
+
+**Escenario:** Un usuario desea editar su perfil.
+
+- **Dado:** El usuario se ha autenticado y se encuentra en la pantalla de "Editar perfil".
+
+- **Cuando:** Rellena el formulario con los datos de los casos de prueba y presiona el botón "Guardar cambios".
+
+- **Entonces:** El sistema debe modificar los datos del usuario y persistirlos en la base de datos en caso de éxito, o mostrar un mensaje de error en caso contrario.
+
+| **Caso de Prueba** | **Datos a introducir (Test Data)** | **Resultado Esperado** | **Reglas de Negocio Cubiertas** |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **P-01: Edición exitosa** | **Nombre completo:** "Miles Morales"<br><br>**Teléfono:** "123456789"<br><br>**Dirección:** "Calle Graham, 10"<br><br>**País:** "United Kingdom"<br><br>**Ciudad:** "London" | El sistema modifica los datos del usuario y los persiste en la base de datos. | RN-USR-04<br>RN-USR-05<br>RN-USR-06<br>RN-USR-07<br>RN-USR-08<br>RN-USR-13 |
+| **P-02: Fallo - Campos vacíos** | Cada uno de los campos obligatorios: sin rellenar | El sistema impide la edición del perfil y muestra un error indicando que los campos obligatorios se deben rellenar. | RN-USR-04<br>RN-USR-05<br>RN-USR-06<br>RN-USR-07<br>RN-USR-08<br>RN-USR-13 |
+
 ### 6.1 CU-ARRENDADOR-01 - Subida de artículos
 
 **Escenario:** Un usuario sube un artículo.
