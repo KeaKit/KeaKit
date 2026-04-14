@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput } from "react-native";
 import { Text } from "react-native-paper";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
-import { useNavigation } from "@react-navigation/native";
+import { CommonActions, useNavigation } from "@react-navigation/native";
 import {
   NativeStackNavigationProp,
   NativeStackScreenProps,
@@ -17,7 +17,6 @@ import {
   createPaymentIntent,
   confirmStripePayment,
   processPaymentWithStripe,
-  deleteKit,
 } from "../../services";
 import { getKitPaymentWithPromo } from "../../services/kitService";
 import {
@@ -50,6 +49,14 @@ type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 export default function CheckoutScreen({ route }: Props) {
   const { kitId } = route.params;
   const navigation = useNavigation<CheckoutNav>();
+  const resetToMyKits = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: "Home" }, { name: "MyKits" }],
+      }),
+    );
+  };
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -118,11 +125,15 @@ export default function CheckoutScreen({ route }: Props) {
     }
   }
 
-  async function calculateEnoughBalance(prices?: KitPaymentDTO) {
+  function calculateEnoughBalance(prices?: KitPaymentDTO) {
     const currentPrices = prices ?? kitPrices;
-    if (currentPrices?.totalPrice != null && balance > 0) {
-      setEnoughBalance(balance * 100 >= currentPrices.totalPrice);
+    if (currentPrices?.totalPrice == null) {
+      setEnoughBalance(false);
+      return;
     }
+
+    const balanceInCents = Math.round(balance * 100);
+    setEnoughBalance(balanceInCents >= currentPrices.totalPrice);
   }
 
   async function fetchKitDetails() {
@@ -140,18 +151,22 @@ export default function CheckoutScreen({ route }: Props) {
     const init = async () => {
       await fetchBalance();
       const prices = await fetchKitPrice();
-      await calculateEnoughBalance(prices);
+      calculateEnoughBalance(prices);
       await fetchKitDetails();
     };
     init();
   }, [kitId]);
+
+  useEffect(() => {
+    calculateEnoughBalance();
+  }, [balance, kitPrices]);
 
   const handleRemovePromo = async () => {
     setAppliedPromo(null);
     setPromoInput('');
     setPromoMessage(null);
     const prices = await fetchKitPrice();
-    await calculateEnoughBalance(prices);
+    calculateEnoughBalance(prices);
   };
 
   //  Pago
@@ -201,7 +216,7 @@ export default function CheckoutScreen({ route }: Props) {
       } else {
         await executeStripePayment(prices.totalPrice);
       }
-      navigation.navigate("MyKits");
+      resetToMyKits();
     } catch (error) {
       console.error("❌ Error:", error);
       let errorMessage =
@@ -230,7 +245,7 @@ export default function CheckoutScreen({ route }: Props) {
         const updatedPrices = await fetchKitPrice(code);
         setAppliedPromo(code);
         setPromoMessage({ text: `Realizado: ${result.message}`, valid: true });
-        await calculateEnoughBalance(updatedPrices);
+        calculateEnoughBalance(updatedPrices);
       } else {
         setPromoMessage({ text: result.message, valid: false });
       }
@@ -241,15 +256,6 @@ export default function CheckoutScreen({ route }: Props) {
     }
   };
 
-
-  const handleKitDelete = async () => {
-    try {
-      await deleteKit(kitId, user?.token ?? "");
-    } catch (error) {
-      console.error('Error', 'No se pudo eliminar el kit.');
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -257,7 +263,6 @@ export default function CheckoutScreen({ route }: Props) {
         title="Pagar el kit"
         showBack={true}
         onBack={() => {
-          handleKitDelete();
           navigation.goBack()
         }}
       />

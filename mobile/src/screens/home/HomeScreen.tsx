@@ -86,7 +86,9 @@ const HomeScreen: React.FC = () => {
     if (!user?.id || !user?.token) return;
     if (user.role !== "USER") return;
 
-    const stored = await AsyncStorage.getItem(LAST_UPDATES_KEY);
+    const userUpdatesKey = `${LAST_UPDATES_KEY}_${user.id}`;
+
+    const stored = await AsyncStorage.getItem(userUpdatesKey);
     const lastUpdates: Record<string, string> = stored ? JSON.parse(stored) : {};
 
     const kits = await getMyKits(user.id, user.token);
@@ -113,7 +115,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    await AsyncStorage.setItem(LAST_UPDATES_KEY, JSON.stringify(lastUpdates));
+    await AsyncStorage.setItem(userUpdatesKey, JSON.stringify(lastUpdates));
   };
 
 

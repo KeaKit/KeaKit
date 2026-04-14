@@ -170,6 +170,46 @@ export interface Item {
   quantity?: number;
 }
 
+export interface ItemCatalog {
+  id: number;
+  itemType: "ARTICLE" | "SERVICE" | string;
+  title: string;
+  description: string;
+  city: string;
+  country?: string | null;
+  pricePerMonth: number;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  category?: string | null;
+  totalUnits: number;
+  ownerId: number;
+  ownerName?: string | null;
+  status?: "AVAILABLE" | "RENTED" | "INACTIVE" | string | null;
+  condition?: ArticleCondition | null;
+  imageUrl?: string | null;
+}
+
+export interface ItemFilterRequest {
+  minPrice?: number;
+  maxPrice?: number;
+  country?: string;
+  city?: string;
+  categoryId?: number;
+  condition?: ArticleCondition;
+  page?: number;
+  size?: number;
+}
+
+export interface ItemFilterResponse {
+  content: ItemCatalog[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export interface ItemCatalogResponse {
   id: number;
     itemType: string; 

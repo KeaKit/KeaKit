@@ -46,6 +46,7 @@ export const API_ROUTES = {
   GET_NUMBER_OF_ARTICLES_BY_CATEGORY: (categoryId: number) => `${BASE_URL}/api/article/category/${categoryId}/count`,
   ALL_ITEMS: `${BASE_URL}/api/items/all`,
   ITEMS_FOR_RENT: (ownerId: number) => `${BASE_URL}/api/items/for-rent/${ownerId}`,
+  FILTER_ITEMS_FOR_KIT: `${BASE_URL}/api/items/filter-for-kit`,
 
   // Incidents
   CREATE_INCIDENT:            `${BASE_URL}/api/incidents`,
