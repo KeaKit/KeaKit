@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
@@ -120,6 +120,15 @@ const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
   const route = useRoute<any>();
   const { user } = useAuth();
+
+  const resetToMyKits = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: "Home" }, { name: "MyKits" }],
+      }),
+    );
+  };
   
   // Obtener kitToCreate de los parámetros de ruta
   const kitToCreate : Partial<KitCreateRequest> | null = route.params?.kitToCreate;
@@ -171,9 +180,6 @@ const CreateKitScreen: React.FC = () => {
   const [targetCityCoords, setTargetCityCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
 
-  // Estado para saber si pagamos con wallet o con stripe
-  const [paymentType, setPaymentType] = useState<"WALLET" | "NORMAL">("NORMAL");
-  
   // Prerrellenado de campos inicial - usar useEffect
   useEffect(() => {
     if (kitToCreate) {
@@ -282,7 +288,7 @@ const CreateKitScreen: React.FC = () => {
 
       const response = await filterItemsForKit(
         {
-          country: country.trim() || undefined,
+          country: undefined,
           city: nextShowOnlyMyCity && city.trim() ? city.trim() : undefined,
           categoryId: nextSelectedCategoryId ? Number(nextSelectedCategoryId) : undefined,
           condition: nextSelectedCondition
@@ -644,20 +650,7 @@ const CreateKitScreen: React.FC = () => {
         throw new Error("No se pudo crear el kit.");
       }
 
-      if (paymentType === "WALLET") {
-        // Multiplicamos por 100 para pasarlo a céntimos
-        const amountInCents = Math.round(finalPrice * 100);
-
-        await processPaymentWithWallet(
-          createdKit.id,
-          user.token,
-          amountInCents
-        );
-        
-        navigation.navigate("MyKits");
-      } else {
-        navigation.navigate("Checkout", { kitId: createdKit.id });
-      }
+      navigation.navigate("Checkout", { kitId: createdKit.id });
 
    } catch (err) {
       console.error("ERROR al procesar la creación/pago del kit:", err);
@@ -1072,23 +1065,6 @@ const CreateKitScreen: React.FC = () => {
 
             {/* Botones de acción */}
             <Button
-              mode="contained"
-              buttonColor={Colors.primary}
-              disabled={submitting || walletBalance < finalPrice || finalPrice === 0}
-              onPress={() => {
-                setPaymentType("WALLET");
-                setConfirmVisible(true);
-              }}
-              icon="wallet"
-              style={{ borderRadius: 8, marginBottom: 8 }}
-              contentStyle={{ paddingVertical: 8 }}
-            >
-              {walletBalance >= finalPrice
-                ? "Pagar con Cartera"
-                : "Saldo insuficiente en cartera"}
-            </Button>
-
-            <Button
               mode="outlined"
               onPress={async () => {
                 if (!user?.id || !user.token) {
@@ -1147,7 +1123,6 @@ const CreateKitScreen: React.FC = () => {
               mode="contained"
               onPress={() => {
                 setConfirmVisible(true);
-                setPaymentType("NORMAL");
               }}
               disabled={submitting}
               loading={submitting}
