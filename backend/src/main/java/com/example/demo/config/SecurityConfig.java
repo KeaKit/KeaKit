@@ -36,11 +36,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> Customizer.withDefaults())
+            .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/swagger-ui.html","/swagger-ui/**","/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                .requestMatchers("/api/users/*/public-profile").permitAll()
                 .requestMatchers("/api/cities/**").permitAll()
                 .requestMatchers("/api/countries/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
@@ -57,9 +58,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/services/**").authenticated()
                 .requestMatchers("/api/users/**").authenticated()
                 .requestMatchers("/api/ratings/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/promo-codes/validate").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/category", "/api/category/**").permitAll()
+                .requestMatchers("/api/rgpd/current-policy").permitAll()
                 .requestMatchers("/error").permitAll()
-		.anyRequest().authenticated()
+		        .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -74,19 +77,13 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-    	CorsConfiguration configuration = new CorsConfiguration();
-    
-    // 1. Permitir CUALQUIER origen temporalmente para descartar errores de tipeo o barras finales
-    	configuration.setAllowedOriginPatterns(Arrays.asList("*")); 
-    
-    // 2. Permitir todos los métodos
-    	configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-    
-    // 3. Permitir CUALQUIER cabecera (es posible que el frontend mande algo que no teníamos en la lista)
-    	configuration.setAllowedHeaders(Arrays.asList("*"));
-    
-    // 4. Debe ser false si usamos "*" en originPatterns
-    	configuration.setAllowCredentials(false); 
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        configuration.setAllowedOrigins(Arrays.asList("https://keakitv3.web.app", "http://localhost:8081")); 
+        
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(false);
 
 	UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     	source.registerCorsConfiguration("/**", configuration);

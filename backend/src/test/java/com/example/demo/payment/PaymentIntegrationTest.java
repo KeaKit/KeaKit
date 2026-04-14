@@ -80,7 +80,12 @@ public class PaymentIntegrationTest {
 		ReflectionTestUtils.setField(deposit, "destinationWallet", tenantWallet);
 		ReflectionTestUtils.setField(deposit, "amount", 1000.0);
 		ReflectionTestUtils.setField(deposit, "type", TransactionType.PAYOUT);
+		@SuppressWarnings("unchecked")
+		List<Transaction> txs = (List<Transaction>) ReflectionTestUtils.getField(tenantWallet, "transactions");
+		txs.add(deposit); // Ahora getBalance() sumará 1000.0 al iterar esta lista
 		transactionRepository.saveAndFlush(deposit);
+
+
 
 		Category category = new Category("Bricolaje", "Taller", 5.0, 500.0);
 		category.setStatus(CategoryStatus.ACTIVE);
@@ -94,6 +99,9 @@ public class PaymentIntegrationTest {
 		article.setStatus(ArticleStatus.AVAILABLE);
 		article.setDescription("Taladro de alta potencia");
 		article.setCity("Madrid");
+		article.setTotalUnits(5); // Asegura que hay stock suficiente para el memento (que pide 1)
+		article.setAvailableFrom(LocalDate.now().minusDays(1)); // Disponible desde ayer
+		article.setAvailableUntil(LocalDate.now().plusMonths(2)); // Disponible hasta después del alquiler del kit
 		Article savedArticle = articleRepository.saveAndFlush(article);
 
 		kit = new Kit();
@@ -121,13 +129,12 @@ public class PaymentIntegrationTest {
 		kitRepository.saveAndFlush(kit);
 
 		entityManager.flush();
-		entityManager.clear();
 	}
 
 	private void saveSimpleWallet(User user) {
 		Wallet wallet = new Wallet();
 		ReflectionTestUtils.setField(wallet, "user", user);
-		ReflectionTestUtils.setField(wallet, "transactions", List.of());
+		//ReflectionTestUtils.setField(wallet, "transactions", List.of());
 		walletRepository.saveAndFlush(wallet);
 	}
 

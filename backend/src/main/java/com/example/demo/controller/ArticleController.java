@@ -13,13 +13,11 @@ import com.example.demo.service.ArticleService;
 import com.example.demo.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.List;
 
@@ -115,9 +113,34 @@ public class ArticleController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateArticle(@PathVariable Long id, @RequestParam Long ownerId, @RequestBody Article updateData) {
+    public ResponseEntity<?> updateArticle(
+            @PathVariable Long id,
+            @RequestParam Long ownerId,
+            @RequestBody Article updateData) {
         try {
             Article updated = articleService.update(id, ownerId, updateData);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @PutMapping(value = "/{id}/with-image", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> updateArticleWithImage(
+            @PathVariable Long id,
+            @RequestParam Long ownerId,
+            @RequestPart("data") String dataJson,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        try {
+            Article updateData = objectMapper.readValue(dataJson, Article.class);
+            Article updated;
+            
+            if (image != null && !image.isEmpty()) {
+                updated = articleService.updateWithImage(id, ownerId, updateData, image);
+            } else {
+                updated = articleService.update(id, ownerId, updateData);
+            }
+            
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

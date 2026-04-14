@@ -29,6 +29,9 @@ public class RegisterRequest {
 
     @NotBlank(message = "Country is required")
     private String country;
+
+    private Boolean acceptedPolicies;
+    private Boolean acceptedMarketing;
     
     public String getEmail() {
         return email;
@@ -86,6 +89,21 @@ public class RegisterRequest {
         this.country = country;
     }
 
+    public Boolean getAcceptedPolicies() {
+        return acceptedPolicies;
+    }
+    
+    public void setAcceptedPolicies(Boolean acceptedPolicies) {
+        this.acceptedPolicies = acceptedPolicies;
+    }
+
+    public Boolean getAcceptedMarketing() {
+        return acceptedMarketing;
+    }
+    
+    public void setAcceptedMarketing(Boolean acceptedMarketing) {
+        this.acceptedMarketing = acceptedMarketing;
+    }
 
 
 }

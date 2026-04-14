@@ -5,7 +5,7 @@ import { Colors } from '../styles';
 interface Props {
   visible: boolean;
   message: string;
-  type?: 'success' | 'error';
+  type?: 'success' | 'error' | 'info';
   onClose: () => void;
   action?: { label: string; onPress: () => void };
   duration?: number;
@@ -24,7 +24,6 @@ export const PushNotification: React.FC<Props> = ({
 
   useEffect(() => {
     if (visible) {
-      // Entrada
       Animated.parallel([
         Animated.timing(translateY, {
           toValue: 0,
@@ -38,7 +37,6 @@ export const PushNotification: React.FC<Props> = ({
         }),
       ]).start();
 
-      // Salida automática
       const timer = setTimeout(() => {
         Animated.parallel([
           Animated.timing(translateY, {
@@ -60,8 +58,14 @@ export const PushNotification: React.FC<Props> = ({
 
   if (!visible) return null;
 
-  // Color basado en el tipo
-  const backgroundColor = type === 'success' ? Colors.success : Colors.error;
+  const getBackgroundColor = () => {
+    switch (type) {
+      case 'success': return Colors.success;
+      case 'error': return Colors.error;
+      case 'info': return Colors.info || '#2196F3';
+      default: return Colors.success;
+    }
+  };
 
   return (
     <Animated.View
@@ -70,7 +74,7 @@ export const PushNotification: React.FC<Props> = ({
         {
           transform: [{ translateY }],
           opacity,
-          backgroundColor, // Color dinámico
+          backgroundColor: getBackgroundColor(),
         },
       ]}
     >

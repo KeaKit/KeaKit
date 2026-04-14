@@ -122,7 +122,7 @@ public class TestDataFactory {
                 total,
                 subtotal,
                 guarantee,
-                courier);
+                courier, 0);
     }
 
     /**
@@ -141,7 +141,8 @@ public class TestDataFactory {
                 15000,
                 10000,
                 4000,
-                1000);
+                1000,
+                0);
     }
 
     public static Item createMockItem(Long id, String title, Double price, User owner) {

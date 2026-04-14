@@ -71,7 +71,7 @@ public class PaymentControllerTest extends BaseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("Pago procesado correctamente"));
 
-        verify(paymentService).processPayment(KIT_ID, false);
+        verify(paymentService).processPayment(KIT_ID, false, null, null);
     }
 
     @Test
@@ -93,13 +93,13 @@ public class PaymentControllerTest extends BaseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("Pago con billetera procesado correctamente"));
 
-        verify(paymentService).processPayment(KIT_ID, true);
+        verify(paymentService).processPayment(KIT_ID, true, null, null);
     }
 
     @Test
     void processWalletPayment_ShouldReturnError_WhenServiceThrowsException() throws Exception {
         doThrow(new RuntimeException("Saldo insuficiente"))
-            .when(paymentService).processPayment(KIT_ID, true);
+            .when(paymentService).processPayment(KIT_ID, true, null, null);
 
         mockMvc.perform(post(PROCESS_WALLET_URL, KIT_ID))
                 .andExpect(status().isInternalServerError())
@@ -126,7 +126,7 @@ public class PaymentControllerTest extends BaseControllerTest {
         String errorMsg = "Database connection failed";
         
         doThrow(new RuntimeException(errorMsg))
-            .when(paymentService).processPayment(KIT_ID, false);
+            .when(paymentService).processPayment(KIT_ID, false, null, null);
 
         mockMvc.perform(post(PROCESS_STRIPE_URL, KIT_ID)
                 .contentType(MediaType.APPLICATION_JSON)
