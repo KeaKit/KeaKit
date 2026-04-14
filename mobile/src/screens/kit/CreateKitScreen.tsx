@@ -32,7 +32,6 @@ import {
 } from "../../services/articleService";
 import { getCityCoordinates } from "../../services/cityService";
 import { fetchAllCategories } from "../../services/categoryService";
-import { processPaymentWithWallet } from "../../services";
 import { API_ROUTES } from "../../config/api";
 import {
   RootStackParamList,
@@ -58,8 +57,8 @@ import {
 import { styles } from "../../styles/uploadArticleScreenStyles";
 import { formatRentalDuration, calculateMonthsBetween } from "../../utils/duration";
 
-const COMISION = 0; // todos son usuarios pilotos y no se cobra comision
-const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
+const COMISION = 0;
+const GUARANTEE_PERCENTAGE = 0.2;
 const PLATFORM_COURIER_PRICE = 9.99;
 
 type CreateKitNav = NativeStackNavigationProp<RootStackParamList, "CreateKit">;
@@ -129,10 +128,9 @@ const CreateKitScreen: React.FC = () => {
       }),
     );
   };
-  
-  // Obtener kitToCreate de los parámetros de ruta
-  const kitToCreate : Partial<KitCreateRequest> | null = route.params?.kitToCreate;
-  const isEditable : boolean = route.params?.isEditable ?? true;
+
+  const kitToCreate: Partial<KitCreateRequest> | null = route.params?.kitToCreate;
+  const isEditable: boolean = route.params?.isEditable ?? true;
 
   const {
     selectedCountry,
@@ -144,7 +142,6 @@ const CreateKitScreen: React.FC = () => {
     onCountryChange,
   } = useLocationPicker();
 
-  
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -172,7 +169,7 @@ const CreateKitScreen: React.FC = () => {
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  
+
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [expandedSearch, setExpandedSearch] = useState(false);
   const [nearbyProducts, setNearbyProducts] = useState<ArticleNearby[]>([]);
@@ -180,7 +177,6 @@ const CreateKitScreen: React.FC = () => {
   const [targetCityCoords, setTargetCityCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
 
-  // Prerrellenado de campos inicial - usar useEffect
   useEffect(() => {
     if (kitToCreate) {
       if (kitToCreate.name) setName(kitToCreate.name);
@@ -194,20 +190,16 @@ const CreateKitScreen: React.FC = () => {
     }
   }, [kitToCreate]);
 
-  // Establecer país y ciudad del usuario cuando estén disponibles
   useEffect(() => {
     if (user?.country) {
       setCountry(user.country);
       void onCountryChange(user.country);
     }
-
     if (user?.city) {
       setCity(user.city);
-
       setSelectedCity(user.city);
     }
   }, []);
-
 
   useEffect(() => {
     if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
@@ -291,9 +283,7 @@ const CreateKitScreen: React.FC = () => {
           country: undefined,
           city: nextShowOnlyMyCity && city.trim() ? city.trim() : undefined,
           categoryId: nextSelectedCategoryId ? Number(nextSelectedCategoryId) : undefined,
-          condition: nextSelectedCondition
-            ? (nextSelectedCondition as ArticleCondition)
-            : undefined,
+          condition: nextSelectedCondition ? (nextSelectedCondition as ArticleCondition) : undefined,
           minPrice: nextMinPrice ? parseFloat(nextMinPrice) : undefined,
           maxPrice: nextMaxPrice ? parseFloat(nextMaxPrice) : undefined,
           page: 0,
@@ -309,17 +299,19 @@ const CreateKitScreen: React.FC = () => {
         pricePerMonth: Number(p.pricePerMonth ?? 0),
         status: String(p.status ?? "AVAILABLE"),
         category: typeof p.category === "string" ? p.category : "",
-        condition: p.condition ?? null,
+        condition: (p as any).condition ?? null,
         city: p.city ?? "",
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
-        imageUrl: p.imageUrl ?? null,
+        imageUrl: (p as any).imageUrl ?? null,
         totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
-        availableFrom: p.availableFrom ?? undefined,
-        availableUntil: p.availableUntil ?? undefined,
+        availableFrom: (p as any).availableFrom ?? undefined,
+        availableUntil: (p as any).availableUntil ?? undefined,
       }));
 
-      setAvailableProducts(mapped);
+      const filteredByOwner = mapped.filter(p => p.ownerId !== user?.id);
+
+      setAvailableProducts(filteredByOwner);
       setErrors((prev) => ({ ...prev, general: undefined }));
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo cargar el catálogo.";
@@ -334,13 +326,13 @@ const CreateKitScreen: React.FC = () => {
     }
   }, [
     city,
-    country,
     maxPriceFilter,
     minPriceFilter,
     selectedCategoryId,
     selectedCondition,
     showOnlyMyCity,
     user?.token,
+    user?.id,
   ]);
 
   useEffect(() => {
@@ -362,7 +354,6 @@ const CreateKitScreen: React.FC = () => {
         }
       }
     };
-
     fetchWalletBalance();
   }, [loadCatalog, user?.token, user?.id]);
 
@@ -391,8 +382,8 @@ const CreateKitScreen: React.FC = () => {
 
   const courierPrice = deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
-  const kitPayment : KitPaymentDTO = useMemo(() => {
-    const subtotal = Math.round(totalPrice * 100); 
+  const kitPayment: KitPaymentDTO = useMemo(() => {
+    const subtotal = Math.round(totalPrice * 100);
     const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
     const platformfee = Math.round(subtotal * COMISION);
     const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
@@ -404,8 +395,7 @@ const CreateKitScreen: React.FC = () => {
       platformfee: platformfee,
       courierPrice: courier,
       totalPrice: total,
-      discount: 0, // TODO: Añadir lógica de descuentos a esta pantalla si es necesario
-
+      discount: 0,
     };
   }, [totalPrice, deliveryMethod]);
 
@@ -429,8 +419,7 @@ const CreateKitScreen: React.FC = () => {
   const filteredProducts = useMemo(() => {
     const q = searchText.trim().toLowerCase();
     return availableProducts.filter((p) => {
-      const notInactive =
-        p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
+      const notInactive = p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
       const bySearch =
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
@@ -441,21 +430,16 @@ const CreateKitScreen: React.FC = () => {
 
       return notInactive && bySearch;
     });
-  }, [
-    availableProducts,
-    searchText,
-  ]);
+  }, [availableProducts, searchText]);
 
   const openAddProductModal = async () => {
     const useCityFilter = city.trim().length > 0;
     setShowOnlyMyCity(useCityFilter);
     await loadCatalog({ showOnlyMyCity: useCityFilter });
     setTempSelectedQuantities(selectedQuantities);
-
     setSearchText("");
     setShowOnlyAvailable(true);
 
-    // Cargar productos del mapa solo si el usuario está autenticado
     if (user?.token) {
       try {
         const mapData = await getArticlesForMap(user.token, country.trim() || undefined);
@@ -564,7 +548,6 @@ const CreateKitScreen: React.FC = () => {
     return invalidTitles;
   };
 
-
   const validate = (isDraft: boolean = false): {
     valid: boolean;
     payloadDates?: { startIso: string; endIso: string };
@@ -575,10 +558,25 @@ const CreateKitScreen: React.FC = () => {
     if (!startDate) nextErrors.startDate = "Debes seleccionar una fecha inicial.";
     if (!endDate) nextErrors.endDate = "Debes seleccionar una fecha final.";
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (startDate && startDate < today) {
+      nextErrors.startDate = "La fecha de inicio no puede ser pasada.";
+    }
+
+    if (endDate && endDate < today) {
+      nextErrors.endDate = "La fecha de fin no puede ser pasada.";
+    }
+
+    if (startDate && endDate && endDate < startDate) {
+      nextErrors.endDate = "La fecha de fin debe ser posterior a la de inicio.";
+    }
+
     if (!isDraft) {
       if (!country.trim()) nextErrors.country = "El país es obligatorio.";
       if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
-      
+
       if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
         nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
       }
@@ -598,12 +596,12 @@ const CreateKitScreen: React.FC = () => {
       if (startDate && endDate) {
         const invalidItems = checkItemsAvailability(startDate, endDate);
         if (invalidItems.length > 0) {
-          setErrors(prev => ({...prev, items: `Aviso: Algunos artículos no están disponibles en estas fechas.`}));
+          setErrors(prev => ({ ...prev, items: `Aviso: Algunos artículos no están disponibles en estas fechas.` }));
         }
       }
     }
     setErrors(prev => ({ ...prev, ...nextErrors }));
-    
+
     if (Object.keys(nextErrors).length > 0 || !startDate || !endDate)
       return { valid: false };
 
@@ -629,12 +627,9 @@ const CreateKitScreen: React.FC = () => {
       startDate: validation.payloadDates.startIso,
       endDate: validation.payloadDates.endIso,
       deliveryMethod,
-      meetingPoint:
-        deliveryMethod === "MEETING_POINT"
-          ? meetingPoint.trim()
-          : courierAddress.trim(),
+      meetingPoint: deliveryMethod === "MEETING_POINT" ? meetingPoint.trim() : courierAddress.trim(),
       tenantId: user.id,
-      status: KitStatus.DRAFT, // SIEMPRE LO CREAMOS COMO DRAFT INICIALMENTE
+      status: KitStatus.DRAFT,
       itemSelections: selectedProducts.map((p) => ({
         itemId: p.id,
         quantity: selectedQuantities[p.id] ?? 1,
@@ -644,7 +639,7 @@ const CreateKitScreen: React.FC = () => {
 
     try {
       setSubmitting(true);
-      
+
       const createdKit = await createKit(payload, user.token);
       if (!createdKit) {
         throw new Error("No se pudo crear el kit.");
@@ -652,7 +647,7 @@ const CreateKitScreen: React.FC = () => {
 
       navigation.navigate("Checkout", { kitId: createdKit.id });
 
-   } catch (err) {
+    } catch (err) {
       console.error("ERROR al procesar la creación/pago del kit:", err);
 
       const error = err as {
@@ -662,12 +657,8 @@ const CreateKitScreen: React.FC = () => {
 
       const errorMsg = error.response?.data?.message || error.message || "";
 
-      // 3. Aplicamos tu lógica de validación
-      if (errorMsg.includes("ya no está disponible") || 
-                errorMsg.includes("unidades"))
-      {
-        setErrors({ items: errorMsg }); // Se mostrará debajo de la lista de artículos
-
+      if (errorMsg.includes("ya no está disponible") || errorMsg.includes("unidades")) {
+        setErrors({ items: errorMsg });
       } else {
         setErrors({ general: "Ha ocurrido un error al procesar el kit o el pago." });
       }
@@ -701,19 +692,12 @@ const CreateKitScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={createKitStyles.headerRow}>
-            {/* Botón de volver */}
-            <TouchableOpacity
-              style={componentStyles.iconButton}
-              onPress={() => navigation.goBack()}
-            >
+            <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={24} color={Colors.primary} />
             </TouchableOpacity>
-
             <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
               {kitToCreate ? "Personaliza tu kit" : "Crea un kit"}
             </Text>
-
-            {/* Mantener espacio a la derecha para centrar el título */}
             <View style={componentStyles.iconButton} />
           </View>
 
@@ -730,25 +714,13 @@ const CreateKitScreen: React.FC = () => {
             outlineColor={Colors.border}
             activeOutlineColor={Colors.primary}
           />
-          {errors.name ? (
-            <Text style={commonStyles.errorText}>{errors.name}</Text>
-          ) : null}
+          {errors.name ? <Text style={commonStyles.errorText}>{errors.name}</Text> : null}
 
           {/* País */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>País</Text>
-            <View
-              style={[
-                styles.pickerWrapper,
-                errors.country ? styles.pickerWrapperError : null,
-              ]}
-            >
-              <Ionicons
-                name="earth-outline"
-                size={18}
-                color={Colors.textSecondary}
-                style={styles.pickerIcon}
-              />
+            <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
+              <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
               <SelectPicker
                 options={countries}
                 selectedValue={selectedCountry}
@@ -772,27 +744,15 @@ const CreateKitScreen: React.FC = () => {
           {/* Ciudad */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Ciudad</Text>
-            <View
-              style={[
-                styles.pickerWrapper,
-                errors.city ? styles.pickerWrapperError : null,
-              ]}
-            >
-              <Ionicons
-                name="location-outline"
-                size={18}
-                color={Colors.textSecondary}
-                style={styles.pickerIcon}
-              />
+            <View style={[styles.pickerWrapper, errors.city ? styles.pickerWrapperError : null]}>
+              <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
               {loadingCities ? (
                 <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
               ) : (
                 <SelectPicker
                   options={cities.map((c) => ({ label: c, value: c }))}
                   selectedValue={selectedCity}
-                  placeholder={
-                    selectedCountry ? "Selecciona una ciudad" : "Primero elige un país"
-                  }
+                  placeholder={selectedCountry ? "Selecciona una ciudad" : "Primero elige un país"}
                   disabled={cities.length === 0}
                   onValueChange={(value: string) => {
                     setSelectedCity(value);
@@ -815,37 +775,18 @@ const CreateKitScreen: React.FC = () => {
               commonStyles.input,
               createKitStyles.dateInput,
               (errors.startDate || errors.endDate) && commonStyles.inputError,
-              {
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              },
+              { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
             ]}
             onPress={() => setShowDateRangePicker(true)}
           >
-            <Text
-              style={[
-                {
-                  color:
-                    startDate && endDate
-                      ? Colors.textPrimary
-                      : Colors.textSecondary,
-                },
-              ]}
-            >
+            <Text style={{ color: startDate && endDate ? Colors.textPrimary : Colors.textSecondary }}>
               {startDate && endDate
-                ? `${String(startDate.getDate()).padStart(2, "0")}/${String(
-                    startDate.getMonth() + 1,
-                  ).padStart(2, "0")}/${startDate.getFullYear()} - ${String(
-                    endDate.getDate(),
-                  ).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(
-                    2,
-                    "0",
-                  )}/${endDate.getFullYear()}`
+                ? `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${startDate.getFullYear()} - ${String(endDate.getDate()).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${endDate.getFullYear()}`
                 : "Selecciona rango de fechas del alquiler"}
             </Text>
             <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
           </TouchableOpacity>
+
           <DatePickerModal
             locale="es"
             mode="range"
@@ -854,14 +795,12 @@ const CreateKitScreen: React.FC = () => {
             startDate={startDate || undefined}
             endDate={endDate || undefined}
             allowEditing={false}
-            // Busca el DatePickerModal y reemplaza el onConfirm:
+            validRange={{ startDate: new Date() }}
             onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
               setShowDateRangePicker(false);
               if (params.startDate && params.endDate) {
                 const invalidItems = checkItemsAvailability(params.startDate, params.endDate);
-                
                 if (invalidItems.length > 0) {
-                  // Seteamos el error para que se vea el texto, pero el validate(true) lo ignorará
                   setErrors((prev) => ({
                     ...prev,
                     items: `Atención: Algunos productos no están disponibles en estas fechas: ${invalidItems.join(", ")}`,
@@ -869,22 +808,17 @@ const CreateKitScreen: React.FC = () => {
                 } else {
                   clearFieldError("items");
                 }
-
                 setStartDate(params.startDate);
                 setEndDate(params.endDate);
                 clearFieldError("startDate");
                 clearFieldError("endDate");
               }
             }}
-        />
-          {errors.startDate ? (
-            <Text style={commonStyles.errorText}>{errors.startDate}</Text>
-          ) : null}
-          {errors.endDate ? (
-            <Text style={commonStyles.errorText}>{errors.endDate}</Text>
-          ) : null}
+          />
 
-          {/* Duración del alquiler */}
+          {errors.startDate && <Text style={commonStyles.errorText}>{errors.startDate}</Text>}
+          {errors.endDate && <Text style={commonStyles.errorText}>{errors.endDate}</Text>}
+
           {monthsBetween !== null && monthsBetween > 0 && (
             <View style={{ marginTop: 8, marginBottom: 16 }}>
               <Text style={commonStyles.bodySecondary}>
@@ -894,10 +828,7 @@ const CreateKitScreen: React.FC = () => {
           )}
 
           <View style={createKitStyles.deliverySection}>
-            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
-              Método de entrega
-            </Text>
-
+            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>Método de entrega</Text>
             <SegmentedButtons
               value={deliveryMethod}
               onValueChange={(value) => {
@@ -906,16 +837,8 @@ const CreateKitScreen: React.FC = () => {
                 clearFieldError("courierAddress");
               }}
               buttons={[
-                {
-                  value: "COURIER",
-                  label: "Mensajería",
-                  icon: "truck-delivery",
-                },
-                {
-                  value: "MEETING_POINT",
-                  label: "Punto de encuentro",
-                  icon: "map-marker",
-                },
+                { value: "COURIER", label: "Mensajería", icon: "truck-delivery" },
+                { value: "MEETING_POINT", label: "Punto de encuentro", icon: "map-marker" },
               ]}
               style={{ marginVertical: 12 }}
             />
@@ -932,21 +855,14 @@ const CreateKitScreen: React.FC = () => {
                     clearFieldError("meetingPoint");
                   }}
                   error={!!errors.meetingPoint}
-                  style={{
-                    backgroundColor: Colors.backgroundWhite,
-                    marginTop: 12,
-                  }}
+                  style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
                   outlineColor={Colors.border}
                   activeOutlineColor={Colors.primary}
                   multiline
                 />
-                {errors.meetingPoint ? (
-                  <Text style={commonStyles.errorText}>{errors.meetingPoint}</Text>
-                ) : null}
+                {errors.meetingPoint && <Text style={commonStyles.errorText}>{errors.meetingPoint}</Text>}
               </>
-            ) : null}
-
-            {deliveryMethod === "COURIER" ? (
+            ) : (
               <>
                 <PaperTextInput
                   mode="outlined"
@@ -957,52 +873,38 @@ const CreateKitScreen: React.FC = () => {
                     clearFieldError("courierAddress");
                   }}
                   error={!!errors.courierAddress}
-                  style={{
-                    backgroundColor: Colors.backgroundWhite,
-                    marginTop: 12,
-                  }}
+                  style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
                   outlineColor={Colors.border}
                   activeOutlineColor={Colors.primary}
                   multiline
                 />
-                {errors.courierAddress ? (
-                  <Text style={commonStyles.errorText}>{errors.courierAddress}</Text>
-                ) : null}
+                {errors.courierAddress && <Text style={commonStyles.errorText}>{errors.courierAddress}</Text>}
+                <Text style={commonStyles.bodySecondary}>
+                  Se aplicará una tarifa fija de mensajería de {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
+                </Text>
               </>
-            ) : null}
-
-            {deliveryMethod === "COURIER" ? (
-              <Text style={commonStyles.bodySecondary}>
-                Se aplicará una tarifa fija de mensajería de{" "}
-                {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
-              </Text>
-            ) : null}
+            )}
           </View>
 
           <View style={createKitStyles.productsHeader}>
-            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
-              Tus Productos
-            </Text>
+            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>Tus Productos</Text>
             {isEditable && (
-            <Button
-              mode="contained"
-              onPress={openAddProductModal}
-              icon="plus"
-              compact
-              style={{ borderRadius: 8 }}
-            >
-              {selectedItemsCount > 0? "Añadir más productos":"Añadir producto"}
-            </Button>
+              <Button
+                mode="contained"
+                onPress={openAddProductModal}
+                icon="plus"
+                compact
+                style={{ borderRadius: 8 }}
+              >
+                {selectedItemsCount > 0 ? "Añadir más productos" : "Añadir producto"}
+              </Button>
             )}
           </View>
 
           <View style={createKitStyles.counterBadge}>
-            <Text style={createKitStyles.counterBadgeText}>
-              Seleccionados: {selectedItemsCount}
-            </Text>
+            <Text style={createKitStyles.counterBadgeText}>Seleccionados: {selectedItemsCount}</Text>
           </View>
 
-          {/* Lista de items añadidos al kit */}
           {loadingCatalog ? (
             <View style={createKitStyles.loaderArea}>
               <ActivityIndicator color={Colors.primary} />
@@ -1027,22 +929,14 @@ const CreateKitScreen: React.FC = () => {
             ))
           )}
 
-          {errors.items ? (
-            <Text style={commonStyles.errorText}>{errors.items}</Text>
-          ) : null}
-          {errors.general ? (
-            <Text style={commonStyles.errorText}>{errors.general}</Text>
-          ) : null}
+          {errors.items && <Text style={commonStyles.errorText}>{errors.items}</Text>}
+          {errors.general && <Text style={commonStyles.errorText}>{errors.general}</Text>}
         </ScrollView>
-          
+
         <View style={createKitStyles.footerRow}>
-          {/* Resumen de precios */}
           <View style={{ flex: 1 }}>
-            
-            {/* Componente del Resumen que reemplaza la vista manual antigua */}
             <KitPaymentResumeComponent kitPrices={kitPayment} />
 
-            {/* Vista con el saldo de la cartera */}
             <View
               style={{
                 flexDirection: "row",
@@ -1058,12 +952,9 @@ const CreateKitScreen: React.FC = () => {
                 <Ionicons name="wallet-outline" size={20} color={Colors.primary} />
                 <Text style={commonStyles.body}>Saldo en cartera</Text>
               </View>
-              <Text style={[commonStyles.body, { fontWeight: "bold" }]}>
-                {walletBalance.toFixed(2)}€
-              </Text>
+              <Text style={[commonStyles.body, { fontWeight: "bold" }]}>{walletBalance.toFixed(2)}€</Text>
             </View>
 
-            {/* Botones de acción */}
             <Button
               mode="outlined"
               onPress={async () => {
@@ -1082,10 +973,7 @@ const CreateKitScreen: React.FC = () => {
                   startDate: validation.payloadDates.startIso,
                   endDate: validation.payloadDates.endIso,
                   deliveryMethod,
-                  meetingPoint:
-                    deliveryMethod === "MEETING_POINT"
-                      ? meetingPoint.trim()
-                      : courierAddress.trim(),
+                  meetingPoint: deliveryMethod === "MEETING_POINT" ? meetingPoint.trim() : courierAddress.trim(),
                   tenantId: user.id,
                   itemSelections: selectedProducts.map((p) => ({
                     itemId: p.id,
@@ -1103,7 +991,6 @@ const CreateKitScreen: React.FC = () => {
                   }
                 } catch (error: any) {
                   console.error("Error guardando borrador:", error);
-                  
                   const errorMsg = error.response?.data?.message || error.message || "";
                   if (errorMsg.includes("ya no está disponible")) {
                     setErrors({ items: errorMsg });
@@ -1121,9 +1008,7 @@ const CreateKitScreen: React.FC = () => {
 
             <Button
               mode="contained"
-              onPress={() => {
-                setConfirmVisible(true);
-              }}
+              onPress={() => setConfirmVisible(true)}
               disabled={submitting}
               loading={submitting}
               icon="cart-outline"
@@ -1172,65 +1057,16 @@ const CreateKitScreen: React.FC = () => {
           mapProducts={mapProducts}
         />
 
-        <Modal
-          visible={confirmVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setConfirmVisible(false)}
-        >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              justifyContent: "center",
-              alignItems: "center",
-              padding: 20,
-            }}
-          >
-            <View
-              style={{
-                width: "100%",
-                backgroundColor: "white",
-                borderRadius: 16,
-                padding: 20,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  marginBottom: 10,
-                  color: "#111",
-                }}
-              >
-                Depósito de garantía
-              </Text>
-
+        <Modal visible={confirmVisible} transparent animationType="fade" onRequestClose={() => setConfirmVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+            <View style={{ width: "100%", backgroundColor: "white", borderRadius: 16, padding: 20 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#111" }}>Depósito de garantía</Text>
               <Text style={{ fontSize: 15, color: "#444", marginBottom: 20 }}>
-                Recuerda que el 20% se retendrá como garantía y se te devolverá
-                cuando el kit sea devuelto en buen estado.
+                Recuerda que el 20% se retendrá como garantía y se te devolverá cuando el kit sea devuelto en buen estado.
               </Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "flex-end",
-                  gap: 10,
-                }}
-              >
-                <Button mode="outlined" onPress={() => setConfirmVisible(false)}>
-                  Cancelar
-                </Button>
-
-                <Button
-                  mode="contained"
-                  onPress={() => {
-                    setConfirmVisible(false);
-                    handleSubmit();
-                  }}
-                >
-                  Aceptar
-                </Button>
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
+                <Button mode="outlined" onPress={() => setConfirmVisible(false)}>Cancelar</Button>
+                <Button mode="contained" onPress={() => { setConfirmVisible(false); handleSubmit(); }}>Aceptar</Button>
               </View>
             </View>
           </View>

@@ -862,7 +862,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
               style={[createKitStyles.modalBtn, { borderRadius: 8 }]}
               contentStyle={{ paddingVertical: 4 }}
             >
-              Añadir
+              Añadir ({Object.keys(tempSelectedQuantities).length})
             </Button>
           </View>
         </View>
