@@ -142,7 +142,7 @@ public class ArticleService {
             .orElseThrow(() -> new RuntimeException("Article not found"));
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
-            throw new RuntimeException("El artículo se encuentra actualmente alquilado en un Kit activo y no se puede editar ni eliminar");
+            throw new RuntimeException("Article is currently rented and cannot be edited");
         }
 
         User owner = article.getOwner();
@@ -162,7 +162,7 @@ public class ArticleService {
             .orElseThrow(() -> new RuntimeException("Article not found"));
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
-            throw new RuntimeException("El artículo se encuentra actualmente alquilado en un Kit activo y no se puede editar ni eliminar");
+            throw new RuntimeException("Article is currently rented and cannot be deleted");
         }
 
         User owner = article.getOwner();
@@ -458,7 +458,7 @@ public class ArticleService {
             .orElseThrow(() -> new RuntimeException("Article not found"));
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
-            throw new RuntimeException("El artículo se encuentra actualmente alquilado en un Kit activo y no se puede editar ni eliminar");
+            throw new RuntimeException("Article is currently rented and cannot be edited");
         }
 
         User owner = article.getOwner();
