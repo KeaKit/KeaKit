@@ -30,6 +30,7 @@
 #### Tercera captación (Feedback sprint 2)
 | `**riseda6*****` | Erasmus |
 | `**aparren*****` | Nómada |
+| `**44137*****` | Erasmus |
 
 ### Arrendadores (Oferta)
 *Usuarios con objetos disponibles.*
@@ -62,3 +63,4 @@
 | `**seleg****​` | Eco-colaborador | 
 | `**enezguer*****​` | Eco-colaborador |  
 | `**cia.d.ga*****​` | Práctica |
+| `**uchogv*****​` | Eco-colaborador |
