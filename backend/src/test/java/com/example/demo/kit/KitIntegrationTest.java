@@ -894,4 +894,34 @@ class KitIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Kit not found"));
     }
+
+    @Test
+    void testConfirmKitStatus_wrongTenant_returnsNotFound() throws Exception {
+        User intruder = new User();
+        intruder.setName("Intruso");
+        intruder.setEmail("intruder@example.com");
+        intruder.setPassword("123456");
+        intruder.setRole(UserRole.USER);
+        intruder.setCountry("España");
+        intruder.setCity("Madrid");
+        intruder.setAddress("Calle Falsa 123");
+        intruder.setPhone("111222333");
+        intruder = userRepository.save(intruder);
+
+        Kit intruderKit = new Kit();
+        intruderKit.setName("Kit Ajeno");
+        intruderKit.setCountry("España");
+        intruderKit.setCity("Madrid");
+        intruderKit.setStartDate(LocalDate.now());
+        intruderKit.setEndDate(LocalDate.now().plusDays(5));
+        intruderKit.setStatus(KitStatus.PAID);
+        intruderKit.setTenant(intruder);
+        intruderKit = kitRepository.save(intruderKit);
+
+        mockMvc.perform(patch("/api/kits/confirm/" + intruderKit.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Kit does not belong to the specified tenant"));
+    }
 }
