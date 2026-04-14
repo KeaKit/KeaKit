@@ -139,7 +139,11 @@ const NotificationsScreen: React.FC = () => {
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-            {item.type === "ITEM_RENTED" ? "Objeto alquilado" : "Fin de alquiler"}
+            {item.type === "ITEM_RENTED" ? "Objeto alquilado" :
+             item.type === "RETURN_REMINDER" ? "Recordatorio de devolución" :
+             item.type === "DEMAND_ALERT" ? "Alerta de demanda" :
+             item.type === "ARTICLE_AVAILABLE" ? "Artículo disponible" :
+             "Notificación"}
           </Text>
           <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
         </View>

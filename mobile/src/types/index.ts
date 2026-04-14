@@ -528,7 +528,7 @@ export interface TrackingNotification {
   read: boolean;
 }
 
-export type ActivityNotificationType = "ITEM_RENTED" | "RETURN_REMINDER";
+export type ActivityNotificationType = "ITEM_RENTED" | "RETURN_REMINDER" | "DEMAND_ALERT" | "ARTICLE_AVAILABLE";
 
 export interface ActivityNotification {
   id: number;
@@ -537,6 +537,7 @@ export interface ActivityNotification {
   read: boolean;
   type: ActivityNotificationType;
   relatedKitId: number | null;
+  relatedArticleId: number | null;
 }
 
 export interface ArticleNearby {

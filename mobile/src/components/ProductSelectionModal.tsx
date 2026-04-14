@@ -20,6 +20,7 @@ import { ArticleMapView } from "./ArticleMapView";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "./NotificationContext";
 import { requestArticleAvailabilityNotification } from "../services/articleService";
+import { createDemandAlert } from "../services/notificationService";
 
 type ProductSelectionNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -112,9 +113,13 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     setRequestingIds((prev) => ({ ...prev, [articleId]: true }));
 
     try {
-      await requestArticleAvailabilityNotification(articleId, user.id, user.token);
+      // Enviar ambas notificaciones: aviso al arrendatario y demanda al arrendador
+      await Promise.all([
+        requestArticleAvailabilityNotification(articleId, user.id, user.token),
+        createDemandAlert(articleId, user.id, user.token)
+      ]);
       showNotification('Te avisaremos cuando el artículo vuelva a estar disponible.', 'success');
-    } catch (error) {
+      } catch (error) {
       showNotification(
         error instanceof Error ? error.message : 'No se pudo solicitar el aviso.',
         'error',
