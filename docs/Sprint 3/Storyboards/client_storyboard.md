@@ -244,15 +244,15 @@ Al principio (planos 1-7), las transiciones deben ser cortas, directas y directa
 ---
 ## Storyboard
 
-DISCLAIMER: El guión ha sido elaborado a mano y formateado con inteligencia artificial a MarkDown. Las imágenes pertenecientes al storyboard, al ser una primera versión a comentar con el equipo, se han elaborado con inteligencia artificial (Nano Banana) a partir del guión. Posteriormente se actualizarán con imágenes más ilustrativas, estas sirven como mera referencia inicial.
+DISCLAIMER: El guión ha sido elaborado a mano y formateado con inteligencia artificial a MarkDown. Las imágenes pertenecientes al storyboard se han elaborado con inteligencia artificial (Nano Banana) a partir del guión. 
 
 Las imágenes deben interpretarse de izquierda a derecha, empezando por las de arriba. Se omite el último plano debido a que es una imagen del logo de keakit. 
 
-![1234](./img/1.png)
-![5678](./img/2.png)
-![9101112](./img/3.png)
-![13141516](./img/4.png)
-![17](./img/5.png)
+![1234](./img/1_client.png)
+![5678](./img/2_client.png)
+![9101112](./img/3_client.png)
+![13141516](./img/4_client.png)
+![17](./img/5_client.png)
 
 
 
@@ -263,3 +263,5 @@ Las imágenes deben interpretarse de izquierda a derecha, empezando por las de a
 | Versión | Fecha | Autor | Cambios |
 |---------|-------|-------|---------|
 | 1.0 | 08/04/2026| Rosa María Espinosa Martínez | Versión inicial del storyboard completo |
+| 1.1 | 14/04/2026| Rosa María Espinosa Martínez | Actualización de las referencias de las imágenes |
+
