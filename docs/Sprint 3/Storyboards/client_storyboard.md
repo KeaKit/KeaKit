@@ -246,7 +246,7 @@ Al principio (planos 1-7), las transiciones deben ser cortas, directas y directa
 
 DISCLAIMER: El guión ha sido elaborado a mano y formateado con inteligencia artificial a MarkDown. Las imágenes pertenecientes al storyboard se han elaborado con inteligencia artificial (Nano Banana) a partir del guión. 
 
-Las imágenes deben interpretarse de izquierda a derecha, empezando por las de arriba. Se omite el último plano debido a que es una imagen del logo de keakit. 
+Las imágenes deben interpretarse de izquierda a derecha, empezando por las de arriba. Se omite el último plano debido a que es una imagen del logo de KeaKit. 
 
 ![1234](./img/1_client.png)
 ![5678](./img/2_client.png)
