@@ -229,19 +229,19 @@ El objetivo es identificar problemas residuales, funcionalidades no implementada
 
 | Tarea | Responsable | Fecha de finalizacion | Estado |
 |-------|-------------|----------------|--------|
-| Refactorización frontend de kits predeterminados | Equipo 1 | 00/00/2026 | In progress |
-| [BUG] No permite pago con wallet  | Equipo 3 | 00/00/2026 | In Review |
-| [BUG] Alquiler de artículos ya alquilados  | Equipo 2 | 00/00/2026 | In Review |
-| [BUG] Valoración única de un artículo del kit  | Equipo - | 00/00/2026 | To Do |
-| [BUG] Al crear un artículo, este aparece en el listado de productos para crear un kit, pero no en el mapa.  | Equipo - | 00/00/2026 | To Do |
+| Refactorización frontend de kits predeterminados | Equipo 1 | 13/04/2026 | Done |
+| [BUG] No permite pago con wallet  | Equipo 3 | 13/04/2026 | Done |
+| [BUG] Alquiler de artículos ya alquilados  | Equipo 2 | 14/04/2026 | Done |
+| [BUG] Valoración única de un artículo del kit  | Equipo 4 | 14/04/2026 | Done |
+| [BUG] Al crear un artículo, este aparece en el listado de productos para crear un kit, pero no en el mapa  | Equipo 4 | 14/04/2026 | Done |
 
 ## 7. Historial de versiones
 
 | Versión | Fecha       | Descripción                                               | Autor(es)                             |
 |---------|-------------|-----------------------------------------------------------|----------------------------------------|
-| 1.0.0   | 12/04/2026  | Análisis del feedback del sprint 2 (Bookmerang + RooMA)  | Análisis inicial                 |
-
+| 1.0.0   | 12/04/2026  | Análisis del feedback del sprint 2 (Bookmerang + RooMA)  | Candela Jazmín Gutiérrez González                |
+| 2.0.0   | 14/04/2026  | Actualización de estados de tareas  | Candela Jazmín Gutiérrez González               |
 
 **Redactado por:** Candela Jazmín Gutiérrez González  
-**Fecha de redacción:** 12/04/2026  
-**Versión:** 1.1.0
+**Fecha de redacción:** 14/04/2026  
+**Versión:** 2.1.0
