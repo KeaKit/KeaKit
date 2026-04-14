@@ -33,12 +33,12 @@ export async function createDemandAlert(
   articleId: number,
   requesterId: number,
   token: string,
-): Promise<void> {
+): Promise<ActivityNotification> {
   const res = await fetchWithTimeout(API_ROUTES.CREATE_DEMAND_ALERT, {
     method: "POST",
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
     body: JSON.stringify({ articleId, requesterId }),
   });
 
-  await handleResponse<void>(res);
+  return handleResponse<ActivityNotification>(res);
 }

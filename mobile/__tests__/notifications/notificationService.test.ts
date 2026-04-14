@@ -1,6 +1,7 @@
 import {
   getUserNotifications,
   markNotificationRead,
+  createDemandAlert,
 } from '../../src/services/notificationService';
 
 // Simulamos la función fetch nativa para no hacer llamadas reales a Internet
@@ -106,5 +107,98 @@ describe('notificationService', () => {
     });
 
     await expect(markNotificationRead(99, fakeToken)).rejects.toThrow('Notificación no encontrada');
+  });
+
+  // --- createDemandAlert (CU-ARRENDADOR-06) ---
+
+  it('createDemandAlert crea una alerta de demanda exitosamente', async () => {
+    const mockNotification = {
+      id: 1,
+      message: 'Juan está interesado en alquilar tu artículo "Bicicleta", que actualmente no está disponible.',
+      type: 'DEMAND_ALERT',
+      read: false
+    };
+
+    ((globalThis as any).fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      status: 201,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: async () => JSON.stringify(mockNotification),
+      json: async () => mockNotification,
+    });
+
+    const result = await createDemandAlert(5, 2, fakeToken);
+
+    expect((globalThis as any).fetch).toHaveBeenCalledTimes(1);
+    expect((globalThis as any).fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/notifications/demand-alert'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'Authorization': `Bearer ${fakeToken}`
+        }),
+        body: JSON.stringify({ articleId: 5, requesterId: 2 })
+      })
+    );
+    expect(result).toEqual(mockNotification);
+  });
+
+  it('createDemandAlert lanza un error si el artículo no está disponible según el servidor', async () => {
+    ((globalThis as any).fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ message: 'El artículo ya está disponible para alquilar' })
+    });
+
+    await expect(createDemandAlert(5, 2, fakeToken)).rejects.toThrow('El artículo ya está disponible para alquilar');
+  });
+
+  it('createDemandAlert lanza un error si el artículo no se encuentra', async () => {
+    ((globalThis as any).fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ message: 'Article not found with id: 999' })
+    });
+
+    await expect(createDemandAlert(999, 2, fakeToken)).rejects.toThrow('Article not found with id: 999');
+  });
+
+  it('createDemandAlert lanza un error si el usuario no es propietario del artículo pero intenta crearlo', async () => {
+    ((globalThis as any).fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ message: 'El propietario no puede solicitar su propio artículo' })
+    });
+
+    await expect(createDemandAlert(5, 1, fakeToken)).rejects.toThrow('El propietario no puede solicitar su propio artículo');
+  });
+
+  it('createDemandAlert lanza un error de timeout si la petición es lenta', async () => {
+    const abortError = new Error('AbortError');
+    abortError.name = 'AbortError';
+    
+    ((globalThis as any).fetch as jest.Mock).mockRejectedValueOnce(abortError);
+
+    await expect(createDemandAlert(5, 2, fakeToken)).rejects.toThrow('Tiempo de espera agotado al conectar con el servidor.');
+  });
+
+  it('createDemandAlert lanza un error si hay problema de red', async () => {
+    ((globalThis as any).fetch as jest.Mock).mockRejectedValueOnce(new Error('Network unavailable'));
+
+    await expect(createDemandAlert(5, 2, fakeToken)).rejects.toThrow('Network unavailable');
+  });
+
+  it('createDemandAlert lanza un error 500 del servidor', async () => {
+    ((globalThis as any).fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ message: 'Error interno del servidor' })
+    });
+
+    await expect(createDemandAlert(5, 2, fakeToken)).rejects.toThrow('Error interno del servidor');
   });
 });
