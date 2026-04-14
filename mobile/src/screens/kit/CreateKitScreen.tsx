@@ -256,7 +256,7 @@ const CreateKitScreen: React.FC = () => {
       }
     };
 
-    loadCategories();
+    void loadCategories();
 
     return () => {
       cancelled = true;
@@ -296,7 +296,7 @@ const CreateKitScreen: React.FC = () => {
         user.token,
       );
 
-      const mapped: CatalogProduct[] = (response.content ?? []).map((p) => ({
+      const mapped: CatalogProduct[] = response.content.map((p) => ({
         id: Number(p.id),
         itemType: String(p.itemType ?? "ARTICLE"),
         title: p.title ?? "Sin título",

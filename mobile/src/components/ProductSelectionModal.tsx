@@ -668,12 +668,12 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                         {p.ownerName ? (
                           <Text
                             style={{ color: "#007AFF" }}
-                            onPress={() =>
+                            onPress={() => {
                               navigateToUserReviews(
                                 p.ownerId,
                                 p.ownerName || "",
-                              )
-                            }
+                              );
+                            }}
                           >
                             {`${p.ownerName}`}
                             {" • "}
