@@ -97,6 +97,8 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 | **P-04: Fallo - Email con formato inválido** | **Nombre completo:** "Clark Kent"<br><br>**Correo electrónico:** "clarkkentemail.com"<br><br>**Teléfono:** "987654321"<br><br>**Dirección:** "Calle Metropolis, 10"<br><br>**Contraseña:** "superman123"<br><br>**Repetir contraseña:** "superman123"<br><br>**País:** "Spain"<br><br>**Ciudad:** "Barcelona" | El sistema impide el registro y muestra un error indicando que el formato del correo no es válido. | RN-USR-02 |
 | **P-05: Fallo - Contraseña demasiado corta** | **Nombre completo:** "Diana Prince"<br><br>**Correo electrónico:** "diana@amazon.com"<br><br>**Teléfono:** "654321987"<br><br>**Dirección:** "Calle Themyscira, 8"<br><br>**Contraseña:** "123"<br><br>**Repetir contraseña:** "123"<br><br>**País:** "Spain"<br><br>**Ciudad:** "Valencia" | El sistema impide el registro y muestra un error indicando que la contraseña debe tener al menos 6 caracteres. | RN-USR-03 |
 
+---
+
 ### 6.1 CU-GENERAL-01 - Inicio de sesión
 
 **Escenario:** Un usuario desea iniciar sesión.
@@ -114,6 +116,8 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 | **P-03: Fallo - Correo no registrado** | **Correo electrónico:** "noexiste@email.com"<br><br>**Contraseña:** "password123" | El sistema impide el inicio de sesión y muestra un error indicando que no existe una cuenta con el correo indicado. | RN-USR-01<br>RN-USR-02<br>RN-SEG-01 |
 | **P-04: Fallo - Contraseña incorrecta** | **Correo electrónico:** "tenant@example.com"<br><br>**Contraseña:** "wrongpassword" | El sistema impide el inicio de sesión y muestra un error indicando que la contraseña es incorrecta. | RN-USR-09<br>RN-SEG-01<br>RN-SEG-06 |
 
+---
+
 ### 6.1 CU-GENERAL-02 - Edición de perfil
 
 **Escenario:** Un usuario desea editar su perfil.
@@ -128,6 +132,63 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | **P-01: Edición exitosa** | **Nombre completo:** "Miles Morales"<br><br>**Teléfono:** "123456789"<br><br>**Dirección:** "Calle Graham, 10"<br><br>**País:** "United Kingdom"<br><br>**Ciudad:** "London" | El sistema modifica los datos del usuario y los persiste en la base de datos. | RN-USR-04<br>RN-USR-05<br>RN-USR-06<br>RN-USR-07<br>RN-USR-08<br>RN-USR-13 |
 | **P-02: Fallo - Campos vacíos** | Cada uno de los campos obligatorios: sin rellenar | El sistema impide la edición del perfil y muestra un error indicando que los campos obligatorios se deben rellenar. | RN-USR-04<br>RN-USR-05<br>RN-USR-06<br>RN-USR-07<br>RN-USR-08<br>RN-USR-13 |
+
+---
+
+### 6.1 CU-GENERAL-03 - Crear valoración (arrendatario → arrendador)
+
+**Escenario:** Un arrendatario desea crear una valoración sobre un arrendador tras participar en un kit.
+
+- **Dado:** El usuario está autenticado, ha participado en un kit válido en estado "FINISHED" y accede a la pantalla de detalles del kit donde accede al apartado "Valorar kit".
+
+- **Cuando:** Rellena el formulario con los datos de los casos de prueba y presiona el botón "Enviar Valoración".
+
+- **Entonces:** El sistema debe registrar la valoración en caso de éxito, o mostrar un mensaje de error en caso contrario.
+
+| **Caso de Prueba** | **Datos a introducir (Test Data)** | **Resultado Esperado** | **Reglas de Negocio Cubiertas** |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **P-01: Creación exitosa** | **Puntuación:** 5<br><br>**Comentario:** "Todo perfecto"<br><br>**Kit:** válido<br><br>**Reviewer:** arrendatario<br><br>**Reviewee:** propietario | El sistema crea la valoración con tipo `RENTER_TO_OWNER`, registra la fecha automáticamente y la persiste. | RN-VAL-01<br>RN-VAL-02<br>RN-VAL-05<br>RN-VAL-06<br>RN-VAL-08 |
+| **P-02: Fallo - Comentario demasiado largo** | **Puntuación:** 3<br><br>**Comentario:** texto > 1000 caracteres<br><br>**Kit:** válido | El sistema impide la creación y muestra error indicando que el comentario excede el límite permitido. | RN-VAL-02 |
+| **P-03: Fallo - Auto-valoración** | **Reviewer = Reviewee** | El sistema impide la creación y muestra error indicando que un usuario no puede valorarse a sí mismo. | RN-VAL-03 |
+| **P-04: Fallo - Valoración duplicada por kit** | **Reviewer, Reviewee, Kit** ya existentes | El sistema impide la creación y muestra error indicando que ya existe una valoración para ese kit. | RN-VAL-04 |
+| **P-05: Fallo - Usuario no participante en el kit** | **Reviewer:** usuario ajeno al kit | El sistema impide la creación y muestra error indicando que no tiene permisos para valorar ese kit. | RN-VAL-06 |
+
+---
+
+### 6.1 CU-GENERAL-03 - Crear valoración (arrendador → arrendatario)
+
+**Escenario:** Un arrendador desea crear una valoración sobre un arrendatario tras alquilar su producto.
+
+- **Dado:** El usuario está autenticado, ha participado en un kit válido en estado "FINISHED" y accede a la pantalla de historial de alquileres de un objeto donde selecciona la instancia del objeto en el kit para valorar y se encuentra en la pantalla "Valorar kit".
+
+- **Cuando:** Rellena el formulario con los datos de los casos de prueba y presiona el botón "Enviar Valoración".
+
+- **Entonces:** El sistema debe registrar la valoración en caso de éxito, o mostrar un mensaje de error en caso contrario.
+
+| **Caso de Prueba** | **Datos a introducir (Test Data)** | **Resultado Esperado** | **Reglas de Negocio Cubiertas** |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **P-01: Creación exitosa** | **Puntuación:** 4<br><br>**Comentario:** "Buen trato al objeto"<br><br>**Kit:** válido<br><br>**Reviewer:** propietario<br><br>**Reviewee:** arrendatario | El sistema crea la valoración con tipo `OWNER_TO_RENTER`, registra la fecha automáticamente y la persiste. | RN-VAL-01<br>RN-VAL-02<br>RN-VAL-05<br>RN-VAL-06<br>RN-VAL-08 |
+| **P-02: Fallo - Comentario demasiado largo** | **Puntuación:** 3<br><br>**Comentario:** texto > 1000 caracteres<br><br>**Kit:** válido | El sistema impide la creación y muestra error indicando que el comentario excede el límite permitido. | RN-VAL-02 |
+| **P-03: Fallo - Auto-valoración** | **Reviewer = Reviewee** | El sistema impide la creación y muestra error indicando que un usuario no puede valorarse a sí mismo. | RN-VAL-03 |
+| **P-04: Fallo - Valoración duplicada por kit** | **Reviewer, Reviewee, Kit** ya existentes | El sistema impide la creación y muestra error indicando que ya existe una valoración para ese kit. | RN-VAL-04 |
+| **P-05: Fallo - Usuario no participante en el kit** | **Reviewer:** usuario ajeno al kit | El sistema impide la creación y muestra error indicando que no tiene permisos para valorar ese kit. | RN-VAL-06 |
+
+---
+
+### 6.1 CU-GENERAL-03 - Consulta de valoraciones
+
+**Escenario:** Un usuario desea consultar las valoraciones de otro usuario.
+
+- **Dado:** Existen valoraciones registradas en el sistema para un usuario.
+
+- **Cuando:** Un usuario accede al apartado de valoraciones de otro usuario.
+
+- **Entonces:** El sistema muestra las valoraciones recibidas.
+
+| **Caso de Prueba** | **Datos a introducir (Test Data)** | **Resultado Esperado** | **Reglas de Negocio Cubiertas** |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **P-01: Consulta exitosa** | **Usuario consultado:** con valoraciones | El sistema muestra la lista de valoraciones recibidas correctamente. | RN-VAL-09 |
+| **P-02: Usuario sin valoraciones** | **Usuario consultado:** sin valoraciones | El sistema muestra un mensaje indicando que no hay valoraciones disponibles. | RN-VAL-09 |
 
 ### 6.1 CU-ARRENDADOR-01 - Subida de artículos
 
