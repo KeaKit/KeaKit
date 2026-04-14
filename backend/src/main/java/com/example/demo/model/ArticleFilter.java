@@ -2,7 +2,6 @@ package com.example.demo.model;
 
 import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Predicate; 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 

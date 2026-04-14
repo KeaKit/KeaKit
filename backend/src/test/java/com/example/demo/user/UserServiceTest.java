@@ -26,8 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,6 +50,7 @@ class UserServiceTest {
     private RegisterRequest registerRequest;
     private LoginRequest loginRequest;
     private User existingUser;
+    private static final String TEST_IP = "127.0.0.1";
 
     @BeforeEach
     void setUp() {
@@ -58,6 +58,10 @@ class UserServiceTest {
         registerRequest.setEmail("new.user@test.com");
         registerRequest.setPassword("plain-password");
         registerRequest.setName("New User");
+        registerRequest.setPhone("666555444");
+        registerRequest.setAddress("Street 1");
+        registerRequest.setCity("Sevilla");
+        registerRequest.setCountry("Spain");
 
         loginRequest = new LoginRequest();
         loginRequest.setEmail("new.user@test.com");
@@ -78,7 +82,8 @@ class UserServiceTest {
         });
         when(jwtUtil.generateToken("new.user@test.com", 10L, UserRole.USER)).thenReturn("jwt-token");
 
-        UserResponse response = userService.register(registerRequest);
+        // CORREGIDO: Ahora pasamos la IP
+        UserResponse response = userService.register(registerRequest, TEST_IP);
 
         assertNotNull(response);
         assertEquals(10L, response.getId());
@@ -103,7 +108,8 @@ class UserServiceTest {
     void register_existingEmail_throwsUserAlreadyExistsException() {
         when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(true);
 
-        assertThrows(UserAlreadyExistsException.class, () -> userService.register(registerRequest));
+        // CORREGIDO: Ahora pasamos la IP
+        assertThrows(UserAlreadyExistsException.class, () -> userService.register(registerRequest, TEST_IP));
 
         verify(userRepository, never()).save(any(User.class));
         verify(walletRepository, never()).save(any());
