@@ -12,11 +12,11 @@
 
 **Concepto Principal:** Alguien trata de mudarse pero no tiene nada en su piso, rompiendo esto la magia de llegar a su destino soñado. Llaman a la puerta, es un repartidor de KeaKit. Este repartidor va explicando todo lo que respecta a la aplicación, su rentabilidad, la garantía...
 
-**Tono:** Dinámico, asertivo, entretenido, informativo pero sin caer en detalles muy técnicos.
+**Tono:** Dinámico, asertivo, entretenido e informativo, pero sin caer en detalles muy técnicos.
 
 **Duración aproximada:** 2-3 minutos.
 
-**Mensaje clave:** KeaKit permite alquilar lo que no usas y que otros aprovechen lo que necesitan, reduciendo gastos y residuos. Además, es una aplicación rentable, pues funciona por comisiones en cada kit y tiene muy bajos costes de mantenimiento.
+**Mensaje clave:** KeaKit permite alquilar lo que no usas y que otros aprovechen lo que necesitan, reduciendo gastos y residuos. Además, es una aplicación rentable, pues funciona por comisiones en cada kit, no se hace cargo de la gestión física de los objetos y tiene muy bajos costes de mantenimiento.
 
 ---
 
@@ -28,7 +28,7 @@
 |----------|----------|
 | **Encuadre** | Empieza con una pantalla en negro. Secuencias del PROTAGONISTA llegando a una ciudad y admirando los edificios. |
 | **Apariencia del personaje** | Persona normal, vestida de calle, con maletas. |
-| **Diálogo** | _Voz en OFF_ **"Imagínese que te muda a la ciudad de sus sueños durante un tiempo. Todo es tal y como lo imaginó; os edificios que una vez apreciaba desde su imaginación, ahora los ve por la ventana. Llega a su nuevo hogar con ilusión, con ganas de disfrutar de un nuevo comienzo. Abre la puerta, va a sentarse en el sofá..."** |
+| **Diálogo** | _Voz en OFF_ **"Imagínese que se muda a la ciudad de sus sueños durante un tiempo. Todo es tal y como lo imaginó; los edificios que una vez apreciaba desde su imaginación, ahora los ve por la ventana. Llega a su nuevo hogar con ilusión, con ganas de disfrutar de un nuevo comienzo. Abre la puerta, va a sentarse en el sofá..."** |
 
 ---
 
@@ -61,8 +61,8 @@
 |----------|----------|
 | **Encuadre** | Se muestra al SPEAKER de frente justo antes de pasar adentro, sosteniendo una caja de KeaKit |
 | **Acción** | El SPEAKER entra al piso, dejando al PROTAGONISTA desconcertado.|
-| **Personaje** | El SPEAKER será el personaje encargado de comentar todos los aspectos técnicos en el anuncio. Se presenta con una caja de KeaKit, sonriente. Habla a cámara mientras anda de frente. Al terminar de hablar, deja la caja en el suelo. |
-| **Diálogo** | _(SPEAKER)_ **"KeaKit es la plataforma de alquiler de objetos y servicios pensada para casos como este. Ahora, en lugar de visitar tiendas de cocina, de muebles, de electrodomésticos o proveedores de red por separado, puedes hacerte con todos estos objetos desde la palma de su mano en pocos segundos. Así, evitará desperdiciar dinero, quebrarse la cabeza con el qué hacer una vez no necesite estos productos, y estará contribuyendo con el medioambiente."**|
+| **Personaje** | El SPEAKER será el personaje encargado de comentar todos los aspectos técnicos en el anuncio. Se presenta en traje con una caja de KeaKit, sonriente. Habla a cámara mientras anda de frente. Al terminar de hablar, deja la caja en la encimera de la cocina. |
+| **Diálogo** | _(SPEAKER)_ **"KeaKit es la plataforma de alquiler de objetos y servicios pensada para casos como este. Ahora, en lugar de visitar tiendas de cocina, muebles, electrodomésticos o proveedores de red por separado, puede hacerse con todos estos objetos o servicios desde la palma de su mano, en pocos segundos. Así, evitará desperdiciar dinero, quebrarse la cabeza con el qué hacer una vez no necesite estos productos, y estará contribuyendo con el medioambiente."**|
 
 ---
 
@@ -82,10 +82,10 @@
 |----------|----------|
 | **Encuadre** | Es una continuación del plano anterior, pero se enfoca al PROTAGONISTA |
 | **Aspecto** | El PROTAGONISTA se muestra confundido |
-| **Acción** | Con un tenedor en la mano, el PROTAGONISTA deja abruptamente de recolocar cosas en la cocina y se dirige al SPEAKER |
+| **Acción** | Con un tenedor en la mano, el PROTAGONISTA deja abruptamente de recolocar cosas en la cocina y se dirige al SPEAKER agitadamente |
 | **Diálogo** | _(PROTAGONISTA)_ **"¿Pero, y si rompo algo? ¿O si tengo que ir yo a recoger todo esto por la ciudad?"** |
 | **Acción II** | El SPEAKER le quita el tenedor de la mano y le responde |
-| **Diálogo II** | _(PROTAGONISTA)_ **(SPEAKER) "Todo está bajo control. Implementamos un depósito de garantía del 20% para asegurar el buen estado. Y sobre la logística: tú eliges. Mensajería directa a tu puerta o punto de encuentro. Flexibilidad absoluta."** |
+| **Diálogo II** | _(PROTAGONISTA)_ **(SPEAKER) "Todo está bajo control. Implementamos un depósito de garantía del 20% para asegurar el buen estado. Y sobre la logística, tú eliges entre mensajería directa a tu puerta o punto de encuentro. Flexibilidad absoluta."** |
 
 
 ---
@@ -105,10 +105,8 @@
 | Elemento | Detalles |
 |----------|----------|
 | **Encuadre** | Plano medio del SPEAKER. A su izquierda, aparecen artículos dinámicamente (se añaden suavemente uno a uno a la pantalla hasta formar un kit completo) y el número "240€" a la derecha. |
-| **Personaje** | ESTUDIANTE ERASMUS feliz desempaquetando un monitor nuevo |
-| **Accesorios** | Teléfono móvil en mano, caja del monitor |
 | **Acción** | El SPEAKER interactúa ligeramente con el gráfico con la mano, señalando a la derecha y apareciendo un "20% Comisión" bajo el 240€. |
-| **Diálogo** | _(SPEAKER)_ **"Nuestro modelo de ingresos es directo, transparente y altamente escalable. Retenemos un 20% de comisión por cada kit alquilado. Sabiendo que el ticket medio de un kit es de unos 240 euros, estamos generando 48 euros netos por cada transacción, solo por intermediar."** |
+| **Diálogo** | _(SPEAKER)_ **"Nuestro modelo de ingresos es directo, transparente y altamente escalable. Retenemos un 20% de comisión por cada kit alquilado. Sabiendo que el ticket medio de un kit es de unos 240 euros, estamos generando 48 euros por cada transacción, solo por intermediar."** |
 
 
 ---
@@ -119,7 +117,7 @@
 |----------|----------|
 | **Encuadre** | La cámara se mueve lateralmente. El SPEAKER pasa a estar a la izquierda del plano|
 | **Composición** | Se muestra la gráfica del número de usuarios piloto. Luego, la de rendimiento económico, con una flecha ascendente hacia "Break-even: Mes 9". |
-| **Diálogo** | _(SPEAKER)_ **"Y no hablamos de suposiciones. Ya estamos validando el producto con usuarios piloto reales, demostrando una tendencia de crecimiento sólida".** _(Pasar a la gráfica del rendimiento económico)_ **"Con unos costes operativos extremadamente ligeros, proyectamos alcanzar el break-even con menos de 1.900 kits alquilados. Eso es entre el mes 9 y el mes 10 tras el lanzamiento."** |
+| **Diálogo** | _(SPEAKER)_ **"Y no hablamos de suposiciones."** _(Mostrar la gráfica del crecimiento de usuarios piloto)_ **"Ya estamos validando el producto con usuarios piloto reales, demostrando una tendencia de crecimiento sólida".** _(Pasar a la gráfica del rendimiento económico)_ **"Con unos costes operativos extremadamente ligeros, proyectamos alcanzar el break-even con menos de 1.900 kits alquilados. Eso sería entre el noveno o décimo mes tras el lanzamiento."** |
 
 ---
 
@@ -128,7 +126,7 @@
 | Elemento | Detalles |
 |----------|----------|
 | **Encuadre** | Giro de cámara, se enfoca al PROTAGONISTA sacando un portátil (con el logo de KeaKit) de la caja mientras el SPEAKER habla. Se pasa a enfocar la pantalla del ordenador, que tiene un mapa tipo Google Earth y un sello de GDPR Compliance. |
-| **Movimiento** | Zoom in lento pero constante |
+| **Movimiento** | Plano estático. Zoom in lento pero constante cuando se enfoque al ordenador. |
 | **Diálogo** | _(El SPEAKER no está en cámara, pero es el que habla. Se ve al PROTAGONISTA sacando y abriendo el ordenador)_ **"A partir de ese punto, el sistema es puro beneficio. Sin inventario propio que mantener."** _(Ahora es cuando se enseña la pantalla)_ **"Cumpliendo rigurosamente con la normativa GDPR. Con un efecto red donde cada nuevo usuario atrae a más oferta y demanda. Es la economía circular monetizada de la forma más eficiente posible."** |
 
 ---
@@ -147,7 +145,7 @@
 
 | Elemento | Detalles |
 |----------|----------|
-| **Encuadre** | Fundido a una pantalla beige (MIC) con el logo de KeaKit y el slogan "Vuela libre, nosotros ponemos el nido" |
+| **Encuadre** | Fundido a una pantalla beige (consultar Manual de Identidad Corporativa) con el logo de KeaKit y el eslogan "Vuela libre, nosotros ponemos el nido" |
 | **Diálogo** | _(SPEAKER EN OFF)_**"KeaKit. Vuela libre, nosotros ponemos el nido."** |
 
 ---
@@ -170,8 +168,11 @@ El ritmo del anuncio debe ser continuo, dinámico y que no dé lugar al aburrimi
 
 DISCLAIMER: El guión ha sido elaborado íntegramente a mano. Las imágenes pertenecientes al storyboard se han elaborado con inteligencia artificial (Nano Banana) a partir del guión. 
 
-Las imágenes deben interpretarse de izquierda a derecha, empezando por las de arriba. Se omite el último plano debido a que es una imagen del logo de KeaKit junto a su eslogan. 
+Las imágenes deben interpretarse de izquierda a derecha, empezando por las de arriba.
 
+![1234](./img/business/1_business.png)
+![5678](./img/business/2_business.png)
+![9101112](./img/business/3_business.png)
 
 
 ---
@@ -180,4 +181,6 @@ Las imágenes deben interpretarse de izquierda a derecha, empezando por las de a
 | Versión | Fecha | Autor | Cambios |
 |---------|-------|-------|---------|
 | 1.0 | 14/04/2026| Rosa María Espinosa Martínez | Versión inicial del storyboard completo |
+| 1.1 | 14/04/2026| Rosa María Espinosa Martínez | Revisión de la versión anterior y adición de imágenes |
+
 
