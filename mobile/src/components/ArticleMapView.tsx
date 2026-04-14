@@ -31,55 +31,88 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
 }) => {
   const webViewRef = useRef<WebView>(null);
 
-  const nearbyArticles = useMemo(
-    () => articles.filter((a) => a.cityLat !== undefined && a.cityLng !== undefined),
-    [articles],
-  );
+  // DEBUG: Ver qué llega
+  console.log("🔴 ArticleMapView - artículos:", articles.length);
+  
+  // Agrupar por nombre de ciudad
+  const groupedArticles = useMemo(() => {
+    console.log("🟡 Agrupando artículos...");
+    const groups: Map<string, MapArticle[]> = new Map();
 
-  const centerLat = targetCityCoords?.lat ?? nearbyArticles[0]?.cityLat ?? 40.416;
-  const centerLng = targetCityCoords?.lng ?? nearbyArticles[0]?.cityLng ?? -3.703;
+    for (const article of articles) {
+      if (article.cityLat === undefined || article.cityLng === undefined) {
+        console.log(`  ❌ ${article.title} - sin coordenadas`);
+        continue;
+      }
+      const cityKey = (article.city || "unknown").trim().toLowerCase();
+      console.log(`  ✅ ${article.title} -> ciudad: "${cityKey}"`);
+      if (!groups.has(cityKey)) {
+        groups.set(cityKey, []);
+      }
+      groups.get(cityKey)!.push(article);
+    }
 
-  const markers = useMemo(() => {
-    const result: {
-      id?: number;
-      lat: number;
-      lng: number;
-      title: string;
-      sub: string;
-      price?: string;
-      owner?: string;
-      isTarget: boolean;
-    }[] = [];
+    console.log(`📊 Total grupos: ${groups.size}`);
+    const result: any[] = [];
+
+    for (const [cityKey, groupArticles] of groups.entries()) {
+      const firstArticle = groupArticles[0];
+      console.log(`  Grupo "${cityKey}": ${groupArticles.length} artículos`);
+      
+      if (groupArticles.length === 1) {
+        const a = groupArticles[0];
+        result.push({
+          id: a.id,
+          lat: a.cityLat,
+          lng: a.cityLng,
+          title: a.title,
+          sub: `${a.city || cityKey}`,
+          price: `${a.pricePerMonth.toFixed(2)} €/mes`,
+          owner: a.ownerName,
+          isTarget: false,
+          count: 1,
+          articleIds: [a.id],
+          articles: groupArticles,
+        });
+      } else {
+        result.push({
+          id: null,
+          lat: firstArticle.cityLat,
+          lng: firstArticle.cityLng,
+          title: `📦 ${groupArticles.length} artículos en ${groupArticles[0].city || cityKey}`,
+          sub: `${groupArticles.length} productos`,
+          price: `Desde ${Math.min(...groupArticles.map(a => a.pricePerMonth)).toFixed(2)} €/mes`,
+          owner: undefined,
+          isTarget: false,
+          count: groupArticles.length,
+          articleIds: groupArticles.map(a => a.id),
+          articles: groupArticles,
+        });
+      }
+    }
 
     if (targetCityCoords) {
       result.push({
+        id: null,
         lat: targetCityCoords.lat,
         lng: targetCityCoords.lng,
-        title: userCity ?? "Ciudad destino",
-        sub: "Tu ciudad seleccionada",
+        title: "📍 " + (userCity ?? "Ciudad destino"),
+        sub: "Tu ubicación",
+        price: undefined,
+        owner: undefined,
         isTarget: true,
+        count: 1,
+        articleIds: [],
+        articles: [],
       });
     }
 
-    for (const a of nearbyArticles) {
-      result.push({
-        id: a.id,
-        lat: a.cityLat!,
-        lng: a.cityLng!,
-        title: a.title,
-        sub: `${a.city ?? ""}${a.distanceKm ? ` · ~${a.distanceKm} km` : ""}`,
-        price: `${a.pricePerMonth.toFixed(2)} €/mes`,
-        owner: a.ownerName,
-        isTarget: false,
-      });
-    }
-
+    console.log("✅ Marcadores finales:", result.length);
     return result;
-  }, [nearbyArticles, targetCityCoords, userCity]);
+  }, [articles, targetCityCoords, userCity]);
 
-  const selectedIdsJson = JSON.stringify(selectedIds);
-  const markersJson = JSON.stringify(markers);
-  const primaryColor = Colors.primary;
+  const centerLat = targetCityCoords?.lat ?? groupedArticles[0]?.lat ?? 40.416;
+  const centerLng = targetCityCoords?.lng ?? groupedArticles[0]?.lng ?? -3.703;
 
   const html = `<!DOCTYPE html>
 <html>
@@ -90,70 +123,99 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; }
-    .popup-title { font-weight: 700; font-size: 13px; color: #111; margin-bottom: 2px; }
-    .popup-sub { font-size: 12px; color: #555; }
-    .popup-price { font-size: 13px; font-weight: 600; color: ${primaryColor}; margin-top: 2px; }
-    .popup-owner { font-size: 11px; color: #888; margin-bottom: 6px; }
+    .popup-title { font-weight: 700; font-size: 14px; }
+    .popup-sub { font-size: 11px; color: #666; }
+    .popup-price { font-size: 13px; font-weight: 600; color: ${Colors.primary}; margin-top: 4px; }
+    .cluster-marker {
+      background: ${Colors.primary};
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      border: 2px solid white;
+      cursor: pointer;
+    }
+    .single-marker {
+      background: #F57F17;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      border: 2px solid white;
+      cursor: pointer;
+    }
     .btn-add {
-      margin-top: 6px; width: 100%; padding: 5px 0;
-      border: none; border-radius: 6px; cursor: pointer;
-      font-size: 13px; font-weight: 600;
+      margin-top: 8px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
     }
     .btn-add.selected { background: #eee; color: #555; }
-    .btn-add.unselected { background: ${primaryColor}; color: white; }
+    .btn-add.unselected { background: ${Colors.primary}; color: white; }
+    .article-list { margin-top: 8px; border-top: 1px solid #eee; }
+    .article-item { padding: 6px 0; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; }
+    .article-item:first-child { border-top: none; }
   </style>
 </head>
 <body>
   <div id="map"></div>
   <script>
-    var selected = new Set(${selectedIdsJson});
+    var selected = new Set(${JSON.stringify(selectedIds)});
     var map = L.map('map').setView([${centerLat}, ${centerLng}], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    var markers = ${markersJson};
+    var markersData = ${JSON.stringify(groupedArticles)};
+    console.log("Mapa - Marcadores a dibujar:", markersData.length);
 
-    function sendToggle(id) {
-      window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'ADD_ARTICLE', id: id }));
+    function sendAddArticle(id) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'ADD_ARTICLE', id: id }));
     }
 
     function buildPopup(m) {
-      var html = '<div class="popup-title">' + m.title + '</div>';
+      var html = '<b>' + m.title + '</b>';
       if (m.sub) html += '<div class="popup-sub">' + m.sub + '</div>';
       if (m.price) html += '<div class="popup-price">' + m.price + '</div>';
-      if (m.owner) html += '<div class="popup-owner">' + m.owner + '</div>';
-      if (!m.isTarget && m.id != null) {
+      
+      if (!m.isTarget && m.count > 1 && m.articles) {
+        html += '<div class="article-list">';
+        for (var i = 0; i < m.articles.length; i++) {
+          var a = m.articles[i];
+          var isSel = selected.has(a.id);
+          html += '<div class="article-item">';
+          html += '<span>' + a.title + ' (' + a.pricePerMonth.toFixed(2) + '€/mes)</span>';
+          html += '<button class="btn-add ' + (isSel ? 'selected' : 'unselected') + '" onclick="sendAddArticle(' + a.id + ')">' + (isSel ? 'Quitar' : 'Añadir') + '</button>';
+          html += '</div>';
+        }
+        html += '</div>';
+      } else if (!m.isTarget && m.id != null) {
         var isSel = selected.has(m.id);
-        html += '<button class="btn-add ' + (isSel ? 'selected' : 'unselected') + '" onclick="sendToggle(' + m.id + ')">'
-              + (isSel ? 'Quitar' : 'Añadir') + '</button>';
+        html += '<button class="btn-add ' + (isSel ? 'selected' : 'unselected') + '" style="width:100%; margin-top:8px;" onclick="sendAddArticle(' + m.id + ')">' + (isSel ? 'Quitar del kit' : 'Añadir al kit') + '</button>';
       }
       return html;
     }
 
-    var leafletMarkers = {};
-    markers.forEach(function(m) {
-      var color = m.isTarget ? '${primaryColor}' : '#F57F17';
-      var icon = L.divIcon({
-        html: '<div style="width:14px;height:14px;border-radius:50%;background:' + color + ';border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>',
-        className: '', iconSize: [14, 14], iconAnchor: [7, 7]
-      });
-      var marker = L.marker([m.lat, m.lng], { icon: icon }).addTo(map);
-      marker.bindPopup(buildPopup(m));
-      if (!m.isTarget && m.id != null) leafletMarkers[m.id] = { marker: marker, data: m };
-    });
+    function getIcon(m) {
+      if (m.isTarget) {
+        return L.divIcon({ html: '<div style="width:14px;height:14px;border-radius:50%;background:#${Colors.primary.replace('#', '')};border:2px solid white;"></div>', iconSize: [14, 14], iconAnchor: [7, 7] });
+      } else if (m.count > 1) {
+        return L.divIcon({ html: '<div class="cluster-marker">' + m.count + '</div>', iconSize: [36, 36], iconAnchor: [18, 18] });
+      } else {
+        return L.divIcon({ html: '<div class="single-marker"></div>', iconSize: [14, 14], iconAnchor: [7, 7] });
+      }
+    }
 
-    document.addEventListener('message', function(e) {
-      try {
-        var msg = JSON.parse(e.data);
-        if (msg.type === 'SELECTION_UPDATE') {
-          selected = new Set(msg.ids);
-          Object.keys(leafletMarkers).forEach(function(id) {
-            var entry = leafletMarkers[id];
-            entry.marker.setPopupContent(buildPopup(entry.data));
-          });
-        }
-      } catch(err) {}
+    markersData.forEach(function(m) {
+      var marker = L.marker([m.lat, m.lng], { icon: getIcon(m) }).addTo(map);
+      marker.bindPopup(buildPopup(m));
     });
   </script>
 </body>
@@ -164,13 +226,6 @@ export const ArticleMapView: React.FC<ArticleMapViewProps> = ({
       const msg = JSON.parse(event.nativeEvent.data);
       if (msg.type === "ADD_ARTICLE" && onAddArticle) {
         onAddArticle(msg.id);
-        // Update selection state inside WebView
-        const newIds = selectedIds.includes(msg.id)
-          ? selectedIds.filter((i) => i !== msg.id)
-          : [...selectedIds, msg.id];
-        webViewRef.current?.injectJavaScript(
-          `document.dispatchEvent(new MessageEvent('message',{data:JSON.stringify({type:'SELECTION_UPDATE',ids:${JSON.stringify(newIds)}})}));true;`
-        );
       }
     } catch {}
   };

@@ -14,7 +14,7 @@ import { TextInput as PaperTextInput, Button } from "react-native-paper";
 import { Colors, commonStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types";
+import { RootStackParamList, CatalogProduct } from "../types";
 import { useNavigation } from "@react-navigation/native";
 import { ArticleMapView } from "./ArticleMapView";
 import { useAuth } from "../context/AuthContext";
@@ -22,26 +22,6 @@ import { useNotification } from "./NotificationContext";
 import { requestArticleAvailabilityNotification } from "../services/articleService";
 
 type ProductSelectionNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-
-type CatalogProduct = {
-  id: number;
-  title: string;
-  pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
-  category?: string;
-  city?: string;
-  ownerId: number;
-  ownerName?: string;
-  imageUrl?: string | null;
-  totalUnits: number;
-  availableFrom?: string;
-  availableUntil?: string;
-  isAvailable?: boolean;
-  availabilityMessage?: string;
-  distanceKm?: number;
-  cityLat?: number;
-  cityLng?: number;
-};
 
 type ProductSelectionModalProps = {
   visible: boolean;
@@ -67,7 +47,7 @@ type ProductSelectionModalProps = {
   onToggleExpandedSearch: () => void;
   loadingNearby: boolean;
   targetCityCoords?: { lat: number; lng: number } | null;
-  mapProducts?: { id: number; title: string; city?: string | null; pricePerMonth: number; ownerName?: string | null; distanceKm?: number; cityLat?: number; cityLng?: number }[];
+  mapProducts?: CatalogProduct[];
 };
 
 export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
@@ -101,6 +81,28 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   const { showNotification } = useNotification();
   const [mapView, setMapView] = React.useState(false);
   const [requestingIds, setRequestingIds] = React.useState<Record<number, boolean>>({});
+  const [mapReady, setMapReady] = React.useState(false);
+
+  // Productos para el mapa (aplicando mismo filtro de ciudad si está activo)
+  const mapDisplayProducts = React.useMemo(() => {
+    let products = mapProducts;
+    if (showOnlyMyCity && userCity) {
+      products = products.filter((a) => a.city?.toLowerCase() === userCity.toLowerCase());
+    }
+    return products.map((a) => ({ ...a, city: a.city ?? undefined, ownerName: a.ownerName ?? undefined }));
+  }, [mapProducts, showOnlyMyCity, userCity]);
+
+  // Activar el mapa cuando se cambia a vista mapa
+  React.useEffect(() => {
+    if (mapView) {
+      // Siempre marcar como listo después de un breve retraso
+      // Si hay productos se mostrará el mapa, si no el mensaje de "sin productos"
+      const timer = setTimeout(() => setMapReady(true), 100);
+      return () => clearTimeout(timer);
+    } else {
+      setMapReady(false);
+    }
+  }, [mapView]);
 
   const handleRequestAvailability = async (articleId: number) => {
     if (!user?.id || !user.token) {
@@ -178,7 +180,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       return { ...p, isAvailable: true };
     });
 
-    // Filtrar por disponibilidad si el checkbox está activado
     if (showOnlyAvailable) {
       return mapped.filter((p) => p.isAvailable === true);
     }
@@ -213,7 +214,10 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
             <View style={{ flexDirection: "row", gap: 8 }}>
               <TouchableOpacity
-                onPress={() => setMapView(false)}
+                onPress={() => {
+                  setMapView(false);
+                  setMapReady(false);
+                }}
                 style={{
                   flex: 1, flexDirection: "row", alignItems: "center",
                   justifyContent: "center", gap: 6, paddingVertical: 8,
@@ -226,7 +230,9 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                 <Text style={{ color: !mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Lista</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => setMapView(true)}
+                onPress={() => {
+                  setMapView(true);
+                }}
                 style={{
                   flex: 1, flexDirection: "row", alignItems: "center",
                   justifyContent: "center", gap: 6, paddingVertical: 8,
@@ -239,7 +245,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                 <Text style={{ color: mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Mapa</Text>
               </TouchableOpacity>
             </View>
-
 
             {userCity && (
               <TouchableOpacity
@@ -328,17 +333,29 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
           </View>
 
           {mapView ? (
-            <ArticleMapView
-              articles={(
-                showOnlyMyCity && userCity
-                  ? mapProducts.filter((a) => a.city?.toLowerCase() === userCity.toLowerCase())
-                  : mapProducts
-              ).map((a) => ({ ...a, city: a.city ?? undefined, ownerName: a.ownerName ?? undefined }))}
-              targetCityCoords={targetCityCoords ?? null}
-              userCity={userCity}
-              selectedIds={Object.keys(tempSelectedQuantities).map(Number)}
-              onAddArticle={onToggleSelection}
-            />
+            mapReady ? (
+              mapDisplayProducts.length > 0 ? (
+                <ArticleMapView
+                  articles={mapDisplayProducts}
+                  targetCityCoords={targetCityCoords ?? null}
+                  userCity={userCity}
+                  selectedIds={Object.keys(tempSelectedQuantities).map(Number)}
+                  onAddArticle={onToggleSelection}
+                />
+              ) : (
+                <View style={{ height: 300, justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="map-outline" size={48} color={Colors.border} />
+                  <Text style={{ marginTop: 8, color: Colors.textSecondary, textAlign: 'center' }}>
+                    No hay productos disponibles en el mapa
+                  </Text>
+                </View>
+              )
+            ) : (
+              <View style={{ height: 300, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator color={Colors.primary} />
+                <Text style={{ marginTop: 8 }}>Cargando mapa...</Text>
+              </View>
+            )
           ) : null}
 
           <ScrollView style={[createKitStyles.modalList, mapView ? { height: 0 } : {}]}>
@@ -358,7 +375,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   p.id,
                 );
                 const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
-                // Cambio: Un producto se puede añadir si hay fechas válidas Y está AVAILABLE
                 const canBeAdded = p.isAvailable && p.status === 'AVAILABLE';
 
                 return (
@@ -419,13 +435,10 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                             </Text> 
                           ) : ""}
                         {p.city ? `${p.city}` : ""}
-                        {p.distanceKm !== undefined ? (
+                        {p.distanceKm !== undefined && p.distanceKm > 0 ? (
                           <Text style={{ color: "#F57F17" }}>{` · ~${p.distanceKm} km`}</Text>
                         ) : null}
                         {p.category ? ` · ${p.category}` : ""}
-                        {" • "}
-                        {p.city ? `${p.city} • ` : ""}
-                        {p.category ? `${p.category}` : ""}
                       </Text>
                       <Text style={commonStyles.caption}>
                         Unidades disponibles: {p.totalUnits}
@@ -512,7 +525,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       <Text style={commonStyles.bodySecondary}>/ mes</Text>
                     </View>
                     
-                    {/* CAMBIO: Lógica de icono simplificada para mostrar siempre Checkmark o Campana */}
                     {canBeAdded ? (
                       <Ionicons
                         name={checked ? "checkmark-circle" : "ellipse-outline"}
@@ -572,7 +584,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
               style={[createKitStyles.modalBtn, { borderRadius: 8 }]}
               contentStyle={{ paddingVertical: 4 }}
             >
-              Añadir
+              Añadir ({Object.keys(tempSelectedQuantities).length})
             </Button>
           </View>
         </View>

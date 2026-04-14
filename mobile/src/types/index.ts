@@ -592,4 +592,26 @@ export interface ArticleNearby {
   distanceKm: number;
 }
 
+
+export type CatalogProduct = {
+  id: number;
+  itemType: "ARTICLE" | "SERVICE" | string;
+  title: string;
+  pricePerMonth: number;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
+  category?: string;
+  city?: string;
+  ownerId: number;
+  ownerName?: string;
+  imageUrl?: string | null;
+  totalUnits: number;
+  availableFrom?: string;
+  availableUntil?: string;
+  isAvailable?: boolean;
+  availabilityMessage?: string;
+  distanceKm?: number;
+  cityLat?: number;
+  cityLng?: number;
+};
+
 export * from "./defaultKitTypes";
