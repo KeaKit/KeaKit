@@ -26,7 +26,7 @@ export const ItemPaymentComponent = ({
     // amount.
     const msPerDay = 24 * 60 * 60 * 1000;
     // Use Math.ceil so a partial day counts as a full rental day.
-    let days = Math.ceil((end.getTime() - start.getTime()) / msPerDay);
+    let days = Math.ceil((end.getTime() - start.getTime() + 1) / msPerDay);
     if (days <= 0) days = 1;
 
     // Business decision: prorrate month price by days/30.0 (consistent with
