@@ -103,8 +103,8 @@ type ProductSelectionModalProps = {
     distanceKm?: number;
     cityLat?: number;
     cityLng?: number;
-    availableFrom?: string | null;  // ← Permitir null
-    availableUntil?: string | null;  // ← Permitir null
+    availableFrom?: string | null;
+    availableUntil?: string | null;
   }[];
 };
 
@@ -317,7 +317,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
   // Productos para el mapa (con marca de disponibilidad, sin filtrar)
   const mapProductsWithAvailability = React.useMemo(() => {
-    // Primero obtener los productos que pasan los filtros básicos del mapa
     let products = (showOnlyMyCity && userCity
       ? mapProducts.filter(
           (a) =>
@@ -331,20 +330,17 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       ownerName: a.ownerName ?? undefined,
     }));
 
-    // Si no hay fechas seleccionadas, todos están disponibles
     if (!startDate || !endDate) {
-      return products.map(p => ({ ...p, isAvailableForDates: true }));
+      return products;
     }
 
-    // Normalizar fechas del kit
     const requestStart = new Date(startDate);
     requestStart.setHours(0, 0, 0, 0);
     
     const requestEnd = new Date(endDate);
     requestEnd.setHours(0, 0, 0, 0);
 
-    // Marcar disponibilidad sin filtrar (todos los productos se muestran)
-    return products.map((product) => {
+    const processedProducts = products.map((product) => {
       if (!product.availableFrom || !product.availableUntil) {
         return { ...product, isAvailableForDates: false };
       }
@@ -359,7 +355,13 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       
       return { ...product, isAvailableForDates: isAvailable };
     });
-  }, [mapProducts, filteredProductIds, showOnlyMyCity, userCity, startDate, endDate]);
+
+    if (showOnlyAvailable) {
+      return processedProducts.filter(p => p.isAvailableForDates === true);
+    }
+    
+    return processedProducts;
+  }, [mapProducts, filteredProductIds, showOnlyMyCity, userCity, startDate, endDate, showOnlyAvailable]);
   
   const navigateToUserReviews = (ownerId: number, ownerName: string) => {
     onDismiss();
