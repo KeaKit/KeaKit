@@ -141,8 +141,9 @@ public class ArticleService {
         Article article = articleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Article not found"));
 
-        if (article.getStatus() == ArticleStatus.RENTED)
-            throw new RuntimeException("Article is currently rented and cannot be edited");
+        if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
+            throw new RuntimeException("El artículo se encuentra actualmente alquilado en un Kit activo y no se puede editar ni eliminar");
+        }
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -160,8 +161,9 @@ public class ArticleService {
         Article article = articleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Article not found"));
 
-        if (article.getStatus() == ArticleStatus.RENTED)
-            throw new RuntimeException("Article is currently rented and cannot be deleted");
+        if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
+            throw new RuntimeException("El artículo se encuentra actualmente alquilado en un Kit activo y no se puede editar ni eliminar");
+        }
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -218,16 +220,37 @@ public class ArticleService {
     }
 
     private UserArticle convertToUserArticle(Article article) {
-        boolean isRented = article.getStatus() != null &&
-                "RENTED".equalsIgnoreCase(article.getStatus().name());
-        LocalDate rentedUntil = isRented ? article.getAvailableUntil() : null;
+        boolean isManuallyRented = article.getStatus() != null && "RENTED".equalsIgnoreCase(article.getStatus().name());
         
+        // Consultar dinámicamente si está en algún Kit alquilado
+        List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(article.getId());
+        List<Kit> activeKits = kits.stream()
+            .filter(k -> k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE)
+            .collect(Collectors.toList());
+            
+        boolean isRentedInKit = !activeKits.isEmpty();
+        
+        // Determinar estado final a devolver al frontend
+        String finalStatus = (isManuallyRented || isRentedInKit) ? "RENTED" : 
+                            (article.getStatus() != null ? article.getStatus().name() : "UNKNOWN");
+        
+        // Determinar la fecha de fin de alquiler (la máxima fecha de los kits activos)
+        LocalDate rentedUntil = null;
+        if (isRentedInKit) {
+            rentedUntil = activeKits.stream()
+                .map(Kit::getEndDate)
+                .max(LocalDate::compareTo)
+                .orElse(null);
+        } else if (isManuallyRented) {
+            rentedUntil = article.getAvailableUntil();
+        }
+
         return new UserArticle(
                 article.getId(),
                 article.getTitle(),
                 article.getImageUrl(),
                 article.getPricePerMonth(),
-                article.getStatus() != null ? article.getStatus().name() : "UNKNOWN",
+                finalStatus,
                 rentedUntil
         );
     }
@@ -434,8 +457,9 @@ public class ArticleService {
         Article article = articleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Article not found"));
 
-        if (article.getStatus() == ArticleStatus.RENTED)
-            throw new RuntimeException("Article is currently rented and cannot be edited");
+        if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
+            throw new RuntimeException("El artículo se encuentra actualmente alquilado en un Kit activo y no se puede editar ni eliminar");
+        }
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -534,4 +558,11 @@ public class ArticleService {
         if (updateData.getImageUrl() != null) 
             article.setImageUrl(updateData.getImageUrl());
     }
+
+    private boolean isArticleCurrentlyRented(Long articleId) {
+    List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
+    return kits.stream().anyMatch(k -> 
+        k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE
+    );
+}
 }
