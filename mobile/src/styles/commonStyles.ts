@@ -14,6 +14,15 @@ export const commonStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundWhite,
   },
+  
+  contentContainer: {
+    flex: 1,
+    backgroundColor: Colors.backgroundGray,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    padding: Spacing.lg,
+    gap: Spacing.lg,
+  },
 
   screenPadding: {
     paddingHorizontal: Spacing.lg,
@@ -28,13 +37,12 @@ export const commonStyles = StyleSheet.create({
     padding: 50,
     paddingTop: 30,
     paddingBottom: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    ...Shadows.header,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
     elevation: 5,
   },
-
+    
   // Headers
   header: {
     flexDirection: 'row',
@@ -116,6 +124,14 @@ export const commonStyles = StyleSheet.create({
     color: Colors.primary,
   },
 
+  buttonRow: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   // Cards
   card: {
     backgroundColor: Colors.backgroundCard,
@@ -166,13 +182,14 @@ export const commonStyles = StyleSheet.create({
     marginBottom: 15
   },
 
-  bodyPrimary: {
+  body: {
     fontSize: FontSizes.base,
     color: Colors.textPrimary,
   },
 
-  body: {
+  bodyStrong: {
     fontSize: FontSizes.base,
+    fontWeight: FontWeights.bold,
     color: Colors.textPrimary,
   },
 
@@ -183,6 +200,13 @@ export const commonStyles = StyleSheet.create({
 
   caption: {
     fontSize: FontSizes.sm,
+    color: Colors.textSecondary,
+  },
+
+  emptyText: {
+    fontSize: FontSizes.base,
+    textAlign: "center",
+    marginTop: Spacing.lg,
     color: Colors.textSecondary,
   },
 
@@ -218,6 +242,12 @@ export const commonStyles = StyleSheet.create({
     height: 2,
     backgroundColor: Colors.border,
     marginVertical: Spacing.lg,
+  },
+
+  dividerSmall: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.sm,
   },
 
   // Mensajes de error

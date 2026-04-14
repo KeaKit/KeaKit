@@ -5,7 +5,9 @@ import {
   UserArticle,
   KitPaymentDTO,
   KitDeliveryResponse,
-  UpdateDeliveryRequest
+  UpdateDeliveryRequest,
+  ItemFilterRequest,
+  ItemFilterResponse,
 } from "../types";
 import { handleResponse, fetchWithTimeout, jsonHeaders } from "./utils";
 
@@ -19,6 +21,31 @@ export async function fetchMyArticles(
   });
 
   return handleResponse<UserArticle[]>(res);
+}
+
+export async function filterItemsForKit(
+  filters: ItemFilterRequest,
+  token: string,
+): Promise<ItemFilterResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.FILTER_ITEMS_FOR_KIT, {
+    method: "POST",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    body: JSON.stringify(filters),
+  });
+
+  if (res.status === 404) {
+    return {
+      content: [],
+      page: filters.page ?? 0,
+      size: filters.size ?? 10,
+      totalElements: 0,
+      totalPages: 0,
+      hasNext: false,
+      hasPrevious: false,
+    };
+  }
+
+  return handleResponse<ItemFilterResponse>(res);
 }
 
 export async function createKit(
@@ -184,3 +211,18 @@ export async function getUnassignedKits(
   return handleResponse<KitResponse[]>(res);
 }
 
+export async function getKitPaymentWithPromo(
+  kitId: number,
+  token: string,
+  promoCode: string,
+  email: string,
+): Promise<KitPaymentDTO> {
+  const res = await fetchWithTimeout(
+    API_ROUTES.GET_KIT_PAYMENT_BY_ID_PROMO(kitId, promoCode, email),
+    {
+      method: 'GET',
+      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    },
+  );
+  return handleResponse<KitPaymentDTO>(res);
+}

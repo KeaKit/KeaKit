@@ -38,3 +38,27 @@ export async function updateProfile(
   });
   return handleResponse<UserResponse>(res);
 }
+
+export const uploadProfileImage = async (image: File, token: string): Promise<UserResponse> => {
+  const formData = new FormData();
+  formData.append('image', image);
+  const res = await fetch(API_ROUTES.UPLOAD_PROFILE_IMAGE, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  return handleResponse<UserResponse>(res);
+};
+
+export interface PublicUserProfile {
+  profileImageUrl?: string;
+  founderBadge: boolean;
+}
+
+export const getPublicUserProfile = async (userId: number): Promise<PublicUserProfile> => {
+  const res = await fetch(API_ROUTES.GET_PUBLIC_USER_PROFILE(userId), {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return handleResponse<PublicUserProfile>(res);
+};

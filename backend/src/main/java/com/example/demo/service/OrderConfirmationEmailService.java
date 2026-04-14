@@ -40,20 +40,25 @@ public class OrderConfirmationEmailService {
     private String fromEmail;
 
     public void sendOrderConfirmation(Kit kit) {
-        if (kit == null) {
-            logger.warn("No se puede enviar confirmación: kit es nulo");
-            return;
-        }
+        sendOrderConfirmation(kit, 0.0, null);
+    }
+
+    public void sendOrderConfirmation(Kit kit, Double discountAmount, String promoCode) {
+        if (kit == null) return;
         KitResponse resp = new KitResponse(kit);
         String recipientEmail = kit.getTenant() != null ? kit.getTenant().getEmail() : null;
         if (recipientEmail == null || recipientEmail.isBlank()) {
             logger.warn("No se puede enviar confirmación: email del arrendatario no encontrado en Kit id={}", kit.getId());
             return;
         }
-        sendOrderConfirmation(resp, recipientEmail, kit.getId());
+        sendOrderConfirmation(resp, recipientEmail, kit.getId(), discountAmount, promoCode);
     }
 
     public void sendOrderConfirmation(KitResponse kitResponse, String explicitRecipientEmail, Long originalKitId) {
+        sendOrderConfirmation(kitResponse, explicitRecipientEmail, originalKitId, 0.0, null);
+    }
+
+    public void sendOrderConfirmation(KitResponse kitResponse, String explicitRecipientEmail, Long originalKitId, Double discountAmount, String promoCode) {
         if (kitResponse == null) {
             logger.warn("No se puede enviar confirmación: kitResponse es nulo");
             return;
@@ -75,7 +80,7 @@ public class OrderConfirmationEmailService {
             : "usuario";
         String subject = "Confirmación de pedido - KeaKit";
 
-        String htmlContent = buildHtmlContent(kitResponse, tenantName);
+        String htmlContent = buildHtmlContent(kitResponse, tenantName, discountAmount != null ? discountAmount : 0.0, promoCode);
 
         Mail mail = new Mail(
             new Email(fromEmail),
@@ -96,7 +101,7 @@ public class OrderConfirmationEmailService {
             int statusCode = response.getStatusCode();
 
             if (statusCode >= 200 && statusCode < 300) {
-                logger.info("Correo de confirmación enviado");
+                logger.info("Correo de confirmación enviado para kit {}", kitResponse.getId());
                 try {
                     if (response.getBody() != null && !response.getBody().isBlank()) {
                         logger.debug("SendGrid response body: {}", response.getBody());
@@ -108,14 +113,9 @@ public class OrderConfirmationEmailService {
                     logger.debug("No se pudo leer body/headers de la respuesta de SendGrid", e);
                 }
                 return;
+            } else {
+                logger.error("Error al enviar correo de confirmación para kit {}. Código: {}", kitResponse.getId(), statusCode);
             }
-
-            logger.error(
-                "Error al enviar correo de confirmación para kit {}. Código: {}, Body: {}",
-                kitResponse.getId(),
-                statusCode,
-                response.getBody()
-            );
         } catch (Exception ex) {
             logger.error("Excepción enviando correo de confirmación para kit {}", kitResponse.getId(), ex);
         }
@@ -151,7 +151,20 @@ public class OrderConfirmationEmailService {
         return safeValue(currencyFormatter.format(amount));
     }
 
-    private String buildHtmlContent(KitResponse kit, String tenantName) {
+    private String buildDiscountRow(Double discountAmount, String promoCode) {
+        if (discountAmount == null || discountAmount <= 0) return "";
+        NumberFormat fmt = NumberFormat.getCurrencyInstance(SPANISH_LOCALE);
+        String label = promoCode != null && !promoCode.isBlank()
+            ? "Descuento (" + escapeHtml(promoCode) + ")"
+            : "Descuento aplicado";
+        return "<tr>" +
+            "<td style=\"padding: 8px 0; font-size: 14px; color: #4caf7d;\">" + label + "</td>" +
+            "<td style=\"padding: 8px 0; font-size: 14px; font-weight: 700; color: #4caf7d; text-align: right;\">-" +
+            safeValue(fmt.format(discountAmount)) + "</td>" +
+            "</tr>";
+    }
+
+    private String buildHtmlContent(KitResponse kit, String tenantName, Double discountAmount, String promoCode) {
         try {
             ClassPathResource templateResource = new ClassPathResource(TEMPLATE_PATH);
             String template = StreamUtils.copyToString(templateResource.getInputStream(), StandardCharsets.UTF_8);
@@ -159,7 +172,7 @@ public class OrderConfirmationEmailService {
             StringBuilder itemsHtml = new StringBuilder();
             int rentalDays = 0;
             if (kit.getStartDate() != null && kit.getEndDate() != null) {
-                rentalDays = (int) ChronoUnit.DAYS.between(kit.getStartDate(), kit.getEndDate());
+                rentalDays = (int) (ChronoUnit.DAYS.between(kit.getStartDate(), kit.getEndDate()) + 1);
                 if (rentalDays <= 0) rentalDays = 1;
             }
             double prorationFactor = (rentalDays > 0) ? ((double) rentalDays) / 30.0 : 0.0;
@@ -207,11 +220,9 @@ public class OrderConfirmationEmailService {
             String deliveryMethodStr = kit.getDeliveryMethod() != null ? (kit.getDeliveryMethod() == com.example.demo.model.DeliveryMethod.COURIER ? "Envío por mensajería" : "Entrega en punto de encuentro") : "Pendiente de definir";
 
             double guaranteeRate = kit.getAppliedGuaranteeRate() != null ? kit.getAppliedGuaranteeRate() : 0.2;
-            double commissionRate = kit.getAppliedCommissionRate() != null ? kit.getAppliedCommissionRate() : 0.2;
             double guaranteeAmount = subtotalProrated * guaranteeRate;
-            double commissionAmount = subtotalProrated * commissionRate;
             double courier = kit.getCourierPrice() != null ? kit.getCourierPrice() : 0.0;
-            double totalEstimated = subtotalProrated + guaranteeAmount + commissionAmount + courier;
+            double totalEstimated = subtotalProrated + guaranteeAmount + courier - (discountAmount != null ? discountAmount : 0.0);
 
             return template
                 .replace("{{tenantName}}", safeValue(tenantName))
@@ -229,9 +240,8 @@ public class OrderConfirmationEmailService {
                 .replace("{{itemsRows}}", itemsHtml.toString())
                 .replace("{{subtotalPrice}}", formatCurrency(subtotalProrated, "-"))
                 .replace("{{guaranteePrice}}", formatCurrency(guaranteeAmount, "-"))
-                .replace("{{platformFee}}", formatCurrency(commissionAmount, "-"))
-                .replace("{{comissionPercent}}", (int)(commissionRate * 100) + "%")
-                .replace("{{guaranteePercent}}", (int)(guaranteeRate * 100) + "%");
+                .replace("{{guaranteePercent}}", (int)(guaranteeRate * 100) + "%")
+                .replace("{{discountRow}}", buildDiscountRow(discountAmount, promoCode));
         } catch (IOException ex) {
             logger.error("No se pudo cargar la plantilla HTML de confirmación (KitResponse)", ex);
             return "<p>Tu pedido ha sido confirmado correctamente. ID: " + safeValue(kit.getId()) + "</p>";

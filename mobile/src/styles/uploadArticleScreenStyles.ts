@@ -185,7 +185,7 @@ export const styles = StyleSheet.create<Styles>({
   imagePlaceholder: {
     height: 180,
     width: '100%',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundWhite,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.border,
@@ -240,7 +240,7 @@ export const styles = StyleSheet.create<Styles>({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.border,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.white,
   },
   conditionChipActive: {
     borderColor: Colors.primary,

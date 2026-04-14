@@ -11,10 +11,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, RatingResponse } from '../../types';
+import { RootStackParamList, RatingResponse, UserResponse } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { getRatingsForUser } from '../../services/ratingService';
+import { getUserById } from '../../services/authService'; 
+import { ProfileImageWithBadge } from '../../components/ProfileImageWithBadge'; 
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } from '../../styles';
+import { getPublicUserProfile } from '../../services/userService';
 
 type UserRatingsNav = NativeStackNavigationProp<RootStackParamList, 'UserRatings'>;
 type UserRatingsRoute = RouteProp<RootStackParamList, 'UserRatings'>;
@@ -28,10 +31,23 @@ const UserRatingsScreen: React.FC = () => {
   const [ratings, setRatings] = useState<RatingResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+const [publicProfile, setPublicProfile] = useState<{ profileImageUrl?: string; founderBadge?: boolean }>({});
   useEffect(() => {
+    loadPublicProfile();
     loadRatings();
   }, []);
+
+  const loadPublicProfile = async () => {
+    try {
+      const data = await getPublicUserProfile(userId);
+      setPublicProfile({
+        profileImageUrl: data.profileImageUrl,
+        founderBadge: data.founderBadge,
+      });
+    } catch (err) {
+      console.warn('No se pudo cargar la imagen pública del usuario');
+    }
+  };
 
   const loadRatings = async () => {
     if (!user) return;
@@ -116,6 +132,12 @@ const UserRatingsScreen: React.FC = () => {
       ) : (
         <>
           <View style={[commonStyles.screenPadding, styles.summarySection]}>
+            {/* Imagen de perfil con insignia */}
+            <ProfileImageWithBadge
+              imageUrl={publicProfile.profileImageUrl}
+              size={80}
+              founderBadge={publicProfile.founderBadge || false}
+            />
             <Text style={styles.userName}>{userName}</Text>
             <View style={styles.averageRow}>
               <Ionicons name="star" size={24} color={Colors.warning} />
@@ -154,6 +176,7 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.xl,
     fontWeight: FontWeights.bold as '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.md,
     marginBottom: Spacing.sm,
   },
   averageRow: {

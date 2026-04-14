@@ -122,3 +122,11 @@ export async function updateUser(
   });
   return handleResponse<UserResponse>(res);
 }
+
+export const toggleFounderBadge = async (userId: number, token: string): Promise<UserResponse> => {
+  const res = await fetch(API_ROUTES.TOGGLE_FOUNDER_BADGE(userId), {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<UserResponse>(res);
+};
