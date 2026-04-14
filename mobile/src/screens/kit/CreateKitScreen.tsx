@@ -282,7 +282,7 @@ const CreateKitScreen: React.FC = () => {
 
       const response = await filterItemsForKit(
         {
-          country: country.trim() || undefined,
+          country: undefined,
           city: nextShowOnlyMyCity && city.trim() ? city.trim() : undefined,
           categoryId: nextSelectedCategoryId ? Number(nextSelectedCategoryId) : undefined,
           condition: nextSelectedCondition
