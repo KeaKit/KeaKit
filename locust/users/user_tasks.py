@@ -3,9 +3,6 @@ import uuid
 from locust import HttpUser, task, between
 from utils.helpers import random_email
 
-def random_email():
-    return f"user_{uuid.uuid4().hex[:8]}@performance.com"
-
 class UserFlowUser(HttpUser):
     wait_time = between(1, 3)
     token = None
