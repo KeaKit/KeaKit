@@ -176,7 +176,7 @@ public class PaymentService {
     private void completeOrder(Long kitId) throws ResourceNotFoundException {
         kitService.markAsPaid(kitId);
         Kit kitEntity = kitRepository.findById(kitId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kit not found for email confirmation"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kit no encontrado para confirmación de email"));
         emailService.sendOrderConfirmation(kitEntity);
     }
 
@@ -222,7 +222,7 @@ public class PaymentService {
         Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
         if (tenantWallet.getBalance() < amount) {
             throw new NotEnoughBalanceException(
-                    "Not enough balance in wallet. Required: " + amount + ", Available: " + tenantWallet.getBalance());
+                    "Saldo insuficiente en el monedero. Requerido: " + amount + ", Disponible: " + tenantWallet.getBalance());
         }
         Transaction givePayment = new Transaction(-amount, tenantWallet, TransactionType.PAYOUT);
         return givePayment;
@@ -319,7 +319,7 @@ public class PaymentService {
 
         if (wallet.getBalance() < amount) {
             throw new NotEnoughBalanceException(
-                    "Not enough balance" + " Required: " + amount + ", Available: " + wallet.getBalance());
+                    "Saldo insuficiente" + " Requerido: " + amount + ", Disponible: " + wallet.getBalance());
         }
 
         Long amountInCents = (long) (amount * 100);

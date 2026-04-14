@@ -73,7 +73,7 @@ public class IncidentService {
 
     public Incident getIncidentById(Long id) {
         Incident incident = incidentRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Incident not found"));
+        .orElseThrow(() -> new RuntimeException("Incidencia no encontrada"));
 
         if (!(checkUserAdmin() || checkUserAuthor(incident) || checkUserOwner(incident))) {
             throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para ver esta incidencia.");
@@ -191,7 +191,7 @@ public class IncidentService {
         comment.setIncident(incident);
         if (comment.getAuthor() != null && comment.getAuthor().getId() != null) {
             User author = userRepository.findById(comment.getAuthor().getId())
-                .orElseThrow(() -> new RuntimeException("Author not found"));
+                .orElseThrow(() -> new RuntimeException("Autor no encontrado"));
             comment.setAuthor(author);
         }
         return incidentCommentRepository.save(comment);

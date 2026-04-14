@@ -53,7 +53,7 @@ public class ItemService {
         Page<ItemCatalogResponse> resultPage = itemRepository.findAll(spec, pageable).map(this::toCatalogResponse);
 
         if (resultPage.isEmpty()) {
-            throw new ResourceNotFoundException("No items found for the provided filters");
+            throw new ResourceNotFoundException("Ningún artículo encontrado con los criterios de búsqueda proporcionados");
         }
 
         return new ItemFilterResponseDTO(
@@ -75,7 +75,7 @@ public class ItemService {
 
     public Item findById(Long id) throws ResourceNotFoundException {
         return itemRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado"));
     }
 
     public Item save(Item item) {
@@ -84,7 +84,7 @@ public class ItemService {
 
     public Item update(Long id, Item updateData) {
         Item item = itemRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Item not found"));
+            .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         if (updateData.getTitle() != null) item.setTitle(updateData.getTitle());
         if (updateData.getDescription() != null) item.setDescription(updateData.getDescription());
@@ -95,7 +95,7 @@ public class ItemService {
         if (updateData.getCategory() != null) item.setCategory(updateData.getCategory());
         if (updateData.getTotalUnits() != null) {
             if (updateData.getTotalUnits() < 1) {
-                throw new RuntimeException("totalUnits must be >= 1");
+                throw new RuntimeException("Las unidades totales deben ser al menos 1");
             }
             item.setTotalUnits(updateData.getTotalUnits());
         }
@@ -106,7 +106,7 @@ public class ItemService {
 
     public void deleteById(Long id) {
         if (!itemRepository.existsById(id)) {
-            throw new RuntimeException("Item not found");
+            throw new RuntimeException("Artículo no encontrado");
         }
         defaultKitService.removeItemFromAllDefaultKits(id);
         itemRepository.deleteById(id);
@@ -115,44 +115,44 @@ public class ItemService {
     private ArticleCondition validateAndParseFilterInput(Double minPrice, Double maxPrice, String country, String city,
             Long categoryId, String condition, Integer page, Integer size) {
         if (minPrice != null && minPrice <= 0) {
-            throw new IllegalArgumentException("minPrice must be greater than 0");
+            throw new IllegalArgumentException("El precio mínimo debe ser mayor que 0");
         }
         if (maxPrice != null && maxPrice <= 0) {
-            throw new IllegalArgumentException("maxPrice must be greater than 0");
+            throw new IllegalArgumentException("El precio máximo debe ser mayor que 0");
         }
         if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
-            throw new IllegalArgumentException("minPrice cannot be greater than maxPrice");
+            throw new IllegalArgumentException("El precio mínimo no puede ser mayor que el precio máximo");
         }
 
         if (country != null) {
             String trimmed = country.trim();
             if (trimmed.isEmpty()) {
-                throw new IllegalArgumentException("country must not be blank");
+                throw new IllegalArgumentException("El país no puede estar en blanco");
             }
             if (trimmed.length() > 120) {
-                throw new IllegalArgumentException("country cannot exceed 120 characters");
+                throw new IllegalArgumentException("El país no puede exceder 120 caracteres");
             }
         }
 
         if (city != null) {
             String trimmed = city.trim();
             if (trimmed.isEmpty()) {
-                throw new IllegalArgumentException("city must not be blank");
+                throw new IllegalArgumentException("La ciudad no puede estar en blanco");
             }
             if (trimmed.length() > 120) {
-                throw new IllegalArgumentException("city cannot exceed 120 characters");
+                throw new IllegalArgumentException("La ciudad no puede exceder 120 caracteres");
             }
         }
 
         if (categoryId != null && categoryId <= 0) {
-            throw new IllegalArgumentException("categoryId must be greater than 0");
+            throw new IllegalArgumentException("El ID de la categoría debe ser mayor que 0");
         }
 
         if (page != null && page < 0) {
-            throw new IllegalArgumentException("page must be greater than or equal to 0");
+            throw new IllegalArgumentException("La página debe ser mayor o igual a 0");
         }
         if (size != null && size <= 0) {
-            throw new IllegalArgumentException("size must be greater than 0");
+            throw new IllegalArgumentException("El tamaño debe ser mayor que 0");
         }
 
         if (condition == null || condition.trim().isEmpty()) {
@@ -162,7 +162,7 @@ public class ItemService {
         try {
             return ArticleCondition.valueOf(condition.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("condition must be one of: NEW, LIGHTLY_USED, USED, WORN");
+            throw new IllegalArgumentException("La condición debe ser una entre: NEW, LIGHTLY_USED, USED, WORN");
         }
     }
 

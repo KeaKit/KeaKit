@@ -52,7 +52,7 @@ public class AdminUserService {
         String normalizedEmail = request.getEmail().toLowerCase().trim();
         
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new UserAlreadyExistsException("Email already exists");
+            throw new UserAlreadyExistsException("El correo ya está registrado.");
         }
 
         User user = new User(
@@ -77,7 +77,7 @@ public class AdminUserService {
     public UserResponse updateUser(Long id, AdminUserRequest request) {
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
 
         if (request.getEmail() != null) {
             String normalizedEmail = request.getEmail().toLowerCase().trim();
@@ -123,7 +123,7 @@ public class AdminUserService {
 
     public UserResponse toggleFounderBadge(Long id) {
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+            .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
         user.setFounderBadge(!user.isFounderBadge());
         return new UserResponse(userRepository.save(user));
     }
@@ -132,7 +132,7 @@ public class AdminUserService {
     public void deleteUser(Long id) {
 
         if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException("User not found");
+            throw new UserNotFoundException("Usuario no encontrado");
         }
 
         // 1. borrar wallet primero
