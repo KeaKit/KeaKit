@@ -142,6 +142,7 @@ export interface Article {
   rentedUntil: string | null;
   totalUnits?: number;
   condition: ArticleCondition | null;
+  ownerCommissionPromoCode?: string | null;
 }
 
 export interface ArticlePayload {
@@ -157,6 +158,7 @@ export interface ArticlePayload {
   purchaseDate?: string;
   totalUnits?: number;
   condition?: ArticleCondition;
+  ownerCommissionPromoCode?: string;
 }
 
 export interface Item {
@@ -509,6 +511,7 @@ export interface Service {
   category: Category;
   status: ServiceStatus;
   totalUnits?: number;
+  ownerCommissionPromoCode?: string | null;
 }
 
 export interface ServicePayload {
@@ -521,6 +524,7 @@ export interface ServicePayload {
   category: { id: number };
   status?: ServiceStatus;
   totalUnits?: number;
+  ownerCommissionPromoCode?: string;
 }
 
 export interface UserService {
@@ -590,6 +594,7 @@ export interface PromoCodeFormData {
   discountRate: number;
   active: boolean;
   singleUse: boolean;
+  type?: 'TENANT_DISCOUNT' | 'OWNER_COMMISSION_REDUCTION';
   pilotUserOnly: boolean;
   pilotEmails: string[];
 }

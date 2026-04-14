@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.model.*;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ServiceRepository;
@@ -29,6 +30,7 @@ class ServiceItemServiceTest {
     @Mock private ServiceRepository serviceRepository;
     @Mock private UserRepository userRepository;
     @Mock private CategoryRepository categoryRepository;
+    @Mock private PromoCodeService promoCodeService;
 
     @InjectMocks
     private ServiceItemService serviceItemService;
@@ -709,5 +711,163 @@ class ServiceItemServiceTest {
 
         assertThat(expiresExactlyToday.getStatus()).isEqualTo(ServiceStatus.ACTIVE);
         verify(serviceRepository, never()).save(any());
+    }
+
+    // ------------ createAndPromote — ownerCommissionPromoCode ------------
+    
+    @Test
+    void createAndPromote_withValidOwnerCommissionPromoCode_succeeds() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode("owner10"); // minúsculas, se normalizará
+    
+        ServiceItem result = serviceItemService.createAndPromote(newService, 1L, 1L);
+    
+        assertThat(result.getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
+        verify(promoCodeService).validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com");
+    }
+    
+    @Test
+    void createAndPromote_withInvalidOwnerCommissionPromoCode_throws() {
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("INVALIDO", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(false, null, "Código promocional no válido"));
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode("INVALIDO");
+    
+        assertThatThrownBy(() -> serviceItemService.createAndPromote(newService, 1L, 1L))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Código promocional no válido");
+        verify(serviceRepository, never()).save(any());
+    }
+    
+    @Test
+    void createAndPromote_withNullOwnerCommissionPromoCode_doesNotCallPromoValidation() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode(null);
+    
+        serviceItemService.createAndPromote(newService, 1L, 1L);
+    
+        verify(promoCodeService, never())
+            .validateForOwnerCommissionReductionAllowReservedByUser(any(), any());
+    }
+    
+    @Test
+    void createAndPromote_withBlankOwnerCommissionPromoCode_normalizesToNull() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode("   ");
+    
+        serviceItemService.createAndPromote(newService, 1L, 1L);
+    
+        verify(promoCodeService, never())
+            .validateForOwnerCommissionReductionAllowReservedByUser(any(), any());
+    }
+    
+    @Test
+    void createAndPromote_withValidOwnerPromoCode_callsReserveOwnerSingleUse() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+        doNothing().when(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode("OWNER10");
+    
+        serviceItemService.createAndPromote(newService, 1L, 1L);
+    
+        verify(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+    }
+    
+    // ------------ update — ownerCommissionPromoCode ------------
+    
+    @Test
+    void update_withNewOwnerCommissionPromoCode_validatesAndReserves() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+        doNothing().when(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("owner10"); // minúsculas, normalizar
+    
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+    
+        assertThat(result.getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
+        verify(promoCodeService).validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com");
+        verify(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+    }
+    
+    @Test
+    void update_withInvalidOwnerCommissionPromoCode_throws() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("MALO", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(false, null, "Código promocional no válido"));
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("MALO");
+    
+        assertThatThrownBy(() -> serviceItemService.update(1L, 1L, updateData))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Código promocional no válido");
+        verify(serviceRepository, never()).save(any());
+    }
+    
+    @Test
+    void update_withSameOwnerCommissionPromoCode_doesNotResetConsumedFlag() {
+        service.setOwnerCommissionPromoCode("OWNER10");
+        service.setOwnerCommissionPromoConsumed(true);
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("OWNER10");
+    
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+    
+        assertThat(result.isOwnerCommissionPromoConsumed()).isTrue();
+    }
+    
+    @Test
+    void update_withDifferentOwnerCommissionPromoCode_resetsConsumedFlag() {
+        service.setOwnerCommissionPromoCode("OWNER10");
+        service.setOwnerCommissionPromoConsumed(true);
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER20", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.20, "Código aplicado correctamente"));
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("OWNER20");
+    
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+    
+        assertThat(result.isOwnerCommissionPromoConsumed()).isFalse();
+    }
+    
+    @Test
+    void update_removingOwnerCommissionPromoCode_normalizesToNullAndClearsConsumed() {
+        service.setOwnerCommissionPromoCode("OWNER10");
+        service.setOwnerCommissionPromoConsumed(true);
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("  "); // blank = eliminar
+    
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+    
+        assertThat(result.getOwnerCommissionPromoCode()).isNull();
+        assertThat(result.isOwnerCommissionPromoConsumed()).isFalse();
+        verify(promoCodeService, never()).validateForOwnerCommissionReductionAllowReservedByUser(any(), any());
     }
 }
