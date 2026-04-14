@@ -4,6 +4,9 @@ export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
   LOGIN:    `${BASE_URL}/api/users/login`,
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
+  // Update profile image endpoint
+  UPLOAD_PROFILE_IMAGE: `${BASE_URL}/api/users/profile/image`,
+
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   GET_ADMIN_ALL_USERS: `${BASE_URL}/api/admin/users/no-self`,
@@ -14,6 +17,7 @@ export const API_ROUTES = {
   GET_RATINGS_FOR_USER:  (userId: number) => `${BASE_URL}/api/ratings/user/${userId}`,
   GET_RATINGS_BY_USER:   (userId: number) => `${BASE_URL}/api/ratings/given/${userId}`,
   GET_RATING:            (id: number) => `${BASE_URL}/api/ratings/${id}`,
+  GET_PUBLIC_USER_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}/public-profile`,
   DELETE_RATING:         (id: number) => `${BASE_URL}/api/ratings/${id}`,
   HAS_REVIEWED_ITEMS: `${BASE_URL}/api/ratings/has-reviewed`,
   HAS_REVIEWED_ITEM_IN_KITS: `${BASE_URL}/api/ratings/has-reviewed-kit`,
@@ -33,8 +37,8 @@ export const API_ROUTES = {
   UPLOAD_ARTICLE_WITH_IMAGE: (ownerId: number, categoryId: number) => `${BASE_URL}/api/article/upload-with-image?ownerId=${ownerId}&categoryId=${categoryId}`,
   GET_ARTICLE: (id: number) => `${BASE_URL}/api/article/${id}`,
   REQUEST_AVAILABILITY_NOTIFICATION: (articleId: number, requesterId: number) => `${BASE_URL}/api/article/${articleId}/notify-when-available?requesterId=${requesterId}`,
-  UPDATE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
-  DELETE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
+  UPDATE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,  
+  UPDATE_ARTICLE_WITH_IMAGE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/with-image?ownerId=${ownerId}`,  DELETE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
   TOGGLE_RENT:    (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/toggle-rent?ownerId=${ownerId}`,
   CATEGORIES: `${BASE_URL}/api/category`,
   CATEGORY_BY_ID: (id: number) => `${BASE_URL}/api/category/${id}`,
@@ -146,7 +150,21 @@ export const API_ROUTES = {
     `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`,
 
   // Article history
-  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`
+  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`,
+
+  // RGPD - Para usuarios autenticados
+  RGPD_CHECK: `${BASE_URL}/api/rgpd/check`,
+  RGPD_ACCEPT: `${BASE_URL}/api/rgpd/accept`,
+  RGPD_NEEDS_CONSENT: `${BASE_URL}/api/rgpd/needs-consent`,
+  
+  // RGPD - Política pública (sin autenticación)
+  RGPD_CURRENT_POLICY: `${BASE_URL}/api/rgpd/current-policy`,
+  
+  // Admin RGPD
+  ADMIN_CURRENT_POLICY: `${BASE_URL}/api/admin/rgpd/current`,
+  ADMIN_CREATE_POLICY: `${BASE_URL}/api/admin/rgpd/policies`,
+  // Insignia
+  TOGGLE_FOUNDER_BADGE: (id: number) => `${BASE_URL}/api/admin/users/${id}/founder-badge`,
 
 } as const;
 

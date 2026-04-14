@@ -60,6 +60,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       address: response.address,
       city: response.city,
       country: response.country,
+      founderBadge: response.founderBadge || false,
+      profileImageUrl: response.profileImageUrl,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
     setUser(authUser);
@@ -78,6 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       address: response.address,
       city: response.city,
       country: response.country,
+      founderBadge: response.founderBadge || false,
+      profileImageUrl: response.profileImageUrl,
     };
     await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
     setUser(authUser);

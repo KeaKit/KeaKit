@@ -111,6 +111,7 @@ const UploadArticleScreen: React.FC = () => {
   const [appliedOwnerPromoCode, setAppliedOwnerPromoCode] = useState<string | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoMessage, setPromoMessage] = useState<{ text: string; valid: boolean } | null>(null);
+  const [totalUnits, setTotalUnits] = useState('1');
   const [condition, setCondition] = useState<'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN' | ''>('');
 
   const conditionOptions: { value: 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN'; label: string }[] = [
@@ -259,6 +260,10 @@ const UploadArticleScreen: React.FC = () => {
     if (purchaseDate && !isValidIsoDate(purchaseDate))
       newErrors.purchaseDate = 'Fecha de compra no válida';
 
+    if (!totalUnits || isNaN(Number(totalUnits)) || Number(totalUnits) < 1 || !Number.isInteger(Number(totalUnits))) {
+      newErrors.totalUnits = 'Introduce un número de unidades válido (mínimo 1)';
+    }
+
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
@@ -289,6 +294,7 @@ const UploadArticleScreen: React.FC = () => {
         description:   description.trim(),
         city:          selectedCity,
         pricePerMonth: Number(pricePerMonth),
+        totalUnits:    Number(totalUnits),
         availableFrom,
         availableUntil,
         category:      { id: selectedCategory!.id } as any,
@@ -450,6 +456,14 @@ const UploadArticleScreen: React.FC = () => {
           {/* Precio y disponibilidad */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Precio y disponibilidad</Text>
+            <Field
+              label="Unidades disponibles"
+              value={totalUnits}
+              onChange={(t) => { setTotalUnits(t); clearError('totalUnits'); }}
+              placeholder="Ej: 1"
+              keyboardType="numeric"
+              error={errors.totalUnits}
+            />
             <Field
               label="Precio por mes (€)"
               value={pricePerMonth}

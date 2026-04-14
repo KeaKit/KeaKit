@@ -19,6 +19,10 @@ public class CreateArticleRequest {
     @Positive(message = "Price must be positive")
     private Double pricePerMonth;
 
+    @NotNull(message = "Total units is required")
+    @Positive(message = "Total units must be positive")
+    private Integer totalUnits;
+
     private LocalDate availableFrom;
     private LocalDate availableUntil;
 
@@ -90,5 +94,13 @@ public class CreateArticleRequest {
 
     public void setPurchaseDate(LocalDate purchaseDate) {
         this.purchaseDate = purchaseDate;
+    }
+
+    public Integer getTotalUnits() {
+    return totalUnits;
+}
+
+    public void setTotalUnits(Integer totalUnits) {
+        this.totalUnits = totalUnits;
     }
 }

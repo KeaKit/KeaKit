@@ -17,3 +17,4 @@ export * from "./KeakitCRUDButton";
 export * from "./KeakitSearchBar";
 export * from "./KeakitTag";
 export * from "./categories";
+export * from "./defaultKits";

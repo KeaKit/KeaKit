@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/build/Ionicons";
+import { DefaultKit } from "./defaultKitTypes";
 
 export type UserRole = "ADMIN" | "USER" | "COURIER";
 
@@ -10,6 +11,8 @@ export interface RegisterRequest {
   city: string;
   country: string;
   password: string;
+  acceptedPolicies?: boolean;
+  acceptedMarketing?: boolean;
 }
 
 export interface LoginRequest {
@@ -26,7 +29,9 @@ export interface UserResponse {
   address: string;
   city: string;
   country: string;
+  founderBadge: boolean; 
   token?: string;
+  profileImageUrl?: string;
 }
 
 export interface AuthUser {
@@ -38,6 +43,8 @@ export interface AuthUser {
   address: string;
   city: string;
   country: string;
+  founderBadge: boolean; 
+  profileImageUrl?: string;
   token: string;
 }
 
@@ -163,6 +170,23 @@ export interface Item {
   quantity?: number;
 }
 
+export interface ItemCatalogResponse {
+  id: number;
+    itemType: string; 
+    title: string;
+    description: string;
+    city: string;
+    pricePerMonth: number;
+    availableFrom: Date;
+    availableUntil: Date;
+    category: string;
+    totalUnits: number;
+    ownerId: number;
+    ownerName: string;
+    status?: string;   // solo para ARTICLE
+    imageUrl?: string; // solo para ARTICLE
+}
+
 export enum KitStatus {
   DRAFT = "DRAFT",
   PAID = "PAID",
@@ -248,24 +272,7 @@ export interface Category {
   maxPrice: number;
 }
 
-export interface DefaultKitItem {
-  id: number;
-  item: Article;
-}
 
-export interface DefaultKit {
-  id: number;
-  name: string;
-  description: string;
-  basePrice: number;
-  items: DefaultKitItem[];
-}
-
-export interface DefaultKitCreateRequest {
-  name: string;
-  description: string;
-  itemsIds?: number[];
-}
 
 export type IncidentType = "GENERAL" | "DAMAGED_ITEM";
 export type IncidentStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
@@ -382,6 +389,7 @@ export interface HeaderMenuSection {
   items: HeaderMenuItem[];
 }
 
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -404,6 +412,7 @@ export type RootStackParamList = {
   MyKitsHistory: undefined;
   KitDetail: { kitId: number };
   DefaultKits: undefined;
+  DefaultKitDetails: { kitId: number };
   EditDefaultKit: { kitId: number };
   UploadArticle: undefined;
   AdminUsers: undefined;
@@ -415,7 +424,7 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
-  DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
+  DefaultKitForm: { defaultKit?: DefaultKit; mode: "edit" | "create" };
   Commission: undefined;
   Wallet: undefined;
   WithdrawMoney: undefined;
@@ -423,8 +432,10 @@ export type RootStackParamList = {
   TrackingNotifications: undefined;
   AssignedKits: undefined;
   Couriers: undefined;
-  CourierDetail: { courier: UserResponse, isBusy?: boolean };
-  ArticleRentals: { articleId: number, articleTitle: string };
+  CourierDetail: { courier: UserResponse; isBusy?: boolean };
+  ArticleRentals: { articleId: number; articleTitle: string };
+  RgpdPolicy: undefined;
+  EditPolicy: undefined;
   PromoCodes: undefined;
   PromoCodeForm: { promoCode?: PromoCodeFormData; mode: 'create' | 'edit' };
   PilotUsers: undefined;
@@ -585,3 +596,5 @@ export interface ArticleNearby {
   cityLng: number;
   distanceKm: number;
 }
+
+export * from "./defaultKitTypes";

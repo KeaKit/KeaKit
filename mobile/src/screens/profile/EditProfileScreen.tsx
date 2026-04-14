@@ -6,17 +6,19 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Image,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
-import { updateProfile } from '../../services/userService';
+import { updateProfile, uploadProfileImage } from '../../services/userService';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
+import { ProfileImageWithBadge } from '../../components/ProfileImageWithBadge';
 
 type EditProfileNav = NativeStackNavigationProp<RootStackParamList, 'EditProfile'>;
 
@@ -72,6 +74,8 @@ const EditProfileScreen: React.FC = () => {
   } = useLocationPicker(profileUser?.country ?? '', profileUser?.city ?? '');
 
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
   const [errors, setErrors]   = useState<FieldErrors>({});
 
   const clearErrors = () => setErrors({});
@@ -79,6 +83,34 @@ const EditProfileScreen: React.FC = () => {
   const setField = (field: keyof ProfileData) => (value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     clearErrors();
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso denegado', 'Necesitamos acceso a tu galería para cambiar la foto.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.3,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      const maxSizeMB = 0.9;
+      const fileSizeMB = asset.fileSize ? asset.fileSize / (1024 * 1024) : 0;
+
+      if (fileSizeMB > maxSizeMB) {
+        Alert.alert('Imagen demasiado grande', `La imagen pesa ${fileSizeMB.toFixed(2)} MB. El límite es de ${maxSizeMB} MB.`);
+        return;
+      }
+
+      setProfileImageUri(asset.uri);
+    }
   };
 
   const handleSave = async () => {
@@ -97,6 +129,20 @@ const EditProfileScreen: React.FC = () => {
 
     try {
       setLoading(true);
+      
+      let finalProfileImageUrl = profileUser?.profileImageUrl; 
+
+      if (profileImageUri) {
+        setUploadingImage(true);
+        const response = await fetch(profileImageUri);
+        const blob = await response.blob();
+        const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+        
+        const imageResponse = await uploadProfileImage(file, user!.token);
+        finalProfileImageUrl = imageResponse.profileImageUrl;
+        setUploadingImage(false);
+      }
+
       const updatedUser = await updateProfile(profileUser!.id, {
         name:    form.name.trim(),
         phone:   form.phone.trim().replace(/\s/g, ''),
@@ -104,6 +150,7 @@ const EditProfileScreen: React.FC = () => {
         city:    selectedCity,
         country: selectedCountry,
       }, profileUser!.token);
+
       setUser({
         ...user!,
         name:    updatedUser.name,
@@ -111,12 +158,15 @@ const EditProfileScreen: React.FC = () => {
         address: updatedUser.address,
         city:    updatedUser.city,
         country: updatedUser.country,
+        profileImageUrl: finalProfileImageUrl, 
       });
+
       navigation.goBack();
     } catch (err: unknown) {
       setErrors(parseBackendError(err));
     } finally {
       setLoading(false);
+      setUploadingImage(false);
     }
   };
 
@@ -137,7 +187,16 @@ const EditProfileScreen: React.FC = () => {
         <Ionicons name="arrow-back" size={24} color="#103a57" />
       </TouchableOpacity>
 
-      <Image source={require('../../../assets/logo.png')} style={styles.logo} />
+      <View style={styles.avatarContainer}>
+        <ProfileImageWithBadge
+          imageUrl={profileImageUri || user?.profileImageUrl}
+          size={120}
+          founderBadge={user?.founderBadge || false}
+        />
+        <TouchableOpacity style={styles.cameraButton} onPress={pickImage} disabled={uploadingImage}>
+          <Ionicons name="camera" size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
       <Text style={styles.title}>Editar perfil</Text>
       <Text style={styles.subtitle}>{profileUser?.email}</Text>
@@ -218,14 +277,15 @@ const EditProfileScreen: React.FC = () => {
       )}
 
       <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
+        style={[styles.button, (loading || uploadingImage) && styles.buttonDisabled]}
         onPress={handleSave}
-        disabled={loading}
+        disabled={loading || uploadingImage}
       >
-        {loading
-          ? <ActivityIndicator color="#fff" />
-          : <Text style={styles.buttonText}>Guardar cambios</Text>
-        }
+        {(loading || uploadingImage) ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Guardar cambios</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
@@ -245,10 +305,22 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 8,
   },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 10,
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  cameraButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#103a57',
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   title: {
     fontSize: 24,

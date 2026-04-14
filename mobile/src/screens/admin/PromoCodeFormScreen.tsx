@@ -63,16 +63,22 @@ const PromoCodeFormScreen: React.FC = () => {
       valid = false;
     } else setCodeError('');
 
-    const num = parseFloat(discountStr);
-    if (isNaN(num) || num < 0 || num > 100) {
-      setDiscountError('El descuento debe estar entre 0 y 100');
+    const trimmedDiscount = discountStr.trim();
+    if (!/^\d+$/.test(trimmedDiscount)) {
+      setDiscountError('El descuento debe contener solo números enteros');
+      valid = false;
+    } else {
+      const num = Number(trimmedDiscount);
+      if (num < 0 || num > 100) {
+        setDiscountError('El descuento debe estar entre 0 y 100');
         valid = false;
-      } else if (!Number.isInteger(num) || discountStr.includes(',') || discountStr.includes('.')) {
-        setDiscountError('El descuento debe ser un número entero (sin decimales)');
-        valid = false;
-      } else setDiscountError('');
-      return valid;
-    };
+      } else {
+        setDiscountError('');
+      }
+    }
+
+    return valid;
+  };
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -100,9 +106,10 @@ const PromoCodeFormScreen: React.FC = () => {
     if (!validate() || !user?.token) return;
     setSaving(true);
     try {
+      const discountPercent = Number(discountStr.trim());
       const payload = {
         code: code.trim().toUpperCase(),
-        discountRate: parseFloat(discountStr) / 100,
+        discountRate: discountPercent / 100,
         active,
         singleUse,
         type: promoType,
@@ -176,7 +183,7 @@ const PromoCodeFormScreen: React.FC = () => {
                 onChangeText={t => { setDiscountStr(t); setDiscountError(''); }}
                 placeholder="Ej: 15"
                 placeholderTextColor="#aaa"
-                keyboardType="decimal-pad"
+                keyboardType="number-pad"
                 editable={!saving}
               />
               <View style={styles.percentBadge}>
