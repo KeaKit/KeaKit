@@ -35,6 +35,8 @@ const FadeIn: React.FC<{ delay?: number; children: React.ReactNode }> = ({ delay
 };
 
 const PromoCodeFormScreen: React.FC = () => {
+  const CODE_MAX_LENGTH = 10;
+
   const navigation = useNavigation<PromoCodeFormNav>();
   const route = useRoute<PromoCodeFormRoute>();
   const { user } = useAuth();
@@ -58,8 +60,12 @@ const PromoCodeFormScreen: React.FC = () => {
 
   const validate = (): boolean => {
     let valid = true;
-    if (!code.trim()) {
+    const normalizedCode = code.trim();
+    if (!normalizedCode) {
       setCodeError('El código es obligatorio');
+      valid = false;
+    } else if (normalizedCode.length > CODE_MAX_LENGTH) {
+      setCodeError(`El código no puede superar ${CODE_MAX_LENGTH} caracteres`);
       valid = false;
     } else setCodeError('');
 
@@ -167,12 +173,22 @@ const PromoCodeFormScreen: React.FC = () => {
             <TextInput
               style={[styles.input, !!codeError && styles.inputError]}
               value={code}
-              onChangeText={t => { setCode(t.toUpperCase()); setCodeError(''); }}
+              onChangeText={t => {
+                const nextCode = t.toUpperCase();
+                setCode(nextCode);
+
+                if (nextCode.trim().length > CODE_MAX_LENGTH) {
+                  setCodeError(`El código no puede superar ${CODE_MAX_LENGTH} caracteres`);
+                } else {
+                  setCodeError('');
+                }
+              }}
               placeholder="Ej: BIENVENIDA20"
               placeholderTextColor="#aaa"
               autoCapitalize="characters"
               editable={!saving}
             />
+            <Text style={styles.helperText}>Máximo {CODE_MAX_LENGTH} caracteres</Text>
             {!!codeError && <Text style={styles.errorText}>{codeError}</Text>}
 
             <Text style={[styles.cardTitle, { marginTop: 12 }]}>Porcentaje de descuento</Text>
@@ -422,6 +438,7 @@ const styles = StyleSheet.create({
     color: KC.blue,
   },
   errorText: { fontSize: 13, color: KC.error },
+  helperText: { fontSize: 12, color: KC.gray, marginTop: -4 },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   toggleInfo: { flex: 1, paddingRight: 12 },
   toggleLabel: { fontSize: 15, fontWeight: '700', color: KC.blueDark },

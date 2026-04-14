@@ -145,9 +145,9 @@ public class PromoCodeService {
         } else if (promoCode.isSingleUse()) {
             if (!promoCode.getUsedByEmails().isEmpty()) {
                 if (allowSingleUseIfReservedBySameUser && userEmail != null && !userEmail.isBlank()) {
-                    boolean reservedBySameUser = promoCode.getUsedByEmails().stream()
-                            .anyMatch(e -> e.equalsIgnoreCase(userEmail));
-                    if (reservedBySameUser) {
+                    boolean reservedExclusivelyBySameUser = promoCode.getUsedByEmails().stream()
+                            .allMatch(e -> e.equalsIgnoreCase(userEmail));
+                    if (reservedExclusivelyBySameUser) {
                         return new PromoCodeValidationResponse(true, promoCode.getDiscountRate(), "Código aplicado correctamente");
                     }
                 }
