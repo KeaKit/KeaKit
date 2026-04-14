@@ -1,7 +1,7 @@
 # Listado de Usuarios Piloto
 **Fecha del informe:** 24/03/2026
 **Fuente de datos:** Formulario de Captación Usuarios Piloto, Feedback Sprint 1
-**Muestra total analizada:** 24 usuarios
+**Muestra total analizada:** 31 usuarios
 
 ### Arrendatarios (Demanda)
 *Usuarios que buscan equipamiento.*
@@ -27,6 +27,11 @@
 | `**blocc2*****` | Erasmus |
 | `**art.mon*****` | Nómada |
 
+#### Tercera captación (Feedback sprint 2)
+| `**riseda6*****` | Erasmus |
+| `**aparren*****` | Nómada |
+| `**44137*****` | Erasmus |
+
 ### Arrendadores (Oferta)
 *Usuarios con objetos disponibles.*
 
@@ -51,3 +56,11 @@
 | :--- | :--- |
 | `**apafa*****​` | Práctico |
 | `**en2004*****​` | Eco-colaborador |
+
+#### Tercera captación (Feedback sprint 2)
+| `**ndomor*****​` | Eco-colaborador |  
+| `**liemusc*****​` | Eco-colaborador |  
+| `**seleg****​` | Eco-colaborador | 
+| `**enezguer*****​` | Eco-colaborador |  
+| `**cia.d.ga*****​` | Práctica |
+| `**uchogv*****​` | Eco-colaborador |
