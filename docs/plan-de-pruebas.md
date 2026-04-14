@@ -79,6 +79,41 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 - **Alcance por Módulos**: Todos los Casos de Uso (CU) descritos a continuación.
 
+### 6.1 CU-GENERAL-01 - Registro
+
+**Escenario:** Un usuario desea registrarse.
+
+- **Dado:** El usuario se encuentra en la pantalla inicial de inicio de sesión sin autenticarse y pulsa sobre "¿No tienes cuenta? Regístrate" y hay un usuario existente en la base de datos con email "tenant@example.com".
+
+- **Cuando:** Rellena el formulario con los datos de los casos de prueba y presiona el botón "Registrarse".
+
+- **Entonces:** El sistema debe crear la cuenta de usuario con rol "USER", crear un monedero, iniciar sesión y redirigir al usuario a la página principal en caso de éxito, o mostrar un mensaje de error en caso contrario.
+
+| **Caso de Prueba** | **Datos a introducir (Test Data)** | **Resultado Esperado** | **Reglas de Negocio Cubiertas** |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **P-01: Registro exitoso** | **Nombre completo:** "Peter Parker"<br><br>**Correo electrónico:** "peterparker@email.com"<br><br>**Teléfono:** "866434410"<br><br>**Dirección:** "Calle Ingram, 20"<br><br>**Contraseña:** "notspiderman1234"<br><br>**Repetir contraseña:** "notspiderman1234"<br><br>**País:** "Spain"<br><br>**Ciudad:** "Sevilla" | El sistema crea la cuenta de usuario con rol "USER", crea su monedero, inicia sesión y redirige al usuario a la página principal. | RN-USR-01<br>RN-USR-02<br>RN-USR-03<br>RN-USR-04<br>RN-USR-05<br>RN-USR-06<br>RN-USR-07<br>RN-USR-08<br>RN-USR-09<br>RN-USR-10<br>RN-USR-12<br>RN-USR-15<br>RN-SEG-01<br>RN-SEG-02<br>RN-SEG-06 |
+| **P-02: Fallo - Campos vacíos** | Cada uno de los campos obligatorios: sin rellenar | El sistema impide el registro y muestra un error indicando que los campos obligatorios se deben rellenar. | RN-USR-02<br>RN-USR-03<br>RN-USR-04<br>RN-USR-05<br>RN-USR-06<br>RN-USR-07<br>RN-USR-08 |
+| **P-03: Fallo - Email duplicado** | **Nombre completo:** "Bruce Wayne"<br><br>**Correo electrónico:** "tenant@example.com" (ya registrado)<br><br>**Teléfono:** "123456789"<br><br>**Dirección:** "Calle Gotham, 1"<br><br>**Contraseña:** "batman123"<br><br>**Repetir contraseña:** "batman123"<br><br>**País:** "Spain"<br><br>**Ciudad:** "Madrid" | El sistema impide el registro y muestra un error indicando que el email ya está en uso. | RN-USR-01 |
+| **P-04: Fallo - Email con formato inválido** | **Nombre completo:** "Clark Kent"<br><br>**Correo electrónico:** "clarkkentemail.com"<br><br>**Teléfono:** "987654321"<br><br>**Dirección:** "Calle Metropolis, 10"<br><br>**Contraseña:** "superman123"<br><br>**Repetir contraseña:** "superman123"<br><br>**País:** "Spain"<br><br>**Ciudad:** "Barcelona" | El sistema impide el registro y muestra un error indicando que el formato del correo no es válido. | RN-USR-02 |
+| **P-05: Fallo - Contraseña demasiado corta** | **Nombre completo:** "Diana Prince"<br><br>**Correo electrónico:** "diana@amazon.com"<br><br>**Teléfono:** "654321987"<br><br>**Dirección:** "Calle Themyscira, 8"<br><br>**Contraseña:** "123"<br><br>**Repetir contraseña:** "123"<br><br>**País:** "Spain"<br><br>**Ciudad:** "Valencia" | El sistema impide el registro y muestra un error indicando que la contraseña debe tener al menos 6 caracteres. | RN-USR-03 |
+
+### 6.1 CU-GENERAL-01 - Inicio de sesión
+
+**Escenario:** Un usuario desea iniciar sesión.
+
+- **Dado:** El usuario se encuentra en la pantalla inicial de inicio de sesión y hay un usuario existente en la base de datos con email "tenant@example.com" y contraseña "password123".
+
+- **Cuando:** Rellena el formulario con los datos de los casos de prueba y presiona el botón "Iniciar sesión".
+
+- **Entonces:** El sistema debe iniciar sesión y redirigir al usuario a la página principal en caso de éxito, o mostrar un mensaje de error en caso contrario.
+
+| **Caso de Prueba** | **Datos a introducir (Test Data)** | **Resultado Esperado** | **Reglas de Negocio Cubiertas** |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **P-01: Inicio de sesión exitoso** | **Correo electrónico:** "tenant@example.com"<br><br>**Contraseña:** "password123" | El sistema inicia sesión al usuario y le redirige a la página principal. | RN-USR-01<br>RN-USR-02<br>RN-USR-09<br>RN-SEG-01<br>RN-SEG-02<br>RN-SEG-03<br>RN-SEG-07 |
+| **P-02: Fallo - Campos vacíos** | Cada uno de los campos obligatorios: sin rellenar | El sistema impide el inicio de sesión y muestra un error indicando que los campos obligatorios se deben rellenar. | RN-USR-02<br>RN-USR-09 |
+| **P-03: Fallo - Correo no registrado** | **Correo electrónico:** "noexiste@email.com"<br><br>**Contraseña:** "password123" | El sistema impide el inicio de sesión y muestra un error indicando que no existe una cuenta con el correo indicado. | RN-USR-01<br>RN-USR-02<br>RN-SEG-01 |
+| **P-04: Fallo - Contraseña incorrecta** | **Correo electrónico:** "tenant@example.com"<br><br>**Contraseña:** "wrongpassword" | El sistema impide el inicio de sesión y muestra un error indicando que la contraseña es incorrecta. | RN-USR-09<br>RN-SEG-01<br>RN-SEG-06 |
+
 ### 6.1 CU-ARRENDADOR-01 - Subida de artículos
 
 **Escenario:** Un usuario sube un artículo.
