@@ -153,6 +153,9 @@ export const API_ROUTES = {
   // Article history
   GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`,
 
+  // Demand analysis
+  DEMAND_ANALYSIS_TOP: (limit?: number) =>
+    limit && limit > 0 ? `${BASE_URL}/api/demand-analysis/top?limit=${limit}` : `${BASE_URL}/api/demand-analysis/top`,
   // RGPD - Para usuarios autenticados
   RGPD_CHECK: `${BASE_URL}/api/rgpd/check`,
   RGPD_ACCEPT: `${BASE_URL}/api/rgpd/accept`,
