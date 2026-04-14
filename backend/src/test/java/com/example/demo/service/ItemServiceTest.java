@@ -1,0 +1,136 @@
+package com.example.demo.service;
+
+import com.example.demo.dto.ItemFilterResponseDTO;
+import com.example.demo.model.Article;
+import com.example.demo.model.ArticleCondition;
+import com.example.demo.model.ArticleStatus;
+import com.example.demo.model.Category;
+import com.example.demo.model.CategoryStatus;
+import com.example.demo.model.Item;
+import com.example.demo.model.ServiceItem;
+import com.example.demo.model.ServiceStatus;
+import com.example.demo.model.User;
+import com.example.demo.model.UserRole;
+import com.example.demo.repository.ItemRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class ItemServiceTest {
+
+    @Mock private ItemRepository itemRepository;
+    @Mock private DefaultKitService defaultKitService;
+
+    @InjectMocks
+    private ItemService itemService;
+
+    private User owner;
+    private Category category;
+
+    @BeforeEach
+    void setUp() {
+        owner = new User();
+        owner.setId(1L);
+        owner.setName("Owner");
+        owner.setEmail("owner@example.com");
+        owner.setPassword("pwdpwd");
+        owner.setRole(UserRole.USER);
+
+        category = new Category("Bricolaje", "Desc", 5.0, 500.0);
+        category.setId(1L);
+        category.setStatus(CategoryStatus.ACTIVE);
+    }
+
+    private Article makeArticle(Long id, ArticleCondition condition, ArticleStatus status, double price) {
+        Article article = new Article();
+        article.setId(id);
+        article.setTitle("Taladro");
+        article.setDescription("Un taladro potente");
+        article.setCity("Madrid");
+        article.setCountry("España");
+        article.setPricePerMonth(price);
+        article.setAvailableFrom(LocalDate.now().plusDays(1));
+        article.setAvailableUntil(LocalDate.now().plusDays(30));
+        article.setOwner(owner);
+        article.setCategory(category);
+        article.setCondition(condition);
+        article.setStatus(status);
+        article.setImageUrl("img.jpg");
+        return article;
+    }
+
+    private ServiceItem makeService(Long id, ServiceStatus status, double price) {
+        ServiceItem service = new ServiceItem();
+        service.setId(id);
+        service.setTitle("Montaje");
+        service.setDescription("Servicio de montaje");
+        service.setCity("Sevilla");
+        service.setCountry("España");
+        service.setPricePerMonth(price);
+        service.setAvailableFrom(LocalDate.now().plusDays(1));
+        service.setAvailableUntil(LocalDate.now().plusDays(30));
+        service.setOwner(owner);
+        service.setCategory(category);
+        service.setStatus(status);
+        return service;
+    }
+
+    @Test
+    void filterItemsForKit_withConditionAndPriceRange_returnsMappedResponse() {
+        List<Item> items = List.of(
+                makeArticle(1L, ArticleCondition.USED, ArticleStatus.AVAILABLE, 25.0),
+                makeService(2L, ServiceStatus.ACTIVE, 40.0)
+        );
+        Page<Item> page = new PageImpl<>(items, PageRequest.of(0, 10), items.size());
+
+        when(itemRepository.findAll(org.mockito.ArgumentMatchers.<Specification<Item>>any(), eq(PageRequest.of(0, 10)))).thenReturn(page);
+
+        ItemFilterResponseDTO result = itemService.filterItemsForKit(20.0, 50.0, null, null, null, "USED", 0, 10);
+
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent().get(0).getId()).isEqualTo(1L);
+        assertThat(result.getContent().get(0).getStatus()).isEqualTo("AVAILABLE");
+        assertThat(result.getContent().get(0).getCondition()).isEqualTo("USED");
+        assertThat(result.getContent().get(1).getId()).isEqualTo(2L);
+        assertThat(result.getContent().get(1).getStatus()).isEqualTo("ACTIVE");
+        assertThat(result.getContent().get(1).getCondition()).isNull();
+        assertThat(result.getPage()).isEqualTo(0);
+        assertThat(result.getSize()).isEqualTo(10);
+
+        verify(itemRepository).findAll(org.mockito.ArgumentMatchers.<Specification<Item>>any(), eq(PageRequest.of(0, 10)));
+    }
+
+    @Test
+    void filterItemsForKit_whenMinPriceIsGreaterThanMaxPrice_throws() {
+        assertThatThrownBy(() -> itemService.filterItemsForKit(60.0, 20.0, null, null, null, null, 0, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("minPrice cannot be greater than maxPrice");
+    }
+
+    @Test
+    void filterItemsForKit_whenConditionIsInvalid_throws() {
+        assertThatThrownBy(() -> itemService.filterItemsForKit(20.0, 50.0, null, null, null, "BROKEN", 0, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("condition must be one of: NEW, LIGHTLY_USED, USED, WORN");
+    }
+}
