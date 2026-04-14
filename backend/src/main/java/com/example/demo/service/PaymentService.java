@@ -106,6 +106,12 @@ public class PaymentService {
             throws ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
 
         KitResponse kit = kitService.findById(kitId);
+        
+        // Validar que el kit aún no ha sido pagado
+        if (kit.getStatus() != null && kit.getStatus() != com.example.demo.model.KitStatus.DRAFT) {
+            throw new RuntimeException("Kit is already payed.");
+        }
+        
         KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId, promoCode, userEmail);
 
         if (payWithWallet) {
