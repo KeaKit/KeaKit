@@ -9,6 +9,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { promoteService } from '../../services/servicesService';
 import { fetchAllCategories } from '../../services/categoryService';
+import { validatePromoCode } from '../../services/promoCodeService';
 import { ServicePayload, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
@@ -93,6 +94,7 @@ const PromoteServiceScreen: React.FC = () => {
   const [availableFrom, setAvailableFrom] = useState('');
   const [availableUntil, setAvailableUntil] = useState('');
   const [totalUnits, setTotalUnits] = useState('1');
+  const [ownerCommissionPromoCode, setOwnerCommissionPromoCode] = useState('');
 
   const {
     selectedCountry,
@@ -184,6 +186,22 @@ const PromoteServiceScreen: React.FC = () => {
 
     setLoading(true);
     try {
+      const trimmedOwnerPromoCode = ownerCommissionPromoCode.trim();
+      if (trimmedOwnerPromoCode && user.email) {
+        const ownerPromoValidation = await validatePromoCode(
+          user.token,
+          trimmedOwnerPromoCode,
+          user.email,
+          'OWNER_COMMISSION_REDUCTION',
+        );
+
+        if (!ownerPromoValidation.valid) {
+          showNotification(ownerPromoValidation.message || 'Código promocional no válido para arrendador', 'error');
+          setLoading(false);
+          return;
+        }
+      }
+
       const payload: ServicePayload = {
         title: title.trim(),
         description: description.trim(),
@@ -194,6 +212,7 @@ const PromoteServiceScreen: React.FC = () => {
         category: { id: selectedCategory!.id },
         status: 'ACTIVE',
         totalUnits: totalUnits ? Number(totalUnits) : 1,
+        ...(trimmedOwnerPromoCode && { ownerCommissionPromoCode: trimmedOwnerPromoCode }),
       };
 
       await promoteService(user.id, selectedCategory!.id, user.token, payload);
@@ -394,6 +413,17 @@ const PromoteServiceScreen: React.FC = () => {
               optional
               error={errors.totalUnits}
             />
+
+            <Field
+              label="Código promo de comisión"
+              value={ownerCommissionPromoCode}
+              onChange={(t) => setOwnerCommissionPromoCode(t.toUpperCase())}
+              placeholder="Ej: OWNER10"
+              optional
+            />
+            <Text style={styles.helperText}>
+              Opcional. Solo se aceptan códigos del tipo comisión para arrendadores.
+            </Text>
 
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Periodo de disponibilidad</Text>

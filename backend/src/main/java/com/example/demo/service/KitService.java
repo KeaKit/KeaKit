@@ -169,7 +169,7 @@ public class KitService {
 
         double discount = 0.0;
         if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
-            var validation = promoCodeService.validate(promoCode, userEmail);
+            var validation = promoCodeService.validateForTenantDiscount(promoCode, userEmail);
             if (validation.isValid()) {
                 discount = subtotalPrice * validation.getDiscountRate();
             }
@@ -201,7 +201,7 @@ public class KitService {
 
         double discount = 0.0;
         if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
-            var validation = promoCodeService.validate(promoCode, userEmail);
+            var validation = promoCodeService.validateForTenantDiscount(promoCode, userEmail);
             if (validation.isValid()) {
                 discount = subtotalPrice * validation.getDiscountRate();
             }
