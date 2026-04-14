@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
@@ -25,12 +25,13 @@ import {
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
-import { createKit } from "../../services/kitService";
+import { createKit, filterItemsForKit } from "../../services/kitService";
 import {
   getNearbyArticles,
   getArticlesForMap,
 } from "../../services/articleService";
 import { getCityCoordinates } from "../../services/cityService";
+import { fetchAllCategories } from "../../services/categoryService";
 import { processPaymentWithWallet } from "../../services";
 import { API_ROUTES } from "../../config/api";
 import {
@@ -39,6 +40,8 @@ import {
   KitStatus,
   ArticleNearby,
   KitPaymentDTO,
+  Category,
+  ArticleCondition,
 } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
@@ -80,8 +83,9 @@ type CatalogProduct = {
   itemType: "ARTICLE" | "SERVICE" | string;
   title: string;
   pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | "ACTIVE" | string;
   category?: string;
+  condition?: ArticleCondition | null;
   city?: string;
   ownerId: number;
   ownerName?: string;
@@ -96,9 +100,39 @@ type CatalogProduct = {
   cityLng?: number;
 };
 
+type CatalogFilterOverrides = {
+  showOnlyMyCity?: boolean;
+  selectedCategoryId?: string;
+  selectedCondition?: string;
+  minPrice?: string;
+  maxPrice?: string;
+};
+
+const CONDITION_OPTIONS = [
+  { label: "Cualquier estado", value: "" },
+  { label: "Nuevo", value: "NEW" },
+  { label: "Poco usado", value: "LIGHTLY_USED" },
+  { label: "Usado", value: "USED" },
+  { label: "Desgastado", value: "WORN" },
+];
+
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
+  const route = useRoute<any>();
   const { user } = useAuth();
+
+  const resetToMyKits = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: "Home" }, { name: "MyKits" }],
+      }),
+    );
+  };
+  
+  // Obtener kitToCreate de los parámetros de ruta
+  const kitToCreate : Partial<KitCreateRequest> | null = route.params?.kitToCreate;
+  const isEditable : boolean = route.params?.isEditable ?? true;
 
   const {
     selectedCountry,
@@ -110,6 +144,7 @@ const CreateKitScreen: React.FC = () => {
     onCountryChange,
   } = useLocationPicker();
 
+  
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -125,7 +160,11 @@ const CreateKitScreen: React.FC = () => {
   const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
 
   const [searchText, setSearchText] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
+  const [catalogCategories, setCatalogCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedCondition, setSelectedCondition] = useState("");
+  const [minPriceFilter, setMinPriceFilter] = useState("");
+  const [maxPriceFilter, setMaxPriceFilter] = useState("");
   const [showOnlyMyCity, setShowOnlyMyCity] = useState(false);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -141,8 +180,34 @@ const CreateKitScreen: React.FC = () => {
   const [targetCityCoords, setTargetCityCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
 
-  // Estado para saber si pagamos con wallet o con stripe
-  const [paymentType, setPaymentType] = useState<"WALLET" | "NORMAL">("NORMAL");
+  // Prerrellenado de campos inicial - usar useEffect
+  useEffect(() => {
+    if (kitToCreate) {
+      if (kitToCreate.name) setName(kitToCreate.name);
+      if (kitToCreate.itemSelections) {
+        const initialQuantities: Record<number, number> = {};
+        kitToCreate.itemSelections.forEach((selection: any) => {
+          initialQuantities[selection.itemId] = selection.quantity;
+        });
+        setSelectedQuantities(initialQuantities);
+      }
+    }
+  }, [kitToCreate]);
+
+  // Establecer país y ciudad del usuario cuando estén disponibles
+  useEffect(() => {
+    if (user?.country) {
+      setCountry(user.country);
+      void onCountryChange(user.country);
+    }
+
+    if (user?.city) {
+      setCity(user.city);
+
+      setSelectedCity(user.city);
+    }
+  }, []);
+
 
   useEffect(() => {
     if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
@@ -182,7 +247,29 @@ const CreateKitScreen: React.FC = () => {
     setErrors((prev) => ({ ...prev, [field]: undefined, general: undefined }));
   };
 
-  const loadCatalog = useCallback(async () => {
+  useEffect(() => {
+    if (!user?.token) return;
+
+    let cancelled = false;
+    const loadCategories = async () => {
+      try {
+        const data = await fetchAllCategories(user.token);
+        if (!cancelled) {
+          setCatalogCategories(data.filter((category) => category.status === "ACTIVE"));
+        }
+      } catch (error) {
+        console.warn("No se pudieron cargar las categorías del catálogo:", error);
+      }
+    };
+
+    void loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.token]);
+
+  const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
     if (!user?.token) {
       setAvailableProducts([]);
       setLoadingCatalog(false);
@@ -190,56 +277,71 @@ const CreateKitScreen: React.FC = () => {
       return;
     }
 
+    const nextShowOnlyMyCity = overrides?.showOnlyMyCity ?? showOnlyMyCity;
+    const nextSelectedCategoryId = overrides?.selectedCategoryId ?? selectedCategoryId;
+    const nextSelectedCondition = overrides?.selectedCondition ?? selectedCondition;
+    const nextMinPrice = overrides?.minPrice ?? minPriceFilter;
+    const nextMaxPrice = overrides?.maxPrice ?? maxPriceFilter;
+
     try {
       setLoadingCatalog(true);
 
-      const res = await fetch(API_ROUTES.ITEMS_FOR_RENT(user.id), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+      const response = await filterItemsForKit(
+        {
+          country: undefined,
+          city: nextShowOnlyMyCity && city.trim() ? city.trim() : undefined,
+          categoryId: nextSelectedCategoryId ? Number(nextSelectedCategoryId) : undefined,
+          condition: nextSelectedCondition
+            ? (nextSelectedCondition as ArticleCondition)
+            : undefined,
+          minPrice: nextMinPrice ? parseFloat(nextMinPrice) : undefined,
+          maxPrice: nextMaxPrice ? parseFloat(nextMaxPrice) : undefined,
+          page: 0,
+          size: 100,
         },
-      });
+        user.token,
+      );
 
-      const contentType = res.headers.get("content-type") || "";
-      const text = await res.text();
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-
-      if (!contentType.includes("application/json")) {
-        throw new Error(`Respuesta no JSON: ${text}`);
-      }
-
-      const raw = JSON.parse(text);
-
-      const mapped: CatalogProduct[] = (raw ?? []).map((p: any) => ({
+      const mapped: CatalogProduct[] = response.content.map((p) => ({
         id: Number(p.id),
         itemType: String(p.itemType ?? "ARTICLE"),
         title: p.title ?? "Sin título",
         pricePerMonth: Number(p.pricePerMonth ?? 0),
         status: String(p.status ?? "AVAILABLE"),
-        category: typeof p.category === "string" ? p.category : p.category?.name ?? "",
+        category: typeof p.category === "string" ? p.category : "",
+        condition: p.condition ?? null,
         city: p.city ?? "",
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
         imageUrl: p.imageUrl ?? null,
         totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
-        availableFrom: p.availableFrom ?? null,
-        availableUntil: p.availableUntil ?? null,
+        availableFrom: p.availableFrom ?? undefined,
+        availableUntil: p.availableUntil ?? undefined,
       }));
 
       setAvailableProducts(mapped);
       setErrors((prev) => ({ ...prev, general: undefined }));
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo cargar el catálogo.";
-      setErrors((prev) => ({ ...prev, general: message }));
+      if (message.toLowerCase().includes("no items found")) {
+        setErrors((prev) => ({ ...prev, general: undefined }));
+      } else {
+        setErrors((prev) => ({ ...prev, general: message }));
+      }
       setAvailableProducts([]);
     } finally {
       setLoadingCatalog(false);
     }
-  }, [user?.token, user?.id]);
+  }, [
+    city,
+    country,
+    maxPriceFilter,
+    minPriceFilter,
+    selectedCategoryId,
+    selectedCondition,
+    showOnlyMyCity,
+    user?.token,
+  ]);
 
   useEffect(() => {
     loadCatalog();
@@ -303,6 +405,7 @@ const CreateKitScreen: React.FC = () => {
       courierPrice: courier,
       totalPrice: total,
       discount: 0, // TODO: Añadir lógica de descuentos a esta pantalla si es necesario
+
     };
   }, [totalPrice, deliveryMethod]);
 
@@ -312,80 +415,44 @@ const CreateKitScreen: React.FC = () => {
     return totalPrice + guarantee + commission + courierPrice;
   }, [totalPrice, courierPrice]);
 
-  const categories = useMemo(() => {
-    const set = new Set(
-      availableProducts.map((p) => p.category?.trim()).filter((c): c is string => Boolean(c)),
-    );
-    return ["ALL", ...Array.from(set)];
-  }, [availableProducts]);
+  const categoryOptions = useMemo(
+    () => [
+      { label: "Todas las categorías", value: "" },
+      ...catalogCategories.map((category) => ({
+        label: category.name,
+        value: String(category.id),
+      })),
+    ],
+    [catalogCategories],
+  );
 
   const filteredProducts = useMemo(() => {
     const q = searchText.trim().toLowerCase();
-
-    const local = availableProducts.filter((p) => {
-      const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
-      const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
-      const byCity = !showOnlyMyCity || !city.trim() || (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
+    return availableProducts.filter((p) => {
+      const notInactive =
+        p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
       const bySearch =
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
         (p.city ?? "").toLowerCase().includes(q) ||
-        (p.category ?? "").toLowerCase().includes(q);
+        (p.category ?? "").toLowerCase().includes(q) ||
+        (p.ownerName ?? "").toLowerCase().includes(q) ||
+        (p.condition ?? "").toLowerCase().includes(q);
 
-      return notInactive && byCategory && byCity && bySearch;
+      return notInactive && bySearch;
     });
-
-    if (!expandedSearch || nearbyProducts.length === 0) return local;
-
-    const localIds = new Set(local.map((p) => p.id));
-    const nearby: CatalogProduct[] = nearbyProducts
-      .filter((p) => {
-        if (localIds.has(p.id)) return false;
-        const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
-        const bySearch =
-          q.length === 0 ||
-          p.title.toLowerCase().includes(q) ||
-          (p.city ?? "").toLowerCase().includes(q) ||
-          (p.category ?? "").toLowerCase().includes(q);
-        return byCategory && bySearch;
-      })
-      .map((p) => ({
-        id: p.id,
-        itemType: p.itemType,
-        title: p.title,
-        pricePerMonth: p.pricePerMonth,
-        status: p.status ?? "AVAILABLE",
-        category: p.category ?? undefined,
-        city: p.city,
-        ownerId: p.ownerId ?? 0,
-        ownerName: p.ownerName ?? undefined,
-        imageUrl: p.imageUrl,
-        totalUnits: p.totalUnits ?? 1,
-        availableFrom: p.availableFrom ?? undefined,
-        availableUntil: p.availableUntil ?? undefined,
-        distanceKm: p.distanceKm,
-        cityLat: p.cityLat,
-        cityLng: p.cityLng,
-      }));
-
-    return [...local, ...nearby];
   }, [
     availableProducts,
-    nearbyProducts,
     searchText,
-    categoryFilter,
-    showOnlyMyCity,
-    city,
-    expandedSearch,
   ]);
 
   const openAddProductModal = async () => {
-    await loadCatalog();
+    const useCityFilter = city.trim().length > 0;
+    setShowOnlyMyCity(useCityFilter);
+    await loadCatalog({ showOnlyMyCity: useCityFilter });
     setTempSelectedQuantities(selectedQuantities);
 
     setSearchText("");
-    setCategoryFilter("ALL");
-    setShowOnlyMyCity(city.trim().length > 0);
     setShowOnlyAvailable(true);
 
     // Cargar productos del mapa solo si el usuario está autenticado
@@ -402,6 +469,26 @@ const CreateKitScreen: React.FC = () => {
     }
 
     setCatalogModalVisible(true);
+  };
+
+  const handleApplyCatalogFilters = async () => {
+    await loadCatalog();
+  };
+
+  const handleClearCatalogFilters = async () => {
+    const resetCityFilter = city.trim().length > 0;
+    setSelectedCategoryId("");
+    setSelectedCondition("");
+    setMinPriceFilter("");
+    setMaxPriceFilter("");
+    setShowOnlyMyCity(resetCityFilter);
+    await loadCatalog({
+      selectedCategoryId: "",
+      selectedCondition: "",
+      minPrice: "",
+      maxPrice: "",
+      showOnlyMyCity: resetCityFilter,
+    });
   };
 
   const toggleTempSelection = (id: number) => {
@@ -427,6 +514,7 @@ const CreateKitScreen: React.FC = () => {
 
   const removeSelectedItem = (id: number) => {
     setSelectedQuantities((prev) => removeSelectedQuantity(prev, id));
+    setErrors((prev) => ({ ...prev, items: undefined, general: undefined }));
   };
 
   const changeSelectedQuantity = (id: number, nextQuantity: number, maxQuantity: number) => {
@@ -562,20 +650,7 @@ const CreateKitScreen: React.FC = () => {
         throw new Error("No se pudo crear el kit.");
       }
 
-      if (paymentType === "WALLET") {
-        // Multiplicamos por 100 para pasarlo a céntimos
-        const amountInCents = Math.round(finalPrice * 100);
-
-        await processPaymentWithWallet(
-          createdKit.id,
-          user.token,
-          amountInCents
-        );
-        
-        navigation.navigate("MyKits");
-      } else {
-        navigation.navigate("Checkout", { kitId: createdKit.id });
-      }
+      navigation.navigate("Checkout", { kitId: createdKit.id });
 
    } catch (err) {
       console.error("ERROR al procesar la creación/pago del kit:", err);
@@ -635,7 +710,7 @@ const CreateKitScreen: React.FC = () => {
             </TouchableOpacity>
 
             <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
-              Crea un Kit
+              {kitToCreate ? "Personaliza tu kit" : "Crea un kit"}
             </Text>
 
             {/* Mantener espacio a la derecha para centrar el título */}
@@ -908,6 +983,7 @@ const CreateKitScreen: React.FC = () => {
             <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
               Tus Productos
             </Text>
+            {isEditable && (
             <Button
               mode="contained"
               onPress={openAddProductModal}
@@ -915,8 +991,9 @@ const CreateKitScreen: React.FC = () => {
               compact
               style={{ borderRadius: 8 }}
             >
-              Añadir Producto
+              {selectedItemsCount > 0? "Añadir más productos":"Añadir producto"}
             </Button>
+            )}
           </View>
 
           <View style={createKitStyles.counterBadge}>
@@ -945,6 +1022,7 @@ const CreateKitScreen: React.FC = () => {
                 onIncrease={incrementSelectedQuantity}
                 onDecrease={decrementSelectedQuantity}
                 onRemove={removeSelectedItem}
+                isEditable={isEditable}
               />
             ))
           )}
@@ -978,31 +1056,14 @@ const CreateKitScreen: React.FC = () => {
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Ionicons name="wallet-outline" size={20} color={Colors.primary} />
-                <Text style={commonStyles.bodyPrimary}>Saldo en cartera</Text>
+                <Text style={commonStyles.body}>Saldo en cartera</Text>
               </View>
-              <Text style={[commonStyles.bodyPrimary, { fontWeight: "bold" }]}>
+              <Text style={[commonStyles.body, { fontWeight: "bold" }]}>
                 {walletBalance.toFixed(2)}€
               </Text>
             </View>
 
             {/* Botones de acción */}
-            <Button
-              mode="contained"
-              buttonColor={Colors.primary}
-              disabled={submitting || walletBalance < finalPrice || finalPrice === 0}
-              onPress={() => {
-                setPaymentType("WALLET");
-                setConfirmVisible(true);
-              }}
-              icon="wallet"
-              style={{ borderRadius: 8, marginBottom: 8 }}
-              contentStyle={{ paddingVertical: 8 }}
-            >
-              {walletBalance >= finalPrice
-                ? "Pagar con Cartera"
-                : "Saldo insuficiente en cartera"}
-            </Button>
-
             <Button
               mode="outlined"
               onPress={async () => {
@@ -1062,7 +1123,6 @@ const CreateKitScreen: React.FC = () => {
               mode="contained"
               onPress={() => {
                 setConfirmVisible(true);
-                setPaymentType("NORMAL");
               }}
               disabled={submitting}
               loading={submitting}
@@ -1080,9 +1140,19 @@ const CreateKitScreen: React.FC = () => {
           onDismiss={() => setCatalogModalVisible(false)}
           searchText={searchText}
           onSearchChange={setSearchText}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
-          categories={categories}
+          categoryOptions={categoryOptions}
+          selectedCategoryId={selectedCategoryId}
+          onCategoryChange={setSelectedCategoryId}
+          conditionOptions={CONDITION_OPTIONS}
+          selectedCondition={selectedCondition}
+          onConditionChange={setSelectedCondition}
+          minPrice={minPriceFilter}
+          maxPrice={maxPriceFilter}
+          onMinPriceChange={setMinPriceFilter}
+          onMaxPriceChange={setMaxPriceFilter}
+          onApplyFilters={handleApplyCatalogFilters}
+          onClearFilters={handleClearCatalogFilters}
+          filtersLoading={loadingCatalog}
           filteredProducts={filteredProducts}
           tempSelectedQuantities={tempSelectedQuantities}
           onToggleSelection={toggleTempSelection}

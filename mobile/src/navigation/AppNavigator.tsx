@@ -1,9 +1,11 @@
-// AppNavigator.tsx
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuth } from "../context/AuthContext";
+import { TrackingNotificationsProvider } from "../context/TrackingNotificationContext";
+import { RootStackParamList } from "../types";
+
 import { NotificationProvider } from "../components/NotificationContext";
 import MainLayout from "../components/MainLayout";
 
@@ -11,58 +13,78 @@ import MainLayout from "../components/MainLayout";
 import LoginScreen from "../screens/auth/LoginScreen";
 import RegisterScreen from "../screens/auth/RegisterScreen";
 
-// Main Screens (with Navbar)
+// Home
 import HomeScreen from "../screens/home/HomeScreen";
 import AdminHomeScreen from "../screens/admin/AdminHomeScreen";
+
+// Users and Profile
 import ProfileScreen from "../screens/profile/ProfileScreen";
-import MyArticlesScreen from "../screens/profile/MyArticlesScreen";
+import AdminUsersScreen from "../screens/admin/AdminUsersScreen";
+import EditProfileScreen from "../screens/profile/EditProfileScreen";
+import PilotUsersScreen from "../screens/admin/PilotUsersScreen";
+import AdminUserFormScreen from "../screens/admin/AdminUserFormScreen";
+
+// Kits
 import MyKitsScreen from "../screens/profile/MyKitsScreen";
-import MyServicesScreen from "../screens/service/MyServicesScreen";
+import MyKitsHistoryScreen from "../screens/kit/MyKitsHistoryScreen";
+import KitTrackingScreen from "../screens/kit/KitTrackingScreen";
+import KitDetailScreen from "../screens/kit/KitDetailScreen";
+import CreateKitScreen from "../screens/kit/CreateKitScreen";
+
+// Incidents
 import MyIncidentsScreen from "../screens/incidents/MyIncidentsScreen";
 import AdminIncidentsScreen from "../screens/admin/AdminIncidentsScreen";
+import CreateIncidentScreen from "../screens/incidents/CreateIncidentScreen";
+import IncidentDetailScreen from "../screens/incidents/IncidentDetailScreen";
+
+// Payment and Wallet
 import WalletScreen from "../screens/wallet/WalletScreen";
 import WithdrawMoneyScreen from "../screens/wallet/WithdrawMoneyScreen";
+import CheckoutScreen from "../screens/kit/CheckoutScreen";
+
+// Categories
 import CategoriesScreen from "../screens/category/CategoriesScreen";
-import AdminUsersScreen from "../screens/admin/AdminUsersScreen";
-import MyKitsHistoryScreen from "../screens/kit/MyKitsHistoryScreen";
+import CategoryFormScreen from "../screens/category/CategoryDetailsScreen";
+
+// Ratings
 import UserRatingsScreen from "../screens/ratings/UserRatingsScreen";
+import CreateRatingScreen from "../screens/ratings/CreateRatingScreen";
+
+// Commission
 import CommissionScreen from "../screens/commission/CommissionScreen";
 
-// Detail/Creation Screens (without Navbar)
-import EditProfileScreen from '../screens/profile/EditProfileScreen';
-import UploadArticleScreen from '../screens/profile/UploadArticleScreen';
-import CheckoutScreen from '../screens/kit/CheckoutScreen';
-import CreateRatingScreen from '../screens/ratings/CreateRatingScreen';
-import CreateKitScreen from '../screens/kit/CreateKitScreen';
+// Couriers
+import CouriersScreen from "../screens/admin/CouriersScreen";
+import CourierDetailScreen from "../screens/admin/CourierDetailScreen";
+import AssignedKitsScreen from "../screens/kit/AssignedKitsScreen";
 
-import DefaultKitFormScreen from '../screens/deafaultKit/admin/DefaultKitFormScreen';
-import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
-import EditArticleScreen from '../screens/profile/EditArticleScreen';
-import KitDetailScreen from '../screens/kit/KitDetailScreen';
-import CategoryFormScreen from '../screens/category/CategoryDetailsScreen';
-import CreateIncidentScreen from '../screens/incidents/CreateIncidentScreen';
-import IncidentDetailScreen from '../screens/incidents/IncidentDetailScreen';
-import CreateServiceScreen from '../screens/service/CreateServiceScreen';
-import EditServiceScreen from '../screens/service/EditServiceScreen';
-import KitTrackingScreen from '../screens/kit/KitTrackingScreen';
-import { TrackingNotificationsProvider } from '../context/TrackingNotificationContext';
-import TrackingNotificationsScreen from '../screens/notifications/TrackingNotificationsScreen';
-import AssignedKitsScreen from '../screens/kit/AssignedKitsScreen';
-import CouriersScreen from '../screens/admin/CouriersScreen';
-import CourierDetailScreen from '../screens/admin/CourierDetailScreen';
-import PromoCodesScreen from '../screens/admin/PromoCodesScreen';
-import PromoCodeFormScreen from '../screens/admin/PromoCodeFormScreen';
-import PilotUsersScreen from '../screens/admin/PilotUsersScreen';
+// Promo codes
+import PromoCodesScreen from "../screens/admin/PromoCodesScreen";
+import PromoCodeFormScreen from "../screens/admin/PromoCodeFormScreen";
+
+// Notifications
 import ActivityNotificationsScreen from "../screens/notifications/ActivityNotificationsScreen";
 import NotificationsScreen from "../screens/notifications/NotificationsScreen";
+import TrackingNotificationsScreen from "../screens/notifications/TrackingNotificationsScreen";
 
-import { RootStackParamList } from "../types";
+// Articles
+import MyArticlesScreen from "../screens/profile/MyArticlesScreen";
 import ArticleRentalsScreen from "../screens/article/ArticleRentalsScreen";
+import RgpdPolicyScreen from "../screens/legal/RgpdPolicyScreen";
+import EditPolicyScreen from "../screens/admin/EditPolicyScreen";
+import UploadArticleScreen from "../screens/profile/UploadArticleScreen";
+import EditArticleScreen from "../screens/profile/EditArticleScreen";
+
+// Services
+import MyServicesScreen from "../screens/service/MyServicesScreen";
+import CreateServiceScreen from "../screens/service/CreateServiceScreen";
+import EditServiceScreen from "../screens/service/EditServiceScreen";
+
 // Default kits
-import PurchaseDefaultKitScreen from '../screens/deafaultKit/tenant/PurchaseDefaultKitScreen';
-import EditDefaultKitScreen from '../screens/deafaultKit/tenant/EditDefaultKitScreen';
-import DefaultKitsScreen from "../screens/deafaultKit/tenant/DefaultKitsScreen";
-import DefaultKitsAdminScreen from "../screens/deafaultKit/admin/DefaultKitsAdminScreen";
+import DefaultKitsScreen from "../screens/defaultKit/tenant/DefaultKitsScreen";
+import DefaultKitFormScreen from "../screens/defaultKit/admin/DefaultKitFormScreen";
+import DefaultKitDetailScreen from "../screens/defaultKit/tenant/DefaultKitDetailsScreen";
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -77,6 +99,26 @@ const AppNavigator: React.FC = () => {
     );
   }
 
+  const withLayout = (Component: React.ComponentType<any>) => {
+    return () => (
+      <MainLayout>
+        <Component />
+      </MainLayout>
+    );
+  };
+
+  const withLayoutAndRole = (
+    AdminComponent: React.ComponentType<any>,
+    UserComponent: React.ComponentType<any>,
+    userRole: string,
+  ) => {
+    return () => (
+      <MainLayout>
+        {userRole === "ADMIN" ? <AdminComponent /> : <UserComponent />}
+      </MainLayout>
+    );
+  };
+
   return (
     <NotificationProvider>
       <TrackingNotificationsProvider>
@@ -84,164 +126,108 @@ const AppNavigator: React.FC = () => {
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             {user ? (
               <>
-                {/* === PANTALLAS PRINCIPALES (CON NAVBAR) === */}
-
-                {/* Home - Admin o User según rol */}
-                <Stack.Screen name="Home">
-                  {() => (
-                    <MainLayout>
-                      {user.role === "ADMIN" ? (
-                        <AdminHomeScreen />
-                      ) : (
-                        <HomeScreen />
-                      )}
-                    </MainLayout>
+                <Stack.Screen
+                  name="Home"
+                  component={withLayoutAndRole(
+                    AdminHomeScreen,
+                    HomeScreen,
+                    user.role,
                   )}
-                </Stack.Screen>
+                />
 
-                <Stack.Screen name="DefaultKits">
-                  {() => (
-                    <MainLayout>
-                      {user.role === "ADMIN" ? (
-                        <DefaultKitsAdminScreen />
-                      ) : (
-                        <DefaultKitsScreen />
-                      )}
-                    </MainLayout>
+                <Stack.Screen
+                  name="DefaultKits"
+                  component={withLayout(
+                    DefaultKitsScreen
                   )}
-                </Stack.Screen>
+                />
+                <Stack.Screen
+                  name="DefaultKitDetails"
+                  component={DefaultKitDetailScreen}
+                />
 
-                {/* Perfil y listados principales */}
-                <Stack.Screen name="Profile">
-                  {() => (
-                    <MainLayout>
-                      <ProfileScreen />
-                    </MainLayout>
-                  )}
-                </Stack.Screen>
+                <Stack.Screen
+                  name="Profile"
+                  component={withLayout(ProfileScreen)}
+                />
 
-                <Stack.Screen name="MyArticles">
-                  {() => (
-                    <MainLayout>
-                      <MyArticlesScreen />
-                    </MainLayout>
-                  )}
-                </Stack.Screen>
+                <Stack.Screen
+                  name="MyArticles"
+                  component={withLayout(MyArticlesScreen)}
+                />
 
-                <Stack.Screen name="ArticleRentals">
-                  {() => (
-                    <MainLayout>
-                      <ArticleRentalsScreen />
-                    </MainLayout>
-                  )}
-                </Stack.Screen>
+                <Stack.Screen
+                  name="ArticleRentals"
+                  component={withLayout(ArticleRentalsScreen)}
+                />
 
-                <Stack.Screen name="MyKits">
-                  {() => (
-                    <MainLayout>
-                      <MyKitsScreen />
-                    </MainLayout>
-                  )}
-                </Stack.Screen>
+                <Stack.Screen
+                  name="MyKits"
+                  component={withLayout(MyKitsScreen)}
+                />
 
-                <Stack.Screen name="MyServices">
-                  {() => (
-                    <MainLayout>
-                      <MyServicesScreen />
-                    </MainLayout>
-                  )}
-                </Stack.Screen>
+                <Stack.Screen
+                  name="MyServices"
+                  component={withLayout(MyServicesScreen)}
+                />
 
-                <Stack.Screen name="MyIncidents">
-                  {() => (
-                    <MainLayout>
-                      <MyIncidentsScreen />
-                    </MainLayout>
-                  )}
-                </Stack.Screen>
+                <Stack.Screen
+                  name="MyIncidents"
+                  component={withLayout(MyIncidentsScreen)}
+                />
 
-                <Stack.Screen name="MyKitsHistory">
-                  {() => (
-                    <MainLayout>
-                      <MyKitsHistoryScreen />
-                    </MainLayout>
-                  )}
-                </Stack.Screen>
+                <Stack.Screen
+                  name="MyKitsHistory"
+                  component={withLayout(MyKitsHistoryScreen)}
+                />
 
-                <Stack.Screen name="UserRatings">
-                  {() => (
-                    <MainLayout>
-                      <UserRatingsScreen />
-                    </MainLayout>
-                  )}
-                </Stack.Screen>
+                <Stack.Screen
+                  name="UserRatings"
+                  component={withLayout(UserRatingsScreen)}
+                />
 
-                <Stack.Screen name="Wallet">
-                  {() => (
-                    <MainLayout>
-                      <WalletScreen />
-                    </MainLayout>
-                  )}
-                </Stack.Screen>
+                <Stack.Screen
+                  name="Wallet"
+                  component={withLayout(WalletScreen)}
+                />
 
                 {/* Pantallas de administración */}
                 {user.role === "ADMIN" && (
                   <>
-                    <Stack.Screen name="AdminUsers">
-                      {() => (
-                        <MainLayout>
-                          <AdminUsersScreen />
-                        </MainLayout>
-                      )}
-                    </Stack.Screen>
+                    <Stack.Screen
+                      name="AdminUsers"
+                      component={withLayout(AdminUsersScreen)}
+                    />
 
-                    <Stack.Screen name="Categories">
-                      {() => (
-                        <MainLayout>
-                          <CategoriesScreen />
-                        </MainLayout>
-                      )}
-                    </Stack.Screen>
+                    <Stack.Screen
+                      name="Categories"
+                      component={withLayout(CategoriesScreen)}
+                    />
 
-                    <Stack.Screen name="Commission">
-                      {() => (
-                        <MainLayout>
-                          <CommissionScreen />
-                        </MainLayout>
-                      )}
-                    </Stack.Screen>
+                    <Stack.Screen
+                      name="Commission"
+                      component={withLayout(CommissionScreen)}
+                    />
 
-                    <Stack.Screen name="PilotUsers">
-                      {() => (
-                        <MainLayout>
-                          <PilotUsersScreen />
-                        </MainLayout>
-                      )}
-                    </Stack.Screen>
-                    
-                    <Stack.Screen name="PromoCodes">
-                      {() => (
-                        <MainLayout>
-                          <PromoCodesScreen />
-                        </MainLayout>
-                      )}
-                    </Stack.Screen>
+                    <Stack.Screen
+                      name="PilotUsers"
+                      component={withLayout(PilotUsersScreen)}
+                    />
 
-                    <Stack.Screen name="Couriers">
-                      {() => (
-                        <MainLayout>
-                          <CouriersScreen />
-                        </MainLayout>
-                      )}
-                    </Stack.Screen>
+                    <Stack.Screen
+                      name="PromoCodes"
+                      component={withLayout(PromoCodesScreen)}
+                    />
 
-                    <Stack.Screen name="AdminIncidents">
-                      {() => (
-                        <MainLayout>
-                          <AdminIncidentsScreen />
-                        </MainLayout>
-                      )}
-                    </Stack.Screen>
+                    <Stack.Screen
+                      name="Couriers"
+                      component={withLayout(CouriersScreen)}
+                    />
+
+                    <Stack.Screen
+                      name="AdminIncidents"
+                      component={withLayout(AdminIncidentsScreen)}
+                    />
                   </>
                 )}
 
@@ -278,14 +264,9 @@ const AppNavigator: React.FC = () => {
                 <Stack.Screen name="KitDetail" component={KitDetailScreen} />
                 <Stack.Screen name="Checkout" component={CheckoutScreen} />
                 <Stack.Screen
-                  name="EditDefaultKit"
-                  component={EditDefaultKitScreen}
-                />
-                <Stack.Screen
                   name="DefaultKitForm"
                   component={DefaultKitFormScreen}
                 />
-                <Stack.Screen name="PurchaseDefaultKit" component={PurchaseDefaultKitScreen} options={{ headerShown: false }} />
 
                 {/* Valoraciones */}
                 <Stack.Screen
@@ -316,12 +297,19 @@ const AppNavigator: React.FC = () => {
                   name="WithdrawMoney"
                   component={WithdrawMoneyScreen}
                 />
+                <Stack.Screen 
+                  name="EditPolicy" 
+                  component={EditPolicyScreen} 
+                />
 
                 {/*Tracking - Delivery*/}
 
                 <Stack.Screen name="Tracking" component={KitTrackingScreen} />
 
-                <Stack.Screen name="PromoCodeForm" component={PromoCodeFormScreen} />
+                <Stack.Screen
+                  name="PromoCodeForm"
+                  component={PromoCodeFormScreen}
+                />
 
                 <Stack.Screen
                   name="TrackingNotifications"
@@ -352,6 +340,7 @@ const AppNavigator: React.FC = () => {
               <>
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="RgpdPolicy" component={RgpdPolicyScreen} />
               </>
             )}
           </Stack.Navigator>

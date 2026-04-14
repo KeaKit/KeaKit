@@ -172,7 +172,7 @@ public class OrderConfirmationEmailService {
             StringBuilder itemsHtml = new StringBuilder();
             int rentalDays = 0;
             if (kit.getStartDate() != null && kit.getEndDate() != null) {
-                rentalDays = (int) ChronoUnit.DAYS.between(kit.getStartDate(), kit.getEndDate());
+                rentalDays = (int) (ChronoUnit.DAYS.between(kit.getStartDate(), kit.getEndDate()) + 1);
                 if (rentalDays <= 0) rentalDays = 1;
             }
             double prorationFactor = (rentalDays > 0) ? ((double) rentalDays) / 30.0 : 0.0;
@@ -220,11 +220,9 @@ public class OrderConfirmationEmailService {
             String deliveryMethodStr = kit.getDeliveryMethod() != null ? (kit.getDeliveryMethod() == com.example.demo.model.DeliveryMethod.COURIER ? "Envío por mensajería" : "Entrega en punto de encuentro") : "Pendiente de definir";
 
             double guaranteeRate = kit.getAppliedGuaranteeRate() != null ? kit.getAppliedGuaranteeRate() : 0.2;
-            double commissionRate = kit.getAppliedCommissionRate() != null ? kit.getAppliedCommissionRate() : 0.2;
             double guaranteeAmount = subtotalProrated * guaranteeRate;
-            double commissionAmount = subtotalProrated * commissionRate;
             double courier = kit.getCourierPrice() != null ? kit.getCourierPrice() : 0.0;
-            double totalEstimated = subtotalProrated + guaranteeAmount + commissionAmount + courier - (discountAmount != null ? discountAmount : 0.0);
+            double totalEstimated = subtotalProrated + guaranteeAmount + courier - (discountAmount != null ? discountAmount : 0.0);
 
             return template
                 .replace("{{tenantName}}", safeValue(tenantName))
@@ -242,8 +240,6 @@ public class OrderConfirmationEmailService {
                 .replace("{{itemsRows}}", itemsHtml.toString())
                 .replace("{{subtotalPrice}}", formatCurrency(subtotalProrated, "-"))
                 .replace("{{guaranteePrice}}", formatCurrency(guaranteeAmount, "-"))
-                .replace("{{platformFee}}", formatCurrency(commissionAmount, "-"))
-                .replace("{{comissionPercent}}", (int)(commissionRate * 100) + "%")
                 .replace("{{guaranteePercent}}", (int)(guaranteeRate * 100) + "%")
                 .replace("{{discountRow}}", buildDiscountRow(discountAmount, promoCode));
         } catch (IOException ex) {

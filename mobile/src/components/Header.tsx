@@ -1,7 +1,7 @@
 import React from 'react';
 import { Appbar } from 'react-native-paper';
 import { StyleSheet, View } from 'react-native';
-import { Colors } from '../styles/theme';
+import { Colors, Shadows } from '../styles/theme';
 
 interface HeaderProps {
   title: string;
@@ -42,10 +42,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
     elevation: 0,
-    shadowColor: Colors.shadowColor,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    ...Shadows.header,
     zIndex: 10,
     minHeight: 80,
   },

@@ -52,9 +52,9 @@ public class ItemService {
 
         Page<ItemCatalogResponse> resultPage = itemRepository.findAll(spec, pageable).map(this::toCatalogResponse);
 
-        if (resultPage.isEmpty()) {
-            throw new ResourceNotFoundException("No items found for the provided filters");
-        }
+        // if (resultPage.isEmpty()) {
+        //     throw new ResourceNotFoundException("No items found for the provided filters");
+        // }
 
         return new ItemFilterResponseDTO(
                 resultPage.getContent(),

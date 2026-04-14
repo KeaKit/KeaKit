@@ -28,10 +28,8 @@ import {
   markNotificationRead,
 } from "../../services/notificationService";
 
-type NotificationsNav = NativeStackNavigationProp<
-  RootStackParamList,
-  "Notifications"
->;
+// Cambiamos el tipo para poder navegar a cualquier pantalla de las notificaciones
+type NotificationsNav = NativeStackNavigationProp<RootStackParamList>;
 
 const formatDateTime = (value: string): string => {
   const date = new Date(value);
@@ -78,28 +76,26 @@ const NotificationsScreen: React.FC = () => {
   };
 
   const handleCheckNotification = async (notificationId: number) => {
-  if (!user?.token) return;
+    if (!user?.token) return;
 
-  try {
- 
-    const response = await fetch(`http://localhost:8080/api/notifications/${notificationId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${user.token}`,
-      },
-    });
+    try {
+      const response = await fetch(`http://localhost:8080/api/notifications/${notificationId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+        },
+      });
 
-    if (response.ok) {
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      console.log("Notificación eliminada de la BD y la lista");
-    } else {
-      console.error("Error al eliminar: ", response.status);
+      if (response.ok) {
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        console.log("Notificación eliminada de la BD y la lista");
+      } else {
+        console.error("Error al eliminar: ", response.status);
+      }
+    } catch (error) {
+      console.error("Error al quitar la notificación:", error);
     }
-  } catch (error) {
-    console.error("Error al quitar la notificación:", error);
-  }
-};
-
+  };
 
   const markAllRead = async () => {
     if (!user?.token || unreadIds.length === 0) return;
@@ -165,6 +161,26 @@ const NotificationsScreen: React.FC = () => {
   return (
     <SafeAreaView style={commonStyles.container}>
 
+      {/* NUEVO: APARTADOS PARA REDIRIGIR (Pestañas/Botones) */}
+      <View style={styles.navigationRow}>
+        <TouchableOpacity 
+          style={styles.navButton} 
+          onPress={() => navigation.navigate("ActivityNotifications")}
+        >
+          <Ionicons name="notifications-outline" size={20} color={Colors.primary} />
+          <Text style={styles.navButtonText}>Actividad</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.navButton} 
+          onPress={() => navigation.navigate("TrackingNotifications")}
+        >
+          <Ionicons name="cube-outline" size={20} color={Colors.primary} />
+          <Text style={styles.navButtonText}>Seguimiento</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* CONTENIDO DE LA LISTA */}
       {loading ? (
         <View style={styles.centerContent}>
           <ActivityIndicator color={Colors.primary} />
@@ -202,6 +218,36 @@ const styles = StyleSheet.create({
     fontWeight: FontWeights.bold,
     color: Colors.textPrimary,
   },
+  
+  // --- NUEVOS ESTILOS PARA LOS APARTADOS ---
+  navigationRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: '#fff',
+  },
+  navButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.backgroundWhite,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    gap: 8,
+  },
+  navButtonText: {
+    color: Colors.primary,
+    fontWeight: FontWeights.semibold,
+    fontSize: FontSizes.sm,
+  },
+  // ------------------------------------------
+
   centerContent: {
     flex: 1,
     justifyContent: "center",
