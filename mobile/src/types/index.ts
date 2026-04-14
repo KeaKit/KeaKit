@@ -370,6 +370,15 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
+export interface DemandAnalysisItem {
+  itemId: number;
+  title: string;
+  categoryName: string;
+  imageUrl: string | null;
+  totalTimesRented: number;
+  totalUnitsRented: number;
+}
+
 export type NavbarScreen =
   | "Home"
   | "Profile"
