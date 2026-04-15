@@ -51,7 +51,10 @@
 | [#569](https://github.com/KeaKit/KeaKit/issues/569) | Despliegue del backend de la aplicación sprint 3 | High | 4 | Done | Guillermo Ciria González | 
 | [#572](https://github.com/KeaKit/KeaKit/issues/572) | Despliegue del frontend de la aplicación sprint 3 | High | 4 | Done | Guillermo Ciria González | 
 | [#573](https://github.com/KeaKit/KeaKit/issues/573) | Arreglo de los scripts de CD para la nueva entrega | Mid | 2 | Done | Guillermo Ciria González | 
-| [#615](https://github.com/KeaKit/KeaKit/issues/612) | Ampliar seeder con Kits para Valorar | High | 1 | Done | Alejandro González Macías | 
+| [#615](https://github.com/KeaKit/KeaKit/issues/615) | Ampliar seeder con Kits para Valorar | High | 1 | Done | Alejandro González Macías | 
+| [#483](https://github.com/KeaKit/KeaKit/issues/483) | [BUG] A la hora de confirmar recepción de kit devuelve error CORS | High | 0.5 | Done | Alejandro González Macías | 
+| [#619](https://github.com/KeaKit/KeaKit/issues/619) | [BUG] Error cuando un arrendador intenta valorar a un arrendatario | High | 1 | Done | Alejandro González Macías | 
+| [#542](https://github.com/KeaKit/KeaKit/issues/542) | [BUG] Puedo confirmar recepción del Kit sin ser dueño del Kit | High | 0.5 | Done | Alejandro González Macías | 
 
 
 ## 5. Resumen carga de trabajo
@@ -59,22 +62,23 @@
 | Responsable       | SP - Semana 1|  SP - Semana 2| **TOTAL** |
 |-------------------|------------------------|------------------------|------------------------|
 | Adrián Chabrera Rubio |  8 SP | 6 SP | 14 SP                                          
-| Alejandro González Macías | 6 SP | 4 SP  | 10 SP                   
+| Alejandro González Macías | 6 SP | 6 SP  | 12 SP                   
 | Guillermo Ciria González | 3 SP | 10 SP | 13 SP                   
 | Marta De la Calle González | 4 SP | 0 SP| 4 SP              
 | Rafael Harana Mancilla | 4 SP | 0 SP | 4 SP                  
-| **TOTAL EQUIPO**   | **25 SP**        | **20 SP**   |   **45 SP**  | 
+| **TOTAL EQUIPO**   | **25 SP**        | **22 SP**   |   **47 SP**  | 
 
 ## 6. Historial de versiones
 
 | Versión | Fecha | Descripción  | Autor(es)                  |
 |---------|-------------|--------------------------------|----------------------------|
 | 1.0.0   | 09/04/2026  |  Sprint Backlog Semana 1   | Adrián Chabrera Rubio |
-| 2.0.0 | 14/04/2026 | Sprint Backlog Semana 2 | Adrián Chabrera Rubio
+| 2.0.0 | 14/04/2026 | Sprint Backlog Semana 2 | Adrián Chabrera Rubio |
+| 2.0.1 | 15/04/2026 | Añadidos bugs solucionados en el sprint 3 | Adrián Chabrera Rubio
 
 ---
 **Redactado por:** Adrián Chabrera Rubio
 
 **Fecha de redacción:** 09/04/2026  
 
-**Versión:** 2.0.0
+**Versión:** 2.0.1
