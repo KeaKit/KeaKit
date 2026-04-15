@@ -404,6 +404,8 @@
 
 - Add user verification to confirm kit ([cfd96b5](https://github.com/KeaKit/KeaKit/commit/cfd96b54e37064e35d8ed7d7e0c4360d8ac59245))
 
+- Add code to service creation ([92bb2c8](https://github.com/KeaKit/KeaKit/commit/92bb2c864a0ad854ed1711b691f2f31224091246))
+
 
 ### Docs
 
