@@ -232,7 +232,7 @@ public class PaymentServiceTest {
         NotEnoughBalanceException exception = assertThrows(NotEnoughBalanceException.class,
                 () -> paymentService.processPayment(KIT_ID, true));
 
-        assertThat(exception.getMessage()).contains("Not enough balance");
+    assertThat(exception.getMessage()).contains("Saldo insuficiente");
     }
 
 
@@ -371,7 +371,7 @@ public class PaymentServiceTest {
         NotEnoughBalanceException ex = assertThrows(NotEnoughBalanceException.class,
                 () -> paymentService.withdrawToBank(TENANT.getId(), amount, bankAccount));
 
-        assertThat(ex.getMessage()).contains("Not enough balance");
+    assertThat(ex.getMessage()).contains("Saldo insuficiente");
         verify(paymentService, never()).createStripePayout(any());
         verify(walletService, never()).updateWalletBalance(anyLong(), any());
     }

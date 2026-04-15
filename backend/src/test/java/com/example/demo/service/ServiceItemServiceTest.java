@@ -144,7 +144,7 @@ class ServiceItemServiceTest {
         when(serviceRepository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> serviceItemService.findById(99L));
-        assertThat(ex.getMessage()).contains("Service not found");
+    assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
 
@@ -198,7 +198,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 99L, 1L));
-        assertThat(ex.getMessage()).contains("User not found");
+        assertThat(ex.getMessage()).contains("Usuario no encontrado");
     }
 
     @Test
@@ -209,7 +209,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 99L));
-        assertThat(ex.getMessage()).contains("Category not found");
+        assertThat(ex.getMessage()).contains("Categoría no encontrada");
     }
 
     @Test
@@ -219,7 +219,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Title is required");
+        assertThat(ex.getMessage()).contains("Título requerido");
     }
 
     @Test
@@ -229,7 +229,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Title is required");
+        assertThat(ex.getMessage()).contains("Título requerido");
     }
 
     @Test
@@ -239,7 +239,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("City is required");
+        assertThat(ex.getMessage()).contains("Ciudad requerida");
     }
 
     @Test
@@ -249,7 +249,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("City is required");
+        assertThat(ex.getMessage()).contains("Ciudad requerida");
     }
 
     @Test
@@ -259,7 +259,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Monthly price must be positive");
+        assertThat(ex.getMessage()).contains("El precio mensual debe ser positivo");
     }
 
     @Test
@@ -269,7 +269,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Monthly price must be positive");
+        assertThat(ex.getMessage()).contains("El precio mensual debe ser positivo");
     }
 
     @Test
@@ -279,7 +279,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Monthly price must be positive");
+        assertThat(ex.getMessage()).contains("El precio mensual debe ser positivo");
     }
 
     @Test
@@ -290,7 +290,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("You must specify the date range");
+        assertThat(ex.getMessage()).contains("Debes especificar el rango de fechas");
     }
 
     @Test
@@ -300,7 +300,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Start date cannot be in the past");
+        assertThat(ex.getMessage()).contains("La fecha de inicio no puede ser en el pasado");
     }
 
     @Test
@@ -311,7 +311,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("End date must be after the start date");
+        assertThat(ex.getMessage()).contains("La fecha de finalización debe ser después de la fecha de inicio");
     }
 
     @Test
@@ -323,7 +323,7 @@ class ServiceItemServiceTest {
         newService.setAvailableUntil(LocalDate.now().minusDays(1));
         assertThatThrownBy(() -> serviceItemService.createAndPromote(newService, 1L, 1L))
             .isInstanceOf(RuntimeException.class)
-            .hasMessage("End date must be after the start date");
+            .hasMessage("La fecha de finalización debe ser después de la fecha de inicio");
     }
 
 
@@ -368,7 +368,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(99L, 1L, new ServiceItem()));
-        assertThat(ex.getMessage()).contains("Service not found");
+        assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
     @Test
@@ -381,7 +381,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(2L, 1L, new ServiceItem()));
-        assertThat(ex.getMessage()).contains("Only the owner can modify this service");
+        assertThat(ex.getMessage()).contains("Solo el propietario puede modificar este servicio");
     }
 
     @Test
@@ -391,7 +391,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(3L, 1L, new ServiceItem()));
-        assertThat(ex.getMessage()).contains("currently rented and cannot be modified");
+        assertThat(ex.getMessage()).contains("alquilado y no puede ser modificado");
     }
 
     @Test
@@ -429,7 +429,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(1L, 1L, updateData));
-        assertThat(ex.getMessage()).contains("Service status can only be ACTIVE or DRAFT");
+        assertThat(ex.getMessage()).contains("El estado del servicio solo puede ser ACTIVE o DRAFT");
     }
 
     @Test
@@ -455,7 +455,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(1L, 1L, updateData));
-        assertThat(ex.getMessage()).contains("Start date cannot be in the past");
+        assertThat(ex.getMessage()).contains("La fecha de inicio no puede ser en el pasado");
     }
 
     @Test
@@ -468,7 +468,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(1L, 1L, updateData));
-        assertThat(ex.getMessage()).contains("End date must be after the start date");
+        assertThat(ex.getMessage()).contains("La fecha de finalización debe ser después de la fecha de inicio");
     }
 
     @Test
@@ -518,7 +518,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.requestService(99L));
-        assertThat(ex.getMessage()).contains("Service not found");
+        assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
     @Test
@@ -528,7 +528,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.requestService(2L));
-        assertThat(ex.getMessage()).contains("The service is not active and cannot be requested");
+        assertThat(ex.getMessage()).contains("El servicio no está activo y no puede ser solicitado");
     }
 
     @Test
@@ -538,7 +538,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.requestService(3L));
-        assertThat(ex.getMessage()).contains("The service is not active and cannot be requested");
+        assertThat(ex.getMessage()).contains("El servicio no está activo y no puede ser solicitado");
     }
 
 
@@ -574,7 +574,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.releaseService(99L));
-        assertThat(ex.getMessage()).contains("Service not found");
+        assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
     @Test
@@ -606,7 +606,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.delete(99L, 1L));
-        assertThat(ex.getMessage()).contains("Service not found");
+        assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
     @Test
@@ -619,7 +619,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.delete(2L, 1L));
-        assertThat(ex.getMessage()).contains("You do not have permission to delete this service");
+        assertThat(ex.getMessage()).contains("No tienes permiso para eliminar este servicio");
     }
 
     @Test
@@ -629,7 +629,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.delete(3L, 1L));
-        assertThat(ex.getMessage()).contains("The service is currently rented and cannot be deleted");
+        assertThat(ex.getMessage()).contains("El servicio está actualmente alquilado y no puede ser eliminado");
     }
 
     @Test
