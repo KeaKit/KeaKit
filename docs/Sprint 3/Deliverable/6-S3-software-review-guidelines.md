@@ -36,6 +36,9 @@
 * **CU-ADMIN-06** – Creación kits predeterminados: Permite diseñar packs de artículos sugeridos para facilitar la experiencia de alquiler al usuario.
 * <ins>**CU-ADMIN-07** – Sistema de recompensas para usuarios piloto: Define y gestiona las reglas de asignación de descuentos para los usuarios piloto que rellenen una serie de encuestas.</ins>
 
+## Fallos y mejoras identificados por los PUG
+* Se ha detectado un error en el algoritmo de cálculo de descuentos para los usuarios piloto dentro del  **CU-ADMIN-07** (Sistema de recompensas para usuarios piloto). Dicha incidencia ha sido identificada y categorizada para su resolución, con el compromiso de ser subsanada antes de la entrega final del proyecto.
+
 
 ## Datos necesarios
 Para realizar las pruebas de inicio de sesión, se pueden utilizar las siguientes credenciales:
