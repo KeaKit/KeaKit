@@ -376,52 +376,6 @@ public class DatabaseSeeder {
             droneKit.setSnapshots(List.of(snapDrone));
             kitRepo.save(droneKit);
 
-            Kit gamingKit = new Kit();
-            gamingKit.setName("Pack Gaming Weekend");
-            gamingKit.setTenant(tenant);
-            gamingKit.setStatus(KitStatus.PAID);
-            gamingKit.setDeliveryMethod(DeliveryMethod.COURIER);
-            gamingKit.setStartDate(LocalDate.now());
-            gamingKit.setEndDate(LocalDate.now().plusDays(6));
-            gamingKit.setCountry("Spain");
-            gamingKit.setCity("Sevilla");
-            kitRepo.save(gamingKit);
-
-            ItemMemento snapGaming = laptop.createSnapshot(
-                1, 
-                gamingKit.getDeliveryMethod(), 
-                gamingKit.getCourierPrice(),
-                null
-            );
-            snapGaming.setKit(gamingKit);
-            snapGaming.setPriceAtRental(laptop.getPricePerMonth());
-            
-            gamingKit.setSnapshots(List.of(snapGaming));
-            kitRepo.save(gamingKit);
-
-            Kit nightSkyKit = new Kit();
-            nightSkyKit.setName("Pack Nocturno Pro");
-            nightSkyKit.setTenant(tenant);
-            nightSkyKit.setStatus(KitStatus.PAID);
-            nightSkyKit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
-            nightSkyKit.setMeetingPoint("Mirador de la Cornisa, Sevilla");
-            nightSkyKit.setStartDate(LocalDate.now());
-            nightSkyKit.setEndDate(LocalDate.now().plusDays(7));
-            nightSkyKit.setCountry("Spain");
-            nightSkyKit.setCity("Sevilla");
-            kitRepo.save(nightSkyKit);
-
-            ItemMemento snapCamPaid = camara.createSnapshot(1, nightSkyKit.getDeliveryMethod(), 0.0, nightSkyKit.getMeetingPoint());
-            snapCamPaid.setKit(nightSkyKit);
-            snapCamPaid.setPriceAtRental(camara.getPricePerMonth());
-
-            ItemMemento snapDronePaid = dron.createSnapshot(1, nightSkyKit.getDeliveryMethod(), 0.0, nightSkyKit.getMeetingPoint());
-            snapDronePaid.setKit(nightSkyKit);
-            snapDronePaid.setPriceAtRental(dron.getPricePerMonth());
-
-            nightSkyKit.setSnapshots(List.of(snapCamPaid, snapDronePaid));
-            kitRepo.save(nightSkyKit);
-
             // ==========================================
             // 7.2 Kit Predeterminado para el Catálogo (FIX REAL)
             // ==========================================
