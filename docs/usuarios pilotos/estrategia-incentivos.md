@@ -43,11 +43,16 @@ A continuación se detalla cómo estas ventajas intentan resolver las frustracio
 ---
 
 ## 3. PLAN DE EXPANSIÓN Y MARKETING PARA CAPTACIÓN DE USUARIOS PILOTO
-Este plan define las acciones concretas de difusión y comunicación para captar usuarios piloto, aprovechando los canales digitales disponibles (Instagram, LinkedIn, WhatsApp y otras plataformas de mensajería) y vinculando cada acción a los incentivos reales definidos en este documento para llegar a las cifras de usuarios piloto deseadas estipuladas en el documento de gestión de los mismos.
+Este plan define las acciones concretas de difusión y comunicación para captar usuarios piloto, aprovechando los canales digitales disponibles (Instagram, LinkedIn, WhatsApp y otras plataformas de mensajería) y vinculando cada acción a los incentivos reales definidos en este documento para llegar a las cifras de usuarios piloto deseadas estipuladas en el documento de gestión de los mismos. Con esto, se pretende llegar al público para tener una base sólida de clientes que sirva en el momento de lanzar la aplicación al público general.
+
+Se distinguen dos fases de trabajo principales. La primera es aquella que comprende la Fase DP, Sprint 1, Sprint 2 y Sprint 3. Se trata de una primera toma de contacto donde se realizan las tareas indispensables para dar a conocer a la aplicación y su utilidad, así como al equipo de KeaKit.
+
+Una vez pasado el Sprint 3, donde la aplicación ya es existente y funcional, se pasa a la siguiente fase, donde se intensifican los esfuerzos y se lleva un seguimiento más exhaustivo de las publicaciones, su alcance y su impacto. 
+
+A continuación, se detalla la idea de funcionamiento por cada canal, definiendo el estilo de publicaciones a seguir y el público al que van dirigidas.
 
 ### 3.1. Estrategia por canal
 
-#### A. Instagram (@keakit_)
 **Público objetivo principal:** Estudiantes Erasmus, jóvenes en prácticas y nómadas digitales.  
 **Tono:** Cercano, visual y anclado en el humor para conectar con una audiencia joven.
 
@@ -90,6 +95,14 @@ Este plan define las acciones concretas de difusión y comunicación para captar
 * **Seguimiento personalizado:**
     - Mensajes de seguimiento individuales a personas que hayan mostrado interés pero no hayan completado la inscripción.
 
+#### D. X (Anteriormente Twitter)
+
+**Público objetivo:** Estudiantes Erasmus, jóvenes en prácticas y nómadas digitales.
+**Tono:** Informal, en clave de humor. Acorde a las tendencias que se lleven en Internet en el momento de la publicación, pero sin ser políticamente incorrectos.
+
+* **Contenido humorístico / viral:**
+    - No se explicará directamente el funcionamiento de KeaKit, sino que se harán publicaciones cortas pero frecuentes en clave de humor que lo referencien.
+
 ### 3.2. Captación dirigida por perfil de usuario
 
 #### Arrendatarios
@@ -116,8 +129,44 @@ Para evaluar la efectividad de las acciones de marketing, se monitorizarán:
 
 * **Tasa de inscripción:** Número de nuevos usuarios piloto registrados por semana y canal de origen.
 * **Tasa de respuesta a encuestas:** Porcentaje de respuestas obtenidas en las encuestas difundidas por mensajería.
-* **Engagement en redes:** Interacciones (likes, comentarios, compartidos, guardados) en publicaciones de Instagram y LinkedIn.
-* **Conversión por incentivo:** Cuántos usuarios mencionan un incentivo concreto como motivo de inscripción.
+* **Engagement en redes:** Interacciones (likes, comentarios, compartidos, guardados) en publicaciones de Instagram, LinkedIn y X.
+
+### 3.4. Planificación por etapas
+
+Como se mencionó anteriormente, el trabajo se reparte en dos fases, siendo la primera una toma de contacto, y la segunda, que tendrá un producto ya funcional que enseñar al público y donde se intensificarán los esfuerzos para hacerlo llegar al mayor número posible de personas.
+
+#### Primera fase (DP, S1, S2, S3)
+
+Esta fase comenzará el 05/02/2026 con la etapa Devising a project (DP), seguida por los Sprints 1, 2 y 3 y finalizando el 16/04/2026. Durante el grueso del desarrollo de la aplicación, las redes sociales tendrán un papel secundario aunque presente. Se inicializarán las cuentas de correo, Instagram y LinkedIn y se harán publicaciones donde el público pueda conocer la existencia de la aplicación. Se explicarán las ventajas de usar KeaKit, los beneficios de ser usuario piloto y se mandarán mensajes por WhatsApp a las personas más cercanas a los desarrolladores. No se especifica un plan detallado de trabajo, sino que se trabajará según las necesidades del proyecto debido a la falta de recursos. Debido a la falta de regularidad en las publicaciones, no se harán los análisis de las métricas de seguimiento en esta fase.
+
+También se hará una página donde se centralizarán todos los enlaces relevantes (cuentas de redes sociales, encuestas usuarios piloto) para tenerlos a mano y facilitar su accesibilidad al público.
+
+Llegando al final del Sprint 3, se elaborarán dos storyboards con sus respectivos guiones. El objetivo de esto es grabar y lanzar dos anuncios en la siguiente etapa. Cada uno de estos anuncios tiene un público objetivo diferente: posibles inversores y clientes. 
+
+#### Segunda fase (PPL, WPL)
+
+La segunda fase durará cinco semanas, extendiéndose desde el 17/04/2026 (Final Sprint 3) hasta el 21/05/2026 (World Project Launch). Se trata de una etapa crucial a la que se le debe dedicar mucho esfuerzo y tiempo, pues es el momento de dar a conocer al mundo y difundir todo el trabajo que se ha realizado durante meses. 
+
+El objetivo es llegar al mayor número de usuarios piloto. Al principio del estudio para la elaboración del plan de los mismos, se estimó un presupuesto dedicado a 30 usuarios piloto, siendo esta la cifra deseada de alcance. Al haberla superado, nos proponemos llegar al máximo número de usuarios posible. Esto no supondría un impacto en el presupuesto debido a los cambios en el sistema de recompensas; como en esta fase ya solo quedaría mandar una encuesta y los beneficios se basan en el número de encuestas completadas, los nuevos usuarios que se incorporen durante estas cinco semanas solo podrán optar a la Insignia Piloto.
+
+Se describen a continuación el tipo de publicaciones a realizar y su frecuencia según el canal y la fecha.
+
+* **X (Twitter):** Una publicación en días alternos, con contenido humorístico e informal. Se busca viralidad y llegar al público de forma orgánica. Tono desenfadado, referencias a tendencias actuales, sin perder de vista el mensaje de KeaKit.
+
+* **Instagram:** Tres posts semanales tipo carrusel o imagen + caption. Al día siguiente de cada una de estas publicaciones, debe repostearse en las historias, manteniendo así la cuenta activa sin duplicar esfuerzos. También se grabará mínimo un reel cada dos semanas con guión, grabación y edición (contenido más producido). Mezcla de humor, tips útiles y testimonios de usuarios piloto.
+
+* **LinkedIn:** Interacción diaria con perfiles relevantes (comentarios, retweets, conexiones). Mínimo una publicación semanal adaptando el contenido de Instagram a tono profesional, enfocada en valor económico y sostenibilidad.
+
+* **WhatsApp / Mensajería:** Seguimiento personalizado a usuarios piloto ya existentes. Reenvíos de encuestas breves en las semanas 1, 3 y 5. Cadena de difusión orgánica a través de usuarios piloto ya captados y/o conocidos.
+
+
+Al final de cada semana, se hará un seguimiento de las métricas mencionadas anteriormente y se publicarán los resultados en el repositorio público de KeaKit.
+
+---
+
+Este plan queda sujeto a modificaciones para adaptarlo según dichos resultados.
+Para mayor detalle sobre la planificación de estas tareas, se puede comprobar el tablero Kanban perteneciente a Marketing en el GitHub Projects de KeaKit.
+
 
 # 4. SISTEMA GAMIFICADO DE INCENTIVOS BASADO EN PRUEBAS DE FEEDBACK
 El objetivo de este sistema es aumentar la participación activa de los usuarios piloto, fomentar su constancia y obtener datos de calidad que permitan mejorar KeaKit antes del lanzamiento oficial. La idea central es sencilla: cuantas más pruebas de feedback complete un usuario, más beneficios desbloqueará, creando así un camino de progresión que incentiva su implicación continua en el proceso de cocreación de la plataforma.
