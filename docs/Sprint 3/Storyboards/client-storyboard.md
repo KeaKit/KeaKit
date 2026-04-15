@@ -248,11 +248,11 @@ DISCLAIMER: El guión ha sido elaborado a mano y formateado con inteligencia art
 
 Las imágenes deben interpretarse de izquierda a derecha, empezando por las de arriba. Se omite el último plano debido a que es una imagen del logo de KeaKit. 
 
-![1234](./img/1_client.png)
-![5678](./img/2_client.png)
-![9101112](./img/3_client.png)
-![13141516](./img/4_client.png)
-![17](./img/5_client.png)
+![1234](./img/client/1_client.png)
+![5678](./img/client/2_client.png)
+![9101112](./img/client/3_client.png)
+![13141516](./img/client/4_client.png)
+![17](./img/client/5_client.png)
 
 
 
