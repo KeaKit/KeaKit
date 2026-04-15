@@ -1194,6 +1194,8 @@
 
 - Remove duplicated helper function ([d76d669](https://github.com/KeaKit/KeaKit/commit/d76d669b9aff1d5593919ca0333fed0f669ff025))
 
+- Apply button filter eliminated, the filters were aplied automatically ([2f95c45](https://github.com/KeaKit/KeaKit/commit/2f95c4580de091127aa505721c5c737050d20bee))
+
 
 ### add
 
@@ -1351,4 +1353,6 @@
 - Add performance rating tests ([e368678](https://github.com/KeaKit/KeaKit/commit/e3686789b14617c7250b5694ef47ade986fef32b))
 
 - Fix failing confirm status tests due to tenant check ([d396192](https://github.com/KeaKit/KeaKit/commit/d396192fee4b5244a29990a02847b15b335ca0c5))
+
+- Add advance filter testing ([283de71](https://github.com/KeaKit/KeaKit/commit/283de71d88e9be5577f1d731530a168fbbfb14ca))
 
