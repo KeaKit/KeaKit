@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import com.example.demo.model.Incident;
@@ -14,6 +15,7 @@ import com.example.demo.model.IncidentStatus;
 import com.example.demo.model.IncidentType;
 import com.example.demo.model.Item;
 import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.IncidentCommentRepository;
@@ -118,6 +120,37 @@ public class IncidentService {
                 .orElseThrow(() -> new RuntimeException("Kit de alquiler no encontrado"));
             incident.setRelatedKit(relatedKit);
         }
+
+        // Si no llega relatedKit desde cliente, intentamos inferirlo para incidencias DAMAGED_ITEM.
+        // Elegimos primero un kit en curso; si no existe, el más reciente no cancelado/no borrador.
+        if (incident.getType() == IncidentType.DAMAGED_ITEM
+                && incident.getRelatedKit() == null
+                && incident.getUser() != null
+                && incident.getUser().getId() != null
+                && incident.getRelatedItem() != null
+                && incident.getRelatedItem().getId() != null) {
+
+            Long tenantId = incident.getUser().getId();
+            Long itemId = incident.getRelatedItem().getId();
+            LocalDate today = LocalDate.now();
+
+            List<Kit> candidateKits = kitRepository.findByTenantIdAndItemIdOrderByStartDateDesc(tenantId, itemId);
+
+            candidateKits.stream()
+                .filter(k -> k.getStatus() != KitStatus.CANCELLED && k.getStatus() != KitStatus.DRAFT)
+                .filter(k -> k.getStartDate() != null && k.getEndDate() != null)
+                .filter(k -> !today.isBefore(k.getStartDate()) && !today.isAfter(k.getEndDate()))
+                .findFirst()
+                .ifPresent(incident::setRelatedKit);
+
+            if (incident.getRelatedKit() == null) {
+                candidateKits.stream()
+                    .filter(k -> k.getStatus() != KitStatus.CANCELLED && k.getStatus() != KitStatus.DRAFT)
+                    .findFirst()
+                    .ifPresent(incident::setRelatedKit);
+            }
+        }
+
         validateIncident(incident);
         return incidentRepository.save(incident);
     }

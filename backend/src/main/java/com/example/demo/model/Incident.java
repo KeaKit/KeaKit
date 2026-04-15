@@ -2,6 +2,8 @@ package com.example.demo.model;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import jakarta.persistence.*;
 
@@ -31,16 +33,20 @@ public class Incident {
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnoreProperties({"password"})
     private User user;
 
     // El objeto reportado
     @ManyToOne(optional = true)
     @JoinColumn(name = "related_item_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonDeserialize(as = Article.class)
+    @JsonIgnoreProperties({"category", "owner", "allowedMethods"})
     private Item relatedItem;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "related_kit_id")
+    @JsonIgnoreProperties({"snapshots", "tenant"})
     private Kit relatedKit;
 
     public Incident() {
