@@ -270,6 +270,112 @@ public class DatabaseSeeder {
             audiovisualKit.setSnapshots(List.of(snapAv1, snapAv2, snapAv3));
             kitRepo.save(audiovisualKit);
 
+            Kit finished3DKit = new Kit();
+            finished3DKit.setName("Pack Prototipado 3D");
+            finished3DKit.setTenant(tenant);
+            finished3DKit.setStatus(KitStatus.FINISHED);
+            finished3DKit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
+            finished3DKit.setMeetingPoint("Plaza de España, Sevilla");
+            finished3DKit.setStartDate(LocalDate.now().minusMonths(2));
+            finished3DKit.setEndDate(LocalDate.now().minusMonths(1));
+            finished3DKit.setCountry("Spain");
+            finished3DKit.setCity("Sevilla");
+            kitRepo.save(finished3DKit);
+
+            ItemMemento snap3D = impresora.createSnapshot(
+                1, 
+                finished3DKit.getDeliveryMethod(), 
+                finished3DKit.getCourierPrice(), 
+                finished3DKit.getMeetingPoint()
+            );
+            snap3D.setKit(finished3DKit);
+            snap3D.setPriceAtRental(impresora.getPricePerMonth());
+            
+            finished3DKit.setSnapshots(List.of(snap3D));
+            kitRepo.save(finished3DKit);
+
+            Kit finishedPhotoKit = new Kit();
+            finishedPhotoKit.setName("Pack Eventos Express");
+            finishedPhotoKit.setTenant(tenant);
+            finishedPhotoKit.setStatus(KitStatus.FINISHED);
+            finishedPhotoKit.setDeliveryMethod(DeliveryMethod.COURIER);
+            finishedPhotoKit.setStartDate(LocalDate.now().minusWeeks(3));
+            finishedPhotoKit.setEndDate(LocalDate.now().minusWeeks(1));
+            finishedPhotoKit.setCountry("Spain");
+            finishedPhotoKit.setCity("Sevilla");
+            kitRepo.save(finishedPhotoKit);
+
+            ItemMemento snapCam = camara.createSnapshot(
+                1, 
+                finishedPhotoKit.getDeliveryMethod(), 
+                finishedPhotoKit.getCourierPrice(), 
+                null
+            );
+            snapCam.setKit(finishedPhotoKit);
+            snapCam.setPriceAtRental(camara.getPricePerMonth());
+
+            finishedPhotoKit.setSnapshots(List.of(snapCam));
+            kitRepo.save(finishedPhotoKit);
+
+            Kit streamingKit = new Kit();
+            streamingKit.setName("Pack Creador de Contenido");
+            streamingKit.setTenant(tenant);
+            streamingKit.setStatus(KitStatus.FINISHED);
+            streamingKit.setDeliveryMethod(DeliveryMethod.COURIER);
+            streamingKit.setStartDate(LocalDate.now().minusMonths(4));
+            streamingKit.setEndDate(LocalDate.now().minusMonths(3));
+            streamingKit.setCountry("Spain");
+            streamingKit.setCity("Sevilla");
+            kitRepo.save(streamingKit);
+
+            ItemMemento snapStream1 = laptop.createSnapshot(1, streamingKit.getDeliveryMethod(), streamingKit.getCourierPrice(), null);
+            snapStream1.setKit(streamingKit);
+            snapStream1.setPriceAtRental(laptop.getPricePerMonth());
+
+            ItemMemento snapStream2 = camara.createSnapshot(1, streamingKit.getDeliveryMethod(), streamingKit.getCourierPrice(), null);
+            snapStream2.setKit(streamingKit);
+            snapStream2.setPriceAtRental(camara.getPricePerMonth());
+
+            streamingKit.setSnapshots(List.of(snapStream1, snapStream2));
+            kitRepo.save(streamingKit);
+
+            Kit cinemaKit = new Kit();
+            cinemaKit.setName("Pack Cine de Verano");
+            cinemaKit.setTenant(tenant);
+            cinemaKit.setStatus(KitStatus.FINISHED);
+            cinemaKit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
+            cinemaKit.setMeetingPoint("CC Lagoh, Sevilla");
+            cinemaKit.setStartDate(LocalDate.now().minusMonths(1));
+            cinemaKit.setEndDate(LocalDate.now().minusWeeks(2));
+            cinemaKit.setCountry("Spain");
+            cinemaKit.setCity("Sevilla");
+            kitRepo.save(cinemaKit);
+
+            ItemMemento snapCinema = proyector.createSnapshot(1, cinemaKit.getDeliveryMethod(), 0.0, cinemaKit.getMeetingPoint());
+            snapCinema.setKit(cinemaKit);
+            snapCinema.setPriceAtRental(proyector.getPricePerMonth());
+
+            cinemaKit.setSnapshots(List.of(snapCinema));
+            kitRepo.save(cinemaKit);
+
+            Kit droneKit = new Kit();
+            droneKit.setName("Pack Grabación Aérea");
+            droneKit.setTenant(tenant);
+            droneKit.setStatus(KitStatus.FINISHED);
+            droneKit.setDeliveryMethod(DeliveryMethod.COURIER);
+            droneKit.setStartDate(LocalDate.now().minusDays(15));
+            droneKit.setEndDate(LocalDate.now().minusDays(2));
+            droneKit.setCountry("Spain");
+            droneKit.setCity("Sevilla");
+            kitRepo.save(droneKit);
+
+            ItemMemento snapDrone = dron.createSnapshot(1, droneKit.getDeliveryMethod(), droneKit.getCourierPrice(), null);
+            snapDrone.setKit(droneKit);
+            snapDrone.setPriceAtRental(dron.getPricePerMonth());
+
+            droneKit.setSnapshots(List.of(snapDrone));
+            kitRepo.save(droneKit);
+
             // ==========================================
             // 7.2 Kit Predeterminado para el Catálogo (FIX REAL)
             // ==========================================
@@ -310,7 +416,7 @@ public class DatabaseSeeder {
 
             // 8. Rating
             Rating feedback = new Rating();
-            feedback.setKit(myKit);
+            feedback.setKit(finished3DKit);
             feedback.setReviewer(tenant);
             feedback.setReviewee(owner);
             feedback.setScore(5);
