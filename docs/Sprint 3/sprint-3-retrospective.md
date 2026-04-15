@@ -82,9 +82,9 @@ Estos problemas tuvieron un impacto directo en el desarrollo del proyecto, entre
 
 En el siguiente Burndown vemos como ha sido la evolución de trabajo del equipo durante este tercer sprint:
 
-![Sprint 3 Burndown](./img/burndown.png)
+![Sprint 3 Burndown](./img/burndown_sprint3.png)
 
-
+Se puede observar que ha habido una gran acumulación de trabajo, durante todo el sprint que se ha completado de forma abrupta hacia el final del sprint. Esto también refleja los problemas comentados anteriormente.
 
 
 ### 3.3 Plan de acción
