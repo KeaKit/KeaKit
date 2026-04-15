@@ -290,11 +290,15 @@
 
 - Added city and Country selector to AdminUserForm ([1108403](https://github.com/KeaKit/KeaKit/commit/110840371e2891f243030136067a476385247ffc))
 
+- Tests updated after discount code implementation ([a51b044](https://github.com/KeaKit/KeaKit/commit/a51b0444a5904b5a173c7acae6bef19e5591035a))
+
 - Default kit admin screen now visible for admin  and dtos working ([9ecfff4](https://github.com/KeaKit/KeaKit/commit/9ecfff4f4e5fb2a43ba95936e840367e90aab859))
 
 - Default Kits now are shown to the tenant ([b08c36d](https://github.com/KeaKit/KeaKit/commit/b08c36da178618f42a627bad4971b01ee93fe88c))
 
 - Default Kits now working for tenant ([d0463d2](https://github.com/KeaKit/KeaKit/commit/d0463d2bf1fd18a27e74502b0087a9303fc675f0))
+
+- Logic of calculating kit's price fixed ([6f904bc](https://github.com/KeaKit/KeaKit/commit/6f904bcf67c6dd867372fffa4243b81518c9858b))
 
 - Solve CORS error when confirming kit ([1373474](https://github.com/KeaKit/KeaKit/commit/137347484e6bd2543e9f13ddea13b31c811cccb0))
 
@@ -330,15 +334,7 @@
 
 - Solved PeymentIntegrationTest errors ([075e798](https://github.com/KeaKit/KeaKit/commit/075e798dce3fcdee4ac2e60fe9303a237b639e5b))
 
-- Tests updated after discount code implementation ([a51b044](https://github.com/KeaKit/KeaKit/commit/a51b0444a5904b5a173c7acae6bef19e5591035a))
-
-- Logic of calculating kit's price fixed ([6f904bc](https://github.com/KeaKit/KeaKit/commit/6f904bcf67c6dd867372fffa4243b81518c9858b))
-
 - Fix error tests ([5b887ea](https://github.com/KeaKit/KeaKit/commit/5b887ea57722cbccf71d6f9f63daf1987fe00495))
-
-- Fix imports at AppNavigator ([170df01](https://github.com/KeaKit/KeaKit/commit/170df01ae660d69454f1af82a9d4d849015f8f4b))
-
-- Remove duplicate DefaultKits screen at AppNavigator ([509a7bf](https://github.com/KeaKit/KeaKit/commit/509a7bf41bc5f7321a79ffac73656a36582ed5c3))
 
 - Fix imports at AppNavigator ([5a53d57](https://github.com/KeaKit/KeaKit/commit/5a53d570dfc22695fbd76f71ec0f1a5a658de781))
 
@@ -353,6 +349,10 @@
 - Change badge image resize mode to cover for better display ([d605561](https://github.com/KeaKit/KeaKit/commit/d60556149ed2b0fc3bc51fcc18adf6076857cc8e))
 
 - Update founder badge image size and resize mode in HeaderNavbar ([3e5fef5](https://github.com/KeaKit/KeaKit/commit/3e5fef5fd037787c88cde383b35503ee945db127))
+
+- Fix imports at AppNavigator ([170df01](https://github.com/KeaKit/KeaKit/commit/170df01ae660d69454f1af82a9d4d849015f8f4b))
+
+- Remove duplicate DefaultKits screen at AppNavigator ([509a7bf](https://github.com/KeaKit/KeaKit/commit/509a7bf41bc5f7321a79ffac73656a36582ed5c3))
 
 - Solved some codacy problems ([be41582](https://github.com/KeaKit/KeaKit/commit/be41582625964dddbbd4b8c150405b1ad536687e))
 
@@ -884,6 +884,16 @@
 
 - Now kit detailscreen and createkit screem have the same breakdown ([7eed55b](https://github.com/KeaKit/KeaKit/commit/7eed55b52bee441feeb226b2b2d3540b917289c0))
 
+- Add navigation to user reviews from articles history ([23b0b86](https://github.com/KeaKit/KeaKit/commit/23b0b86d9ece1d7cbed1f30f92fc4196dd55a502))
+
+- Add review creation by item owners ([b0b391e](https://github.com/KeaKit/KeaKit/commit/b0b391e136217a57947a54e04cc21573f126f381))
+
+- Implement backend promo code functionality with validation and management ([d155adc](https://github.com/KeaKit/KeaKit/commit/d155adcde3a6819c73b613630b7cef52cb21d23c))
+
+- Implement frontend promo code management and validation functionality ([52f413e](https://github.com/KeaKit/KeaKit/commit/52f413ef9bee77800e655116bb9d12e1a8a37f03))
+
+- Update tests ([7e37d2d](https://github.com/KeaKit/KeaKit/commit/7e37d2da0c1b42d57f94fc305d5f239b6a73a610))
+
 - Implement WithdrawRequest DTO and enhance withdraw functionality in PaymentController and PaymentService ([4ab7863](https://github.com/KeaKit/KeaKit/commit/4ab7863020eef88507fde7aaef6553e767f470ef))
 
 - Add WithdrawMoneyScreen and update API routes for withdrawal functionality ([cc4153e](https://github.com/KeaKit/KeaKit/commit/cc4153e8d7ffb39fdaf0651199c934b478dc8dbe))
@@ -891,10 +901,6 @@
 - Add WithdrawMoneyScreen and integrate withdrawal functionality in wallet services ([40d6ba2](https://github.com/KeaKit/KeaKit/commit/40d6ba26ef5efaa90bcdef252d839a5ab5dca679))
 
 - Update transaction types to include TOP_UP and enhance withdrawal error handling ([8a8ee53](https://github.com/KeaKit/KeaKit/commit/8a8ee53cfefcea7eae1776eed7ce1726c18a0cea))
-
-- Add navigation to user reviews from articles history ([23b0b86](https://github.com/KeaKit/KeaKit/commit/23b0b86d9ece1d7cbed1f30f92fc4196dd55a502))
-
-- Add review creation by item owners ([b0b391e](https://github.com/KeaKit/KeaKit/commit/b0b391e136217a57947a54e04cc21573f126f381))
 
 - Incident refactor feat:new admin incident screen ([4e4656d](https://github.com/KeaKit/KeaKit/commit/4e4656dfc5c5d75c33807ea8d589fb6267bddbcd))
 
@@ -948,6 +954,10 @@
 
 - Add finished kit to database ([9b34543](https://github.com/KeaKit/KeaKit/commit/9b345435d4cb0b69fe4a8199e5ccbfa57f0ae7ac))
 
+- Implement pilot user management and order confirmation enhancements ([46b1961](https://github.com/KeaKit/KeaKit/commit/46b1961870371d647ac08425fc370ae1ef670ca6))
+
+- Enhance promo code functionality and pilot user management ([1233084](https://github.com/KeaKit/KeaKit/commit/1233084ac7e638852ad635c0121a98caeee6405f))
+
 - Agregar logica backend de alertas de demanda ([10d6e49](https://github.com/KeaKit/KeaKit/commit/10d6e49c1e85e446739159e51ea73428e3deaa44))
 
 - Agregar Tests de backend para alertas de demanda ([ffd26b6](https://github.com/KeaKit/KeaKit/commit/ffd26b6d4a4aa89b66715eaadb4c856fef3f47eb))
@@ -970,35 +980,11 @@
 
 - Demand analysis backend ([afd6c56](https://github.com/KeaKit/KeaKit/commit/afd6c5665c1788f4cd92137d4cec082d53b6ad61))
 
-- Add frontend for demand analysis ([57b34bc](https://github.com/KeaKit/KeaKit/commit/57b34bc620dbc10417a29632b78510a00bea0e3a))
-
 - Add confirmation variant to KeakitModal to reuse the component ([c500b3a](https://github.com/KeaKit/KeaKit/commit/c500b3a8f89d0ad1e37c0d0025df8b9e19fd98e8))
 
 - Add label and title in SelectPicker ([a504d67](https://github.com/KeaKit/KeaKit/commit/a504d676170f8a38eedd1b142c75ad7cf973d0ef))
 
 - Add dividerSmall to commonStyles ([ab88321](https://github.com/KeaKit/KeaKit/commit/ab883213cf54b0b16006ae7b903913389661f186))
-
-- Implement RGPD consent management ([d61e1a6](https://github.com/KeaKit/KeaKit/commit/d61e1a6c8c1105ed60823ffe8de0d35df8db7e10))
-
-- Add Privacy Policy management and notifications ([a889cd7](https://github.com/KeaKit/KeaKit/commit/a889cd753f86b17fb9dbed1de11adeeed9d601bc))
-
-- Implement RGPD consent management tests and enhance user deletion service tests ([9146164](https://github.com/KeaKit/KeaKit/commit/91461647948c1429d07aeeb864399b5c2b3defeb))
-
-- Enhance UserControllerTest with additional registration and login scenarios ([6c1f6a7](https://github.com/KeaKit/KeaKit/commit/6c1f6a7eb19e04fdcd56dc0ef613200106ce7cad))
-
-- Add image upload functionality to article update ([a8880e3](https://github.com/KeaKit/KeaKit/commit/a8880e368f152db4351fee7e4e4e35b20b3a1438))
-
-- Cloudinary service tests ([f28db64](https://github.com/KeaKit/KeaKit/commit/f28db64296bd68e1e305926115deb0e99e75907c))
-
-- Implement backend promo code functionality with validation and management ([d155adc](https://github.com/KeaKit/KeaKit/commit/d155adcde3a6819c73b613630b7cef52cb21d23c))
-
-- Implement frontend promo code management and validation functionality ([52f413e](https://github.com/KeaKit/KeaKit/commit/52f413ef9bee77800e655116bb9d12e1a8a37f03))
-
-- Update tests ([7e37d2d](https://github.com/KeaKit/KeaKit/commit/7e37d2da0c1b42d57f94fc305d5f239b6a73a610))
-
-- Implement pilot user management and order confirmation enhancements ([46b1961](https://github.com/KeaKit/KeaKit/commit/46b1961870371d647ac08425fc370ae1ef670ca6))
-
-- Enhance promo code functionality and pilot user management ([1233084](https://github.com/KeaKit/KeaKit/commit/1233084ac7e638852ad635c0121a98caeee6405f))
 
 - Article filters backend added ([145fc22](https://github.com/KeaKit/KeaKit/commit/145fc22a195390bd44991b64e4cafc75e21e21e6))
 
@@ -1021,6 +1007,20 @@
 - Add founder badge display in HeaderNavbar with conditional rendering ([fa0e9c1](https://github.com/KeaKit/KeaKit/commit/fa0e9c1650c859672a333ecc37c924993863eb3b))
 
 - Implement public user profile retrieval and display functionality ([8cf7669](https://github.com/KeaKit/KeaKit/commit/8cf7669bd8ad31c27d56db7e249264da507b602b))
+
+- Add frontend for demand analysis ([57b34bc](https://github.com/KeaKit/KeaKit/commit/57b34bc620dbc10417a29632b78510a00bea0e3a))
+
+- Implement RGPD consent management ([d61e1a6](https://github.com/KeaKit/KeaKit/commit/d61e1a6c8c1105ed60823ffe8de0d35df8db7e10))
+
+- Add Privacy Policy management and notifications ([a889cd7](https://github.com/KeaKit/KeaKit/commit/a889cd753f86b17fb9dbed1de11adeeed9d601bc))
+
+- Implement RGPD consent management tests and enhance user deletion service tests ([9146164](https://github.com/KeaKit/KeaKit/commit/91461647948c1429d07aeeb864399b5c2b3defeb))
+
+- Enhance UserControllerTest with additional registration and login scenarios ([6c1f6a7](https://github.com/KeaKit/KeaKit/commit/6c1f6a7eb19e04fdcd56dc0ef613200106ce7cad))
+
+- Add image upload functionality to article update ([a8880e3](https://github.com/KeaKit/KeaKit/commit/a8880e368f152db4351fee7e4e4e35b20b3a1438))
+
+- Cloudinary service tests ([f28db64](https://github.com/KeaKit/KeaKit/commit/f28db64296bd68e1e305926115deb0e99e75907c))
 
 - Added deploy ([0c629d8](https://github.com/KeaKit/KeaKit/commit/0c629d8ca9b281ccb5e86c4fa6a0f3f1188d5a01))
 
@@ -1154,6 +1154,8 @@
 
 - Refactor to separate responsabilities and change backend's logic due to a potential error ([6348a1a](https://github.com/KeaKit/KeaKit/commit/6348a1a3ac753e5b2982695833d29d9c3e8f93f7))
 
+- Remove categories styles from DefaultKitFormScreen ([56785a6](https://github.com/KeaKit/KeaKit/commit/56785a6a950483e89e486de40a1cf609179f326b))
+
 - Remove categories styles from DefaultKitFormScreen ([f9df85c](https://github.com/KeaKit/KeaKit/commit/f9df85ca7eb3c4d2b156b1d88156cf76448a74df))
 
 - Refactor DefaultKitsScreen ([afcb16c](https://github.com/KeaKit/KeaKit/commit/afcb16c23ca8c10540c61d1e17589e1b51da305d))
@@ -1163,8 +1165,6 @@
 - Implement DefaultKitDetails screen and update navigation flow ([49556a9](https://github.com/KeaKit/KeaKit/commit/49556a91436e0c91da6310a3c9e19b6184cc877e))
 
 - Remove unused components ([f9dd60a](https://github.com/KeaKit/KeaKit/commit/f9dd60a8836f3c3100f0649470fce87162657020))
-
-- Remove categories styles from DefaultKitFormScreen ([56785a6](https://github.com/KeaKit/KeaKit/commit/56785a6a950483e89e486de40a1cf609179f326b))
 
 - Remove DefaultKitsAdminScreen to reuse DefaultKitsScreen for both roles ([361082d](https://github.com/KeaKit/KeaKit/commit/361082d22b18cab5029fb82e8a92c827a7cd7e46))
 
