@@ -408,6 +408,10 @@
 
 - Add code to service creation ([92bb2c8](https://github.com/KeaKit/KeaKit/commit/92bb2c864a0ad854ed1711b691f2f31224091246))
 
+- Add navbar to notifications screen ([81a40f4](https://github.com/KeaKit/KeaKit/commit/81a40f443e53e024c4daa6bfdd39ecd5dae282fc))
+
+- Arrendador can now rate an arrendatario ([9c4d64e](https://github.com/KeaKit/KeaKit/commit/9c4d64ee4d90e523cc7b1f50103e86d725518a30))
+
 
 ### Docs
 
