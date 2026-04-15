@@ -393,6 +393,8 @@ public class KitService {
 
         kitDeliveryService.ensureDeliveryExists(saved);
 
+        notificationService.notifyLandlordsOnKitActive(saved); 
+
         return new KitResponse(saved);
     }
 
