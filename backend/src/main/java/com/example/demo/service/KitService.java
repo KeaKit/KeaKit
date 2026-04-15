@@ -169,7 +169,7 @@ public class KitService {
 
         double discount = 0.0;
         if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
-            var validation = promoCodeService.validate(promoCode, userEmail);
+            var validation = promoCodeService.validateForTenantDiscount(promoCode, userEmail);
             if (validation.isValid()) {
                 discount = subtotalPrice * validation.getDiscountRate();
             }
@@ -201,7 +201,7 @@ public class KitService {
 
         double discount = 0.0;
         if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
-            var validation = promoCodeService.validate(promoCode, userEmail);
+            var validation = promoCodeService.validateForTenantDiscount(promoCode, userEmail);
             if (validation.isValid()) {
                 discount = subtotalPrice * validation.getDiscountRate();
             }
@@ -340,8 +340,13 @@ public class KitService {
     }
 
     public void confirmKitStatus(Long id) {
+        Long tenantId = authService.getAuthenticatedUserId();
         Kit kit = kitRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Kit no encontrado"));
+
+        if (kit.getTenant() == null || !kit.getTenant().getId().equals(tenantId)) {
+            throw new RuntimeException("Kit does not belong to the specified tenant");
+        }
 
         if (kit.getStatus() != KitStatus.PAID) {
             throw new RuntimeException("El kit solo puede ser confirmado si su estado es PAGADO");
@@ -392,6 +397,8 @@ public class KitService {
         Kit saved = kitRepository.save(kit);
 
         kitDeliveryService.ensureDeliveryExists(saved);
+
+        notificationService.notifyLandlordsOnKitActive(saved); 
 
         return new KitResponse(saved);
     }

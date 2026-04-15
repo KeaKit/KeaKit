@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import com.example.demo.dto.PromoCodeValidationResponse;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -15,12 +16,14 @@ public class ServiceItemService {
     private final ServiceRepository serviceRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final PromoCodeService promoCodeService;
 
     public ServiceItemService(ServiceRepository serviceRepository, UserRepository userRepository, 
-                              CategoryRepository categoryRepository) {
+                              CategoryRepository categoryRepository, PromoCodeService promoCodeService) {
         this.serviceRepository = serviceRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
+        this.promoCodeService = promoCodeService;
     }
 
     public List<ServiceItem> findAll() {
@@ -44,6 +47,9 @@ public class ServiceItemService {
             .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
         validateServiceData(service, true);
+        normalizeOwnerCommissionPromoState(service, false);
+        validateOwnerCommissionPromoCode(service.getOwnerCommissionPromoCode(), owner.getEmail());
+        reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), owner.getEmail());
 
         service.setOwner(owner);
         service.setCategory(category);
@@ -90,7 +96,16 @@ public class ServiceItemService {
                 throw new RuntimeException("El estado del servicio solo puede ser ACTIVE o DRAFT");
             }
         }
+
+        if (updateData.getOwnerCommissionPromoCode() != null) {
+            String previousCode = service.getOwnerCommissionPromoCode();
+            service.setOwnerCommissionPromoCode(updateData.getOwnerCommissionPromoCode());
+            normalizeOwnerCommissionPromoState(service, !sameCode(previousCode, service.getOwnerCommissionPromoCode()));
+        }
+
         validateServiceData(service, startMonthChanged);
+        validateOwnerCommissionPromoCode(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
+        reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
 
         return serviceRepository.save(service);
     }
@@ -199,5 +214,67 @@ public class ServiceItemService {
 
     public List<ServiceItem> findByOwner(Long ownerId) {
         return serviceRepository.findByOwnerId(ownerId);
+    }
+
+    private void validateOwnerCommissionPromoCode(String promoCode, String ownerEmail) {
+        if (promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+
+        if (promoCodeService == null) {
+            return;
+        }
+
+        if (ownerEmail == null || ownerEmail.isBlank()) {
+            throw new RuntimeException("Owner email is required to validate owner promo code");
+        }
+
+        PromoCodeValidationResponse validation = promoCodeService
+            .validateForOwnerCommissionReductionAllowReservedByUser(promoCode.trim(), ownerEmail);
+
+        if (!validation.isValid()) {
+            throw new RuntimeException(validation.getMessage());
+        }
+    }
+
+    private void reserveOwnerSingleUseIfNeeded(String promoCode, String ownerEmail) {
+        if (promoCodeService == null || promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+        promoCodeService.reserveOwnerSingleUseIfNeeded(promoCode, ownerEmail);
+    }
+
+    private void normalizeOwnerCommissionPromoState(ServiceItem service, boolean resetConsumedFlag) {
+        String normalized = normalizePromoCode(service.getOwnerCommissionPromoCode());
+        service.setOwnerCommissionPromoCode(normalized);
+
+        if (normalized == null) {
+            service.setOwnerCommissionPromoConsumed(false);
+            return;
+        }
+
+        if (resetConsumedFlag) {
+            service.setOwnerCommissionPromoConsumed(false);
+        }
+    }
+
+    private String normalizePromoCode(String code) {
+        if (code == null) {
+            return null;
+        }
+        String normalized = code.trim().toUpperCase();
+        return normalized.isBlank() ? null : normalized;
+    }
+
+    private boolean sameCode(String left, String right) {
+        String l = normalizePromoCode(left);
+        String r = normalizePromoCode(right);
+        if (l == null && r == null) {
+            return true;
+        }
+        if (l == null || r == null) {
+            return false;
+        }
+        return l.equals(r);
     }
 }

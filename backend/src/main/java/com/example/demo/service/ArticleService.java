@@ -17,6 +17,7 @@ import com.example.demo.dto.CityCoordinatesDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
+import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.ArticleStatus;
@@ -41,12 +42,14 @@ public class ArticleService {
     private final CloudinaryService cloudinaryService;
     private final CityService cityService;
     private final ArticleAvailabilityRequestService availabilityRequestService;
+    private final PromoCodeService promoCodeService;
 
     public ArticleService(ArticleRepository articleRepository, UserRepository userRepository,
                           KitRepository kitRepository, CategoryRepository categoryRepository,
                           PaymentService paymentService,
                           CloudinaryService cloudinaryService, DefaultKitService defaultKitService,
-                          CityService cityService, ArticleAvailabilityRequestService availabilityRequestService) {
+                          CityService cityService, ArticleAvailabilityRequestService availabilityRequestService,
+                          PromoCodeService promoCodeService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.kitRepository = kitRepository;
@@ -56,6 +59,7 @@ public class ArticleService {
         this.paymentService = paymentService;
         this.cityService = cityService;
         this.availabilityRequestService = availabilityRequestService; // Se inyecta manualmente para evitar dependencia circular
+        this.promoCodeService = promoCodeService;
     }
 
 
@@ -132,6 +136,12 @@ public class ArticleService {
             throw new RuntimeException("Propietario con id válido es requerido");
         userRepository.findById(owner.getId())
             .orElseThrow(() -> new RuntimeException("Propietario no encontrado"));
+
+        normalizeOwnerCommissionPromoState(article, false);
+
+        validateOwnerCommissionPromoCode(article.getOwnerCommissionPromoCode(), owner.getEmail());
+        reserveOwnerSingleUseIfNeeded(article.getOwnerCommissionPromoCode(), owner.getEmail());
+
         defaultKitService.removeItemFromAllDefaultKits(article.getId());
         return articleRepository.save(article);
     }
@@ -140,8 +150,9 @@ public class ArticleService {
         Article article = articleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
-        if (article.getStatus() == ArticleStatus.RENTED)
+        if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
+        }
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -152,15 +163,87 @@ public class ArticleService {
 
         updateArticleFields(article, updateData);
 
+        if (updateData.getOwnerCommissionPromoCode() != null) {
+            String previousCode = article.getOwnerCommissionPromoCode();
+            article.setOwnerCommissionPromoCode(updateData.getOwnerCommissionPromoCode());
+            normalizeOwnerCommissionPromoState(article, !sameCode(previousCode, article.getOwnerCommissionPromoCode()));
+        }
+
+        validateOwnerCommissionPromoCode(article.getOwnerCommissionPromoCode(), owner.getEmail());
+        reserveOwnerSingleUseIfNeeded(article.getOwnerCommissionPromoCode(), owner.getEmail());
+
         return articleRepository.save(article);
+    }
+
+    private void validateOwnerCommissionPromoCode(String promoCode, String ownerEmail) {
+        if (promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+
+        if (promoCodeService == null) {
+            return;
+        }
+
+        if (ownerEmail == null || ownerEmail.isBlank()) {
+            throw new RuntimeException("Owner email is required to validate owner promo code");
+        }
+
+        PromoCodeValidationResponse validation = promoCodeService
+            .validateForOwnerCommissionReductionAllowReservedByUser(promoCode.trim(), ownerEmail);
+
+        if (!validation.isValid()) {
+            throw new RuntimeException(validation.getMessage());
+        }
+    }
+
+    private void normalizeOwnerCommissionPromoState(Article article, boolean resetConsumedFlag) {
+        String normalized = normalizePromoCode(article.getOwnerCommissionPromoCode());
+        article.setOwnerCommissionPromoCode(normalized);
+
+        if (normalized == null) {
+            article.setOwnerCommissionPromoConsumed(false);
+            return;
+        }
+
+        if (resetConsumedFlag) {
+            article.setOwnerCommissionPromoConsumed(false);
+        }
+    }
+
+    private void reserveOwnerSingleUseIfNeeded(String promoCode, String ownerEmail) {
+        if (promoCodeService == null || promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+        promoCodeService.reserveOwnerSingleUseIfNeeded(promoCode, ownerEmail);
+    }
+
+    private String normalizePromoCode(String code) {
+        if (code == null) {
+            return null;
+        }
+        String normalized = code.trim().toUpperCase();
+        return normalized.isBlank() ? null : normalized;
+    }
+
+    private boolean sameCode(String left, String right) {
+        String l = normalizePromoCode(left);
+        String r = normalizePromoCode(right);
+        if (l == null && r == null) {
+            return true;
+        }
+        if (l == null || r == null) {
+            return false;
+        }
+        return l.equals(r);
     }
 
     public void deleteById(Long id, Long ownerId) {
         Article article = articleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
-        if (article.getStatus() == ArticleStatus.RENTED)
+        if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser eliminado");
+        }
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -217,16 +300,37 @@ public class ArticleService {
     }
 
     private UserArticle convertToUserArticle(Article article) {
-        boolean isRented = article.getStatus() != null &&
-                "RENTED".equalsIgnoreCase(article.getStatus().name());
-        LocalDate rentedUntil = isRented ? article.getAvailableUntil() : null;
+        boolean isManuallyRented = article.getStatus() != null && "RENTED".equalsIgnoreCase(article.getStatus().name());
         
+        // Consultar dinámicamente si está en algún Kit alquilado
+        List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(article.getId());
+        List<Kit> activeKits = kits.stream()
+            .filter(k -> k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE)
+            .collect(Collectors.toList());
+            
+        boolean isRentedInKit = !activeKits.isEmpty();
+        
+        // Determinar estado final a devolver al frontend
+        String finalStatus = (isManuallyRented || isRentedInKit) ? "RENTED" : 
+                            (article.getStatus() != null ? article.getStatus().name() : "UNKNOWN");
+        
+        // Determinar la fecha de fin de alquiler (la máxima fecha de los kits activos)
+        LocalDate rentedUntil = null;
+        if (isRentedInKit) {
+            rentedUntil = activeKits.stream()
+                .map(Kit::getEndDate)
+                .max(LocalDate::compareTo)
+                .orElse(null);
+        } else if (isManuallyRented) {
+            rentedUntil = article.getAvailableUntil();
+        }
+
         return new UserArticle(
                 article.getId(),
                 article.getTitle(),
                 article.getImageUrl(),
                 article.getPricePerMonth(),
-                article.getStatus() != null ? article.getStatus().name() : "UNKNOWN",
+                finalStatus,
                 rentedUntil
         );
     }
@@ -433,8 +537,9 @@ public class ArticleService {
         Article article = articleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
-        if (article.getStatus() == ArticleStatus.RENTED)
+        if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
+        }
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -533,4 +638,11 @@ public class ArticleService {
         if (updateData.getImageUrl() != null) 
             article.setImageUrl(updateData.getImageUrl());
     }
+
+    private boolean isArticleCurrentlyRented(Long articleId) {
+    List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
+    return kits.stream().anyMatch(k -> 
+        k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE
+    );
+}
 }
