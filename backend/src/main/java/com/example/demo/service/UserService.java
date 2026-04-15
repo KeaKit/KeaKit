@@ -56,7 +56,7 @@ public class UserService {
 
         String normalizedEmail = request.getEmail().toLowerCase().trim();
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new UserAlreadyExistsException("Email already exists");
+            throw new UserAlreadyExistsException("El correo ya está registrado");
         }
 
         String hashedPassword = passwordEncoder.encode(request.getPassword());
@@ -105,7 +105,7 @@ public class UserService {
 
     private void createWalletForUser(User user) {
         if (user == null) {
-            throw new ResourceNotFoundException("User not found. Cannot create wallet.");
+            throw new ResourceNotFoundException("Usuario no encontrado. No se puede crear cartera.");
         }
         Wallet wallet = new Wallet(user);
         walletRepository.save(wallet);
@@ -116,13 +116,13 @@ public class UserService {
         Optional<User> userOpt = userRepository.findByEmail(normalizedEmail);
 
         if (userOpt.isEmpty()) {
-            throw new UserNotFoundException("User not found");
+            throw new UserNotFoundException("Usuario no encontrado");
         }
 
         User user = userOpt.get();
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new InvalidCredentialsException("Invalid password");
+            throw new InvalidCredentialsException("Contraseña inválida");
         }
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getRole());
@@ -131,7 +131,7 @@ public class UserService {
 
     public UserResponse updateUser(Long id, UserUpdateData updateData) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
 
         if (updateData.getName() != null) {
             user.setName(updateData.getName());
@@ -155,25 +155,25 @@ public class UserService {
 
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
         return new UserResponse(user);
     }
 
     public UserResponse getUserByEmail(String email) throws UserNotFoundException {
         String normalizedEmail = email.toLowerCase().trim();
         User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
         return new UserResponse(user);
     }
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
     }
 
     public User updateProfileImage(Long userId, MultipartFile image) throws IOException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
         String imageUrl = cloudinaryService.uploadImage(image);
         user.setProfileImageUrl(imageUrl);
         return userRepository.save(user);
@@ -181,7 +181,7 @@ public class UserService {
 
     public PublicUserProfileDto getPublicUserProfile(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
         return new PublicUserProfileDto(user);
     }
 }

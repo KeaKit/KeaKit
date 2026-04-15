@@ -1,35 +1,34 @@
 package com.example.demo.service;
 
 
-import org.springframework.data.jpa.domain.Specification;
-
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.example.demo.dto.ArticleNearbyDTO;
-import com.example.demo.dto.CityCoordinatesDTO;
 import com.example.demo.dto.ArticleRecordDTO;
+import com.example.demo.dto.CityCoordinatesDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
-import com.example.demo.model.User;
-import com.example.demo.model.Category;
 import com.example.demo.model.ArticleStatus;
+import com.example.demo.model.Category;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
+import com.example.demo.model.User;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.CategoryRepository;
 
 @Service
 public class ArticleService {
@@ -67,10 +66,10 @@ public class ArticleService {
 
     public Article createWithImage(Article article, MultipartFile image, Long ownerId, Long categoryId) throws IOException {
         User owner = userRepository.findById(ownerId)
-            .orElseThrow(() -> new RuntimeException("Owner not found"));
+            .orElseThrow(() -> new RuntimeException("Propietario no encontrado"));
 
         Category category = categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new RuntimeException("Category not found"));
+            .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
         // Upload image to Cloudinary
         String imageUrl = cloudinaryService.uploadImage(image);
@@ -89,34 +88,34 @@ public class ArticleService {
 
     public Article findById(Long id) {
         return articleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Article not found"));
+            .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
     }
 
     public Article save(Article article) {
-        if (article == null) throw new RuntimeException("Article payload is required");
+        if (article == null) throw new RuntimeException("Payload del artículo requerido");
 
         if (article.getTitle() == null || article.getTitle().trim().isEmpty())
-            throw new RuntimeException("Title is required");
+            throw new RuntimeException("Título requerido");
 
         if (article.getDescription() == null || article.getDescription().trim().isEmpty())
-            throw new RuntimeException("Description is required");
+            throw new RuntimeException("Descripción requerida");
         if (article.getDescription().length() > 1000)
-            throw new RuntimeException("Description cannot exceed 1000 characters");
+            throw new RuntimeException("La descripción no puede exceder los 1000 caracteres");
 
         if (article.getCity() == null || article.getCity().trim().isEmpty())
-            throw new RuntimeException("City is required");
+            throw new RuntimeException("Ciudad requerida");
 
         if (article.getPricePerMonth() == null || article.getPricePerMonth() < 0)
-            throw new RuntimeException("pricePerMonth must be >= 0");
+            throw new RuntimeException("El precio por mes debe ser un valor positivo");
 
         if (article.getCategory() != null && article.getCategory().getId() != null) {
             Category category = categoryRepository.findById(article.getCategory().getId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
             double price = article.getPricePerMonth();
             if (price < category.getMinPrice() || price > category.getMaxPrice()) {
                 throw new RuntimeException(
-                    "pricePerMonth must be between " + category.getMinPrice() +
-                    " and " + category.getMaxPrice() + " for this category"
+                    "El precio por mes debe estar entre " + category.getMinPrice() +
+                    " y " + category.getMaxPrice() + " para esta categoría"
                 );
             }
         }
@@ -126,17 +125,17 @@ public class ArticleService {
 
         LocalDate from = article.getAvailableFrom();
         if (from != null && from.isBefore(LocalDate.now()))
-            throw new RuntimeException("availableFrom cannot be in the past");
+            throw new RuntimeException("La fecha de inicio de disponibilidad no puede ser pasada a la actual");
 
         LocalDate until = article.getAvailableUntil();
         if (from != null && until != null && from.isAfter(until))
-            throw new RuntimeException("availableFrom must be before or equal to availableUntil");
+            throw new RuntimeException("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
 
         User owner = article.getOwner();
         if (owner == null || owner.getId() == null)
-            throw new RuntimeException("Owner (with valid id) is required");
+            throw new RuntimeException("Propietario con id válido es requerido");
         userRepository.findById(owner.getId())
-            .orElseThrow(() -> new RuntimeException("Owner not found"));
+            .orElseThrow(() -> new RuntimeException("Propietario no encontrado"));
 
         normalizeOwnerCommissionPromoState(article, false);
 
@@ -149,18 +148,18 @@ public class ArticleService {
 
     public Article update(Long id, Long ownerId, Article updateData) {
         Article article = articleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Article not found"));
+            .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
-            throw new RuntimeException("Article is currently rented and cannot be edited");
+            throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
         }
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
-            throw new RuntimeException("Only the owner can modify this article");
+            throw new RuntimeException("Solo el propietario puede modificar este artículo");
 
         if (updateData.getStatus() != null)
-            throw new RuntimeException("Cannot change status via update; use toggleRent endpoint");
+            throw new RuntimeException("No se puede cambiar el estado a través de la actualización; use el endpoint toggleRent");
 
         updateArticleFields(article, updateData);
 
@@ -240,21 +239,21 @@ public class ArticleService {
 
     public void deleteById(Long id, Long ownerId) {
         Article article = articleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Article not found"));
+            .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
-            throw new RuntimeException("Article is currently rented and cannot be deleted");
+            throw new RuntimeException("El artículo está actualmente alquilado y no puede ser eliminado");
         }
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
-            throw new RuntimeException("Only the owner can delete this article");
+            throw new RuntimeException("Solo el propietario puede eliminar este artículo");
 
         if (article.getImageUrl() != null && !article.getImageUrl().isEmpty()) {
             try {
                 cloudinaryService.deleteImage(article.getImageUrl());
             } catch (IOException e) {
-                System.err.println("Warning: Failed to delete image from Cloudinary: " + e.getMessage());
+                System.err.println("Aviso: Fallo al eliminar la imagen de Cloudinary: " + e.getMessage());
             }
         }
 
@@ -263,16 +262,16 @@ public class ArticleService {
 
     public Article toggleRent(Long id, Long ownerId) {
         Article article = articleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Article not found"));
+            .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
-            throw new RuntimeException("Only the owner can change rental status");
+            throw new RuntimeException("Solo el propietario puede cambiar el estado de alquiler");
 
         ArticleStatus status = article.getStatus();
 
         if (status == ArticleStatus.INACTIVE)
-            throw new RuntimeException("Inactive articles cannot be rented");
+            throw new RuntimeException("Los artículos inactivos no pueden ser alquilados");
 
         if (status == ArticleStatus.AVAILABLE) {
             article.setStatus(ArticleStatus.RENTED);
@@ -339,16 +338,16 @@ public class ArticleService {
     @Transactional
     public ReturnResponse processReturn(Long articleId, Long ownerId, ReturnRequest request) {
         Article article = articleRepository.findById(articleId)
-            .orElseThrow(() -> new RuntimeException("Article not found"));
+            .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         if (!article.getOwner().getId().equals(ownerId))
-            throw new RuntimeException("Only the owner can confirm the return");
+            throw new RuntimeException("Solo el propietario puede confirmar la devolución");
 
         if (article.getStatus() != ArticleStatus.RENTED)
-            throw new RuntimeException("This article is not currently rented");
+            throw new RuntimeException("Este artículo no está actualmente alquilado");
 
         Kit activeKit = kitRepository.findActiveKitByItemId(articleId, KitStatus.ACTIVE)
-            .orElseThrow(() -> new RuntimeException("No active Kit found for this article"));
+            .orElseThrow(() -> new RuntimeException("No se encontró un Kit activo para este artículo"));
 
         Long tenantId = activeKit.getTenant().getId();
         String tenantEmail = activeKit.getTenant().getEmail();
@@ -536,15 +535,15 @@ public class ArticleService {
     @Transactional
     public Article updateWithImage(Long id, Long ownerId, Article updateData, MultipartFile image) throws IOException {
         Article article = articleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Article not found"));
+            .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
-            throw new RuntimeException("Article is currently rented and cannot be edited");
+            throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
         }
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
-            throw new RuntimeException("Only the owner can modify this article");
+            throw new RuntimeException("Solo el propietario puede modificar este artículo");
 
         // Subir nueva imagen si viene
         if (image != null && !image.isEmpty()) {
@@ -553,7 +552,7 @@ public class ArticleService {
                 try {
                     cloudinaryService.deleteImage(article.getImageUrl());
                 } catch (IOException e) {
-                    System.err.println("Warning: Failed to delete old image: " + e.getMessage());
+                    System.err.println("Aviso: Fallo al eliminar la imagen antigua: " + e.getMessage());
                 }
             }
             
@@ -571,55 +570,55 @@ public class ArticleService {
     private void updateArticleFields(Article article, Article updateData) {
         if (updateData.getTitle() != null) {
             if (updateData.getTitle().trim().isEmpty())
-                throw new RuntimeException("Title cannot be empty");
+                throw new RuntimeException("Título requerido");
             article.setTitle(updateData.getTitle());
         }
 
         if (updateData.getDescription() != null) {
             if (updateData.getDescription().trim().isEmpty())
-                throw new RuntimeException("Description cannot be empty");
+                throw new RuntimeException("Descripción requerida");
             if (updateData.getDescription().length() > 1000)
-                throw new RuntimeException("Description cannot exceed 1000 characters");
+                throw new RuntimeException("La descripción no puede exceder 1000 caracteres");
             article.setDescription(updateData.getDescription());
         }
 
         if (updateData.getCity() != null) {
             if (updateData.getCity().trim().isEmpty())
-                throw new RuntimeException("City cannot be empty");
+                throw new RuntimeException("La ciudad no puede estar vacía");
             article.setCity(updateData.getCity());
         }
 
         if (updateData.getPricePerMonth() != null) {
             if (updateData.getPricePerMonth() < 0)
-                throw new RuntimeException("pricePerMonth must be >= 0");
+                throw new RuntimeException("El precio por mes debe ser un valor positivo");
             article.setPricePerMonth(updateData.getPricePerMonth());
         }
 
         Category resolvedCategory = article.getCategory();
         if (updateData.getCategory() != null && updateData.getCategory().getId() != null) {
             resolvedCategory = categoryRepository.findById(updateData.getCategory().getId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
             article.setCategory(resolvedCategory);
         }
         if (resolvedCategory != null && article.getPricePerMonth() != null) {
             double price = article.getPricePerMonth();
             if (price < resolvedCategory.getMinPrice() || price > resolvedCategory.getMaxPrice()) {
                 throw new RuntimeException(
-                    "pricePerMonth must be between " + resolvedCategory.getMinPrice() +
-                    " and " + resolvedCategory.getMaxPrice() + " for this category"
+                    "El precio por mes debe estar entre " + resolvedCategory.getMinPrice() +
+                    " y " + resolvedCategory.getMaxPrice() + " para esta categoría"
                 );
             }
         }
 
         if (updateData.getTotalUnits() != null) {
             if (updateData.getTotalUnits() < 1)
-                throw new RuntimeException("totalUnits must be >= 1");
+                throw new RuntimeException("El número total de unidades debe ser mayor que 1");
             article.setTotalUnits(updateData.getTotalUnits());
         }
 
         if (updateData.getAvailableFrom() != null) {
             if (updateData.getAvailableFrom().isBefore(LocalDate.now()))
-                throw new RuntimeException("availableFrom cannot be in the past");
+                throw new RuntimeException("La fecha de inicio de disponibilidad no puede ser pasada a la actual");
             article.setAvailableFrom(updateData.getAvailableFrom());
         }
         if (updateData.getAvailableUntil() != null) {
@@ -628,7 +627,7 @@ public class ArticleService {
         LocalDate from = article.getAvailableFrom();
         LocalDate until = article.getAvailableUntil();
         if (from != null && until != null && from.isAfter(until))
-            throw new RuntimeException("availableFrom must be before or equal to availableUntil");
+            throw new RuntimeException("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
 
         if (updateData.getPurchaseDate() != null) 
             article.setPurchaseDate(updateData.getPurchaseDate());

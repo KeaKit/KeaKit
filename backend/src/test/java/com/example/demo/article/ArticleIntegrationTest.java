@@ -115,7 +115,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Owner not found"));
+            .andExpect(content().string("Propietario no encontrado"));
     }
 
     @Test
@@ -131,7 +131,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Title is required"));
+            .andExpect(content().string("Título requerido"));
     }
 
     @Test
@@ -148,7 +148,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("pricePerMonth must be >= 0"));
+            .andExpect(content().string("El precio por mes debe ser un valor positivo"));
     }
 
     // RN-ART-06: precio fuera del rango de la categoría (5–500)
@@ -166,7 +166,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("pricePerMonth must be between")));
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("El precio por mes debe estar entre")));
     }
 
     // RN-ART-03: descripción > 1000 caracteres
@@ -184,7 +184,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Description cannot exceed 1000 characters"));
+            .andExpect(content().string("La descripción no puede exceder los 1000 caracteres"));
     }
 
     // RN-ART-11: availableFrom posterior a availableUntil
@@ -204,7 +204,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("availableFrom must be before or equal to availableUntil"));
+            .andExpect(content().string("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización"));
     }
 
     @Test
@@ -223,7 +223,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("availableFrom cannot be in the past"));
+            .andExpect(content().string("La fecha de inicio de disponibilidad no puede ser pasada a la actual"));
     }
 
 
@@ -281,7 +281,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Description cannot exceed 1000 characters"));
+            .andExpect(content().string("La descripción no puede exceder 1000 caracteres"));
     }
 
     @Test
@@ -294,7 +294,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("pricePerMonth must be between")));
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("El precio por mes debe estar entre")));
     }
 
     @Test
@@ -307,7 +307,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article not found"));
+            .andExpect(content().string("Artículo no encontrado"));
     }
 
     @Test
@@ -323,7 +323,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article is currently rented and cannot be edited"));
+            .andExpect(content().string("El artículo está actualmente alquilado y no puede ser editado"));
     }
 
     @Test
@@ -336,7 +336,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Only the owner can modify this article"));
+            .andExpect(content().string("Solo el propietario puede modificar este artículo"));
     }
 
     @Test
@@ -349,7 +349,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Cannot change status via update; use toggleRent endpoint"));
+            .andExpect(content().string("No se puede cambiar el estado a través de la actualización; use el endpoint toggleRent"));
     }
 
     // ------------ DELETE /api/article/{id} ------------
@@ -368,7 +368,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(delete("/api/article/" + savedArticle.getId())
                 .param("ownerId", "999"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Only the owner can delete this article"));
+            .andExpect(content().string("Solo el propietario puede eliminar este artículo"));
 
         assertThat(articleRepository.existsById(savedArticle.getId())).isTrue();
     }
@@ -378,7 +378,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(delete("/api/article/999999")
                 .param("ownerId", savedOwner.getId().toString()))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article not found"));
+            .andExpect(content().string("Artículo no encontrado"));
     }
 
     @Test
@@ -389,7 +389,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(delete("/api/article/" + savedArticle.getId())
                 .param("ownerId", savedOwner.getId().toString()))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article is currently rented and cannot be deleted"));
+            .andExpect(content().string("El artículo está actualmente alquilado y no puede ser eliminado"));
 
         assertThat(articleRepository.existsById(savedArticle.getId())).isTrue();
     }
@@ -428,7 +428,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(post("/api/article/" + savedArticle.getId() + "/toggle-rent")
                 .param("ownerId", savedOwner.getId().toString()))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Inactive articles cannot be rented"));
+            .andExpect(content().string("Los artículos inactivos no pueden ser alquilados"));
     }
 
     @Test
@@ -436,7 +436,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(post("/api/article/" + savedArticle.getId() + "/toggle-rent")
                 .param("ownerId", "999"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Only the owner can change rental status"));
+            .andExpect(content().string("Solo el propietario puede cambiar el estado de alquiler"));
     }
 
     @Test
@@ -444,7 +444,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(post("/api/article/999999/toggle-rent")
                 .param("ownerId", savedOwner.getId().toString()))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article not found"));
+        .andExpect(content().string("Artículo no encontrado"));
     }
 
 

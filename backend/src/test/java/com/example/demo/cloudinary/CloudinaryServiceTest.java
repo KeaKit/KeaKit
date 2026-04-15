@@ -43,7 +43,7 @@ class CloudinaryServiceTest {
 
         assertThatThrownBy(() -> cloudinaryService.uploadImage(file))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File is empty");
+                .hasMessage("El archivo no puede estar vacío");
     }
 
     @Test
@@ -53,7 +53,7 @@ class CloudinaryServiceTest {
 
         assertThatThrownBy(() -> cloudinaryService.uploadImage(file))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File must be an image");
+        .hasMessage("El archivo debe ser una imagen");
     }
 
     @Test
@@ -63,7 +63,7 @@ class CloudinaryServiceTest {
 
         assertThatThrownBy(() -> cloudinaryService.uploadImage(file))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File must be an image");
+        .hasMessage("El archivo debe ser una imagen");
     }
 
     @Test
@@ -74,7 +74,7 @@ class CloudinaryServiceTest {
 
         assertThatThrownBy(() -> cloudinaryService.uploadImage(file))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("File size must not exceed 10MB");
+        .hasMessage("El tamaño del archivo no debe exceder los 10MB");
     }
 
     @Test

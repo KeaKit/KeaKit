@@ -140,7 +140,7 @@ public class KitServiceTest {
         when(platformConfigService.getCommissionRate()).thenReturn(0.2);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.create(req));
-        assertEquals("Tenant ID is required", ex.getMessage());
+    assertEquals("Id del arrendatario requerido para crear un kit", ex.getMessage());
     }
 
     @Test
@@ -248,7 +248,7 @@ public class KitServiceTest {
             kitService.confirmKitStatus(1L)
         );
 
-        assertEquals("The kit can only be confirmed if its status is PAID", exception.getMessage());
+        assertEquals("El kit solo puede ser confirmado si su estado es PAGADO", exception.getMessage());
     }
 
     @Test
@@ -499,7 +499,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> 
             kitService.addItemToKit(kit.getId(), article.getId(), user.getId()));
-        assertEquals("This item is already in the kit", ex.getMessage());
+        assertEquals("Este artículo ya está en el kit", ex.getMessage());
     }
 
     @Test
@@ -533,7 +533,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> 
             kitService.removeItemFromKit(kit.getId(), 100L, user.getId()));
-        assertEquals("A kit cannot be empty. It must contain at least one item.", ex.getMessage());
+        assertEquals("Un kit no puede quedar vacío. Debe contener al menos un artículo.", ex.getMessage());
     }
 
     @Test
@@ -548,7 +548,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> 
             kitService.removeItemFromKit(kit.getId(), 100L, user.getId())); // Intentamos borrar el 100
-        assertEquals("Item is not part of this kit", ex.getMessage());
+        assertEquals("Este artículo no es parte de este kit", ex.getMessage());
     }
 
     // ==========================================
@@ -565,7 +565,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.addItemToKit(10L, 100L, 999L));
-        assertEquals("User not found", ex.getMessage());
+        assertEquals("Usuario no encontrado", ex.getMessage());
     }
 
     @Test
@@ -576,7 +576,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.addItemToKit(999L, 100L, user.getId()));
-        assertEquals("Kit not found", ex.getMessage());
+        assertEquals("Kit no encontrado", ex.getMessage());
     }
 
     @Test
@@ -593,7 +593,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.addItemToKit(kit.getId(), 999L, user.getId()));
-        assertEquals("Item not found", ex.getMessage());
+        assertEquals("Artículo no encontrado", ex.getMessage());
     }
 
     @Test
@@ -679,7 +679,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.removeItemFromKit(10L, 100L, 999L));
-        assertEquals("User not found", ex.getMessage());
+        assertEquals("Usuario no encontrado", ex.getMessage());
     }
 
     @Test
@@ -690,7 +690,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.removeItemFromKit(999L, 100L, user.getId()));
-        assertEquals("Kit not found", ex.getMessage());
+        assertEquals("Kit no encontrado", ex.getMessage());
     }
 
     @Test
@@ -706,7 +706,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.removeItemFromKit(kit.getId(), 100L, user.getId()));
-        assertEquals("Kit is already empty", ex.getMessage());
+        assertEquals("Kit actualmente sin artículos para eliminar", ex.getMessage());
     }
 
     @Test
@@ -1126,7 +1126,7 @@ public class KitServiceTest {
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () ->
             kitService.getKitPayment(999L));
 
-        assertEquals("Kit not found", ex.getMessage());
+        assertEquals("Kit no encontrado", ex.getMessage());
     }
 
     @Test
