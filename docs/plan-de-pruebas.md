@@ -179,7 +179,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 **Escenario:** Un usuario desea consultar las valoraciones de otro usuario.
 
-- **Dado:** Existen valoraciones registradas en el sistema para un usuario.
+- **Dado:** Es usuario está autenticado y existen valoraciones registradas en el sistema para un usuario.
 
 - **Cuando:** Un usuario accede al apartado de valoraciones de otro usuario.
 
@@ -243,6 +243,23 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 | -------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
 | **P-01: Visualización correcta** | Usuario Arrendatario que tiene en base de datos: 1 kit en estado `ACTIVE` y 1 kit en estado `COMPLETED`. | Se listan exactamente los 2 kits. Se muestra la fecha de devolución obligatoriamente para el que está activo.         | RN-KIT-15, RN-KIT-16, RN-KIT-17, RN-KIT-20, RN-KIT-21 |
 | **P-02: Privacidad de kits**     | Usuario A intenta acceder a la URL o endpoint del seguimiento del Kit del Usuario B.                     | El sistema deniega el acceso (Error 403 Forbidden), garantizando que el seguimiento solo lo ve el arrendatario dueño. | RN-KIT-17                                             |
+
+---
+
+### 6.1 CU-ARRENDATARIO-06 - Confirmar recepción de kit
+
+**Escenario:** Un usuario desea confirmar que ha recibido satisfactoriamente un kit.
+
+- **Dado:** El usuario está autenticado, ha alquilado un kit el cual se encuentra en estado "PAID" y se encuentra en la página de "Detalle del kit".
+
+- **Cuando:** El usuario pulsa en el botón "Confirmar recepción" y luego en "Aceptar".
+
+- **Entonces:** El sistema confirma la recepción del kit y cambia su estado a "ACTIVE" en la base de datos.
+
+| **Caso de Prueba** | **Datos a introducir (Test Data)** | **Resultado Esperado** | **Reglas de Negocio Cubiertas** |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **P-01: Confirmación exitosa** | | El sistema confirma la recepción del kit y cambia su estado a "ACTIVE" en la base de datos. | RN-KIT-18 |
+| **P-02: Fallo - Usuario no dueño** | **Usuario que confirma:** usuario no dueño del kit | El sistema muestra un mensaje indicando que el usuario no es dueño del kit cuya recepción a confirmar. | RN-KIT-18 |
 
 ---
 
