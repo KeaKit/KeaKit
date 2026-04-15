@@ -124,13 +124,13 @@ class ItemServiceTest {
     void filterItemsForKit_whenMinPriceIsGreaterThanMaxPrice_throws() {
         assertThatThrownBy(() -> itemService.filterItemsForKit(60.0, 20.0, null, null, null, null, 0, 10))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("minPrice cannot be greater than maxPrice");
+                .hasMessage("El precio mínimo no puede ser mayor que el precio máximo");
     }
 
     @Test
     void filterItemsForKit_whenConditionIsInvalid_throws() {
         assertThatThrownBy(() -> itemService.filterItemsForKit(20.0, 50.0, null, null, null, "BROKEN", 0, 10))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("condition must be one of: NEW, LIGHTLY_USED, USED, WORN");
+                .hasMessage("La condición debe ser una entre: NEW, LIGHTLY_USED, USED, WORN");
     }
 }
