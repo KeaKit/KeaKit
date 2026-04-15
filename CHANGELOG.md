@@ -1178,6 +1178,8 @@
 
 - Business images to storyboard and update image paths ([a8dd5e9](https://github.com/KeaKit/KeaKit/commit/a8dd5e936683a18ad2dc3d7b5aa2fad834eca8fa))
 
+- Updated marketing user pilot plan ([7ca9bd4](https://github.com/KeaKit/KeaKit/commit/7ca9bd4c870d27ca8701dfe224fdab7c2d60b217))
+
 
 ### build
 
