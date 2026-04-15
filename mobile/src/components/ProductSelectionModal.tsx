@@ -634,10 +634,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   p.id,
                 );
                 const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
-                const isRentableStatus =
-                  p.itemType === "SERVICE"
-                    ? p.status === "ACTIVE"
-                    : p.status === "AVAILABLE";
+                const isRentableStatus = p.status === "AVAILABLE" || p.status === "ACTIVE";
                 const canBeAdded = p.isAvailable && isRentableStatus;
 
                 return (
