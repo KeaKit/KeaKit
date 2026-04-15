@@ -1173,6 +1173,12 @@
 - Remove duplicated helper function ([d76d669](https://github.com/KeaKit/KeaKit/commit/d76d669b9aff1d5593919ca0333fed0f669ff025))
 
 
+### add
+
+
+- Business images to storyboard and update image paths ([a8dd5e9](https://github.com/KeaKit/KeaKit/commit/a8dd5e936683a18ad2dc3d7b5aa2fad834eca8fa))
+
+
 ### build
 
 
@@ -1229,6 +1235,12 @@
 - Renamed storyboard-related docs for clarity ([3361ae4](https://github.com/KeaKit/KeaKit/commit/3361ae41f5d707713fa5dc07d598333ef7428bf2))
 
 - Fix text ([6d5d524](https://github.com/KeaKit/KeaKit/commit/6d5d524f7f7899c302085dd94cf9e3112031cb8a))
+
+- Rename client storyboard for clarity ([822cf22](https://github.com/KeaKit/KeaKit/commit/822cf2261a83b5d2fdc1621c338fcedcf8091093))
+
+- First version of the business pitch storyboard (INCOMPLETE, without pictures) ([7dbb621](https://github.com/KeaKit/KeaKit/commit/7dbb621eb30850ed0c8760b22b59b0ef1a14bd7c))
+
+- Refined business pitch storyboard and added pictures for each scene ([7814522](https://github.com/KeaKit/KeaKit/commit/7814522a724121b440187556a5a059a17abd134f))
 
 
 ### test
