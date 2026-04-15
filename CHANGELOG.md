@@ -402,6 +402,10 @@
 
 - Activity Notifications ([723213e](https://github.com/KeaKit/KeaKit/commit/723213e8205b359b231eee4ef7aa02fcb7d92633))
 
+- Add user verification to confirm kit ([cfd96b5](https://github.com/KeaKit/KeaKit/commit/cfd96b54e37064e35d8ed7d7e0c4360d8ac59245))
+
+- Add code to service creation ([92bb2c8](https://github.com/KeaKit/KeaKit/commit/92bb2c864a0ad854ed1711b691f2f31224091246))
+
 
 ### Docs
 
@@ -1333,4 +1337,6 @@
 - Add rating integration tests ([19e7e2e](https://github.com/KeaKit/KeaKit/commit/19e7e2e7894805dfa95b99b8329723bbbd740aa6))
 
 - Add performance rating tests ([e368678](https://github.com/KeaKit/KeaKit/commit/e3686789b14617c7250b5694ef47ade986fef32b))
+
+- Fix failing confirm status tests due to tenant check ([d396192](https://github.com/KeaKit/KeaKit/commit/d396192fee4b5244a29990a02847b15b335ca0c5))
 
