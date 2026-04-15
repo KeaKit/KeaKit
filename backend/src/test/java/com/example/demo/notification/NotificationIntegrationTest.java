@@ -1,6 +1,8 @@
 package com.example.demo.notification;
 
 import com.example.demo.model.*;
+import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.UserRepository;
@@ -40,6 +42,12 @@ class NotificationIntegrationTest {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private ArticleRepository articleRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Test
     void notification_flow_trigger_fetch_and_read() throws Exception {
@@ -95,5 +103,84 @@ class NotificationIntegrationTest {
         // 5. VALIDAR LA ACTUALIZACIÓN FINAL EN LA BASE DE DATOS
         var finalNotification = notificationRepository.findById(notificationId).orElseThrow();
         assertThat(finalNotification.isRead()).isTrue();
+    }
+
+    // ── CU-ARRENDADOR-06: ALERTA DE DEMANDA ────────────────────────────────
+
+    @Test
+    void demandAlert_flow_create_appears_in_owner_inbox() throws Exception {
+        // 1. SETUP: arrendador y arrendatario
+        User owner = new User();
+        owner.setEmail("owner@demand.com");
+        owner.setPassword("password123");
+        owner.setName("Propietario");
+        owner.setRole(UserRole.USER);
+        owner.setPhone("+34111111111");
+        owner.setAddress("Calle Falsa 1");
+        owner.setCity("Madrid");
+        owner.setCountry("Spain");
+        owner = userRepository.save(owner);
+
+        User requester = new User();
+        requester.setEmail("requester@demand.com");
+        requester.setPassword("password123");
+        requester.setName("Arrendatario");
+        requester.setRole(UserRole.USER);
+        requester.setPhone("+34222222222");
+        requester.setAddress("Calle Verdadera 2");
+        requester.setCity("Madrid");
+        requester.setCountry("Spain");
+        requester = userRepository.save(requester);
+
+        // Categoría obligatoria para el artículo
+        Category category = new Category();
+        category.setName("Herramientas-" + System.currentTimeMillis());
+        category.setDescription("Herramientas del hogar");
+        category.setStatus(CategoryStatus.ACTIVE);
+        category.setMinPrice(5.0);
+        category.setMaxPrice(200.0);
+        category = categoryRepository.save(category);
+
+        // Artículo RENTED (no disponible)
+        Article article = new Article();
+        article.setTitle("Taladro Profesional");
+        article.setDescription("Taladro de gran potencia");
+        article.setCity("Madrid");
+        article.setPricePerMonth(15.0);
+        article.setStatus(ArticleStatus.RENTED);
+        article.setOwner(owner);
+        article.setCategory(category);
+        article = articleRepository.save(article);
+
+        final Long ownerId = owner.getId();
+        final Long requesterId = requester.getId();
+        final Long articleId = article.getId();
+
+        // 2. CREAR ALERTA DE DEMANDA VÍA ENDPOINT
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/api/notifications/demand-alert")
+                .param("articleId", String.valueOf(articleId))
+                .param("requesterId", String.valueOf(requesterId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.type").value("DEMAND_ALERT"))
+                .andExpect(jsonPath("$.relatedArticleId").value(articleId))
+                .andExpect(jsonPath("$.read").value(false));
+
+        // 3. VERIFICAR QUE APARECE EN EL BUZÓN DEL ARRENDADOR
+        mockMvc.perform(get("/api/notifications/user/" + ownerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].type").value("DEMAND_ALERT"))
+                .andExpect(jsonPath("$[0].relatedArticleId").value(articleId))
+                .andExpect(jsonPath("$[0].read").value(false));
+
+        // 4. VERIFICAR REGLA: artículo disponible no genera alerta
+        article.setStatus(ArticleStatus.AVAILABLE);
+        articleRepository.save(article);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/api/notifications/demand-alert")
+                .param("articleId", String.valueOf(articleId))
+                .param("requesterId", String.valueOf(requesterId)))
+                .andExpect(status().isBadRequest());
     }
 }

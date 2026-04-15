@@ -104,6 +104,7 @@ public class DatabaseSeeder {
             laptop.setAvailableFrom(LocalDate.now());
             laptop.setAvailableUntil(LocalDate.now().plusMonths(36));
             laptop.setImageUrl("https://i.imgur.com/bY7sIB3.png");
+            laptop.setCondition(ArticleCondition.NEW);
             articleRepo.save(laptop);
 
             // Artículos en ciudades cercanas a Sevilla
@@ -210,8 +211,8 @@ public class DatabaseSeeder {
             audiovisualKit.setTenant(tenant);
             audiovisualKit.setStatus(KitStatus.FINISHED);
             audiovisualKit.setDeliveryMethod(DeliveryMethod.COURIER);
-            audiovisualKit.setStartDate(LocalDate.now().minusMonths(2));
-            audiovisualKit.setEndDate(LocalDate.now().minusMonths(1));
+            audiovisualKit.setStartDate(LocalDate.now());
+            audiovisualKit.setEndDate(LocalDate.now().plusMonths(1));
             audiovisualKit.setCountry("Spain");
             audiovisualKit.setCity("Sevilla");
             kitRepo.save(audiovisualKit);

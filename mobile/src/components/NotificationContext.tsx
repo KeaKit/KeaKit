@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState } from 'react';
 import { PushNotification } from '../components/PushNotification';
 
+type NotificationType = 'success' | 'error' | 'info';
+
 interface NotificationContextType {
   showNotification: (
     message: string, 
-    type?: 'success' | 'error', 
+    type?: NotificationType, 
     action?: { label: string; onPress: () => void }
   ) => void;
 }
@@ -14,12 +16,12 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
-  const [type, setType] = useState<'success' | 'error'>('success');
+  const [type, setType] = useState<NotificationType>('success');
   const [action, setAction] = useState<{ label: string; onPress: () => void } | undefined>();
 
   const showNotification = (
     msg: string, 
-    notificationType: 'success' | 'error' = 'success', 
+    notificationType: NotificationType = 'success', 
     notificationAction?: { label: string; onPress: () => void }
   ) => {
     setMessage(msg);

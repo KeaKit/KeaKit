@@ -83,4 +83,9 @@ public class AdminUserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
+
+    @PatchMapping("/{id}/founder-badge")
+    public ResponseEntity<UserResponse> toggleFounderBadge(@PathVariable Long id) {
+        return ResponseEntity.ok(adminUserService.toggleFounderBadge(id));
+    }
 }

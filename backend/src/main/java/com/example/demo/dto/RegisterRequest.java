@@ -29,6 +29,9 @@ public class RegisterRequest {
 
     @NotBlank(message = "Country is required")
     private String country;
+
+    private Boolean acceptedPolicies;
+    private Boolean acceptedMarketing;
     
     public String getEmail() {
         return email;
@@ -50,24 +53,57 @@ public class RegisterRequest {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getPhone() {
         return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getAddress() {
         return address;
     }
 
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     public String getCity() {
         return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
     public String getCountry() {
         return country;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCountry(String country) {
+        this.country = country;
     }
+
+    public Boolean getAcceptedPolicies() {
+        return acceptedPolicies;
+    }
+    
+    public void setAcceptedPolicies(Boolean acceptedPolicies) {
+        this.acceptedPolicies = acceptedPolicies;
+    }
+
+    public Boolean getAcceptedMarketing() {
+        return acceptedMarketing;
+    }
+    
+    public void setAcceptedMarketing(Boolean acceptedMarketing) {
+        this.acceptedMarketing = acceptedMarketing;
+    }
+
 
 }

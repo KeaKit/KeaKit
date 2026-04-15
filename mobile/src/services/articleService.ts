@@ -30,14 +30,54 @@ async function handleResponse<T>(res: Response): Promise<T> {
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
 
+
 export async function getMyArticles(
-  userId: number,
-  token: string,
+  userId: number, 
+  token: string, 
+  queryFilters?: { 
+    categoryId?: number; 
+    condition?: string; 
+    minPrice?: number; 
+    maxPrice?: number 
+  }
 ): Promise<Article[]> {
-  const res = await fetch(API_ROUTES.MY_ARTICLES(userId), {
+ 
+
+  let url = API_ROUTES.MY_ARTICLES(userId);
+
+
+  if (queryFilters) {
+    const params = new URLSearchParams();
+    
+    if (queryFilters.categoryId) {
+      params.append('categoryId', queryFilters.categoryId.toString());
+    }
+    if (queryFilters.condition) {
+      params.append('condition', queryFilters.condition);
+    }
+
+    if (queryFilters.minPrice !== undefined && queryFilters.minPrice !== null) {
+      params.append('minPrice', queryFilters.minPrice.toString());
+    }
+    if (queryFilters.maxPrice !== undefined && queryFilters.maxPrice !== null) {
+      params.append('maxPrice', queryFilters.maxPrice.toString());
+    }
+    
+    const queryString = params.toString();
+    if (queryString) {
+
+      url += (url.includes('?') ? '&' : '?') + queryString; 
+    }
+  }
+
+  const res = await fetch(url, {
     method: 'GET',
-    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    headers: { 
+      ...jsonHeaders, 
+      Authorization: `Bearer ${token}` 
+    },
   });
+  
   return handleResponse<Article[]>(res);
 }
 
@@ -47,6 +87,37 @@ export async function getArticleById(id: number, token: string): Promise<Article
         headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
     });
     return handleResponse<Article>(res);
+}
+
+export async function requestArticleAvailabilityNotification(
+  articleId: number,
+  requesterId: number,
+  token: string,
+): Promise<string> {
+  const res = await fetch(API_ROUTES.REQUEST_AVAILABILITY_NOTIFICATION(articleId, requesterId), {
+    method: 'POST',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try {
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        errorMessage = data.message || data.error || JSON.stringify(data);
+      } else {
+        errorMessage = await res.text();
+      }
+    } catch {}
+    throw new Error(normalizeErrorMessage(errorMessage));
+  }
+
+  const contentType = res.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    return res.json();
+  }
+  return res.text();
 }
 
 export async function uploadArticle(
@@ -106,7 +177,41 @@ export async function updateArticle(
   ownerId: number,
   token: string,
   payload: Partial<ArticlePayload>,
+  imageUri?: string,
+  imageName?: string,
 ): Promise<Article> {
+  // Si hay imagen, usar el endpoint con imagen
+  if (imageUri && imageName) {
+    const formData = new FormData();
+    
+    // Añadir los datos del artículo como JSON
+    formData.append('data', JSON.stringify(payload));
+    
+    // Añadir la imagen
+    if (Platform.OS === 'web') {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      formData.append('image', blob, imageName);
+    } else {
+      const imageType = imageName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+      formData.append('image', {
+        uri: imageUri,
+        type: imageType,
+        name: imageName,
+      } as any);
+    }
+    
+    const res = await fetch(API_ROUTES.UPDATE_ARTICLE_WITH_IMAGE(id, ownerId), {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    return handleResponse<Article>(res);
+  } 
+  
+  // Sin imagen, usar el endpoint JSON original
   const res = await fetch(API_ROUTES.UPDATE_ARTICLE(id, ownerId), {
     method: 'PUT',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },

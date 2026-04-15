@@ -233,6 +233,24 @@ Escanear el QR con **Expo Go** o abrir en navegador.
 
 ------------------------------------------------------------------------
 
+### Tests de rendimiento (Locust)
+
+Para ejecutar los tests de rendimiento, iniciar el backend en una terminal con el siguiente perfil para usar la bbdd en memoria:
+
+``` bash
+cd backend
+./mvnw spring-boot:run -Dspring-boot.run.profiles=loadtest
+```
+
+Y en otra terminal distinta:
+
+``` bash
+cd locust
+locust -f locustfile.py --host=http://localhost:8080
+```
+
+------------------------------------------------------------------------
+
 ### Notas importantes
 
 -   Todo se ejecuta dentro de Docker.

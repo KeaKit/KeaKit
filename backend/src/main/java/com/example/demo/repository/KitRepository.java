@@ -46,5 +46,17 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
     void updateTenantToNullForFinishedKits(@Param("userId") Long userId);
     
     List<Kit> findByTenantIdAndStatus(Long tenantId, KitStatus status);
+
+
+   // Devuelve los kits pagados/activos que se cruzan con estas fechas
+    @Query("SELECT DISTINCT k FROM Kit k JOIN k.snapshots s " +
+           "WHERE s.originalItemId = :itemId " +
+           "AND k.status IN (:statuses) " +
+           "AND k.startDate <= :endDate " +
+           "AND k.endDate >= :startDate")
+    List<Kit> findOverlappingKitsForItem(@Param("itemId") Long itemId,
+                                         @Param("startDate") LocalDate startDate,
+                                         @Param("endDate") LocalDate endDate,
+                                         @Param("statuses") List<KitStatus> statuses);
 }
 

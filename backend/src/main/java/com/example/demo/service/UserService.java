@@ -1,23 +1,30 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.PublicUserProfileDto;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserUpdateData;
-import com.example.demo.model.User;
-import com.example.demo.model.UserRole;
-import com.example.demo.model.Wallet;
-import com.example.demo.repository.WalletRepository;
 import com.example.demo.exception.InvalidCredentialsException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.UserAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundException;
+import com.example.demo.model.RgpdConsent;
+import com.example.demo.model.User;
+import com.example.demo.model.UserRole;
+import com.example.demo.model.Wallet;
+import com.example.demo.repository.RgpdConsentRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.WalletRepository;
 import com.example.demo.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -35,25 +42,62 @@ public class UserService {
     @Autowired
     private WalletRepository walletRepository;
 
-    public UserResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+    @Autowired
+    private RgpdConsentRepository rgpdConsentRepository;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
+    @Transactional
+    public UserResponse register(RegisterRequest request, String clientIp) {
+        System.out.println("=== REGISTRO RGPD ===");
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("acceptedPolicies: " + request.getAcceptedPolicies());
+
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new UserAlreadyExistsException("Email already exists");
         }
 
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
         User user = new User(
-                request.getEmail(),
+                normalizedEmail,
                 hashedPassword,
                 request.getName(),
                 UserRole.USER,
                 request.getPhone(),
                 request.getAddress(),
                 request.getCity(),
-                request.getCountry());
+                request.getCountry()
+        );
 
         User savedUser = userRepository.save(user);
+        System.out.println("Usuario guardado con ID: " + savedUser.getId());
+
         this.createWalletForUser(savedUser);
+
+        // Guardar consentimiento siempre que acceptedPolicies sea true
+        if (request.getAcceptedPolicies() != null && request.getAcceptedPolicies()) {
+            System.out.println("Guardando consentimiento RGPD para usuario: " + savedUser.getId());
+
+            // Eliminar consentimiento previo si existe
+            rgpdConsentRepository.findByUser(savedUser).ifPresent(existing -> {
+                rgpdConsentRepository.delete(existing);
+                System.out.println("Consentimiento previo eliminado");
+            });
+
+            RgpdConsent consent = new RgpdConsent();
+            consent.setUser(savedUser);
+            consent.setAcceptedVersion("1.0");
+            consent.setAcceptedAt(LocalDateTime.now());
+            consent.setIpAddress(clientIp);
+
+            rgpdConsentRepository.save(consent);
+            System.out.println("Consentimiento guardado correctamente");
+        } else {
+            System.out.println("NO se guarda consentimiento - acceptedPolicies es: " + request.getAcceptedPolicies());
+        }
 
         String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId(), savedUser.getRole());
         return new UserResponse(savedUser, token);
@@ -64,12 +108,12 @@ public class UserService {
             throw new ResourceNotFoundException("User not found. Cannot create wallet.");
         }
         Wallet wallet = new Wallet(user);
-
         walletRepository.save(wallet);
     }
 
     public UserResponse login(LoginRequest request) {
-        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+        Optional<User> userOpt = userRepository.findByEmail(normalizedEmail);
 
         if (userOpt.isEmpty()) {
             throw new UserNotFoundException("User not found");
@@ -116,8 +160,28 @@ public class UserService {
     }
 
     public UserResponse getUserByEmail(String email) throws UserNotFoundException {
-        User user = userRepository.findByEmail(email)
+        String normalizedEmail = email.toLowerCase().trim();
+        User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return new UserResponse(user);
+    }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+    }
+
+    public User updateProfileImage(Long userId, MultipartFile image) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String imageUrl = cloudinaryService.uploadImage(image);
+        user.setProfileImageUrl(imageUrl);
+        return userRepository.save(user);
+    }
+
+    public PublicUserProfileDto getPublicUserProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return new PublicUserProfileDto(user);
     }
 }

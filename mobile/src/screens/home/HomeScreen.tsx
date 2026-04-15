@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
   ScrollView,
   RefreshControl,
   Animated,
@@ -16,9 +17,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, RentedItemResponse, Article, DeliveryStatus, KitResponse } from '../../types';
+import { RootStackParamList, RentedItemResponse, Article, DeliveryStatus, KitResponse, DemandAnalysisItem } from '../../types';
 import { Colors } from '../../styles';
-import { getLoggedUserWallet, getRentedItems, getMyArticles } from '../../services';
+import { getLoggedUserWallet, getRentedItems, getMyArticles, getTopDemandedItems } from '../../services';
 import { SkeletonPulse, FadeInItem } from '../../components';
 import ProfileMenuModal from './ProfileMenuModal';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -54,6 +55,9 @@ const HomeScreen: React.FC = () => {
   const [loadingRentals, setLoadingRentals] = useState(false);
   const [myArticles, setMyArticles] = useState<Article[]>([]);
   const [loadingArticles, setLoadingArticles] = useState(false);
+  const [topDemandedItems, setTopDemandedItems] = useState<DemandAnalysisItem[]>([]);
+  const [loadingTopDemanded, setLoadingTopDemanded] = useState(false);
+  const [topDemandedError, setTopDemandedError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const { unreadCount, addNotification } = useTrackingNotifications();
@@ -86,7 +90,9 @@ const HomeScreen: React.FC = () => {
     if (!user?.id || !user?.token) return;
     if (user.role !== "USER") return;
 
-    const stored = await AsyncStorage.getItem(LAST_UPDATES_KEY);
+    const userUpdatesKey = `${LAST_UPDATES_KEY}_${user.id}`;
+
+    const stored = await AsyncStorage.getItem(userUpdatesKey);
     const lastUpdates: Record<string, string> = stored ? JSON.parse(stored) : {};
 
     const kits = await getMyKits(user.id, user.token);
@@ -113,7 +119,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    await AsyncStorage.setItem(LAST_UPDATES_KEY, JSON.stringify(lastUpdates));
+    await AsyncStorage.setItem(userUpdatesKey, JSON.stringify(lastUpdates));
   };
 
 
@@ -144,6 +150,19 @@ const HomeScreen: React.FC = () => {
     } finally {
       setLoadingArticles(false);
     }
+
+    setLoadingTopDemanded(true);
+    try {
+      const topItems = await getTopDemandedItems(user.token, 5);
+      setTopDemandedItems(topItems);
+      setTopDemandedError(null);
+    } catch (error) {
+      setTopDemandedItems([]);
+      setTopDemandedError(error instanceof Error ? error.message : 'No se pudo cargar el análisis de demanda.');
+    } finally {
+      setLoadingTopDemanded(false);
+    }
+
     await checkTrackingUpdates();
   };
 
@@ -379,7 +398,7 @@ const HomeScreen: React.FC = () => {
                     styles.pillButtonPrimary,
                     { paddingVertical: isMobile ? 8 : 10 }
                   ]} 
-                  onPress={() => navigation.navigate('PurchaseDefaultKit')}
+                  onPress={() => navigation.navigate('DefaultKits')}
                 >
                   <Text style={[
                     styles.pillButtonTextLight,
@@ -552,6 +571,59 @@ const HomeScreen: React.FC = () => {
         </FadeInItem>
 
         {/* Article list */}
+        {user?.role === 'USER' && (
+          <FadeInItem delay={320}>
+            <View style={[
+              styles.card,
+              styles.cardWhite,
+              Shadows.medium,
+              { marginBottom: isMobile ? 16 : 20 }
+            ]}>
+              <View style={styles.topDemandedHeader}>
+                <Text style={[
+                  styles.cardTitleDark,
+                  { fontSize: getResponsiveFontSize(16, 18, 18) }
+                ]}>
+                  Top productos demandados
+                </Text>
+                {!loadingTopDemanded && topDemandedItems.length > 0 && (
+                  <Text style={styles.topDemandedHint}>últimos alquileres</Text>
+                )}
+              </View>
+
+              <View style={styles.listContainer}>
+                {loadingTopDemanded ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <CompactSkeletonRow key={`demand-skeleton-${i}`} isMobile={isMobile} />
+                  ))
+                ) : topDemandedError ? (
+                  <View style={styles.topDemandedErrorBox}>
+                    <Ionicons name="alert-circle-outline" size={20} color={Colors.error} />
+                    <Text style={styles.topDemandedErrorText} numberOfLines={2}>
+                      {topDemandedError}
+                    </Text>
+                    <TouchableOpacity onPress={fetchData} style={styles.topDemandedRetryBtn}>
+                      <Text style={styles.topDemandedRetryText}>Reintentar</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : topDemandedItems.length === 0 ? (
+                  <EmptyTrayMessage icon="stats-chart-outline" message="Aún no hay datos de demanda disponibles" />
+                ) : (
+                  topDemandedItems.map((item, idx) => (
+                    <TopDemandedRow
+                      key={item.itemId}
+                      item={item}
+                      rank={idx + 1}
+                      isLast={idx === topDemandedItems.length - 1}
+                      isMobile={isMobile}
+                    />
+                  ))
+                )}
+              </View>
+            </View>
+          </FadeInItem>
+        )}
+
         {user && (
           <FadeInItem delay={350}>
             <View style={[
@@ -677,6 +749,58 @@ const CompactSkeletonRow: React.FC<{ isMobile: boolean }> = ({ isMobile }) => (
       <SkeletonPulse width="50%" height={isMobile ? 10 : 12} radius={4} />
     </View>
     <SkeletonPulse width={isMobile ? 35 : 40} height={isMobile ? 14 : 16} radius={6} />
+  </View>
+);
+
+const TopDemandedRow: React.FC<{
+  item: DemandAnalysisItem;
+  rank: number;
+  isLast?: boolean;
+  isMobile: boolean;
+}> = ({ item, rank, isLast, isMobile }) => (
+  <View style={[styles.topDemandedRow, isLast && styles.topDemandedRowLast]}>
+    <View style={styles.topDemandedRankBadge}>
+      <Text style={styles.topDemandedRankText}>#{rank}</Text>
+    </View>
+
+    <View style={styles.topDemandedImageWrap}>
+      {item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.topDemandedImage} resizeMode="cover" />
+      ) : (
+        <Ionicons name="image-outline" size={18} color="#9CA3AF" />
+      )}
+    </View>
+
+    <View style={styles.topDemandedInfo}>
+      <Text
+        style={[
+          styles.topDemandedTitle,
+          { fontSize: isMobile ? 13 : 14 }
+        ]}
+        numberOfLines={1}
+      >
+        {item.title}
+      </Text>
+      <Text
+        style={[
+          styles.topDemandedCategory,
+          { fontSize: isMobile ? 11 : 12 }
+        ]}
+        numberOfLines={1}
+      >
+        {item.categoryName}
+      </Text>
+    </View>
+
+    <View style={styles.topDemandedMetrics}>
+      <Text style={[styles.topDemandedMetricValue, { fontSize: isMobile ? 13 : 14 }]}>
+        {item.totalTimesRented}
+      </Text>
+      <Text style={[styles.topDemandedMetricLabel, { fontSize: isMobile ? 10 : 11 }]}>alquileres</Text>
+      <Text style={[styles.topDemandedMetricSubLabel, { fontSize: isMobile ? 10 : 11 }]}>
+        {item.totalUnitsRented} uds.
+      </Text>
+    </View>
   </View>
 );
 
@@ -834,6 +958,107 @@ const styles = StyleSheet.create({
   },
   cardHorizontalText: {
     flex: 1,
+  },
+  topDemandedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  topDemandedHint: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  topDemandedErrorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
+  topDemandedErrorText: {
+    flex: 1,
+    color: Colors.error,
+    fontSize: 13,
+  },
+  topDemandedRetryBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: Colors.primaryHomeOpacity,
+  },
+  topDemandedRetryText: {
+    color: Colors.primaryHome,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  topDemandedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  topDemandedRowLast: {
+    borderBottomWidth: 0,
+  },
+  topDemandedRankBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.primaryHomeOpacity,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topDemandedRankText: {
+    color: Colors.primaryHome,
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  topDemandedImageWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  topDemandedImage: {
+    width: '100%',
+    height: '100%',
+  },
+  topDemandedInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  topDemandedTitle: {
+    color: Colors.primaryHome,
+    fontWeight: '700',
+  },
+  topDemandedCategory: {
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  topDemandedMetrics: {
+    alignItems: 'flex-end',
+    minWidth: 68,
+  },
+  topDemandedMetricValue: {
+    color: Colors.primaryHome,
+    fontWeight: '800',
+    lineHeight: 18,
+  },
+  topDemandedMetricLabel: {
+    color: Colors.textSecondary,
+    fontWeight: '600',
+    lineHeight: 14,
+  },
+  topDemandedMetricSubLabel: {
+    color: '#9CA3AF',
+    fontWeight: '500',
+    lineHeight: 14,
   },
   gridContainer: {
     flexDirection: 'row',

@@ -1,10 +1,10 @@
 package com.example.demo.service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,6 @@ import com.example.demo.model.User;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import java.time.temporal.ChronoUnit;
 
 @Service
 public class KitService {
@@ -60,6 +59,9 @@ public class KitService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private PromoCodeService promoCodeService;
 
     // TODO: Obtener la garantía de la configuración hecha por el admin
     private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2;
@@ -130,6 +132,7 @@ public class KitService {
                 if (request.tenantId() == foundItem.getOwner().getId()) {
                     throw new RuntimeException("Tenant cannot select their own items");
                 }
+                validateItemAvailability(item.itemId(), item.quantity(), kit.getStartDate(), kit.getEndDate());
             }
         }
 
@@ -153,7 +156,7 @@ public class KitService {
         return savedKit;
     }
 
-    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+    public KitPaymentDTO getKitPayment(KitCreateRequest request, String promoCode, String userEmail) {
         double months = calculateMonthsBetween(request.startDate(), request.endDate());
         double subtotalPrice = request.itemSelections().stream()
             .mapToDouble(item -> item.pricePerMonth() * item.quantity() * months)
@@ -163,16 +166,30 @@ public class KitService {
         if (request.deliveryMethod() == DeliveryMethod.COURIER) {
             courierPrice = PLATFORM_COURIER_PRICE;
         }
-        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        double discount = 0.0;
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validate(promoCode, userEmail);
+            if (validation.isValid()) {
+                discount = subtotalPrice * validation.getDiscountRate();
+            }
+        }
+
+        double totalPrice = subtotalPrice + guarantee + courierPrice - discount;
 
         return new KitPaymentDTO(
                 toCents(totalPrice),
                 toCents(subtotalPrice),
                 toCents(guarantee),
-                toCents(courierPrice));
+                toCents(courierPrice),
+                toCents(discount));
     }
 
-    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException {
+    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+        return getKitPayment(request, null, null);
+    }
+
+    public KitPaymentDTO getKitPayment(Long kitId, String promoCode, String userEmail) throws ResourceNotFoundException {
         Kit kit = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
         double months = calculateMonthsBetween(kit.getStartDate(), kit.getEndDate());
@@ -181,13 +198,27 @@ public class KitService {
             .sum();
         double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
         double courierPrice = kit.getDeliveryMethod() == DeliveryMethod.COURIER ? PLATFORM_COURIER_PRICE : 0.0;
-        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        double discount = 0.0;
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validate(promoCode, userEmail);
+            if (validation.isValid()) {
+                discount = subtotalPrice * validation.getDiscountRate();
+            }
+        }
+
+        double totalPrice = subtotalPrice + guarantee + courierPrice - discount;
 
         return new KitPaymentDTO(
                 toCents(totalPrice),
                 toCents(subtotalPrice),
                 toCents(guarantee),
-                toCents(courierPrice));
+                toCents(courierPrice),
+                toCents(discount));
+    }
+
+    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException {
+        return getKitPayment(kitId, null, null);
     }
 
     private Integer toCents(Double amount) {
@@ -195,16 +226,10 @@ public class KitService {
     }
 
     private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
-        int years = end.getYear() - start.getYear();
-        int months = end.getMonthValue() - start.getMonthValue();
-        int days = end.getDayOfMonth() - start.getDayOfMonth();
+        long diffDays = ChronoUnit.DAYS.between(start, end) + 1;
+        return diffDays / 30.0;
 
-        int totalMonths = years * 12 + months;
-
-        int daysInMonth = 30;
-        double monthFraction = (double) days / daysInMonth;
-
-        return totalMonths + monthFraction;
+        // con el backend de antes daba problemas esta función, por ejemplo, si era 15 enero-14 de febrero, daba 0 days, porque hacía 14-15+1; y debería ser 1 mes y 31 días, no 1 mes y 0 días
     }
 
     public KitResponse update(Long id, Kit updateData) {
@@ -237,6 +262,17 @@ public class KitService {
             kit.setCourierPrice(PLATFORM_COURIER_PRICE);
         } else {
             kit.setCourierPrice(null);
+        }
+
+        if (updateData.getStartDate() != null || updateData.getEndDate() != null) {
+            LocalDate newStart = updateData.getStartDate() != null ? updateData.getStartDate() : kit.getStartDate();
+            LocalDate newEnd = updateData.getEndDate() != null ? updateData.getEndDate() : kit.getEndDate();
+            
+            if (kit.getStatus() == KitStatus.DRAFT && kit.getSnapshots() != null) {
+                for (ItemMemento snapshot : kit.getSnapshots()) {
+                    validateItemAvailability(snapshot.getOriginalItemId(), snapshot.getSelectedUnits(), newStart, newEnd);
+                }
+            }
         }
 
         validateDates(kit.getStartDate(), kit.getEndDate());
@@ -311,6 +347,7 @@ public class KitService {
             throw new RuntimeException("The kit can only be confirmed if its status is PAID");
         }
         kit.setStatus(KitStatus.ACTIVE);
+        kitRepository.save(kit);
     }
 
     private List<ItemMemento> itemSelectionToSnapshots(List<KitCreateRequest.ItemSelectionRequest> itemSelections,
@@ -343,6 +380,12 @@ public class KitService {
 
         if (kit.getStatus() != KitStatus.DRAFT) {
             throw new RuntimeException("Only DRAFT kits can be paid");
+        }
+
+        if (kit.getSnapshots() != null) {
+            for (ItemMemento snapshot : kit.getSnapshots()) {
+                validateItemAvailability(snapshot.getOriginalItemId(), snapshot.getSelectedUnits(), kit.getStartDate(), kit.getEndDate());
+            }
         }
 
         kit.setStatus(KitStatus.PAID);
@@ -394,6 +437,9 @@ public class KitService {
         if (alreadyExists) {
             throw new RuntimeException("This item is already in the kit");
         }
+
+        // Como al añadir un artículo desde cero se mete 1 unidad por defecto
+        validateItemAvailability(itemId, 1, kit.getStartDate(), kit.getEndDate());
 
         // 4. Creamos el Snapshot para el nuevo objeto
         ItemMemento newSnapshot = item.createSnapshot(
@@ -449,4 +495,43 @@ public class KitService {
         return new KitResponse(savedKit);
     }
 
+
+
+
+    private void validateItemAvailability(Long itemId, int requestedQuantity, LocalDate startDate, LocalDate endDate) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item not found: " + itemId));
+
+        // 1. Si de base piden más de lo que existe, cortamos directamente
+        if (requestedQuantity > item.getTotalUnits()) {
+             throw new RuntimeException("El artículo '" + item.getTitle() + "' solo tiene " + item.getTotalUnits() + " unidades en total.");
+        }
+
+        List<KitStatus> unavailableStatuses = Arrays.asList(KitStatus.PAID, KitStatus.ACTIVE);
+        List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(itemId, startDate, endDate, unavailableStatuses);
+
+        if (overlappingKits.isEmpty()) return; // Vía libre
+
+        // 2. Comprobamos día por día para calcular la concurrencia exacta
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            int rentedUnitsOnDate = 0;
+
+            for (Kit kit : overlappingKits) {
+                // Si este kit concreto solapa con el día actual del bucle
+                if (!date.isBefore(kit.getStartDate()) && !date.isAfter(kit.getEndDate())) {
+                    // Buscamos cuántas unidades de nuestro artículo tiene alquiladas
+                    for (ItemMemento snapshot : kit.getSnapshots()) {
+                        if (snapshot.getOriginalItemId().equals(itemId)) {
+                            rentedUnitsOnDate += snapshot.getSelectedUnits();
+                        }
+                    }
+                }
+            }
+
+            // 3. Verificamos el stock para este día
+            if (rentedUnitsOnDate + requestedQuantity > item.getTotalUnits()) {
+                throw new RuntimeException("El artículo '" + item.getTitle() + "' no tiene suficientes unidades disponibles para las fechas seleccionadas.");
+            }
+        }
+    }
 }

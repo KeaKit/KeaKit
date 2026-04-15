@@ -17,19 +17,36 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types";
 import { useNavigation } from "@react-navigation/native";
 import { ArticleMapView } from "./ArticleMapView";
+import { useAuth } from "../context/AuthContext";
+import { useNotification } from "./NotificationContext";
+import { requestArticleAvailabilityNotification } from "../services/articleService";
+import { SelectPicker } from "./SelectPicker";
 
-type ProductSelectionNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+const sanitizePriceInput = (value: string): string => value.replace(/\D/g, "");
+
+const parsePrice = (value?: string): number | undefined => {
+  if (!value || value.trim().length === 0) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+type ProductSelectionNav = NativeStackNavigationProp<
+  RootStackParamList,
+  "Home"
+>;
 
 type CatalogProduct = {
   id: number;
+  itemType: "ARTICLE" | "SERVICE" | string;
   title: string;
   pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | "ACTIVE" | string;
   category?: string;
   city?: string;
   ownerId: number;
   ownerName?: string;
   imageUrl?: string | null;
+  condition?: string | null;
   totalUnits: number;
   availableFrom?: string;
   availableUntil?: string;
@@ -45,9 +62,22 @@ type ProductSelectionModalProps = {
   onDismiss: () => void;
   searchText: string;
   onSearchChange: (text: string) => void;
-  categoryFilter: "ALL" | string;
-  onCategoryFilterChange: (category: "ALL" | string) => void;
-  categories: string[];
+  categoryOptions?: { label: string; value: string }[];
+  selectedCategoryId?: string;
+  onCategoryChange?: (categoryId: string) => void;
+  conditionOptions?: { label: string; value: string }[];
+  selectedCondition?: string;
+  onConditionChange?: (condition: string) => void;
+  minPrice?: string;
+  maxPrice?: string;
+  onMinPriceChange?: (value: string) => void;
+  onMaxPriceChange?: (value: string) => void;
+  onApplyFilters?: () => void;
+  onClearFilters?: () => void;
+  filtersLoading?: boolean;
+  categoryFilter?: "ALL" | string;
+  onCategoryFilterChange?: (category: "ALL" | string) => void;
+  categories?: string[];
   filteredProducts: CatalogProduct[];
   tempSelectedQuantities: Record<number, number>;
   onToggleSelection: (id: number) => void;
@@ -64,7 +94,16 @@ type ProductSelectionModalProps = {
   onToggleExpandedSearch: () => void;
   loadingNearby: boolean;
   targetCityCoords?: { lat: number; lng: number } | null;
-  mapProducts?: { id: number; title: string; city?: string | null; pricePerMonth: number; ownerName?: string | null; distanceKm?: number; cityLat?: number; cityLng?: number }[];
+  mapProducts?: {
+    id: number;
+    title: string;
+    city?: string | null;
+    pricePerMonth: number;
+    ownerName?: string | null;
+    distanceKm?: number;
+    cityLat?: number;
+    cityLng?: number;
+  }[];
 };
 
 export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
@@ -72,6 +111,19 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   onDismiss,
   searchText,
   onSearchChange,
+  categoryOptions,
+  selectedCategoryId,
+  onCategoryChange,
+  conditionOptions,
+  selectedCondition,
+  onConditionChange,
+  minPrice,
+  maxPrice,
+  onMinPriceChange,
+  onMaxPriceChange,
+  onApplyFilters,
+  onClearFilters,
+  filtersLoading = false,
   categoryFilter,
   onCategoryFilterChange,
   categories,
@@ -94,7 +146,125 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   mapProducts = [],
 }) => {
   const navigation = useNavigation<ProductSelectionNav>();
+  const { user } = useAuth();
+  const { showNotification } = useNotification();
   const [mapView, setMapView] = React.useState(false);
+  const [requestingIds, setRequestingIds] = React.useState<
+    Record<number, boolean>
+  >({});
+  const filteredProductIds = React.useMemo(
+    () => new Set(filteredProducts.map((product) => product.id)),
+    [filteredProducts],
+  );
+  const resolvedCategoryOptions = React.useMemo(() => {
+    if (categoryOptions && categoryOptions.length > 0) {
+      return categoryOptions;
+    }
+
+    return (categories ?? []).map((category) => ({
+      label: category === "ALL" ? "Todas las categorías" : category,
+      value: category,
+    }));
+  }, [categories, categoryOptions]);
+  const resolvedSelectedCategoryId = selectedCategoryId ?? categoryFilter ?? "";
+  const resolvedSelectedCondition = selectedCondition ?? "";
+  const resolvedConditionOptions = conditionOptions ?? [
+    { label: "Cualquier estado", value: "" },
+  ];
+  const [priceValidationError, setPriceValidationError] =
+    React.useState<string>("");
+
+  const minPriceValue = React.useMemo(() => parsePrice(minPrice), [minPrice]);
+  const maxPriceValue = React.useMemo(() => parsePrice(maxPrice), [maxPrice]);
+
+  const minPriceError = React.useMemo(() => {
+    if (!minPrice || minPrice.trim().length === 0) return "";
+    if (minPriceValue === undefined) return "Introduce solo numeros.";
+    if (minPriceValue < 1) return "El precio minimo debe ser al menos 1 EUR.";
+    return "";
+  }, [minPrice, minPriceValue]);
+
+  const maxPriceError = React.useMemo(() => {
+    if (!maxPrice || maxPrice.trim().length === 0) return "";
+    if (maxPriceValue === undefined) return "Introduce solo numeros.";
+    if (maxPriceValue < 1) return "El precio maximo debe ser al menos 1 EUR.";
+    return "";
+  }, [maxPrice, maxPriceValue]);
+
+  const rangePriceError = React.useMemo(() => {
+    if (minPriceValue === undefined || maxPriceValue === undefined) return "";
+    if (maxPriceValue < minPriceValue) {
+      return "El precio maximo debe ser mayor o igual al minimo.";
+    }
+    return "";
+  }, [minPriceValue, maxPriceValue]);
+
+  const hasPriceErrors = !!(minPriceError || maxPriceError || rangePriceError);
+
+  const handleMinPriceInput = (value: string) => {
+    setPriceValidationError("");
+    (onMinPriceChange ?? (() => {}))(sanitizePriceInput(value));
+  };
+
+  const handleMaxPriceInput = (value: string) => {
+    setPriceValidationError("");
+    (onMaxPriceChange ?? (() => {}))(sanitizePriceInput(value));
+  };
+
+  const handleApplyFiltersPress = () => {
+    if (hasPriceErrors) {
+      setPriceValidationError(
+        "Revisa los precios antes de aplicar los filtros.",
+      );
+      return;
+    }
+    setPriceValidationError("");
+    (onApplyFilters ?? (() => {}))();
+  };
+
+  const handleCategorySelection = (value: string) => {
+    if (onCategoryChange) {
+      onCategoryChange(value);
+      return;
+    }
+    if (onCategoryFilterChange) {
+      onCategoryFilterChange((value || "ALL") as "ALL" | string);
+    }
+  };
+
+  const handleRequestAvailability = async (articleId: number) => {
+    if (!user?.id || !user.token) {
+      showNotification(
+        "Necesitas iniciar sesión para solicitar el aviso.",
+        "error",
+      );
+      return;
+    }
+
+    if (requestingIds[articleId]) return;
+    setRequestingIds((prev) => ({ ...prev, [articleId]: true }));
+
+    try {
+      await requestArticleAvailabilityNotification(
+        articleId,
+        user.id,
+        user.token,
+      );
+      showNotification(
+        "Te avisaremos cuando el artículo vuelva a estar disponible.",
+        "success",
+      );
+    } catch (error) {
+      showNotification(
+        error instanceof Error
+          ? error.message
+          : "No se pudo solicitar el aviso.",
+        "error",
+      );
+    } finally {
+      setRequestingIds((prev) => ({ ...prev, [articleId]: false }));
+    }
+  };
 
   // Calcular disponibilidad de productos basado en fechas
   const productsWithAvailability = React.useMemo(() => {
@@ -160,7 +330,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
   const navigateToUserReviews = (ownerId: number, ownerName: string) => {
     onDismiss();
-    navigation.navigate('UserRatings', {
+    navigation.navigate("UserRatings", {
       userId: ownerId,
       userName: ownerName,
     });
@@ -183,35 +353,163 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
               activeOutlineColor={Colors.primary}
             />
 
+            <View style={{ gap: 8 }}>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <SelectPicker
+                    options={resolvedCategoryOptions}
+                    selectedValue={resolvedSelectedCategoryId}
+                    placeholder="Todas las categorías"
+                    onValueChange={handleCategorySelection}
+                    title="Filtrar por categoría"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <SelectPicker
+                    options={resolvedConditionOptions}
+                    selectedValue={resolvedSelectedCondition}
+                    placeholder="Cualquier estado"
+                    onValueChange={onConditionChange ?? (() => {})}
+                    title="Filtrar por estado"
+                  />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <PaperTextInput
+                  mode="outlined"
+                  label="Precio mín."
+                  value={minPrice ?? ""}
+                  onChangeText={handleMinPriceInput}
+                  keyboardType="numeric"
+                  error={
+                    !!minPriceError ||
+                    !!rangePriceError ||
+                    !!priceValidationError
+                  }
+                  style={{ flex: 1, backgroundColor: Colors.backgroundWhite }}
+                  outlineColor={Colors.border}
+                  activeOutlineColor={Colors.primary}
+                />
+                <PaperTextInput
+                  mode="outlined"
+                  label="Precio máx."
+                  value={maxPrice ?? ""}
+                  onChangeText={handleMaxPriceInput}
+                  keyboardType="numeric"
+                  error={
+                    !!maxPriceError ||
+                    !!rangePriceError ||
+                    !!priceValidationError
+                  }
+                  style={{ flex: 1, backgroundColor: Colors.backgroundWhite }}
+                  outlineColor={Colors.border}
+                  activeOutlineColor={Colors.primary}
+                />
+              </View>
+
+              {!!minPriceError && (
+                <Text style={commonStyles.errorText}>{minPriceError}</Text>
+              )}
+              {!!maxPriceError && (
+                <Text style={commonStyles.errorText}>{maxPriceError}</Text>
+              )}
+              {!!rangePriceError && (
+                <Text style={commonStyles.errorText}>{rangePriceError}</Text>
+              )}
+              {!!priceValidationError && (
+                <Text style={commonStyles.errorText}>
+                  {priceValidationError}
+                </Text>
+              )}
+
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <Button
+                  mode="outlined"
+                  onPress={() => {
+                    setPriceValidationError("");
+                    (onClearFilters ?? (() => {}))();
+                  }}
+                  style={{ flex: 1, borderRadius: 8 }}
+                  contentStyle={{ paddingVertical: 4 }}
+                >
+                  Limpiar
+                </Button>
+                <Button
+                  mode="contained"
+                  onPress={handleApplyFiltersPress}
+                  loading={filtersLoading}
+                  disabled={filtersLoading || hasPriceErrors}
+                  style={{ flex: 1, borderRadius: 8 }}
+                  contentStyle={{ paddingVertical: 4 }}
+                >
+                  Aplicar filtros
+                </Button>
+              </View>
+            </View>
+
             <View style={{ flexDirection: "row", gap: 8 }}>
               <TouchableOpacity
                 onPress={() => setMapView(false)}
                 style={{
-                  flex: 1, flexDirection: "row", alignItems: "center",
-                  justifyContent: "center", gap: 6, paddingVertical: 8,
-                  borderRadius: 8, borderWidth: 1,
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  paddingVertical: 8,
+                  borderRadius: 8,
+                  borderWidth: 1,
                   borderColor: !mapView ? Colors.primary : Colors.border,
-                  backgroundColor: !mapView ? "#E3F2FD" : Colors.backgroundWhite,
+                  backgroundColor: !mapView
+                    ? "#E3F2FD"
+                    : Colors.backgroundWhite,
                 }}
               >
-                <Ionicons name="list-outline" size={18} color={!mapView ? Colors.primary : Colors.textSecondary} />
-                <Text style={{ color: !mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Lista</Text>
+                <Ionicons
+                  name="list-outline"
+                  size={18}
+                  color={!mapView ? Colors.primary : Colors.textSecondary}
+                />
+                <Text
+                  style={{
+                    color: !mapView ? Colors.primary : Colors.textSecondary,
+                    fontSize: 13,
+                  }}
+                >
+                  Lista
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setMapView(true)}
                 style={{
-                  flex: 1, flexDirection: "row", alignItems: "center",
-                  justifyContent: "center", gap: 6, paddingVertical: 8,
-                  borderRadius: 8, borderWidth: 1,
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  paddingVertical: 8,
+                  borderRadius: 8,
+                  borderWidth: 1,
                   borderColor: mapView ? Colors.primary : Colors.border,
                   backgroundColor: mapView ? "#E3F2FD" : Colors.backgroundWhite,
                 }}
               >
-                <Ionicons name="map-outline" size={18} color={mapView ? Colors.primary : Colors.textSecondary} />
-                <Text style={{ color: mapView ? Colors.primary : Colors.textSecondary, fontSize: 13 }}>Mapa</Text>
+                <Ionicons
+                  name="map-outline"
+                  size={18}
+                  color={mapView ? Colors.primary : Colors.textSecondary}
+                />
+                <Text
+                  style={{
+                    color: mapView ? Colors.primary : Colors.textSecondary,
+                    fontSize: 13,
+                  }}
+                >
+                  Mapa
+                </Text>
               </TouchableOpacity>
             </View>
-
 
             {userCity && (
               <TouchableOpacity
@@ -270,42 +568,22 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                 </Text>
               </TouchableOpacity>
             )}
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8 }}
-            >
-              {categories.map((c) => (
-                <TouchableOpacity
-                  key={c}
-                  onPress={() => onCategoryFilterChange(c)}
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor:
-                      categoryFilter === c ? Colors.primary : Colors.border,
-                    backgroundColor:
-                      categoryFilter === c ? "#EAF3F8" : Colors.backgroundWhite,
-                  }}
-                >
-                  <Text style={{ color: Colors.primary }}>
-                    {c === "ALL" ? "Todas las categorías" : c}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
           </View>
 
           {mapView ? (
             <ArticleMapView
-              articles={(
-                showOnlyMyCity && userCity
-                  ? mapProducts.filter((a) => a.city?.toLowerCase() === userCity.toLowerCase())
-                  : mapProducts
-              ).map((a) => ({ ...a, city: a.city ?? undefined, ownerName: a.ownerName ?? undefined }))}
+              articles={(showOnlyMyCity && userCity
+                ? mapProducts.filter(
+                    (a) =>
+                      filteredProductIds.has(a.id) &&
+                      a.city?.toLowerCase() === userCity.toLowerCase(),
+                  )
+                : mapProducts.filter((a) => filteredProductIds.has(a.id))
+              ).map((a) => ({
+                ...a,
+                city: a.city ?? undefined,
+                ownerName: a.ownerName ?? undefined,
+              }))}
               targetCityCoords={targetCityCoords ?? null}
               userCity={userCity}
               selectedIds={Object.keys(tempSelectedQuantities).map(Number)}
@@ -313,7 +591,9 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             />
           ) : null}
 
-          <ScrollView style={[createKitStyles.modalList, mapView ? { height: 0 } : {}]}>
+          <ScrollView
+            style={[createKitStyles.modalList, mapView ? { height: 0 } : {}]}
+          >
             {productsWithAvailability.length === 0 ? (
               <Text
                 style={[
@@ -330,19 +610,24 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   p.id,
                 );
                 const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
-                const isDisabled = p.isAvailable === false;
+                // Cambio: Un producto se puede añadir si hay fechas válidas Y está AVAILABLE
+                const isRentableStatus =
+                  p.itemType === "SERVICE"
+                    ? p.status === "ACTIVE"
+                    : p.status === "AVAILABLE";
+                const canBeAdded = p.isAvailable && isRentableStatus;
+
                 return (
                   <Pressable
                     key={p.id}
                     style={[
                       createKitStyles.modalRow,
-                      isDisabled && {
+                      !canBeAdded && {
                         opacity: 0.7,
                         backgroundColor: "#fafafa",
                       },
                     ]}
-                    onPress={() => !isDisabled && onToggleSelection(p.id)}
-                    disabled={isDisabled}
+                    onPress={() => canBeAdded && onToggleSelection(p.id)}
                   >
                     {p.imageUrl ? (
                       <Image
@@ -380,24 +665,44 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       </Text>
 
                       <Text style={commonStyles.caption}>
-                          {p.ownerName ? (
-                            <Text
-                              style={{ color: "#007AFF" }}
-                              onPress={() => navigateToUserReviews(p.ownerId, p.ownerName || "")}
-                            >
-                              {`${p.ownerName}`}
+                        {p.ownerName ? (
+                          <Text
+                            style={{ color: "#007AFF" }}
+                            onPress={() => {
+                              navigateToUserReviews(
+                                p.ownerId,
+                                p.ownerName || "",
+                              );
+                            }}
+                          >
+                            {`${p.ownerName}`}
                             {" • "}
-                            </Text> 
-                          ) : ""}
+                          </Text>
+                        ) : (
+                          ""
+                        )}
                         {p.city ? `${p.city}` : ""}
                         {p.distanceKm !== undefined ? (
-                          <Text style={{ color: "#F57F17" }}>{` · ~${p.distanceKm} km`}</Text>
+                          <Text
+                            style={{ color: "#F57F17" }}
+                          >{` · ~${p.distanceKm} km`}</Text>
                         ) : null}
                         {p.category ? ` · ${p.category}` : ""}
-                        {" • "}
-                        {p.city ? `${p.city} • ` : ""}
-                        {p.category ? `${p.category}` : ""}
                       </Text>
+                      {p.condition ? (
+                        <Text style={commonStyles.caption}>
+                          Estado:{" "}
+                          {p.condition === "NEW"
+                            ? "Nuevo"
+                            : p.condition === "LIGHTLY_USED"
+                              ? "Poco usado"
+                              : p.condition === "USED"
+                                ? "Usado"
+                                : p.condition === "WORN"
+                                  ? "Desgastado"
+                                  : p.condition}
+                        </Text>
+                      ) : null}
                       <Text style={commonStyles.caption}>
                         Unidades disponibles: {p.totalUnits}
                       </Text>
@@ -405,7 +710,12 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                         <Text
                           style={[
                             commonStyles.caption,
-                            { color: Colors.textSecondary, marginTop: 2 },
+                            {
+                              color: p.isAvailable
+                                ? Colors.textSecondary
+                                : Colors.error,
+                              marginTop: 2,
+                            },
                           ]}
                         >
                           {p.availabilityMessage}
@@ -420,7 +730,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                         marginRight: 8,
                       }}
                     >
-                      {checked ? (
+                      {checked && canBeAdded ? (
                         <View
                           style={{
                             flexDirection: "row",
@@ -482,12 +792,52 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                       </Text>
                       <Text style={commonStyles.bodySecondary}>/ mes</Text>
                     </View>
-                    {!isDisabled && (
+
+                    {/* CAMBIO: Lógica de icono simplificada para mostrar siempre Checkmark o Campana */}
+                    {canBeAdded ? (
                       <Ionicons
                         name={checked ? "checkmark-circle" : "ellipse-outline"}
                         size={22}
                         color={checked ? Colors.success : Colors.primary}
                       />
+                    ) : (
+                      <View
+                        style={{
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 45,
+                        }}
+                      >
+                        <TouchableOpacity
+                          onPress={() => handleRequestAvailability(p.id)}
+                          disabled={requestingIds[p.id]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Avisar cuando ${p.title} esté disponible`}
+                        >
+                          {requestingIds[p.id] ? (
+                            <ActivityIndicator
+                              size="small"
+                              color={Colors.warning}
+                            />
+                          ) : (
+                            <Ionicons
+                              name="notifications-outline"
+                              size={22}
+                              color={Colors.warning}
+                            />
+                          )}
+                        </TouchableOpacity>
+                        <Text
+                          style={{
+                            color: Colors.warning,
+                            fontSize: 8,
+                            marginTop: 2,
+                            textAlign: "center",
+                          }}
+                        >
+                          Avisarme
+                        </Text>
+                      </View>
                     )}
                   </Pressable>
                 );

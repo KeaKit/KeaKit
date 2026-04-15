@@ -17,7 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
+import org.springframework.security.config.Customizer;
 import java.util.Arrays;
 
 @Configuration
@@ -36,10 +36,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/swagger-ui.html","/swagger-ui/**","/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                .requestMatchers("/api/users/*/public-profile").permitAll()
                 .requestMatchers("/api/cities/**").permitAll()
                 .requestMatchers("/api/countries/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
@@ -56,7 +58,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/services/**").authenticated()
                 .requestMatchers("/api/users/**").authenticated()
                 .requestMatchers("/api/ratings/**").authenticated()
-                .anyRequest().authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/promo-codes/validate").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/category", "/api/category/**").permitAll()
+                .requestMatchers("/api/rgpd/current-policy").permitAll()
+                .requestMatchers("/error").permitAll()
+		        .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -73,15 +79,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        configuration.setAllowedOrigins(Arrays.asList("https://keakitv2.web.app", "http://localhost:8081")); 
+        configuration.setAllowedOrigins(Arrays.asList("https://keakitv3.web.app", "http://localhost:8081")); 
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(false);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+	UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    	source.registerCorsConfiguration("/**", configuration);
+    	return source;
     }
 
     @Bean

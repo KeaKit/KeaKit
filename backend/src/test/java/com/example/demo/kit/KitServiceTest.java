@@ -4,9 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +20,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -212,6 +216,192 @@ public class KitServiceTest {
         kitService.confirmKitStatus(1L);
 
         assertEquals(KitStatus.ACTIVE, kit.getStatus());
+    }
+
+    @Test
+    void confirmKitStatus_when_idNotExists_throwsException() {
+        when(kitRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> kitService.confirmKitStatus(99L));
+    }
+
+    @Test
+    void confirmKitStatus_when_statusNotPaid_throwsExceptionWithCorrectMessage() {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.DRAFT);
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
+
+        assertEquals("The kit can only be confirmed if its status is PAID", exception.getMessage());
+    }
+
+    @Test
+    void confirmKitStatus_calls_save_repository() {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.PAID);
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        kitService.confirmKitStatus(1L);
+
+        verify(kitRepository, times(1)).save(any(Kit.class)); 
+    }
+
+    @Test
+    void confirmKitStatus_savesWithCorrectStatus() {
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.PAID);
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        kitService.confirmKitStatus(1L);
+
+        ArgumentCaptor<Kit> kitCaptor = ArgumentCaptor.forClass(Kit.class);
+        verify(kitRepository).save(kitCaptor.capture());
+        
+        assertEquals(KitStatus.ACTIVE, kitCaptor.getValue().getStatus());
+    }
+
+// ==========================================
+    // TESTS DE DISPONIBILIDAD (CONCURRENCIA)
+    // ==========================================
+
+    @Test
+    void createKit_itemUnavailable_throwsException() {
+        User tenant = createTestUser(1L, "Tenant");
+        User owner = createTestUser(2L, "Owner");
+        Article article = createTestArticle(100L, "MacBook Pro", 1, owner);
+
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 1, 50.0);
+        KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid",
+            LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.DRAFT, null, null, tenant.getId(), List.of(selection));
+
+        when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
+        when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+        
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        snap.setSelectedUnits(1);
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.create(req));
+        // Mensaje actualizado
+        assertEquals("El artículo 'MacBook Pro' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
+    }
+
+    @Test
+    void markAsPaid_itemUnavailable_throwsException() {
+        User user = createTestUser(1L, "Tenant");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setStatus(KitStatus.DRAFT);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusDays(5));
+        
+        ItemMemento snapshot = createTestSnapshot(100L, user);
+        snapshot.setSelectedUnits(1);
+        kit.setSnapshots(new ArrayList<>(List.of(snapshot)));
+
+        Article article = createTestArticle(100L, "Cámara Sony", 1, user);
+
+        when(kitRepository.findById(10L)).thenReturn(Optional.of(kit));
+        
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        snap.setSelectedUnits(1);
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.markAsPaid(10L));
+        // Mensaje actualizado
+        assertEquals("El artículo 'Cámara Sony' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
+    }
+    
+    @Test
+    void addItemToKit_itemUnavailable_throwsException() {
+        User user = createTestUser(1L, "Tenant");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusDays(5));
+        kit.setSnapshots(new ArrayList<>());
+        
+        // Creamos un taladro con 5 unidades de stock
+        Article article = createTestArticle(100L, "Taladro", 5, createTestUser(2L, "Owner"));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
+        
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        // TRUCO: Ocupamos las 5 unidades en el alquiler previo.
+        // Así, al pedir 1 nueva, saltará el error por superar el stock (5 + 1 > 5).
+        snap.setSelectedUnits(5); 
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
+
+        when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> 
+            kitService.addItemToKit(kit.getId(), article.getId(), user.getId()));
+            
+        // Mensaje actualizado
+        assertEquals("El artículo 'Taladro' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
+    }
+
+    @Test
+    void updateKitDates_itemUnavailable_throwsException() {
+        User user = createTestUser(1L, "Tenant");
+        Kit kit = new Kit();
+        kit.setId(10L);
+        kit.setStatus(KitStatus.DRAFT);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusDays(5));
+        
+        ItemMemento snapshot = createTestSnapshot(100L, user);
+        snapshot.setSelectedUnits(1);
+        kit.setSnapshots(new ArrayList<>(List.of(snapshot)));
+
+        Kit updateData = new Kit();
+        updateData.setStartDate(LocalDate.now().plusDays(10));
+        updateData.setEndDate(LocalDate.now().plusDays(15));
+        
+        Article article = createTestArticle(100L, "Monitor", 1, user);
+
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        snap.setSelectedUnits(1);
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
+        when(kitRepository.findById(10L)).thenReturn(Optional.of(kit));
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.update(10L, updateData));
+        // Mensaje actualizado
+        assertEquals("El artículo 'Monitor' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
     }
 
     // ==========================================
@@ -822,9 +1012,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(request);
 
-        assertEquals(15398, result.totalPrice());
-        assertEquals(11999, result.subtotalPrice());
-        assertEquals(2400, result.guarantee());
+        assertEquals(15878, result.totalPrice());
+        assertEquals(12399, result.subtotalPrice());
+        assertEquals(2480, result.guarantee());
         assertEquals(999, result.courierPrice());
     }
 
@@ -841,9 +1031,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(request);
 
-        assertEquals(3600, result.totalPrice());
-        assertEquals(3000, result.subtotalPrice());
-        assertEquals(600, result.guarantee());
+        assertEquals(3720, result.totalPrice());
+        assertEquals(3100, result.subtotalPrice());
+        assertEquals(620, result.guarantee());
         assertEquals(0, result.courierPrice());
     }
 
@@ -869,9 +1059,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(77L);
 
-        assertEquals(12459, result.totalPrice());
-        assertEquals(9550, result.subtotalPrice());
-        assertEquals(1910, result.guarantee());
+        assertEquals(12841, result.totalPrice());
+        assertEquals(9868, result.subtotalPrice());
+        assertEquals(1974, result.guarantee());
         assertEquals(999, result.courierPrice());
     }
 
@@ -915,9 +1105,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(88L);
 
-        assertEquals(18000, result.totalPrice());
-        assertEquals(15000, result.subtotalPrice());
-        assertEquals(3000, result.guarantee());
+        assertEquals(18600, result.totalPrice());
+        assertEquals(15500, result.subtotalPrice());
+        assertEquals(3100, result.guarantee());
         assertEquals(0, result.courierPrice());
     }
 

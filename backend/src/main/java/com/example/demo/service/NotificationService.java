@@ -1,8 +1,10 @@
 package com.example.demo.service;
 
 import com.example.demo.model.*;
+import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.NotificationRepository;
+import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -22,9 +24,20 @@ public class NotificationService {
     @Autowired
     private KitRepository kitRepository;
 
+    @Autowired
+    private ArticleRepository articleRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     // Método general para crear notificaciones
     public void createNotification(User user, String message, NotificationType type, Long kitId) {
+        createNotification(user, message, type, kitId, null);
+    }
+
+    public void createNotification(User user, String message, NotificationType type, Long kitId, Long relatedArticleId) {
         Notification notification = new Notification(user, message, type, kitId);
+        notification.setRelatedArticleId(relatedArticleId);
         notificationRepository.save(notification);
     }
 
@@ -38,6 +51,34 @@ public class NotificationService {
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
         notification.setRead(true);
         notificationRepository.save(notification);
+    }
+
+    // CU-ARRENDADOR-06: Alerta de demanda
+    @Transactional
+    public Notification createDemandAlert(Long articleId, Long requesterId) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article not found with id: " + articleId));
+
+        if (article.getStatus() == ArticleStatus.AVAILABLE) {
+            throw new IllegalStateException("El artículo ya está disponible para alquilar");
+        }
+
+        User requester = userRepository.findById(requesterId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + requesterId));
+
+        User owner = article.getOwner();
+        if (owner == null) {
+            throw new IllegalStateException("El artículo no tiene propietario asignado");
+        }
+
+        if (owner.getId().equals(requesterId)) {
+            throw new IllegalStateException("El propietario no puede solicitar su propio artículo");
+        }
+
+        String message = requester.getName() + " está interesado en alquilar tu artículo \"" + article.getTitle() + "\", que actualmente no está disponible.";
+        Notification notification = new Notification(owner, message, NotificationType.DEMAND_ALERT, null);
+        notification.setRelatedArticleId(articleId);
+        return notificationRepository.save(notification);
     }
 
     // Lógica de RN-NOT-05: Objeto alquilado
@@ -77,5 +118,12 @@ public class NotificationService {
                 createNotification(landlord, message, NotificationType.RETURN_REMINDER, kit.getId());
             }
         }
+    }
+
+    public void deleteNotification(Long id) {
+        if (!notificationRepository.existsById(id)) {
+            throw new RuntimeException("La notificación no existe");
+        }
+        notificationRepository.deleteById(id);
     }
 }

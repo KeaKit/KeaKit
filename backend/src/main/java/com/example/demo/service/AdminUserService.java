@@ -29,7 +29,7 @@ public class AdminUserService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private WalletRepository walletRepository; // 👈 AÑADIR
+    private WalletRepository walletRepository;
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
@@ -49,25 +49,25 @@ public class AdminUserService {
     }
 
     public UserResponse createUser(AdminUserRequest request) {
-
-        if (userRepository.existsByEmail(request.getEmail())) {
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+        
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new UserAlreadyExistsException("Email already exists");
         }
 
         User user = new User(
-                request.getEmail(),
+                normalizedEmail,
                 passwordEncoder.encode(request.getPassword()),
                 request.getName(),
-                request.getRole() != null ? request.getRole() : UserRole.USER, // 👈 fallback
+                request.getRole() != null ? request.getRole() : UserRole.USER,
                 request.getPhone(),
                 request.getAddress(),
                 request.getCity(),
-                request.getCountry() // 👈 IMPORTANTE
+                request.getCountry()
         );
 
         User savedUser = userRepository.save(user);
 
-        // 👇 Crear wallet como en UserService
         Wallet wallet = new Wallet(savedUser);
         walletRepository.save(wallet);
 
@@ -80,7 +80,12 @@ public class AdminUserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (request.getEmail() != null) {
-            user.setEmail(request.getEmail());
+            String normalizedEmail = request.getEmail().toLowerCase().trim();
+
+            if (!normalizedEmail.equals(user.getEmail()) && userRepository.existsByEmail(normalizedEmail)) {
+                throw new UserAlreadyExistsException("El correo ya está registrado.");
+            }
+            user.setEmail(normalizedEmail); 
         }
 
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
@@ -107,13 +112,20 @@ public class AdminUserService {
             user.setCity(request.getCity());
         }
 
-        if (request.getCountry() != null) { // 👈 IMPORTANTE
+        if (request.getCountry() != null) {
             user.setCountry(request.getCountry());
         }
 
         User updatedUser = userRepository.save(user);
 
         return new UserResponse(updatedUser);
+    }
+
+    public UserResponse toggleFounderBadge(Long id) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+        user.setFounderBadge(!user.isFounderBadge());
+        return new UserResponse(userRepository.save(user));
     }
 
     @Transactional

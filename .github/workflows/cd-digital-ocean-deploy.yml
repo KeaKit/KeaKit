@@ -1,0 +1,45 @@
+name: CD - Deploy Backend to DigitalOcean
+
+on:
+  workflow_run:
+    workflows: ["Backend tests CI"]
+    types:
+      - completed
+    branches:
+      - main
+      - 'release/*.*.*'
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ejecutar despliegue en el Droplet
+        uses: appleboy/ssh-action@master
+        env:
+          APP_ENV_FILE: ${{ secrets.ENV_FILE }}
+        with:
+          host: ${{ secrets.DROPLET_IP2 }}
+          username: ${{ secrets.DROPLET_USERNAME2 }}
+          key: ${{ secrets.DROPLET_SSH_KEY2 }}
+          envs: APP_ENV_FILE
+          script: |
+            cd ~/app/
+            
+            # 1. Forzamos el fetch para conocer todas las ramas de GitHub
+            git fetch origin
+            
+            # 2. Hacemos checkout a la rama que disparó el evento y actualizamos
+            # Esto cambia de rama si es necesario y sincroniza el código
+            git checkout ${{ github.event.workflow_run.head_branch }}
+            git pull origin ${{ github.event.workflow_run.head_branch }}
+            
+            echo "$APP_ENV_FILE" > .env
+
+            # 3. Reiniciar con Docker Compose
+            docker compose down
+            docker compose up -d --build
+            
+            # 4. Limpieza
+            docker image prune -f

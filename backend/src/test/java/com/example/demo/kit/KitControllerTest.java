@@ -2,7 +2,10 @@ package com.example.demo.kit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -165,6 +168,36 @@ public class KitControllerTest {
             .andExpect(content().string("Kit not found"));
     }
 
+    @Test
+    void confirmKitStatus_notPaid_returnsError() throws Exception {
+        String errorMessage = "The kit can only be confirmed if its status is PAID";
+        doThrow(new RuntimeException(errorMessage))
+            .when(kitService).confirmKitStatus(1L);
+
+        mockMvc.perform(patch("/api/kits/confirm/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string(errorMessage));
+    }
+
+    @Test
+    void confirmKitStatus_verifyServiceCall() throws Exception {
+        mockMvc.perform(patch("/api/kits/confirm/99"))
+            .andExpect(status().isOk());
+
+        // Verifica que el controlador realmente pasó el ID 99 al servicio
+        verify(kitService, times(1)).confirmKitStatus(99L);
+    }
+
+    @Test
+    void confirmKitStatus_unexpectedRuntimeError_returnsNotFound() throws Exception {
+        doThrow(new NullPointerException("Unexpected null value"))
+            .when(kitService).confirmKitStatus(1L);
+
+        mockMvc.perform(patch("/api/kits/confirm/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string("Unexpected null value"));
+    }
+
     // ==========================================
     // TESTS PARA HISTÓRICO DE KITS
     // ==========================================
@@ -305,7 +338,7 @@ public class KitControllerTest {
 
     @Test
     void getKitPaymentByRequest_success_returnsOkAndPaymentDto() throws Exception {
-        KitPaymentDTO paymentDTO = new KitPaymentDTO(15398, 11999, 2400, 999);
+        KitPaymentDTO paymentDTO = new KitPaymentDTO(15398, 11999, 2400, 999, 0);
         when(kitService.getKitPayment(any(KitCreateRequest.class))).thenReturn(paymentDTO);
 
         String requestJson = """
@@ -384,8 +417,8 @@ public class KitControllerTest {
 
     @Test
     void getKitPaymentById_success_returnsOkAndPaymentDto() throws Exception {
-        KitPaymentDTO paymentDTO = new KitPaymentDTO(12459, 9550, 1910, 999);
-        when(kitService.getKitPayment(77L)).thenReturn(paymentDTO);
+        KitPaymentDTO paymentDTO = new KitPaymentDTO(12459, 9550, 1910, 999, 0);
+        when(kitService.getKitPayment(77L, null, null)).thenReturn(paymentDTO);
 
         mockMvc.perform(get("/api/kits/payment/77"))
             .andExpect(status().isOk())
@@ -397,7 +430,7 @@ public class KitControllerTest {
 
     @Test
     void getKitPaymentById_whenKitNotFound_returnsNotFound() throws Exception {
-        when(kitService.getKitPayment(999L)).thenThrow(new RuntimeException("Kit not found"));
+        when(kitService.getKitPayment(999L, null, null)).thenThrow(new RuntimeException("Kit not found"));
 
         mockMvc.perform(get("/api/kits/payment/999"))
             .andExpect(status().isNotFound())
