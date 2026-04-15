@@ -400,6 +400,8 @@
 
 - Simplify availability logic in ProductSelectionModal and improve filtering ([2793493](https://github.com/KeaKit/KeaKit/commit/279349301fea55477416082c13764077aeaac481))
 
+- Activity Notifications ([723213e](https://github.com/KeaKit/KeaKit/commit/723213e8205b359b231eee4ef7aa02fcb7d92633))
+
 
 ### Docs
 
