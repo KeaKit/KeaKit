@@ -90,7 +90,7 @@ public class Category {
     @PreUpdate
     private void validatePrices() {
         if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
-            throw new IllegalArgumentException("El precio mínimo no puede ser mayor que el precio máximo");
+            throw new IllegalArgumentException("minPrice cannot be greater than maxPrice");
         }
         if (minPrice != null) {
             this.minPrice = Math.round(this.minPrice * 100.0) / 100.0;
