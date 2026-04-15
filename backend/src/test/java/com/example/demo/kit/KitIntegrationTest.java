@@ -171,7 +171,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("End date cannot be before start date"));
+        .andExpect(content().string("La fecha de finalización no puede ser anterior a la fecha de inicio"));
     }
 
     @Test
@@ -195,7 +195,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Meeting point is required when delivery method is MEETING_POINT"));
+            .andExpect(content().string("Se requiere punto de encuentro cuando el método de entrega es MEETING_POINT"));
     }
 
     @Test
@@ -222,7 +222,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Tenant cannot select their own items"));
+            .andExpect(content().string("El arrendatario no puede seleccionar sus propios items"));
     }
 
     @Test
@@ -247,7 +247,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Item not found: 999999"));
+            .andExpect(content().string("Item no encontrado: 999999"));
     }
 
     @Test
@@ -730,7 +730,7 @@ class KitIntegrationTest {
         mockMvc.perform(post("/api/kits/" + savedKit.getId() + "/items/" + article.getId())
                 .param("userId", tenant.getId().toString()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("This item is already in the kit"));
+        .andExpect(content().string("Este artículo ya está en el kit"));
     }
 
     @Test
@@ -738,7 +738,7 @@ class KitIntegrationTest {
         mockMvc.perform(post("/api/kits/" + savedKit.getId() + "/items/999999")
                 .param("userId", tenant.getId().toString()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Item not found"));
+        .andExpect(content().string("Artículo no encontrado"));
     }
 
     @Test
@@ -793,7 +793,7 @@ class KitIntegrationTest {
         mockMvc.perform(delete("/api/kits/" + savedKit.getId() + "/items/" + article.getId())
                 .param("userId", tenant.getId().toString()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("A kit cannot be empty. It must contain at least one item."));
+        .andExpect(content().string("Un kit no puede quedar vacío. Debe contener al menos un artículo."));
     }
 
     @Test
@@ -819,7 +819,7 @@ class KitIntegrationTest {
         mockMvc.perform(delete("/api/kits/" + savedKit.getId() + "/items/" + notInKit.getId())
                 .param("userId", tenant.getId().toString()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Item is not part of this kit"));
+        .andExpect(content().string("Este artículo no es parte de este kit"));
     }
 
     @Test
@@ -884,7 +884,7 @@ class KitIntegrationTest {
         mockMvc.perform(patch("/api/kits/confirm/" + savedKit.getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("The kit can only be confirmed if its status is PAID"));
+        .andExpect(content().string("El kit solo puede ser confirmado si su estado es PAGADO"));
     }
 
     @Test
@@ -892,6 +892,36 @@ class KitIntegrationTest {
         mockMvc.perform(patch("/api/kits/confirm/999999")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Kit not found"));
+        .andExpect(content().string("Kit no encontrado"));
+    }
+
+    @Test
+    void testConfirmKitStatus_wrongTenant_returnsNotFound() throws Exception {
+        User intruder = new User();
+        intruder.setName("Intruso");
+        intruder.setEmail("intruder@example.com");
+        intruder.setPassword("123456");
+        intruder.setRole(UserRole.USER);
+        intruder.setCountry("España");
+        intruder.setCity("Madrid");
+        intruder.setAddress("Calle Falsa 123");
+        intruder.setPhone("111222333");
+        intruder = userRepository.save(intruder);
+
+        Kit intruderKit = new Kit();
+        intruderKit.setName("Kit Ajeno");
+        intruderKit.setCountry("España");
+        intruderKit.setCity("Madrid");
+        intruderKit.setStartDate(LocalDate.now());
+        intruderKit.setEndDate(LocalDate.now().plusDays(5));
+        intruderKit.setStatus(KitStatus.PAID);
+        intruderKit.setTenant(intruder);
+        intruderKit = kitRepository.save(intruderKit);
+
+        mockMvc.perform(patch("/api/kits/confirm/" + intruderKit.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Kit does not belong to the specified tenant"));
     }
 }

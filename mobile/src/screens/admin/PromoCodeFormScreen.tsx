@@ -9,7 +9,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
-import { createPromoCode, updatePromoCode } from '../../services/promoCodeService';
+import { createPromoCode, PromoCodeType, updatePromoCode } from '../../services/promoCodeService';
 import { getActivePilotEmails } from '../../services/pilotUserService';
 
 type PromoCodeFormNav = NativeStackNavigationProp<RootStackParamList, 'PromoCodeForm'>;
@@ -35,6 +35,8 @@ const FadeIn: React.FC<{ delay?: number; children: React.ReactNode }> = ({ delay
 };
 
 const PromoCodeFormScreen: React.FC = () => {
+  const CODE_MAX_LENGTH = 10;
+
   const navigation = useNavigation<PromoCodeFormNav>();
   const route = useRoute<PromoCodeFormRoute>();
   const { user } = useAuth();
@@ -45,6 +47,7 @@ const PromoCodeFormScreen: React.FC = () => {
   const [discountStr,    setDiscountStr]     = useState(promoCode ? String((promoCode.discountRate * 100).toFixed(0)) : '');
   const [active,         setActive]         = useState(promoCode?.active ?? true);
   const [singleUse,      setSingleUse]      = useState(promoCode?.singleUse ?? false);
+  const [promoType,      setPromoType]      = useState<PromoCodeType>(promoCode?.type ?? 'TENANT_DISCOUNT');
   const [pilotUserOnly,  setPilotUserOnly]  = useState(promoCode?.pilotUserOnly ?? false);
   const [pilotEmails,    setPilotEmails]    = useState<string[]>(promoCode?.pilotEmails ?? []);
   const [newEmail,       setNewEmail]       = useState('');
@@ -57,21 +60,31 @@ const PromoCodeFormScreen: React.FC = () => {
 
   const validate = (): boolean => {
     let valid = true;
-    if (!code.trim()) {
+    const normalizedCode = code.trim();
+    if (!normalizedCode) {
       setCodeError('El código es obligatorio');
+      valid = false;
+    } else if (normalizedCode.length > CODE_MAX_LENGTH) {
+      setCodeError(`El código no puede superar ${CODE_MAX_LENGTH} caracteres`);
       valid = false;
     } else setCodeError('');
 
-    const num = parseFloat(discountStr);
-    if (isNaN(num) || num < 0 || num > 100) {
-      setDiscountError('El descuento debe estar entre 0 y 100');
+    const trimmedDiscount = discountStr.trim();
+    if (!/^\d+$/.test(trimmedDiscount)) {
+      setDiscountError('El descuento debe contener solo números enteros');
+      valid = false;
+    } else {
+      const num = Number(trimmedDiscount);
+      if (num < 0 || num > 100) {
+        setDiscountError('El descuento debe estar entre 0 y 100');
         valid = false;
-      } else if (!Number.isInteger(num) || discountStr.includes(',') || discountStr.includes('.')) {
-        setDiscountError('El descuento debe ser un número entero (sin decimales)');
-        valid = false;
-      } else setDiscountError('');
-      return valid;
-    };
+      } else {
+        setDiscountError('');
+      }
+    }
+
+    return valid;
+  };
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -99,11 +112,13 @@ const PromoCodeFormScreen: React.FC = () => {
     if (!validate() || !user?.token) return;
     setSaving(true);
     try {
+      const discountPercent = Number(discountStr.trim());
       const payload = {
         code: code.trim().toUpperCase(),
-        discountRate: parseFloat(discountStr) / 100,
+        discountRate: discountPercent / 100,
         active,
         singleUse,
+        type: promoType,
         pilotUserOnly,
         pilotEmails,
       };
@@ -158,12 +173,22 @@ const PromoCodeFormScreen: React.FC = () => {
             <TextInput
               style={[styles.input, !!codeError && styles.inputError]}
               value={code}
-              onChangeText={t => { setCode(t.toUpperCase()); setCodeError(''); }}
+              onChangeText={t => {
+                const nextCode = t.toUpperCase();
+                setCode(nextCode);
+
+                if (nextCode.trim().length > CODE_MAX_LENGTH) {
+                  setCodeError(`El código no puede superar ${CODE_MAX_LENGTH} caracteres`);
+                } else {
+                  setCodeError('');
+                }
+              }}
               placeholder="Ej: BIENVENIDA20"
               placeholderTextColor="#aaa"
               autoCapitalize="characters"
               editable={!saving}
             />
+            <Text style={styles.helperText}>Máximo {CODE_MAX_LENGTH} caracteres</Text>
             {!!codeError && <Text style={styles.errorText}>{codeError}</Text>}
 
             <Text style={[styles.cardTitle, { marginTop: 12 }]}>Porcentaje de descuento</Text>
@@ -174,7 +199,7 @@ const PromoCodeFormScreen: React.FC = () => {
                 onChangeText={t => { setDiscountStr(t); setDiscountError(''); }}
                 placeholder="Ej: 15"
                 placeholderTextColor="#aaa"
-                keyboardType="decimal-pad"
+                keyboardType="number-pad"
                 editable={!saving}
               />
               <View style={styles.percentBadge}>
@@ -182,6 +207,49 @@ const PromoCodeFormScreen: React.FC = () => {
               </View>
             </View>
             {!!discountError && <Text style={styles.errorText}>{discountError}</Text>}
+
+            <Text style={[styles.cardTitle, { marginTop: 12 }]}>Tipo de código</Text>
+            <View style={styles.typeSwitchRow}>
+              <TouchableOpacity
+                style={[
+                  styles.typeSwitchBtn,
+                  promoType === 'TENANT_DISCOUNT' && styles.typeSwitchBtnActive,
+                ]}
+                onPress={() => setPromoType('TENANT_DISCOUNT')}
+                disabled={saving}
+              >
+                <Text
+                  style={[
+                    styles.typeSwitchText,
+                    promoType === 'TENANT_DISCOUNT' && styles.typeSwitchTextActive,
+                  ]}
+                >
+                  Alquiler kit
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.typeSwitchBtn,
+                  promoType === 'OWNER_COMMISSION_REDUCTION' && styles.typeSwitchBtnActive,
+                ]}
+                onPress={() => setPromoType('OWNER_COMMISSION_REDUCTION')}
+                disabled={saving}
+              >
+                <Text
+                  style={[
+                    styles.typeSwitchText,
+                    promoType === 'OWNER_COMMISSION_REDUCTION' && styles.typeSwitchTextActive,
+                  ]}
+                >
+                  Comisión owner
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.cardDesc}>
+              {promoType === 'TENANT_DISCOUNT'
+                ? 'Reduce el precio del alquiler para quien reserva el kit.'
+                : 'Reduce la comisión de plataforma para el propietario del objeto.'}
+            </Text>
           </View>
         </FadeIn>
 
@@ -344,7 +412,33 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   percentSymbol: { fontSize: 20, fontWeight: '700', color: KC.gray },
+  typeSwitchRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  typeSwitchBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: KC.border,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    backgroundColor: '#f8fbff',
+  },
+  typeSwitchBtnActive: {
+    borderColor: KC.blue,
+    backgroundColor: '#e8f3fb',
+  },
+  typeSwitchText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: KC.gray,
+  },
+  typeSwitchTextActive: {
+    color: KC.blue,
+  },
   errorText: { fontSize: 13, color: KC.error },
+  helperText: { fontSize: 12, color: KC.gray, marginTop: -4 },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   toggleInfo: { flex: 1, paddingRight: 12 },
   toggleLabel: { fontSize: 15, fontWeight: '700', color: KC.blueDark },

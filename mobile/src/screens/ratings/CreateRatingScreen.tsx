@@ -25,7 +25,7 @@ const CreateRatingScreen: React.FC = () => {
   const navigation = useNavigation<CreateRatingNav>();
   const route = useRoute<CreateRatingRoute>();
   const { user } = useAuth();
-  const { kitId } = route.params as any; // solo recibe kitId
+  const { kitId, revieweeId, revieweeName } = route.params as any;
 
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState('');
@@ -65,51 +65,69 @@ const CreateRatingScreen: React.FC = () => {
     setLoading(true);
     setError('');
 
-    // Obtener propietarios únicos del kit (ownerId único)
-    const ownersMap = new Map<number, string>();
-    kit.items?.forEach(item => {
-      if (item.ownerId && !ownersMap.has(item.ownerId)) {
-        ownersMap.set(item.ownerId, item.ownerName);
-      }
-    });
-    const owners = Array.from(ownersMap.entries()).map(([id, name]) => ({ id, name }));
-
-    if (owners.length === 0) {
-      setError('No hay propietarios para valorar');
-      setLoading(false);
-      return;
-    }
-
-    let successCount = 0;
-    let failCount = 0;
-
-    for (const owner of owners) {
+    if (revieweeId) {
       try {
         await createRating(
           {
-            revieweeId: owner.id,
+            revieweeId,
             kitId,
             score,
             comment: comment.trim() || undefined,
           },
           user.token,
         );
-        successCount++;
+        setLoading(false);
+        navigation.goBack();
       } catch (err) {
-        failCount++;
-        console.error(`Error al valorar a ${owner.name}:`, err);
+        console.error(`Error al valorar a ${revieweeName}:`, err);
       }
-    }
-
-    setLoading(false);
-    if (failCount === 0) {
-      Alert.alert('Éxito', `Se han enviado ${successCount} valoraciones correctamente.`);
-      navigation.goBack();
     } else {
-      Alert.alert(
-        'Atención',
-        `Se enviaron ${successCount} valoraciones, pero fallaron ${failCount}. Puedes intentar de nuevo más tarde.`
-      );
+      // Obtener propietarios únicos del kit (ownerId único)
+      const ownersMap = new Map<number, string>();
+      kit.items?.forEach(item => {
+        if (item.ownerId && !ownersMap.has(item.ownerId)) {
+          ownersMap.set(item.ownerId, item.ownerName);
+        }
+      });
+      const owners = Array.from(ownersMap.entries()).map(([id, name]) => ({ id, name }));
+
+      if (owners.length === 0) {
+        setError('No hay propietarios para valorar');
+        setLoading(false);
+        return;
+      }
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const owner of owners) {
+        try {
+          await createRating(
+            {
+              revieweeId: owner.id,
+              kitId,
+              score,
+              comment: comment.trim() || undefined,
+            },
+            user.token,
+          );
+          successCount++;
+        } catch (err) {
+          failCount++;
+          console.error(`Error al valorar a ${owner.name}:`, err);
+        }
+      }
+
+      setLoading(false);
+      if (failCount === 0) {
+        Alert.alert('Éxito', `Se han enviado ${successCount} valoraciones correctamente.`);
+        navigation.goBack();
+      } else {
+        Alert.alert(
+          'Atención',
+          `Se enviaron ${successCount} valoraciones, pero fallaron ${failCount}. Puedes intentar de nuevo más tarde.`
+        );
+      }
     }
   };
 
@@ -129,12 +147,13 @@ const CreateRatingScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
-        <Text style={commonStyles.headerTitle}>Valorar kit</Text>
+        <Text style={commonStyles.headerTitle}>Valorar <Text style={commonStyles.headerTitle}>{revieweeName ? "a " + revieweeName : "kit"}</Text></Text>
         <View style={{ width: 24 }} />
       </View>
 
       <View style={[commonStyles.screenPadding, styles.content]}>
         <Text style={styles.title}>Puntúa tu experiencia</Text>
+        <Text style={styles.subtitle}>Solo puedes valorar a un usuario una vez por kit.</Text>
 
         <View style={styles.starsContainer}>
           {[1, 2, 3, 4, 5].map((star) => (
@@ -190,6 +209,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FontSizes.lg,
+    fontWeight: FontWeights.semibold as '600',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  subtitle: {
+    fontSize: FontSizes.sm,
     fontWeight: FontWeights.semibold as '600',
     color: Colors.textPrimary,
     textAlign: 'center',

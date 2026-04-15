@@ -15,6 +15,10 @@ public class PromoCode {
     @Column(nullable = false, unique = true)
     private String code;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "promo_type")
+    private PromoCodeType type = PromoCodeType.TENANT_DISCOUNT;
+
     private Double discountRate; // 0.0 - 1.0
 
     private boolean active = true;
@@ -40,6 +44,9 @@ public class PromoCode {
 
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
+
+    public PromoCodeType getType() { return type; }
+    public void setType(PromoCodeType type) { this.type = type; }
 
     public Double getDiscountRate() { return discountRate; }
     public void setDiscountRate(Double discountRate) { this.discountRate = discountRate; }

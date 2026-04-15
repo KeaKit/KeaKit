@@ -32,14 +32,14 @@ public class ArticleAvailabilityRequestService {
     @Transactional
     public ArticleAvailabilityRequest requestAvailabilityNotification(Long articleId, Long requesterId) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new RuntimeException("Article not found with id: " + articleId));
+                .orElseThrow(() -> new RuntimeException("Artículo con id " + articleId + " no encontrado"));
 
         if (article.getStatus() == ArticleStatus.AVAILABLE) {
             throw new IllegalStateException("El artículo ya está disponible. No es necesario crear un aviso.");
         }
 
         User requester = userRepository.findById(requesterId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + requesterId));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + requesterId));
 
         if (article.getOwner() == null) {
             throw new IllegalStateException("El artículo no tiene propietario asignado");

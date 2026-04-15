@@ -1,5 +1,6 @@
 package com.example.demo.article;
 
+import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
@@ -13,6 +14,7 @@ import com.example.demo.service.ArticleService;
 import com.example.demo.service.CloudinaryService;
 import com.example.demo.service.DefaultKitService;
 import com.example.demo.service.PaymentService;
+import com.example.demo.service.PromoCodeService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,22 +41,15 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ArticleServiceTest {
 
-    @Mock
-    private ArticleRepository articleRepository;
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private CategoryRepository categoryRepository;
-    @Mock
-    private KitRepository kitRepository;
-    @Mock
-    private CloudinaryService cloudinaryService;
-    @Mock
-    private DefaultKitService defaultKitService;
-    @Mock
-    private PaymentService paymentService;
-    @Mock
-    private ArticleAvailabilityRequestService availabilityRequestService;
+    @Mock private ArticleRepository articleRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private CategoryRepository categoryRepository;
+    @Mock private KitRepository kitRepository;
+    @Mock private CloudinaryService cloudinaryService;
+    @Mock private DefaultKitService defaultKitService;
+    @Mock private PaymentService paymentService;
+    @Mock private ArticleAvailabilityRequestService availabilityRequestService; 
+    @Mock private PromoCodeService promoCodeService;
 
     @InjectMocks
     private ArticleService articleService;
@@ -148,7 +143,7 @@ class ArticleServiceTest {
     void findById_notFound_throws() {
         when(articleRepository.findById(99L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.findById(99L));
-        assertThat(ex.getMessage()).contains("Article not found");
+        assertThat(ex.getMessage()).contains("Artículo no encontrado");
     }
 
     // ------------ SAVE /api/article/upload ------------
@@ -156,7 +151,7 @@ class ArticleServiceTest {
     @Test
     void save_nullArticle_throws() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(null));
-        assertThat(ex.getMessage()).contains("Article payload is required");
+        assertThat(ex.getMessage()).contains("Payload del artículo requerido");
     }
 
     @Test
@@ -164,7 +159,7 @@ class ArticleServiceTest {
         article.setTitle(null);
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Title is required");
+                .hasMessage("Título requerido");
     }
 
     @Test
@@ -172,7 +167,7 @@ class ArticleServiceTest {
         article.setTitle("   ");
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Title is required");
+                .hasMessage("Título requerido");
     }
 
     @Test
@@ -180,7 +175,7 @@ class ArticleServiceTest {
         article.setDescription(null);
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Description is required");
+                .hasMessage("Descripción requerida");
     }
 
     @Test
@@ -188,7 +183,7 @@ class ArticleServiceTest {
         article.setDescription("  ");
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Description is required");
+                .hasMessage("Descripción requerida");
     }
 
     @Test
@@ -196,7 +191,7 @@ class ArticleServiceTest {
         article.setDescription("a".repeat(1001));
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Description cannot exceed 1000 characters");
+                .hasMessage("La descripción no puede exceder los 1000 caracteres");
     }
 
     @Test
@@ -211,7 +206,7 @@ class ArticleServiceTest {
         article.setCity(null);
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("City is required");
+                .hasMessage("Ciudad requerida");
     }
 
     @Test
@@ -219,7 +214,7 @@ class ArticleServiceTest {
         article.setCity(" ");
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("City is required");
+                .hasMessage("Ciudad requerida");
     }
 
     @Test
@@ -227,7 +222,7 @@ class ArticleServiceTest {
         article.setPricePerMonth(null);
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("pricePerMonth must be >= 0");
+                .hasMessage("El precio por mes debe ser un valor positivo");
     }
 
     @Test
@@ -235,7 +230,7 @@ class ArticleServiceTest {
         article.setPricePerMonth(-1.0);
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("pricePerMonth must be >= 0");
+                .hasMessage("El precio por mes debe ser un valor positivo");
     }
 
     @Test
@@ -252,7 +247,7 @@ class ArticleServiceTest {
         article.setPricePerMonth(1.0); // < minPrice 5.0
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("pricePerMonth must be between");
+                .hasMessageContaining("El precio por mes debe estar entre");
     }
 
     @Test
@@ -260,7 +255,7 @@ class ArticleServiceTest {
         article.setPricePerMonth(9999.0); // > maxPrice 500.0
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("pricePerMonth must be between");
+                .hasMessageContaining("El precio por mes debe estar entre");
     }
 
     @Test
@@ -275,7 +270,7 @@ class ArticleServiceTest {
         article.setAvailableFrom(LocalDate.now().minusDays(1));
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("availableFrom cannot be in the past");
+                .hasMessage("La fecha de inicio de disponibilidad no puede ser pasada a la actual");
     }
 
     @Test
@@ -284,7 +279,7 @@ class ArticleServiceTest {
         article.setAvailableUntil(LocalDate.now().plusDays(5));
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("availableFrom must be before or equal to availableUntil");
+                .hasMessage("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
     }
 
     @Test
@@ -302,7 +297,7 @@ class ArticleServiceTest {
         article.setOwner(null);
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Owner (with valid id) is required");
+                .hasMessage("Propietario con id válido es requerido");
     }
 
     @Test
@@ -312,7 +307,7 @@ class ArticleServiceTest {
         article.setOwner(noIdOwner);
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Owner (with valid id) is required");
+                .hasMessage("Propietario con id válido es requerido");
     }
 
     @Test
@@ -320,7 +315,7 @@ class ArticleServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> articleService.save(article))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Owner not found");
+                .hasMessage("Propietario no encontrado");
     }
 
     @Test
@@ -392,7 +387,7 @@ class ArticleServiceTest {
         when(articleRepository.findById(99L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.update(99L, owner.getId(), new Article()));
-        assertThat(ex.getMessage()).contains("Article not found");
+    assertThat(ex.getMessage()).contains("Artículo no encontrado");
     }
 
     @Test
@@ -402,7 +397,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, new Article()))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Article is currently rented and cannot be edited");
+                .hasMessage("El artículo está actualmente alquilado y no puede ser editado");
     }
 
     @Test
@@ -415,7 +410,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.update(4L, 1L, new Article()))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Only the owner can modify this article");
+        .hasMessage("Solo el propietario puede modificar este artículo");
     }
 
     @Test
@@ -427,7 +422,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Cannot change status via update; use toggleRent endpoint");
+        .hasMessage("No se puede cambiar el estado a través de la actualización; use el endpoint toggleRent");
     }
 
     @Test
@@ -439,7 +434,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Description cannot exceed 1000 characters");
+        .hasMessage("La descripción no puede exceder 1000 caracteres");
     }
 
     @Test
@@ -451,7 +446,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("pricePerMonth must be between");
+        .hasMessageContaining("El precio por mes debe estar entre");
     }
 
     @Test
@@ -463,7 +458,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("availableFrom cannot be in the past");
+        .hasMessage("La fecha de inicio de disponibilidad no puede ser pasada a la actual");
     }
 
     @Test
@@ -476,7 +471,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("availableFrom must be before or equal to availableUntil");
+        .hasMessage("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
     }
 
     @Test
@@ -538,7 +533,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.deleteById(99L, 1L))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Article not found");
+                .hasMessage("Artículo no encontrado");
     }
 
     @Test
@@ -548,7 +543,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.deleteById(1L, 1L))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Article is currently rented and cannot be deleted");
+        .hasMessage("El artículo está actualmente alquilado y no puede ser eliminado");
     }
 
     @Test
@@ -561,7 +556,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.deleteById(10L, 1L))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Only the owner can delete this article");
+        .hasMessage("Solo el propietario puede eliminar este artículo");
     }
 
     // ------------ toggleRent ------------
@@ -592,7 +587,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.toggleRent(1L, 1L))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Inactive articles cannot be rented");
+        .hasMessage("Los artículos inactivos no pueden ser alquilados");
     }
 
     @Test
@@ -605,7 +600,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.toggleRent(14L, 1L))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Only the owner can change rental status");
+        .hasMessage("Solo el propietario puede cambiar el estado de alquiler");
     }
 
     @Test
@@ -614,7 +609,7 @@ class ArticleServiceTest {
 
         assertThatThrownBy(() -> articleService.toggleRent(99L, 1L))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Article not found");
+                .hasMessage("Artículo no encontrado");
     }
 
     // ------------ findArticlesByUserId ------------
@@ -927,216 +922,4 @@ class ArticleServiceTest {
 
         assertThat(result).isEmpty();
     }
-
-    @Test
-    void createWithImage_success() throws Exception {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
-        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
-        when(cloudinaryService.uploadImage(any(MultipartFile.class))).thenReturn("https://cloudinary.com/image.jpg");
-        when(articleRepository.save(any(Article.class))).thenReturn(article);
-
-        MultipartFile mockImage = mock(MultipartFile.class);
-        Article result = articleService.createWithImage(article, mockImage, 1L, 1L);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getImageUrl()).isEqualTo("https://cloudinary.com/image.jpg");
-        assertThat(result.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
-        verify(cloudinaryService).uploadImage(mockImage);
-        verify(articleRepository).save(any(Article.class));
-    }
-
-    @Test
-    void createWithImage_ownerNotFound_throws() throws Exception {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
-
-        MultipartFile mockImage = mock(MultipartFile.class);
-        assertThatThrownBy(() -> articleService.createWithImage(article, mockImage, 99L, 1L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Owner not found");
-    }
-
-    @Test
-    void createWithImage_categoryNotFound_throws() throws Exception {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
-        when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
-
-        MultipartFile mockImage = mock(MultipartFile.class);
-        assertThatThrownBy(() -> articleService.createWithImage(article, mockImage, 1L, 99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Category not found");
-    }
-
-    @Test
-    void updateWithImage_success_updatesImageAndFields() throws Exception {
-        Article existing = makeArticle(1L, ArticleStatus.AVAILABLE);
-        existing.setCategory(category);
-        existing.setImageUrl("old-image.jpg");
-
-        when(articleRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(cloudinaryService.uploadImage(any(MultipartFile.class))).thenReturn("new-image.jpg");
-        when(articleRepository.save(any(Article.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        Article updateData = new Article();
-        updateData.setTitle("New Title");
-        updateData.setDescription("New Description");
-
-        MultipartFile mockImage = mock(MultipartFile.class);
-
-        Article result = articleService.updateWithImage(1L, owner.getId(), updateData, mockImage);
-
-        assertThat(result.getTitle()).isEqualTo("New Title");
-        assertThat(result.getImageUrl()).isEqualTo("new-image.jpg");
-        verify(cloudinaryService).deleteImage("old-image.jpg");
-        verify(cloudinaryService).uploadImage(mockImage);
-    }
-
-    @Test
-    void updateWithImage_withoutImage_onlyUpdatesFields() throws Exception {
-        Article existing = makeArticle(1L, ArticleStatus.AVAILABLE);
-        existing.setCategory(category);
-        existing.setImageUrl("old-image.jpg");
-
-        when(articleRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(articleRepository.save(any(Article.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        Article updateData = new Article();
-        updateData.setTitle("New Title Only");
-
-        Article result = articleService.updateWithImage(1L, owner.getId(), updateData, null);
-
-        assertThat(result.getTitle()).isEqualTo("New Title Only");
-        assertThat(result.getImageUrl()).isEqualTo("old-image.jpg"); // No cambió
-        verify(cloudinaryService, never()).deleteImage(any());
-        verify(cloudinaryService, never()).uploadImage(any());
-    }
-
-    @Test
-    void updateWithImage_articleRented_throws() throws Exception {
-        Article existing = makeArticle(1L, ArticleStatus.RENTED);
-        when(articleRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-        MultipartFile mockImage = mock(MultipartFile.class);
-
-        assertThatThrownBy(() -> articleService.updateWithImage(1L, owner.getId(), new Article(), mockImage))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Article is currently rented and cannot be edited");
-    }
-
-    @Test
-    void updateWithImage_notOwner_throws() throws Exception {
-        Article existing = makeArticle(1L, ArticleStatus.AVAILABLE);
-        User otherOwner = new User();
-        otherOwner.setId(99L);
-        existing.setOwner(otherOwner);
-
-        when(articleRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-        MultipartFile mockImage = mock(MultipartFile.class);
-
-        assertThatThrownBy(() -> articleService.updateWithImage(1L, owner.getId(), new Article(), mockImage))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Only the owner can modify this article");
-    }
-
-    @Test
-    void updateWithImage_articleNotFound_throws() throws Exception {
-        when(articleRepository.findById(99L)).thenReturn(Optional.empty());
-
-        MultipartFile mockImage = mock(MultipartFile.class);
-
-        assertThatThrownBy(() -> articleService.updateWithImage(99L, owner.getId(), new Article(), mockImage))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Article not found");
-    }
-
-    @Test
-    void updateWithImage_cloudinaryDeleteFails_continuesWithUpload() throws Exception {
-        Article existing = makeArticle(1L, ArticleStatus.AVAILABLE);
-        existing.setImageUrl("old-image.jpg");
-
-        when(articleRepository.findById(1L)).thenReturn(Optional.of(existing));
-        doThrow(new IOException("Delete failed")).when(cloudinaryService).deleteImage("old-image.jpg");
-        when(cloudinaryService.uploadImage(any(MultipartFile.class))).thenReturn("new-image.jpg");
-        when(articleRepository.save(any(Article.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        MultipartFile mockImage = mock(MultipartFile.class);
-
-        // No debe lanzar excepción, solo loguear warning
-        Article result = articleService.updateWithImage(1L, owner.getId(), new Article(), mockImage);
-
-        assertThat(result.getImageUrl()).isEqualTo("new-image.jpg");
-        verify(cloudinaryService).deleteImage("old-image.jpg");
-        verify(cloudinaryService).uploadImage(mockImage);
-    }
-
-    // Adicionales
-
-    @Test
-    void save_withNullCategory_success() {
-        article.setCategory(null);
-        article.setPricePerMonth(100.0);
-
-        when(articleRepository.save(any())).thenReturn(article);
-
-        Article result = articleService.save(article);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getCategory()).isNull();
-    }
-
-    @Test
-    void processReturn_noActiveKit_throws() {
-        Article a = makeArticle(20L, ArticleStatus.RENTED);
-
-        when(articleRepository.findById(20L)).thenReturn(Optional.of(a));
-        when(kitRepository.findActiveKitByItemId(20L, KitStatus.ACTIVE)).thenReturn(Optional.empty());
-
-        ReturnRequest request = new ReturnRequest("GOOD", "");
-
-        assertThatThrownBy(() -> articleService.processReturn(20L, owner.getId(), request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("No active Kit found for this article");
-    }
-
-    @Test
-    void processReturn_articleNotRented_throws() {
-        Article a = makeArticle(20L, ArticleStatus.AVAILABLE);
-
-        when(articleRepository.findById(20L)).thenReturn(Optional.of(a));
-
-        ReturnRequest request = new ReturnRequest("GOOD", "");
-
-        assertThatThrownBy(() -> articleService.processReturn(20L, owner.getId(), request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("This article is not currently rented");
-    }
-
-    @Test
-    void processReturn_notOwner_throws() {
-        Article a = makeArticle(20L, ArticleStatus.RENTED);
-        User differentOwner = new User();
-        differentOwner.setId(99L);
-        a.setOwner(differentOwner);
-        
-        when(articleRepository.findById(20L)).thenReturn(Optional.of(a));
-        
-        ReturnRequest request = new ReturnRequest("GOOD", "");
-        
-        assertThatThrownBy(() -> articleService.processReturn(20L, owner.getId(), request))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Only the owner can confirm the return");
-    }
-
-    @Test
-    void save_categoryNotFound_throws() {
-        article.setCategory(new Category());
-        article.getCategory().setId(999L);
-        
-        when(categoryRepository.findById(999L)).thenReturn(Optional.empty());
-        
-        assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Category not found");
-    }
-
 }

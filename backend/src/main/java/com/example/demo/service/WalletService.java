@@ -27,7 +27,7 @@ public class WalletService {
 
     public Wallet getWalletByUserId(Long userId) throws ResourceNotFoundException {
         return walletRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Cartera no encontrada para el usuario: " + userId));
     }
 
     public List<Transaction> getTransactionsForUser(Long userId) throws ResourceNotFoundException {
@@ -39,10 +39,10 @@ public class WalletService {
     public void updateWalletBalance(Long userId, Double amount) throws ResourceNotFoundException {
         Wallet wallet = getWalletByUserId(userId);
         if (wallet.getBalance() < amount){
-            throw new NotEnoughBalanceException("Insufficient balance in wallet");
+            throw new NotEnoughBalanceException("Saldo insuficiente en la cartera");
         }
         if(amount <= 0.0){
-            throw new NotEnoughBalanceException("the amount need to be positive");
+            throw new NotEnoughBalanceException("El monto debe ser positivo");
         }
         Transaction transaction = new Transaction();
         transaction.setAmount(- amount);

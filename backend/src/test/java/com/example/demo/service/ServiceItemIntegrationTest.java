@@ -237,7 +237,7 @@ class ServiceItemIntegrationTest {
                 .content(objectMapper.writeValueAsString(newService))
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Category not found"));
+            .andExpect(content().string("Categoría no encontrada"));
     }
 
     @Test
@@ -256,7 +256,7 @@ class ServiceItemIntegrationTest {
                 .content(objectMapper.writeValueAsString(newService))
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Title is required"));
+            .andExpect(content().string("Título requerido"));
     }
 
     @Test
@@ -275,7 +275,7 @@ class ServiceItemIntegrationTest {
                 .content(objectMapper.writeValueAsString(newService))
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Monthly price must be positive"));
+            .andExpect(content().string("El precio mensual debe ser positivo"));
     }
 
     @Test
@@ -295,7 +295,7 @@ class ServiceItemIntegrationTest {
                 .content(objectMapper.writeValueAsString(newService))
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Monthly price must be positive"));
+            .andExpect(content().string("El precio mensual debe ser positivo"));
     }
 
     @Test
@@ -315,7 +315,7 @@ class ServiceItemIntegrationTest {
                 .content(objectMapper.writeValueAsString(newService))
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Start date cannot be in the past"));
+            .andExpect(content().string("La fecha de inicio no puede ser en el pasado"));
     }
 
     @Test
@@ -335,7 +335,7 @@ class ServiceItemIntegrationTest {
                 .content(objectMapper.writeValueAsString(newService))
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("End date must be after the start date"));
+            .andExpect(content().string("La fecha de finalización debe ser después de la fecha de inicio"));
     }
 
     @Test
@@ -353,7 +353,7 @@ class ServiceItemIntegrationTest {
                 .content(objectMapper.writeValueAsString(newService))
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("You must specify the date range (From/Until)"));
+            .andExpect(content().string("Debes especificar el rango de fechas (Desde/Hasta)"));
     }
 
     // ─────────────────────────── PUT /{id} (autenticado) ───────────────────────────
@@ -406,7 +406,7 @@ class ServiceItemIntegrationTest {
                 .content(objectMapper.writeValueAsString(updateData))
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Service not found"));
+            .andExpect(content().string("Servicio no encontrado"));
     }
 
     @Test
@@ -435,7 +435,7 @@ class ServiceItemIntegrationTest {
                 .content(objectMapper.writeValueAsString(updateData))
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("The service is currently rented and cannot be modified."));
+            .andExpect(content().string("El servicio está actualmente alquilado y no puede ser modificado."));
     }
 
     @Test
@@ -446,7 +446,7 @@ class ServiceItemIntegrationTest {
                 .content("{\"status\":\"UNAVAILABLE\"}")
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Service status can only be ACTIVE or DRAFT"));
+            .andExpect(content().string("El estado del servicio solo puede ser ACTIVE o DRAFT"));
     }
 
     @Test
@@ -458,7 +458,7 @@ class ServiceItemIntegrationTest {
                          "\",\"availableUntil\":\"" + LocalDate.now().plusDays(5) + "\"}")
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("End date must be after the start date"));
+            .andExpect(content().string("La fecha de finalización debe ser después de la fecha de inicio"));
     }
 
     @Test
@@ -469,7 +469,7 @@ class ServiceItemIntegrationTest {
                 .content("{\"availableFrom\":\"" + LocalDate.now().minusDays(1) + "\"}")
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Start date cannot be in the past"));
+            .andExpect(content().string("La fecha de inicio no puede ser en el pasado"));
     }
 
     @Test
@@ -509,7 +509,7 @@ class ServiceItemIntegrationTest {
         mockMvc.perform(post("/api/services/" + savedService.getId() + "/request")
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("The service is not active and cannot be requested"));
+            .andExpect(content().string("El servicio no está activo y no puede ser solicitado"));
     }
 
     @Test
@@ -520,7 +520,7 @@ class ServiceItemIntegrationTest {
         mockMvc.perform(post("/api/services/" + savedService.getId() + "/request")
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("The service is not active and cannot be requested"));
+            .andExpect(content().string("El servicio no está activo y no puede ser solicitado"));
     }
 
     @Test
@@ -528,7 +528,7 @@ class ServiceItemIntegrationTest {
         mockMvc.perform(post("/api/services/999999/request")
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Service not found"));
+            .andExpect(content().string("Servicio no encontrado"));
     }
 
     // ─────────────────────────── POST /{id}/release (autenticado) ───────────────────────────
@@ -569,7 +569,7 @@ class ServiceItemIntegrationTest {
         mockMvc.perform(post("/api/services/999999/release")
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Service not found"));
+            .andExpect(content().string("Servicio no encontrado"));
     }
 
     // ─────────────────────────── DELETE /{id} (autenticado) ───────────────────────────
@@ -602,7 +602,7 @@ class ServiceItemIntegrationTest {
                 .param("ownerId", savedOwner.getId().toString())
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Service not found"));
+            .andExpect(content().string("Servicio no encontrado"));
     }
 
     @Test
@@ -614,7 +614,7 @@ class ServiceItemIntegrationTest {
                 .param("ownerId", savedOwner.getId().toString())
                 .with(user(asOwner())))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("The service is currently rented and cannot be deleted"));
+            .andExpect(content().string("El servicio está actualmente alquilado y no puede ser eliminado"));
 
         assertThat(serviceRepository.existsById(savedService.getId())).isTrue();
     }

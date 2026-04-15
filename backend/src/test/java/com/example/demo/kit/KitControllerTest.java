@@ -2,7 +2,6 @@ package com.example.demo.kit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -184,7 +183,6 @@ public class KitControllerTest {
         mockMvc.perform(patch("/api/kits/confirm/99"))
             .andExpect(status().isOk());
 
-        // Verifica que el controlador realmente pasó el ID 99 al servicio
         verify(kitService, times(1)).confirmKitStatus(99L);
     }
 
@@ -196,6 +194,17 @@ public class KitControllerTest {
         mockMvc.perform(patch("/api/kits/confirm/1"))
             .andExpect(status().isNotFound())
             .andExpect(content().string("Unexpected null value"));
+    }
+
+    @Test
+    void confirmKitStatus_wrongTenant_returnsNotFound() throws Exception {
+        String errorMessage = "Kit does not belong to the specified tenant";
+        doThrow(new RuntimeException(errorMessage))
+            .when(kitService).confirmKitStatus(1L);
+
+        mockMvc.perform(patch("/api/kits/confirm/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string(errorMessage));
     }
 
     // ==========================================
