@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/build/Ionicons";
+import { DefaultKit } from "./defaultKitTypes";
 
 export type UserRole = "ADMIN" | "USER" | "COURIER";
 
@@ -10,6 +11,8 @@ export interface RegisterRequest {
   city: string;
   country: string;
   password: string;
+  acceptedPolicies?: boolean;
+  acceptedMarketing?: boolean;
 }
 
 export interface LoginRequest {
@@ -139,6 +142,7 @@ export interface Article {
   rentedUntil: string | null;
   totalUnits?: number;
   condition: ArticleCondition | null;
+  ownerCommissionPromoCode?: string | null;
 }
 
 export interface ArticlePayload {
@@ -154,6 +158,7 @@ export interface ArticlePayload {
   purchaseDate?: string;
   totalUnits?: number;
   condition?: ArticleCondition;
+  ownerCommissionPromoCode?: string;
 }
 
 export interface Item {
@@ -163,6 +168,63 @@ export interface Item {
   pricePerMonth: number;
   category: string;
   quantity?: number;
+}
+
+export interface ItemCatalog {
+  id: number;
+  itemType: "ARTICLE" | "SERVICE" | string;
+  title: string;
+  description: string;
+  city: string;
+  country?: string | null;
+  pricePerMonth: number;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  category?: string | null;
+  totalUnits: number;
+  ownerId: number;
+  ownerName?: string | null;
+  status?: "AVAILABLE" | "RENTED" | "INACTIVE" | string | null;
+  condition?: ArticleCondition | null;
+  imageUrl?: string | null;
+}
+
+export interface ItemFilterRequest {
+  minPrice?: number;
+  maxPrice?: number;
+  country?: string;
+  city?: string;
+  categoryId?: number;
+  condition?: ArticleCondition;
+  page?: number;
+  size?: number;
+}
+
+export interface ItemFilterResponse {
+  content: ItemCatalog[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface ItemCatalogResponse {
+  id: number;
+    itemType: string; 
+    title: string;
+    description: string;
+    city: string;
+    pricePerMonth: number;
+    availableFrom: Date;
+    availableUntil: Date;
+    category: string;
+    totalUnits: number;
+    ownerId: number;
+    ownerName: string;
+    status?: string;   // solo para ARTICLE
+    imageUrl?: string; // solo para ARTICLE
 }
 
 export enum KitStatus {
@@ -250,24 +312,7 @@ export interface Category {
   maxPrice: number;
 }
 
-export interface DefaultKitItem {
-  id: number;
-  item: Article;
-}
 
-export interface DefaultKit {
-  id: number;
-  name: string;
-  description: string;
-  basePrice: number;
-  items: DefaultKitItem[];
-}
-
-export interface DefaultKitCreateRequest {
-  name: string;
-  description: string;
-  itemsIds?: number[];
-}
 
 export type IncidentType = "GENERAL" | "DAMAGED_ITEM";
 export type IncidentStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
@@ -327,6 +372,15 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
+export interface DemandAnalysisItem {
+  itemId: number;
+  title: string;
+  categoryName: string;
+  imageUrl: string | null;
+  totalTimesRented: number;
+  totalUnitsRented: number;
+}
+
 export type NavbarScreen =
   | "Home"
   | "Profile"
@@ -384,6 +438,7 @@ export interface HeaderMenuSection {
   items: HeaderMenuItem[];
 }
 
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -406,6 +461,7 @@ export type RootStackParamList = {
   MyKitsHistory: undefined;
   KitDetail: { kitId: number };
   DefaultKits: undefined;
+  DefaultKitDetails: { kitId: number };
   EditDefaultKit: { kitId: number };
   UploadArticle: undefined;
   AdminUsers: undefined;
@@ -417,7 +473,7 @@ export type RootStackParamList = {
   PromoteService: undefined;
   EditService: { service: Service };
   ServiceDetail: { serviceId: number };
-  DefaultKitForm: { defaultKit?: DefaultKit; mode: "view" | "edit" | "create" };
+  DefaultKitForm: { defaultKit?: DefaultKit; mode: "edit" | "create" };
   Commission: undefined;
   Wallet: undefined;
   WithdrawMoney: undefined;
@@ -425,8 +481,10 @@ export type RootStackParamList = {
   TrackingNotifications: undefined;
   AssignedKits: undefined;
   Couriers: undefined;
-  CourierDetail: { courier: UserResponse, isBusy?: boolean };
-  ArticleRentals: { articleId: number, articleTitle: string };
+  CourierDetail: { courier: UserResponse; isBusy?: boolean };
+  ArticleRentals: { articleId: number; articleTitle: string };
+  RgpdPolicy: undefined;
+  EditPolicy: undefined;
   PromoCodes: undefined;
   PromoCodeForm: { promoCode?: PromoCodeFormData; mode: 'create' | 'edit' };
   PilotUsers: undefined;
@@ -453,6 +511,7 @@ export interface Service {
   category: Category;
   status: ServiceStatus;
   totalUnits?: number;
+  ownerCommissionPromoCode?: string | null;
 }
 
 export interface ServicePayload {
@@ -465,6 +524,7 @@ export interface ServicePayload {
   category: { id: number };
   status?: ServiceStatus;
   totalUnits?: number;
+  ownerCommissionPromoCode?: string;
 }
 
 export interface UserService {
@@ -534,6 +594,7 @@ export interface PromoCodeFormData {
   discountRate: number;
   active: boolean;
   singleUse: boolean;
+  type?: 'TENANT_DISCOUNT' | 'OWNER_COMMISSION_REDUCTION';
   pilotUserOnly: boolean;
   pilotEmails: string[];
 }
@@ -584,3 +645,5 @@ export interface ArticleNearby {
   cityLng: number;
   distanceKm: number;
 }
+
+export * from "./defaultKitTypes";

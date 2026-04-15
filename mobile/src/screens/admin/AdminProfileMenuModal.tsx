@@ -118,11 +118,20 @@ const AdminProfileMenuModal: React.FC<AdminProfileMenuModalProps> = ({ visible, 
 
               <TouchableOpacity
                 style={componentStyles.menuItem}
-                onPress={() => navigateTo('MyIncidents')}
+                onPress={() => navigateTo('AdminIncidents')}
               >
                 <Ionicons name="warning" size={24} color={Colors.warning} />
                 <Text style={componentStyles.menuItemText}>Gestión de Incidencias</Text>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
+                onPress={() => navigateTo('EditPolicy')}
+              >
+                <Ionicons name="document-text" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Editar Política de Privacidad</Text>
+              </TouchableOpacity>
+
 
               <View style={[componentStyles.menuItem, adminStyles.menuItemDisabled]}>
                 <Ionicons name="cube" size={24} color={Colors.textLight} />
