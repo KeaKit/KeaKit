@@ -85,7 +85,7 @@ public class WalletServiceTest {
             walletService.getWalletByUserId(NONEXISTING_USER_ID);
         });
 
-        assertTrue(exception.getMessage().contains("Wallet not found"));
+    assertTrue(exception.getMessage().contains("Cartera no encontrada para el usuario"));
     }
 
     @Test
@@ -140,7 +140,7 @@ public class WalletServiceTest {
         NotEnoughBalanceException ex = assertThrows(NotEnoughBalanceException.class,
                 () -> walletService.updateWalletBalance(USER.getId(), 50.0));
 
-        assertTrue(ex.getMessage().contains("Insufficient balance"));
+        assertTrue(ex.getMessage().contains("Saldo insuficiente en la cartera"));
         verify(transactionRepository, never()).save(any());
     }
 
@@ -152,7 +152,7 @@ public class WalletServiceTest {
         NotEnoughBalanceException ex = assertThrows(NotEnoughBalanceException.class,
                 () -> walletService.updateWalletBalance(USER.getId(), 0.0));
 
-        assertTrue(ex.getMessage().contains("positive"));
+        assertTrue(ex.getMessage().contains("El monto debe ser positivo"));
         verify(transactionRepository, never()).save(any());
     }
 

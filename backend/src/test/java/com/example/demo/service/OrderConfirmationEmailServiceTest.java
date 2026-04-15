@@ -54,11 +54,11 @@ public class OrderConfirmationEmailServiceTest {
 
         // Use reflection to call private buildHtmlContent(KitResponse, String)
         OrderConfirmationEmailService svc = new OrderConfirmationEmailService();
-        Method m = OrderConfirmationEmailService.class.getDeclaredMethod("buildHtmlContent", KitResponse.class, String.class);
+        Method m = OrderConfirmationEmailService.class.getDeclaredMethod("buildHtmlContent", KitResponse.class, String.class, Double.class, String.class);
         m.setAccessible(true);
 
         // Act
-        String html = (String) m.invoke(svc, kr, tenant.getName());
+        String html = (String) m.invoke(svc, kr, tenant.getName(), 0.0, null);
 
         // Assert: contains tenant name and item names
         assertNotNull(html);
@@ -67,7 +67,7 @@ public class OrderConfirmationEmailServiceTest {
         assertTrue(html.contains("MacBook Pro"));
 
         // Compute expected prorated numbers using same logic (days / 30)
-        int rentalDays = (int) ChronoUnit.DAYS.between(start, end);
+        int rentalDays = (int) (ChronoUnit.DAYS.between(start, end) + 1);
         if (rentalDays <= 0) rentalDays = 1;
         double factor = ((double) rentalDays) / 30.0;
 

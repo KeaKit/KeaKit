@@ -1,11 +1,10 @@
 package com.example.demo.service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,6 @@ import com.example.demo.model.User;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import java.time.temporal.ChronoUnit;
 
 @Service
 public class KitService {
@@ -62,6 +60,9 @@ public class KitService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private PromoCodeService promoCodeService;
+
     // TODO: Obtener la garantía de la configuración hecha por el admin
     private static final double PLATFORM_GUARANTEE_PERCENTAGE = 0.2;
 
@@ -71,7 +72,7 @@ public class KitService {
 
     public KitResponse findById(Long id) throws ResourceNotFoundException {
         Kit kit = kitRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kit no encontrado"));
         return new KitResponse(kit);
     }
 
@@ -91,7 +92,7 @@ public class KitService {
                 : List.of();
 
         if (status != KitStatus.DRAFT && selections.isEmpty()) {
-            throw new RuntimeException("Item selections are required unless kit is DRAFT");
+            throw new RuntimeException("Se deben seleccionar items a menos que el kit esté en estado DRAFT");
         }
 
         DeliveryMethod deliveryMethod = request.deliveryMethod() != null
@@ -101,7 +102,7 @@ public class KitService {
 
         String meetingPoint = request.meetingPoint() != null ? request.meetingPoint().trim() : null;
         if (deliveryMethod == DeliveryMethod.MEETING_POINT && (meetingPoint == null || meetingPoint.isEmpty())) {
-            throw new RuntimeException("Meeting point is required when delivery method is MEETING_POINT");
+            throw new RuntimeException("Se requiere punto de encuentro cuando el método de entrega es MEETING_POINT");
         }
         kit.setMeetingPoint(deliveryMethod == DeliveryMethod.MEETING_POINT ? meetingPoint : null);
 
@@ -115,23 +116,23 @@ public class KitService {
         kit.setAppliedGuaranteeRate(PLATFORM_GUARANTEE_PERCENTAGE);
 
         if (request.tenantId() == null) {
-            throw new RuntimeException("Tenant ID is required");
+            throw new RuntimeException("Id del arrendatario requerido para crear un kit");
         }
 
         if (request.tenantId() != null) {
             User tenant = userRepository.findById(request.tenantId())
-                    .orElseThrow(() -> new RuntimeException("Tenant not found"));
+                    .orElseThrow(() -> new RuntimeException("Arrendatario no encontrado"));
             kit.setTenant(tenant);
         }
 
         if (!selections.isEmpty()) {
             for (KitCreateRequest.ItemSelectionRequest item : selections) {
                 Item foundItem = itemRepository.findById(item.itemId())
-                        .orElseThrow(() -> new RuntimeException("Item not found: " + item.itemId()));
+                        .orElseThrow(() -> new RuntimeException("Item no encontrado: " + item.itemId()));
                 if (request.tenantId() == foundItem.getOwner().getId()) {
-                    throw new RuntimeException("Tenant cannot select their own items");
+                    throw new RuntimeException("El arrendatario no puede seleccionar sus propios items");
                 }
-                validateItemAvailability(item.itemId(), kit.getStartDate(), kit.getEndDate());
+                validateItemAvailability(item.itemId(), item.quantity(), kit.getStartDate(), kit.getEndDate());
             }
         }
 
@@ -155,7 +156,7 @@ public class KitService {
         return savedKit;
     }
 
-    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+    public KitPaymentDTO getKitPayment(KitCreateRequest request, String promoCode, String userEmail) {
         double months = calculateMonthsBetween(request.startDate(), request.endDate());
         double subtotalPrice = request.itemSelections().stream()
             .mapToDouble(item -> item.pricePerMonth() * item.quantity() * months)
@@ -165,31 +166,59 @@ public class KitService {
         if (request.deliveryMethod() == DeliveryMethod.COURIER) {
             courierPrice = PLATFORM_COURIER_PRICE;
         }
-        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        double discount = 0.0;
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validateForTenantDiscount(promoCode, userEmail);
+            if (validation.isValid()) {
+                discount = subtotalPrice * validation.getDiscountRate();
+            }
+        }
+
+        double totalPrice = subtotalPrice + guarantee + courierPrice - discount;
 
         return new KitPaymentDTO(
                 toCents(totalPrice),
                 toCents(subtotalPrice),
                 toCents(guarantee),
-                toCents(courierPrice));
+                toCents(courierPrice),
+                toCents(discount));
     }
 
-    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException {
+    public KitPaymentDTO getKitPayment(KitCreateRequest request) {
+        return getKitPayment(request, null, null);
+    }
+
+    public KitPaymentDTO getKitPayment(Long kitId, String promoCode, String userEmail) throws ResourceNotFoundException {
         Kit kit = kitRepository.findById(kitId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kit no encontrado"));
         double months = calculateMonthsBetween(kit.getStartDate(), kit.getEndDate());
         double subtotalPrice = kit.getSnapshots().stream()
             .mapToDouble(ki -> ki.getPriceAtRental() * ki.getSelectedUnits() * months)
             .sum();
         double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
         double courierPrice = kit.getDeliveryMethod() == DeliveryMethod.COURIER ? PLATFORM_COURIER_PRICE : 0.0;
-        double totalPrice = subtotalPrice + guarantee + courierPrice;
+
+        double discount = 0.0;
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validateForTenantDiscount(promoCode, userEmail);
+            if (validation.isValid()) {
+                discount = subtotalPrice * validation.getDiscountRate();
+            }
+        }
+
+        double totalPrice = subtotalPrice + guarantee + courierPrice - discount;
 
         return new KitPaymentDTO(
                 toCents(totalPrice),
                 toCents(subtotalPrice),
                 toCents(guarantee),
-                toCents(courierPrice));
+                toCents(courierPrice),
+                toCents(discount));
+    }
+
+    public KitPaymentDTO getKitPayment(Long kitId) throws ResourceNotFoundException {
+        return getKitPayment(kitId, null, null);
     }
 
     private Integer toCents(Double amount) {
@@ -197,21 +226,15 @@ public class KitService {
     }
 
     private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
-        int years = end.getYear() - start.getYear();
-        int months = end.getMonthValue() - start.getMonthValue();
-        int days = end.getDayOfMonth() - start.getDayOfMonth();
+        long diffDays = ChronoUnit.DAYS.between(start, end) + 1;
+        return diffDays / 30.0;
 
-        int totalMonths = years * 12 + months;
-
-        int daysInMonth = 30;
-        double monthFraction = (double) days / daysInMonth;
-
-        return totalMonths + monthFraction;
+        // con el backend de antes daba problemas esta función, por ejemplo, si era 15 enero-14 de febrero, daba 0 days, porque hacía 14-15+1; y debería ser 1 mes y 31 días, no 1 mes y 0 días
     }
 
     public KitResponse update(Long id, Kit updateData) {
         Kit kit = kitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit no encontrado"));
 
         if (updateData.getName() != null)
             kit.setName(updateData.getName());
@@ -247,7 +270,7 @@ public class KitService {
             
             if (kit.getStatus() == KitStatus.DRAFT && kit.getSnapshots() != null) {
                 for (ItemMemento snapshot : kit.getSnapshots()) {
-                    validateItemAvailability(snapshot.getOriginalItemId(), newStart, newEnd);
+                    validateItemAvailability(snapshot.getOriginalItemId(), snapshot.getSelectedUnits(), newStart, newEnd);
                 }
             }
         }
@@ -260,14 +283,14 @@ public class KitService {
 
     public void deleteById(Long id) {
         if (!kitRepository.existsById(id)) {
-            throw new RuntimeException("Kit not found");
+            throw new RuntimeException("Kit no encontrado");
         }
         kitRepository.deleteById(id);
     }
 
     public void validateDates(LocalDate startDate, LocalDate endDate) {
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
-            throw new RuntimeException("End date cannot be before start date");
+            throw new RuntimeException("La fecha de finalización no puede ser anterior a la fecha de inicio");
         }
     }
 
@@ -309,21 +332,27 @@ public class KitService {
 
     public KitResponse findTrackingKitById(Long kitId, Long tenantId) {
         Kit kit = kitRepository.findById(kitId)
-                .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit no encontrado"));
         if (kit.getTenant() == null || !kit.getTenant().getId().equals(tenantId)) {
-            throw new RuntimeException("Kit does not belong to the specified tenant");
+            throw new RuntimeException("Kit no pertenece al arrendatario especificado");
         }
         return new KitResponse(kit);
     }
 
     public void confirmKitStatus(Long id) {
+        Long tenantId = authService.getAuthenticatedUserId();
         Kit kit = kitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit no encontrado"));
+
+        if (kit.getTenant() == null || !kit.getTenant().getId().equals(tenantId)) {
+            throw new RuntimeException("Kit does not belong to the specified tenant");
+        }
 
         if (kit.getStatus() != KitStatus.PAID) {
-            throw new RuntimeException("The kit can only be confirmed if its status is PAID");
+            throw new RuntimeException("El kit solo puede ser confirmado si su estado es PAGADO");
         }
         kit.setStatus(KitStatus.ACTIVE);
+        kitRepository.save(kit);
     }
 
     private List<ItemMemento> itemSelectionToSnapshots(List<KitCreateRequest.ItemSelectionRequest> itemSelections,
@@ -333,10 +362,10 @@ public class KitService {
         return itemSelections.stream()
                 .map(sel -> {
                     Item item = itemRepository.findById(sel.itemId())
-                            .orElseThrow(() -> new RuntimeException("Item not found: " + sel.itemId()));
+                            .orElseThrow(() -> new RuntimeException("Art no encontrado: " + sel.itemId()));
 
                     if (item.getTotalUnits() != null && sel.quantity() > item.getTotalUnits()) {
-                        throw new RuntimeException("Selected quantity exceeds available units");
+                        throw new RuntimeException("La cantidad seleccionada excede las unidades disponibles");
                     }
 
                     ItemMemento snapshot = item.createSnapshot(
@@ -352,15 +381,15 @@ public class KitService {
 
     public KitResponse markAsPaid(Long id) {
         Kit kit = kitRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit no encontrado"));
 
         if (kit.getStatus() != KitStatus.DRAFT) {
-            throw new RuntimeException("Only DRAFT kits can be paid");
+            throw new RuntimeException("Solo los kits en estado DRAFT pueden ser pagados");
         }
 
         if (kit.getSnapshots() != null) {
             for (ItemMemento snapshot : kit.getSnapshots()) {
-                validateItemAvailability(snapshot.getOriginalItemId(), kit.getStartDate(), kit.getEndDate());
+                validateItemAvailability(snapshot.getOriginalItemId(), snapshot.getSelectedUnits(), kit.getStartDate(), kit.getEndDate());
             }
         }
 
@@ -368,6 +397,8 @@ public class KitService {
         Kit saved = kitRepository.save(kit);
 
         kitDeliveryService.ensureDeliveryExists(saved);
+
+        notificationService.notifyLandlordsOnKitActive(saved); 
 
         return new KitResponse(saved);
     }
@@ -377,7 +408,7 @@ public class KitService {
                 .orElseThrow(() -> new RuntimeException("Kit not found"));
 
         if (kit.getStatus() == KitStatus.ACTIVE || kit.getStatus() == KitStatus.FINISHED) {
-            throw new RuntimeException("Cannot cancel ACTIVE or FINISHED kits");
+            throw new RuntimeException("No se puede cancelar kits ACTIVE o FINISHED");
         }
 
         kit.setStatus(KitStatus.CANCELLED);
@@ -389,14 +420,14 @@ public class KitService {
     public KitResponse addItemToKit(Long kitId, Long itemId, Long userId) {
         // 1. Verificamos que el usuario existe
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         // 2. Obtenemos el Kit y el Item
         Kit kit = kitRepository.findById(kitId)
-                .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit no encontrado"));
 
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         // Aseguramos que la lista de snapshots esté inicializada
         List<ItemMemento> snapshots = kit.getSnapshots();
@@ -411,10 +442,11 @@ public class KitService {
                         snapshot.getOriginalItemId().equals(itemId));
 
         if (alreadyExists) {
-            throw new RuntimeException("This item is already in the kit");
+            throw new RuntimeException("Este artículo ya está en el kit");
         }
 
-        validateItemAvailability(itemId, kit.getStartDate(), kit.getEndDate());
+        // Como al añadir un artículo desde cero se mete 1 unidad por defecto
+        validateItemAvailability(itemId, 1, kit.getStartDate(), kit.getEndDate());
 
         // 4. Creamos el Snapshot para el nuevo objeto
         ItemMemento newSnapshot = item.createSnapshot(
@@ -438,26 +470,26 @@ public class KitService {
     public KitResponse removeItemFromKit(Long kitId, Long itemId, Long userId) {
         // 1. Verificamos que el usuario existe
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         // 2. Obtenemos el Kit
         Kit kit = kitRepository.findById(kitId)
-                .orElseThrow(() -> new RuntimeException("Kit not found"));
+                .orElseThrow(() -> new RuntimeException("Kit no encontrado"));
 
         List<ItemMemento> snapshots = kit.getSnapshots();
         if (snapshots == null || snapshots.isEmpty()) {
-            throw new RuntimeException("Kit is already empty");
+            throw new RuntimeException("Kit actualmente sin artículos para eliminar");
         }
 
         // 3. Buscamos el snapshot por su originalItemId
         ItemMemento snapshotToRemove = snapshots.stream()
                 .filter(s -> s.getOriginalItemId() != null && s.getOriginalItemId().equals(itemId))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Item is not part of this kit"));
+                .orElseThrow(() -> new RuntimeException("Este artículo no es parte de este kit"));
 
         // 4. Regla de negocio: El kit no puede quedar vacío
         if (snapshots.size() <= 1) {
-            throw new RuntimeException("A kit cannot be empty. It must contain at least one item.");
+            throw new RuntimeException("Un kit no puede quedar vacío. Debe contener al menos un artículo.");
         }
 
         // 5. Eliminamos la relación y guardamos
@@ -473,18 +505,40 @@ public class KitService {
 
 
 
-    private void validateItemAvailability(Long itemId, LocalDate startDate, LocalDate endDate) {
+    private void validateItemAvailability(Long itemId, int requestedQuantity, LocalDate startDate, LocalDate endDate) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Artículo no encontrado: " + itemId));
+
+        // 1. Si de base piden más de lo que existe, cortamos directamente
+        if (requestedQuantity > item.getTotalUnits()) {
+             throw new RuntimeException("El artículo '" + item.getTitle() + "' solo tiene " + item.getTotalUnits() + " unidades en total.");
+        }
+
         List<KitStatus> unavailableStatuses = Arrays.asList(KitStatus.PAID, KitStatus.ACTIVE);
-        boolean isUnavailable = kitRepository.isItemUnavailableForDates(itemId, startDate, endDate, unavailableStatuses);
-        
-        if (isUnavailable) {
-            // Buscamos el artículo en la base de datos para obtener su nombre
-            Item item = itemRepository.findById(itemId)
-                    .orElseThrow(() -> new RuntimeException("Item not found: " + itemId));
-                    
-            // Lanza el error con el nombre del artículo. 
-            // Nota: Si en tu modelo 'Item' la propiedad se llama distinto, cambia getTitle() por getName()
-            throw new RuntimeException("El artículo '" + item.getTitle() + "' ya no está disponible en las fechas seleccionadas.");
+        List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(itemId, startDate, endDate, unavailableStatuses);
+
+        if (overlappingKits.isEmpty()) return; // Vía libre
+
+        // 2. Comprobamos día por día para calcular la concurrencia exacta
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            int rentedUnitsOnDate = 0;
+
+            for (Kit kit : overlappingKits) {
+                // Si este kit concreto solapa con el día actual del bucle
+                if (!date.isBefore(kit.getStartDate()) && !date.isAfter(kit.getEndDate())) {
+                    // Buscamos cuántas unidades de nuestro artículo tiene alquiladas
+                    for (ItemMemento snapshot : kit.getSnapshots()) {
+                        if (snapshot.getOriginalItemId().equals(itemId)) {
+                            rentedUnitsOnDate += snapshot.getSelectedUnits();
+                        }
+                    }
+                }
+            }
+
+            // 3. Verificamos el stock para este día
+            if (rentedUnitsOnDate + requestedQuantity > item.getTotalUnits()) {
+                throw new RuntimeException("El artículo '" + item.getTitle() + "' no tiene suficientes unidades disponibles para las fechas seleccionadas.");
+            }
         }
     }
 }

@@ -1,3 +1,5 @@
+import uuid
+
 import random
 
 from locust import HttpUser, task, between
@@ -6,12 +8,15 @@ from utils.helpers import random_email
 class UserFlowUser(HttpUser):
     wait_time = between(1, 3)
     token = None
+    user_id = None
+    email = None
+    password = None
 
     def on_start(self):
         self.email = random_email()
         self.password = "Password123"
 
-        self.client.post("/api/users/register", json={
+        reg_response = self.client.post("/api/users/register", json={
             "email": self.email,
             "password": self.password,
             "name": "Test User",
@@ -21,13 +26,18 @@ class UserFlowUser(HttpUser):
             "country": "Spain"
         })
 
-        response = self.client.post("/api/users/login", json={
+        if reg_response.status_code == 200:
+            self.user_id = reg_response.json().get("id")
+
+        log_response = self.client.post("/api/users/login", json={
             "email": self.email,
             "password": self.password
         })
 
-        if response.status_code == 200:
-            self.token = response.json().get("token")
+        if log_response.status_code == 200:
+            self.token = log_response.json().get("token")
+            if not self.user_id:
+                self.user_id = log_response.json().get("id")
 
     def auth_headers(self):
         return {"Authorization": f"Bearer {self.token}"}
@@ -49,7 +59,24 @@ class UserFlowUser(HttpUser):
             "address": "Avenida Siempreviva 742",
             "city": "Madrid",
             "country": "Spain"
-        })  
+        })
+
+    @task(5)
+    def update_profile(self):
+        if self.user_id is not None and self.token is not None:
+            payload = {
+                "name": "Updated User",
+                "phone": "+34699888777",
+                "address": "Nueva Dirección de Carga 456",
+                "city": "Sevilla",
+                "country": "Spain"
+            }
+            self.client.put(
+                f"/api/users/{self.user_id}",
+                json=payload,
+                headers=self.auth_headers(),
+                name="/api/users/[id]"
+            )
         
     @task(3)
     def get_article_record(self):

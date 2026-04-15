@@ -48,7 +48,7 @@ public class NotificationService {
     @Transactional
     public void markAsRead(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
+                .orElseThrow(() -> new RuntimeException("Notificación no encontrada"));
         notification.setRead(true);
         notificationRepository.save(notification);
     }
@@ -57,14 +57,14 @@ public class NotificationService {
     @Transactional
     public Notification createDemandAlert(Long articleId, Long requesterId) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new RuntimeException("Article not found with id: " + articleId));
+                .orElseThrow(() -> new RuntimeException("Artículo no encontrado con id: " + articleId));
 
         if (article.getStatus() == ArticleStatus.AVAILABLE) {
             throw new IllegalStateException("El artículo ya está disponible para alquilar");
         }
 
         User requester = userRepository.findById(requesterId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + requesterId));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + requesterId));
 
         User owner = article.getOwner();
         if (owner == null) {

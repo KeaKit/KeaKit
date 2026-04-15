@@ -1,12 +1,15 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.PublicUserProfileDto;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserUpdateData;
 import com.example.demo.service.UserService;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.security.TokenBlacklistService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import com.example.demo.model.User; 
+import org.springframework.web.multipart.MultipartFile;  
+import java.io.IOException;  
 
 @RestController
 @RequestMapping("/api/users")
@@ -32,15 +39,32 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private String getAuthenticatedEmail(){
+    private String getAuthenticatedEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getName();
     }
 
+    // En UserController.java - Modificar el método register
+
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-        UserResponse response = userService.register(request);
+    public ResponseEntity<UserResponse> register(
+            @Valid @RequestBody RegisterRequest request,
+            HttpServletRequest httpRequest) {
+
+        String clientIp = getClientIp(httpRequest);
+        UserResponse response = userService.register(request, clientIp);
         return ResponseEntity.ok(response);
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty()) {
+            ip = request.getRemoteAddr();
+        }
+        if (ip == null || ip.isEmpty() || "0:0:0:0:0:0:0:1".equals(ip) || "127.0.0.1".equals(ip)) {
+            ip = "unknown";
+        }
+        return ip;
     }
 
     @PostMapping("/login")
@@ -57,12 +81,13 @@ public class UserController {
         if (!authenticatedEmail.equals(response.getEmail())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        
+
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateData updateData) {
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id,
+            @Valid @RequestBody UserUpdateData updateData) {
         String authenticatedEmail = getAuthenticatedEmail();
 
         UserResponse userToUpdate = userService.getUserById(id);
@@ -104,5 +129,20 @@ public class UserController {
             response.put("message", "Error processing logout: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @PatchMapping("/profile/image")
+    public ResponseEntity<UserResponse> updateProfileImage(
+            @RequestParam("image") MultipartFile image,
+            Authentication authentication) throws IOException {
+        User currentUser = userService.findByEmail(authentication.getName());
+        User updated = userService.updateProfileImage(currentUser.getId(), image);
+        return ResponseEntity.ok(new UserResponse(updated));
+    }
+
+    // UserController.java
+    @GetMapping("/{id}/public-profile")
+    public ResponseEntity<PublicUserProfileDto> getPublicUserProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getPublicUserProfile(id));
     }
 }

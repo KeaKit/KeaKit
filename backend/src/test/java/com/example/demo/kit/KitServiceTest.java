@@ -3,11 +3,14 @@ package com.example.demo.kit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +21,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -48,8 +52,10 @@ import com.example.demo.repository.WalletRepository;
 import com.example.demo.service.AuthService;
 import com.example.demo.service.KitDeliveryService;
 import com.example.demo.service.KitService;
+import com.example.demo.service.NotificationService;
 import com.example.demo.service.OrderConfirmationEmailService;
 import com.example.demo.service.PlatformConfigService;
+import com.example.demo.service.PromoCodeService;
 
 @ExtendWith(MockitoExtension.class)
 public class KitServiceTest {
@@ -64,6 +70,8 @@ public class KitServiceTest {
     @Mock private PlatformConfigService platformConfigService;
     @Mock private AuthService authService;
     @Mock private KitDeliveryService kitDeliveryService;
+    @Mock private PromoCodeService promoCodeService;
+    @Mock private NotificationService notificationService;
 
 
     @InjectMocks
@@ -132,7 +140,7 @@ public class KitServiceTest {
         when(platformConfigService.getCommissionRate()).thenReturn(0.2);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.create(req));
-        assertEquals("Tenant ID is required", ex.getMessage());
+    assertEquals("Id del arrendatario requerido para crear un kit", ex.getMessage());
     }
 
     @Test
@@ -204,15 +212,109 @@ public class KitServiceTest {
 
     @Test
     void confirmKitStatus_when_paid_changesToActive() {
+        User tenant = createTestUser(1L, "Tenant");
         Kit kit = new Kit();
         kit.setId(1L);
         kit.setStatus(KitStatus.PAID);
+        kit.setTenant(tenant);
 
+        when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
 
         kitService.confirmKitStatus(1L);
 
         assertEquals(KitStatus.ACTIVE, kit.getStatus());
+        verify(kitRepository).save(kit);
+    }
+
+    @Test
+    void confirmKitStatus_when_idNotExists_throwsException() {
+        when(kitRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> kitService.confirmKitStatus(99L));
+    }
+
+    @Test
+    void confirmKitStatus_when_statusNotPaid_throwsExceptionWithCorrectMessage() {
+        User tenant = createTestUser(1L, "Tenant");
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.DRAFT);
+        kit.setTenant(tenant);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
+
+        assertEquals("El kit solo puede ser confirmado si su estado es PAGADO", exception.getMessage());
+    }
+
+    @Test
+    void confirmKitStatus_calls_save_repository() {
+        User tenant = createTestUser(1L, "Tenant");
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.PAID);
+        kit.setTenant(tenant);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        kitService.confirmKitStatus(1L);
+
+        verify(kitRepository, times(1)).save(any(Kit.class)); 
+    }
+
+    @Test
+    void confirmKitStatus_savesWithCorrectStatus() {
+        User tenant = createTestUser(1L, "Tenant");
+        Kit kit = new Kit();
+        kit.setStatus(KitStatus.PAID);
+        kit.setTenant(tenant);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        kitService.confirmKitStatus(1L);
+
+        ArgumentCaptor<Kit> kitCaptor = ArgumentCaptor.forClass(Kit.class);
+        verify(kitRepository).save(kitCaptor.capture());
+        
+        assertEquals(KitStatus.ACTIVE, kitCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void confirmKitStatus_when_tenantNotMatches_throwsException() {
+        User owner = createTestUser(99L, "Owner");
+        Kit kit = new Kit();
+        kit.setTenant(owner);
+        kit.setStatus(KitStatus.PAID);
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
+
+        assertEquals("Kit does not belong to the specified tenant", exception.getMessage());
+    }
+
+    @Test
+    void confirmKitStatus_when_tenantIsNull_throwsException() {
+        Kit kit = new Kit();
+        kit.setTenant(null);
+        kit.setStatus(KitStatus.PAID);
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
+
+        assertEquals("Kit does not belong to the specified tenant", exception.getMessage());
     }
 
 // ==========================================
@@ -223,7 +325,6 @@ public class KitServiceTest {
     void createKit_itemUnavailable_throwsException() {
         User tenant = createTestUser(1L, "Tenant");
         User owner = createTestUser(2L, "Owner");
-        // Nota: asumiendo que tu método getTitle() del modelo Article/Item devuelve el nombre.
         Article article = createTestArticle(100L, "MacBook Pro", 1, owner);
 
         KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 1, 50.0);
@@ -233,11 +334,20 @@ public class KitServiceTest {
         when(userRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
         when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
         
-        // Simulamos que el artículo ya está alquilado en estas fechas
-        when(kitRepository.isItemUnavailableForDates(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList())).thenReturn(true);
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        snap.setSelectedUnits(1);
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.create(req));
-        assertEquals("El artículo 'MacBook Pro' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+        // Mensaje actualizado
+        assertEquals("El artículo 'MacBook Pro' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
     }
 
     @Test
@@ -250,18 +360,28 @@ public class KitServiceTest {
         kit.setEndDate(LocalDate.now().plusDays(5));
         
         ItemMemento snapshot = createTestSnapshot(100L, user);
+        snapshot.setSelectedUnits(1);
         kit.setSnapshots(new ArrayList<>(List.of(snapshot)));
 
         Article article = createTestArticle(100L, "Cámara Sony", 1, user);
 
         when(kitRepository.findById(10L)).thenReturn(Optional.of(kit));
         
-        // Simulamos que el artículo ya no está disponible
-        when(kitRepository.isItemUnavailableForDates(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList())).thenReturn(true);
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        snap.setSelectedUnits(1);
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
         when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.markAsPaid(10L));
-        assertEquals("El artículo 'Cámara Sony' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+        // Mensaje actualizado
+        assertEquals("El artículo 'Cámara Sony' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
     }
     
     @Test
@@ -273,18 +393,32 @@ public class KitServiceTest {
         kit.setEndDate(LocalDate.now().plusDays(5));
         kit.setSnapshots(new ArrayList<>());
         
+        // Creamos un taladro con 5 unidades de stock
         Article article = createTestArticle(100L, "Taladro", 5, createTestUser(2L, "Owner"));
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(kitRepository.findById(kit.getId())).thenReturn(Optional.of(kit));
         
-        // Aquí necesitamos mockear ambos comportamientos de findById (para sacar el item original, y luego para la validación)
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        // TRUCO: Ocupamos las 5 unidades en el alquiler previo.
+        // Así, al pedir 1 nueva, saltará el error por superar el stock (5 + 1 > 5).
+        snap.setSelectedUnits(5); 
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
+
         when(itemRepository.findById(article.getId())).thenReturn(Optional.of(article));
-        when(kitRepository.isItemUnavailableForDates(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList())).thenReturn(true);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> 
             kitService.addItemToKit(kit.getId(), article.getId(), user.getId()));
-        assertEquals("El artículo 'Taladro' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+            
+        // Mensaje actualizado
+        assertEquals("El artículo 'Taladro' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
     }
 
     @Test
@@ -297,6 +431,7 @@ public class KitServiceTest {
         kit.setEndDate(LocalDate.now().plusDays(5));
         
         ItemMemento snapshot = createTestSnapshot(100L, user);
+        snapshot.setSelectedUnits(1);
         kit.setSnapshots(new ArrayList<>(List.of(snapshot)));
 
         Kit updateData = new Kit();
@@ -305,13 +440,22 @@ public class KitServiceTest {
         
         Article article = createTestArticle(100L, "Monitor", 1, user);
 
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStartDate(LocalDate.now());
+        overlappingKit.setEndDate(LocalDate.now().plusDays(10));
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(100L);
+        snap.setSelectedUnits(1);
+        overlappingKit.setSnapshots(new ArrayList<>(List.of(snap)));
+
+        when(kitRepository.findOverlappingKitsForItem(eq(100L), any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(List.of(overlappingKit));
         when(kitRepository.findById(10L)).thenReturn(Optional.of(kit));
-        // Simulamos que para las nuevas fechas solicitadas en el update ya está ocupado
-        when(kitRepository.isItemUnavailableForDates(eq(100L), eq(updateData.getStartDate()), eq(updateData.getEndDate()), anyList())).thenReturn(true);
         when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.update(10L, updateData));
-        assertEquals("El artículo 'Monitor' ya no está disponible en las fechas seleccionadas.", ex.getMessage());
+        // Mensaje actualizado
+        assertEquals("El artículo 'Monitor' no tiene suficientes unidades disponibles para las fechas seleccionadas.", ex.getMessage());
     }
 
     // ==========================================
@@ -355,7 +499,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> 
             kitService.addItemToKit(kit.getId(), article.getId(), user.getId()));
-        assertEquals("This item is already in the kit", ex.getMessage());
+        assertEquals("Este artículo ya está en el kit", ex.getMessage());
     }
 
     @Test
@@ -389,7 +533,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> 
             kitService.removeItemFromKit(kit.getId(), 100L, user.getId()));
-        assertEquals("A kit cannot be empty. It must contain at least one item.", ex.getMessage());
+        assertEquals("Un kit no puede quedar vacío. Debe contener al menos un artículo.", ex.getMessage());
     }
 
     @Test
@@ -404,7 +548,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> 
             kitService.removeItemFromKit(kit.getId(), 100L, user.getId())); // Intentamos borrar el 100
-        assertEquals("Item is not part of this kit", ex.getMessage());
+        assertEquals("Este artículo no es parte de este kit", ex.getMessage());
     }
 
     // ==========================================
@@ -421,7 +565,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.addItemToKit(10L, 100L, 999L));
-        assertEquals("User not found", ex.getMessage());
+        assertEquals("Usuario no encontrado", ex.getMessage());
     }
 
     @Test
@@ -432,7 +576,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.addItemToKit(999L, 100L, user.getId()));
-        assertEquals("Kit not found", ex.getMessage());
+        assertEquals("Kit no encontrado", ex.getMessage());
     }
 
     @Test
@@ -449,7 +593,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.addItemToKit(kit.getId(), 999L, user.getId()));
-        assertEquals("Item not found", ex.getMessage());
+        assertEquals("Artículo no encontrado", ex.getMessage());
     }
 
     @Test
@@ -535,7 +679,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.removeItemFromKit(10L, 100L, 999L));
-        assertEquals("User not found", ex.getMessage());
+        assertEquals("Usuario no encontrado", ex.getMessage());
     }
 
     @Test
@@ -546,7 +690,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.removeItemFromKit(999L, 100L, user.getId()));
-        assertEquals("Kit not found", ex.getMessage());
+        assertEquals("Kit no encontrado", ex.getMessage());
     }
 
     @Test
@@ -562,7 +706,7 @@ public class KitServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
             kitService.removeItemFromKit(kit.getId(), 100L, user.getId()));
-        assertEquals("Kit is already empty", ex.getMessage());
+        assertEquals("Kit actualmente sin artículos para eliminar", ex.getMessage());
     }
 
     @Test
@@ -922,9 +1066,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(request);
 
-        assertEquals(15398, result.totalPrice());
-        assertEquals(11999, result.subtotalPrice());
-        assertEquals(2400, result.guarantee());
+        assertEquals(15878, result.totalPrice());
+        assertEquals(12399, result.subtotalPrice());
+        assertEquals(2480, result.guarantee());
         assertEquals(999, result.courierPrice());
     }
 
@@ -941,9 +1085,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(request);
 
-        assertEquals(3600, result.totalPrice());
-        assertEquals(3000, result.subtotalPrice());
-        assertEquals(600, result.guarantee());
+        assertEquals(3720, result.totalPrice());
+        assertEquals(3100, result.subtotalPrice());
+        assertEquals(620, result.guarantee());
         assertEquals(0, result.courierPrice());
     }
 
@@ -969,9 +1113,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(77L);
 
-        assertEquals(12459, result.totalPrice());
-        assertEquals(9550, result.subtotalPrice());
-        assertEquals(1910, result.guarantee());
+        assertEquals(12841, result.totalPrice());
+        assertEquals(9868, result.subtotalPrice());
+        assertEquals(1974, result.guarantee());
         assertEquals(999, result.courierPrice());
     }
 
@@ -982,7 +1126,7 @@ public class KitServiceTest {
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () ->
             kitService.getKitPayment(999L));
 
-        assertEquals("Kit not found", ex.getMessage());
+        assertEquals("Kit no encontrado", ex.getMessage());
     }
 
     @Test
@@ -1006,8 +1150,8 @@ public class KitServiceTest {
 
         Kit kit = new Kit();
         kit.setId(88L);
-    kit.setStartDate(LocalDate.now());
-    kit.setEndDate(LocalDate.now().plusMonths(1));
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusMonths(1));
         kit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
         kit.setSnapshots(List.of(serviceSnapshot1, serviceSnapshot2));
 
@@ -1015,12 +1159,222 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(88L);
 
-        assertEquals(18000, result.totalPrice());
-        assertEquals(15000, result.subtotalPrice());
-        assertEquals(3000, result.guarantee());
+        assertEquals(18600, result.totalPrice());
+        assertEquals(15500, result.subtotalPrice());
+        assertEquals(3100, result.guarantee());
         assertEquals(0, result.courierPrice());
     }
 
+    @Test
+    void getKitPayment_fromRequest_withValidPromoCode_appliesDiscount() {
+        when(promoCodeService.validateForTenantDiscount("DESCUENTO10", "tenant@test.com"))
+                .thenReturn(new com.example.demo.dto.PromoCodeValidationResponse(true, 0.10, "Código aplicado"));
     
+        KitCreateRequest.ItemSelectionRequest selection =
+                new KitCreateRequest.ItemSelectionRequest(100L, 2, 50.0);
+        KitCreateRequest request = new KitCreateRequest(
+                "Kit Promo", "ES", "MAD",
+                LocalDate.now(), LocalDate.now().plusMonths(1),
+                KitStatus.DRAFT, DeliveryMethod.COURIER, null,
+                1L, List.of(selection));
+    
+        KitPaymentDTO result = kitService.getKitPayment(request, "DESCUENTO10", "tenant@test.com");
+    
+        KitPaymentDTO resultWithout = kitService.getKitPayment(request);
+        assertTrue(result.discount() > 0, "El descuento debe ser positivo con promo válida");
+        assertTrue(result.totalPrice() < resultWithout.totalPrice(),
+                "El total con descuento debe ser menor que sin descuento");
+    }
+    
+    @Test
+    void getKitPayment_fromRequest_withInvalidPromoCode_noDiscount() {
+        when(promoCodeService.validateForTenantDiscount("INVALIDO", "tenant@test.com"))
+                .thenReturn(new com.example.demo.dto.PromoCodeValidationResponse(false, null, "Código no válido"));
+    
+        KitCreateRequest.ItemSelectionRequest selection =
+                new KitCreateRequest.ItemSelectionRequest(100L, 1, 50.0);
+        KitCreateRequest request = new KitCreateRequest(
+                "Kit Sin Promo", "ES", "MAD",
+                LocalDate.now(), LocalDate.now().plusMonths(1),
+                KitStatus.DRAFT, DeliveryMethod.COURIER, null,
+                1L, List.of(selection));
+    
+        KitPaymentDTO withInvalidPromo = kitService.getKitPayment(request, "INVALIDO", "tenant@test.com");
+        KitPaymentDTO withoutPromo = kitService.getKitPayment(request);
+    
+        assertEquals(0, withInvalidPromo.discount(), "Con promo inválida, el descuento debe ser 0");
+        assertEquals(withoutPromo.totalPrice(), withInvalidPromo.totalPrice(),
+                "El precio total debe ser igual al de sin promo");
+    }
+    
+    @Test
+    void getKitPayment_fromRequest_withNullPromoCode_noDiscount() {
+        KitCreateRequest.ItemSelectionRequest selection =
+                new KitCreateRequest.ItemSelectionRequest(100L, 1, 50.0);
+        KitCreateRequest request = new KitCreateRequest(
+                "Kit Sin Promo", "ES", "MAD",
+                LocalDate.now(), LocalDate.now().plusMonths(1),
+                KitStatus.DRAFT, DeliveryMethod.COURIER, null,
+                1L, List.of(selection));
+    
+        KitPaymentDTO result = kitService.getKitPayment(request, null, null);
+    
+        assertEquals(0, result.discount(), "Sin promo, el descuento debe ser 0");
+        verify(promoCodeService, never()).validateForTenantDiscount(any(), any());
+    }
+    
+    @Test
+    void getKitPayment_fromRequest_withBlankPromoCode_noDiscount() {
+        KitCreateRequest.ItemSelectionRequest selection =
+                new KitCreateRequest.ItemSelectionRequest(100L, 1, 50.0);
+        KitCreateRequest request = new KitCreateRequest(
+                "Kit Sin Promo", "ES", "MAD",
+                LocalDate.now(), LocalDate.now().plusMonths(1),
+                KitStatus.DRAFT, DeliveryMethod.COURIER, null,
+                1L, List.of(selection));
+    
+        KitPaymentDTO result = kitService.getKitPayment(request, "  ", "tenant@test.com");
+    
+        assertEquals(0, result.discount(), "Con promo en blanco, el descuento debe ser 0");
+        verify(promoCodeService, never()).validateForTenantDiscount(any(), any());
+    }
+    
+    @Test
+    void getKitPayment_fromRequest_noPromo_overloadCallsWithNulls() {
+        KitCreateRequest.ItemSelectionRequest selection =
+                new KitCreateRequest.ItemSelectionRequest(100L, 2, 30.0);
+        KitCreateRequest request = new KitCreateRequest(
+                "Kit", "ES", "MAD",
+                LocalDate.now(), LocalDate.now().plusMonths(1),
+                KitStatus.DRAFT, DeliveryMethod.MEETING_POINT, "Plaza",
+                1L, List.of(selection));
+    
+        KitPaymentDTO resultOverload = kitService.getKitPayment(request);
+        KitPaymentDTO resultExplicitNull = kitService.getKitPayment(request, null, null);
+    
+        assertEquals(resultOverload.totalPrice(), resultExplicitNull.totalPrice());
+        assertEquals(resultOverload.discount(), resultExplicitNull.discount());
+    }
+        
+    @Test
+    void getKitPayment_fromKitId_withValidPromoCode_appliesDiscount() throws Exception {
+        when(promoCodeService.validateForTenantDiscount("PROMO20", "tenant@test.com"))
+                .thenReturn(new com.example.demo.dto.PromoCodeValidationResponse(true, 0.20, "Código aplicado"));
+    
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setPriceAtRental(100.0);
+        snapshot.setSelectedUnits(1);
+    
+        Kit kit = new Kit();
+        kit.setId(55L);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusMonths(1));
+        kit.setDeliveryMethod(DeliveryMethod.COURIER);
+        kit.setSnapshots(List.of(snapshot));
+    
+        when(kitRepository.findById(55L)).thenReturn(Optional.of(kit));
+    
+        KitPaymentDTO result = kitService.getKitPayment(55L, "PROMO20", "tenant@test.com");
+        KitPaymentDTO resultWithout = kitService.getKitPayment(55L);
+    
+        assertTrue(result.discount() > 0, "El descuento debe ser positivo con promo válida");
+        assertTrue(result.totalPrice() < resultWithout.totalPrice(),
+                "El total con descuento debe ser menor que sin descuento");
+    }
+    
+    @Test
+    void getKitPayment_fromKitId_withInvalidPromoCode_noDiscount() throws Exception {
+        when(promoCodeService.validateForTenantDiscount("INVALIDO", "tenant@test.com"))
+                .thenReturn(new com.example.demo.dto.PromoCodeValidationResponse(false, null, "No válido"));
+    
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setPriceAtRental(50.0);
+        snapshot.setSelectedUnits(2);
+    
+        Kit kit = new Kit();
+        kit.setId(66L);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusMonths(1));
+        kit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
+        kit.setSnapshots(List.of(snapshot));
+    
+        when(kitRepository.findById(66L)).thenReturn(Optional.of(kit));
+    
+        KitPaymentDTO result = kitService.getKitPayment(66L, "INVALIDO", "tenant@test.com");
+    
+        assertEquals(0, result.discount(), "Con promo inválida, el descuento debe ser 0");
+    }
+    
+    @Test
+    void getKitPayment_fromKitId_withNullPromoCode_noDiscount() throws Exception {
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setPriceAtRental(80.0);
+        snapshot.setSelectedUnits(1);
+    
+        Kit kit = new Kit();
+        kit.setId(77L);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusMonths(1));
+        kit.setDeliveryMethod(DeliveryMethod.COURIER);
+        kit.setSnapshots(List.of(snapshot));
+    
+        when(kitRepository.findById(77L)).thenReturn(Optional.of(kit));
+    
+        KitPaymentDTO result = kitService.getKitPayment(77L, null, null);
+    
+        assertEquals(0, result.discount(), "Sin promo, el descuento debe ser 0");
+        verify(promoCodeService, never()).validateForTenantDiscount(any(), any());
+    }
+    
+    @Test
+    void getKitPayment_fromKitId_noPromo_overloadCallsWithNulls() throws Exception {
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setPriceAtRental(40.0);
+        snapshot.setSelectedUnits(3);
+    
+        Kit kit = new Kit();
+        kit.setId(88L);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusMonths(1));
+        kit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
+        kit.setSnapshots(List.of(snapshot));
+    
+        when(kitRepository.findById(88L)).thenReturn(Optional.of(kit));
+    
+        KitPaymentDTO resultOverload = kitService.getKitPayment(88L);
+        KitPaymentDTO resultExplicit = kitService.getKitPayment(88L, null, null);
+    
+        assertEquals(resultOverload.totalPrice(), resultExplicit.totalPrice());
+        assertEquals(resultOverload.subtotalPrice(), resultExplicit.subtotalPrice());
+        assertEquals(resultOverload.discount(), resultExplicit.discount());
+    }
+    
+    @Test
+    void getKitPayment_fromKitId_discountReducesTotalCorrectly() throws Exception {
+        when(promoCodeService.validateForTenantDiscount("MITAD", "tenant@test.com"))
+                .thenReturn(new com.example.demo.dto.PromoCodeValidationResponse(true, 0.50, "Mitad de precio"));
+    
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setPriceAtRental(100.0);
+        snapshot.setSelectedUnits(1);
+    
+        Kit kit = new Kit();
+        kit.setId(99L);
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusMonths(1));
+        kit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
+        kit.setSnapshots(List.of(snapshot));
+    
+        when(kitRepository.findById(99L)).thenReturn(Optional.of(kit));
+    
+        KitPaymentDTO result = kitService.getKitPayment(99L, "MITAD", "tenant@test.com");
+    
+        assertEquals(result.discount(), result.subtotalPrice() / 2,
+                1.0, // tolerancia de 1 céntimo por redondeo
+                "El descuento del 50% debe ser la mitad del subtotal");
+        assertEquals(result.subtotalPrice() + result.guarantee() - result.discount(),
+                result.totalPrice(),
+                "Total = subtotal + garantía - descuento");
+    }
 
 }

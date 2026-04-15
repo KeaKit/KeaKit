@@ -70,10 +70,6 @@ const mockRentals: ArticleRecordDTO[] = [
   }
 ];
 
-// ==========================================
-// BLOQUE DE TESTS
-// ==========================================
-
 describe("ArticleRentals Logic Tests", () => {
 
   describe("computeSections (Distribución en SectionList)", () => {

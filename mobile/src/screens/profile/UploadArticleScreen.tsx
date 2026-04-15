@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, TextInput, ActivityIndicator, Image,
+  ScrollView, TextInput, ActivityIndicator, Image, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { uploadArticle, uploadArticleWithImage } from '../../services/articleService';
 import { fetchAllCategories } from '../../services/categoryService';
+import { validatePromoCode } from '../../services/promoCodeService';
 import { ArticlePayload, ArticleCondition, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
@@ -106,6 +107,11 @@ const UploadArticleScreen: React.FC = () => {
   const [availableUntil, setAvailableUntil] = useState('');
   const [selectedImage, setSelectedImage] = useState<{ uri: string; name: string } | null>(null);
   const [purchaseDate, setPurchaseDate] = useState('');
+  const [ownerCommissionPromoCode, setOwnerCommissionPromoCode] = useState('');
+  const [appliedOwnerPromoCode, setAppliedOwnerPromoCode] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoMessage, setPromoMessage] = useState<{ text: string; valid: boolean } | null>(null);
+  const [totalUnits, setTotalUnits] = useState('1');
   const [condition, setCondition] = useState<'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN' | ''>('');
 
   const conditionOptions: { value: 'NEW' | 'LIGHTLY_USED' | 'USED' | 'WORN'; label: string }[] = [
@@ -139,6 +145,34 @@ const UploadArticleScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [cameraAvailable, setCameraAvailable] = useState<boolean | null>(null);
+  
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkCameraAvailability = async () => {
+      try {
+        if (Platform.OS === 'web') {
+          if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const hasCamera = devices.some(device => device.kind === 'videoinput');
+            setCameraAvailable(hasCamera);
+          } else {
+            setCameraAvailable(false);
+          }
+        } else {
+          const { status } = await ImagePicker.requestCameraPermissionsAsync();
+          setCameraAvailable(status === 'granted');
+        }
+      } catch {
+        setCameraAvailable(false);
+      }
+    };
+    
+    checkCameraAvailability();
+  }, []);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -175,23 +209,105 @@ const UploadArticleScreen: React.FC = () => {
 
   const takePicture = async () => {
     try {
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) {
-        showNotification('Se requiere acceso a la cámara para tomar fotos', 'error');
-        return;
-      }
-      const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [4, 3], quality: 0.8 });
-      if (!result.canceled && result.assets?.length > 0) {
-        const asset = result.assets[0];
-        setSelectedImage({ uri: asset.uri, name: `photo_${Date.now()}.jpg` });
-        clearError('image');
+      if (Platform.OS === 'web') {
+
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setCameraStream(stream);
+        setShowCameraModal(true);
+      } else {
+
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (!perm.granted) {
+          showNotification('Se requiere acceso a la cámara para tomar fotos', 'error');
+          return;
+        }
+        const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [4, 3], quality: 0.8 });
+        if (!result.canceled && result.assets?.length > 0) {
+          const asset = result.assets[0];
+          setSelectedImage({ uri: asset.uri, name: `photo_${Date.now()}.jpg` });
+          clearError('image');
+        }
       }
     } catch {
-      showNotification('No se pudo tomar la foto', 'error');
+      showNotification('No se pudo acceder a la cámara', 'error');
     }
   };
 
+  const capturePhoto = () => {
+    const videoElement = document.querySelector('#camera-video') as HTMLVideoElement;
+    if (videoElement) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(videoElement, 0, 0);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const uri = URL.createObjectURL(blob);
+            setCapturedPhoto(uri);
+          }
+        }, 'image/jpeg', 0.8);
+      }
+    }
+  };
+
+  const confirmPhoto = () => {
+    if (capturedPhoto) {
+      setSelectedImage({ uri: capturedPhoto, name: `photo_${Date.now()}.jpg` });
+      clearError('image');
+      closeCameraModal();
+    }
+  };
+
+  const discardPhoto = () => {
+    setCapturedPhoto(null);
+  };
+
+  const closeCameraModal = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+    }
+    setCameraStream(null);
+    setCapturedPhoto(null);
+    setShowCameraModal(false);
+  };
+
   const clearError = (key: string) => setErrors((prev) => ({ ...prev, [key]: '' }));
+
+  const handleApplyPromo = async () => {
+    const code = ownerCommissionPromoCode.trim().toUpperCase();
+    if (!code || !user?.email || !user?.token) return;
+
+    setPromoLoading(true);
+    try {
+      const result = await validatePromoCode(
+        user.token,
+        code,
+        user.email,
+        'OWNER_COMMISSION_REDUCTION',
+      );
+
+      if (result.valid) {
+        setAppliedOwnerPromoCode(code);
+        setPromoMessage({ text: `Realizado: ${result.message}`, valid: true });
+      } else {
+        setAppliedOwnerPromoCode(null);
+        setPromoMessage({ text: result.message, valid: false });
+      }
+    } catch {
+      setAppliedOwnerPromoCode(null);
+      setPromoMessage({ text: 'Error al validar el código', valid: false });
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setOwnerCommissionPromoCode('');
+    setAppliedOwnerPromoCode(null);
+    setPromoMessage(null);
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -220,6 +336,10 @@ const UploadArticleScreen: React.FC = () => {
     if (purchaseDate && !isValidIsoDate(purchaseDate))
       newErrors.purchaseDate = 'Fecha de compra no válida';
 
+    if (!totalUnits || isNaN(Number(totalUnits)) || Number(totalUnits) < 1 || !Number.isInteger(Number(totalUnits))) {
+      newErrors.totalUnits = 'Introduce un número de unidades válido (mínimo 1)';
+    }
+
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
@@ -238,17 +358,26 @@ const UploadArticleScreen: React.FC = () => {
     }
     setLoading(true);
     try {
+      const trimmedOwnerPromoCode = ownerCommissionPromoCode.trim();
+      if (trimmedOwnerPromoCode && appliedOwnerPromoCode !== trimmedOwnerPromoCode.toUpperCase()) {
+        showNotification('Debes pulsar Aplicar para validar el código promocional', 'error');
+        setLoading(false);
+        return;
+      }
+
       const payload: ArticlePayload = {
         title:         title.trim(),
         description:   description.trim(),
         city:          selectedCity,
         pricePerMonth: Number(pricePerMonth),
+        totalUnits:    Number(totalUnits),
         availableFrom,
         availableUntil,
         category:      { id: selectedCategory!.id } as any,
         status:        'AVAILABLE',
         ...(condition           && { condition:    condition as ArticleCondition }),
         ...(purchaseDate.trim() && { purchaseDate: purchaseDate.trim() }),
+        ...(appliedOwnerPromoCode && { ownerCommissionPromoCode: appliedOwnerPromoCode }),
       };
       if (selectedImage) {
         await uploadArticleWithImage(user.id, selectedCategory!.id, user.token, payload, selectedImage.uri, selectedImage.name);
@@ -404,6 +533,14 @@ const UploadArticleScreen: React.FC = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Precio y disponibilidad</Text>
             <Field
+              label="Unidades disponibles"
+              value={totalUnits}
+              onChange={(t) => { setTotalUnits(t); clearError('totalUnits'); }}
+              placeholder="Ej: 1"
+              keyboardType="numeric"
+              error={errors.totalUnits}
+            />
+            <Field
               label="Precio por mes (€)"
               value={pricePerMonth}
               onChange={(t) => { setPricePerMonth(t); clearError('pricePerMonth'); }}
@@ -414,6 +551,65 @@ const UploadArticleScreen: React.FC = () => {
             {selectedCategory && (
               <Text style={styles.helperText}>{`Precio entre ${selectedCategory.minPrice}€ y ${selectedCategory.maxPrice}€`}</Text>
             )}
+
+            <View style={styles.fieldContainer}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Código promo de comisión</Text>
+                <Text style={styles.optional}> (opcional)</Text>
+              </View>
+
+              {appliedOwnerPromoCode ? (
+                <View style={styles.promoAppliedRow}>
+                  <View style={styles.promoAppliedBadge}>
+                    <Ionicons name="pricetag" size={14} color="#4caf7d" />
+                    <Text style={styles.promoAppliedCode}>{appliedOwnerPromoCode}</Text>
+                  </View>
+                  <TouchableOpacity onPress={handleRemovePromo} style={styles.promoRemoveBtn}>
+                    <Ionicons name="close-circle" size={20} color="#e74c3c" />
+                    <Text style={styles.promoRemoveText}>Quitar</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.promoInputRow}>
+                    <TextInput
+                      style={[
+                        styles.promoInput,
+                        promoMessage?.valid === false && styles.promoInputError,
+                      ]}
+                      value={ownerCommissionPromoCode}
+                      onChangeText={(t) => {
+                        setOwnerCommissionPromoCode(t.toUpperCase());
+                        setPromoMessage(null);
+                      }}
+                      placeholder="OWNER10"
+                      placeholderTextColor="#aaa"
+                      autoCapitalize="characters"
+                      editable={!loading}
+                    />
+                    <TouchableOpacity
+                      style={[styles.promoBtn, (!ownerCommissionPromoCode.trim() || promoLoading) && styles.promoBtnDisabled]}
+                      onPress={handleApplyPromo}
+                      disabled={!ownerCommissionPromoCode.trim() || promoLoading || loading}
+                    >
+                      {promoLoading
+                        ? <ActivityIndicator color="#fff" size="small" />
+                        : <Text style={styles.promoBtnText}>Aplicar</Text>
+                      }
+                    </TouchableOpacity>
+                  </View>
+                  {promoMessage && (
+                    <Text style={promoMessage.valid ? styles.promoSuccess : styles.promoError}>
+                      {promoMessage.text}
+                    </Text>
+                  )}
+                </>
+              )}
+
+              <Text style={styles.helperText}>
+                Solo admite códigos de tipo comisión para arrendadores.
+              </Text>
+            </View>
 
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Periodo de disponibilidad</Text>
@@ -502,15 +698,17 @@ const UploadArticleScreen: React.FC = () => {
                   <Text style={styles.placeholderText}>Sube una foto de tu artículo</Text>
                 </View>
               )}
-              <View style={styles.buttonRow}>
-                <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
+              <View style={[styles.buttonRow, !cameraAvailable && styles.buttonRowWeb]}>
+                <TouchableOpacity style={[styles.imageButton, !cameraAvailable && styles.imageButtonWeb]} onPress={pickImage}>
                   <Ionicons name="images" size={20} color={Colors.primary} />
                   <Text style={styles.imageButtonText}>Galería</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.imageButton} onPress={takePicture}>
-                  <Ionicons name="camera" size={20} color={Colors.primary} />
-                  <Text style={styles.imageButtonText}>Cámara</Text>
-                </TouchableOpacity>
+                {cameraAvailable && (
+                  <TouchableOpacity style={styles.imageButton} onPress={takePicture}>
+                    <Ionicons name="camera" size={20} color={Colors.primary} />
+                    <Text style={styles.imageButtonText}>Cámara</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
 
@@ -580,6 +778,57 @@ const UploadArticleScreen: React.FC = () => {
 
           <View style={{ height: Spacing.xxl }} />
         </ScrollView>
+
+        {showCameraModal && Platform.OS === 'web' && (
+          <View style={styles.cameraModalOverlay}>
+            <View style={styles.cameraModalContent}>
+              {!capturedPhoto ? (
+                <>
+                  <Text style={styles.cameraModalTitle}>Cámara</Text>
+                  <video
+                    id="camera-video"
+                    style={styles.cameraVideo}
+                    autoPlay
+                    playsInline
+                    ref={(ref) => {
+                      if (ref && cameraStream) {
+                        ref.srcObject = cameraStream;
+                      }
+                    }}
+                  />
+                  <View style={styles.cameraButtonsRow}>
+                    <TouchableOpacity style={[styles.cameraButton, styles.cameraButtonSecondary]} onPress={closeCameraModal}>
+                      <Ionicons name="close" size={24} color={Colors.error} />
+                      <Text style={[styles.cameraButtonText, { color: Colors.error }]}>Cerrar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.cameraButton, styles.cameraButtonPrimary]} onPress={capturePhoto}>
+                      <Ionicons name="camera" size={24} color="white" />
+                      <Text style={[styles.cameraButtonText, { color: 'white' }]}>Capturar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.cameraModalTitle}>Foto capturada</Text>
+                  <Image
+                    source={{ uri: capturedPhoto }}
+                    style={styles.capturedPhotoPreview}
+                  />
+                  <View style={styles.cameraButtonsRow}>
+                    <TouchableOpacity style={[styles.cameraButton, styles.cameraButtonSecondary]} onPress={discardPhoto}>
+                      <Ionicons name="trash" size={24} color={Colors.error} />
+                      <Text style={[styles.cameraButtonText, { color: Colors.error }]}>Descartar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.cameraButton, styles.cameraButtonPrimary]} onPress={confirmPhoto}>
+                      <Ionicons name="checkmark" size={24} color="white" />
+                      <Text style={[styles.cameraButtonText, { color: 'white' }]}>Confirmar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     </PaperProvider>
   );
@@ -692,6 +941,86 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: -4,
   },
+  promoInputRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  promoInput: {
+    flex: 1,
+    height: 48,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2d6e91',
+    backgroundColor: '#f8fbff',
+    letterSpacing: 1,
+  },
+  promoInputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#fef2f2',
+  },
+  promoBtn: {
+    height: 48,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    backgroundColor: '#2d6e91',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promoBtnDisabled: {
+    opacity: 0.45,
+  },
+  promoBtnText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  promoSuccess: {
+    fontSize: 13,
+    color: '#10B981',
+    fontWeight: '600',
+  },
+  promoError: {
+    fontSize: 13,
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  promoAppliedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f0fdf4',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: '#10B981',
+  },
+  promoAppliedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  promoAppliedCode: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1e526e',
+    letterSpacing: 1,
+  },
+  promoRemoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  promoRemoveText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#e74c3c',
+  },
 
   // ── Date selectors ────────────────────────────────────────────────────────
   dateSelector: {
@@ -756,6 +1085,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.md,
   },
+  buttonRowWeb: {
+    gap: Spacing.md,
+  },
   imageButton: {
     flex: 1,
     flexDirection: 'row',
@@ -768,6 +1100,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
     borderWidth: 1,
     borderColor: Colors.primary,
+  },
+  imageButtonWeb: {
+    flex: 1,
   },
   imageButtonText: {
     color: Colors.primary,
@@ -811,6 +1146,72 @@ const styles = StyleSheet.create({
   conditionChipTextActive: {
     color: Colors.primary,
     fontWeight: '700',
+  },
+
+  // ── Web Camera Modal ──────────────────────────────────────────────────────
+  cameraModalOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  cameraModalContent: {
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: 16,
+    overflow: 'hidden',
+    width: '90%',
+    maxWidth: 600,
+    gap: Spacing.md,
+    padding: Spacing.lg,
+  },
+  cameraModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimaryHome,
+    textAlign: 'center',
+  },
+  cameraVideo: {
+    width: '100%',
+    height: 400,
+    borderRadius: 8,
+    backgroundColor: Colors.backgroundWhite,
+    objectFit: 'contain' as const,
+  },
+  capturedPhotoPreview: {
+    width: '100%',
+    height: 400,
+    borderRadius: 8,
+    resizeMode: 'contain',
+  },
+  cameraButtonsRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  cameraButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+  },
+  cameraButtonPrimary: {
+    backgroundColor: Colors.primary,
+  },
+  cameraButtonSecondary: {
+    backgroundColor: Colors.border,
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  cameraButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

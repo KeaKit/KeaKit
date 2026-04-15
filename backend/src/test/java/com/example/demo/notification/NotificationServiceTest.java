@@ -140,7 +140,7 @@ class NotificationServiceTest {
         when(notificationRepository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> notificationService.markAsRead(99L));
-        assertThat(ex.getMessage()).isEqualTo("Notification not found");
+        assertThat(ex.getMessage()).isEqualTo("Notificación no encontrada");
         verify(notificationRepository, never()).save(any());
     }
 
