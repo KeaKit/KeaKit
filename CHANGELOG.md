@@ -1070,6 +1070,8 @@
 
 - Add kits sample data to confirm kits ([e178f1d](https://github.com/KeaKit/KeaKit/commit/e178f1ddc0a78730896fb141600ad305b00ec452))
 
+- Add incident and risk log for Sprint 3 ([0cf337c](https://github.com/KeaKit/KeaKit/commit/0cf337cb28c7697f6167dd299bebdcbc612d0e0f))
+
 
 ### Refactorizaciones
 
