@@ -39,8 +39,8 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-          projectId: '${{ secrets.FIREBASE_PROJECT_ID }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT2 }}'
+          projectId: '${{ secrets.FIREBASE_PROJECT_ID2 }}'
           channelId: 'live' 
           # Esto le dice a Firebase que el comando se ejecuta desde la carpeta mobile
           entryPoint: mobile
