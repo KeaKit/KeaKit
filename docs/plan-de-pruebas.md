@@ -99,7 +99,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 6.1 CU-GENERAL-01 - Inicio de sesión
+### 6.2 CU-GENERAL-01 - Inicio de sesión
 
 **Escenario:** Un usuario desea iniciar sesión.
 
@@ -118,7 +118,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 6.1 CU-GENERAL-02 - Edición de perfil
+### 6.3 CU-GENERAL-02 - Edición de perfil
 
 **Escenario:** Un usuario desea editar su perfil.
 
@@ -135,7 +135,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 6.1 CU-GENERAL-03 - Crear valoración (arrendatario → arrendador)
+### 6.4 CU-GENERAL-03 - Crear valoración (arrendatario → arrendador)
 
 **Escenario:** Un arrendatario desea crear una valoración sobre un arrendador tras participar en un kit.
 
@@ -155,7 +155,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 6.1 CU-GENERAL-03 - Crear valoración (arrendador → arrendatario)
+### 6.5 CU-GENERAL-03 - Crear valoración (arrendador → arrendatario)
 
 **Escenario:** Un arrendador desea crear una valoración sobre un arrendatario tras alquilar su producto.
 
@@ -175,7 +175,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 6.1 CU-GENERAL-03 - Consulta de valoraciones
+### 6.6 CU-GENERAL-03 - Consulta de valoraciones
 
 **Escenario:** Un usuario desea consultar las valoraciones de otro usuario.
 
@@ -190,7 +190,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 | **P-01: Consulta exitosa** | **Usuario consultado:** con valoraciones | El sistema muestra la lista de valoraciones recibidas correctamente. | RN-VAL-09 |
 | **P-02: Usuario sin valoraciones** | **Usuario consultado:** sin valoraciones | El sistema muestra un mensaje indicando que no hay valoraciones disponibles. | RN-VAL-09 |
 
-### 6.1 CU-ARRENDADOR-01 - Subida de artículos
+### 6.7 CU-ARRENDADOR-01 - Subida de artículos
 
 **Escenario:** Un usuario sube un artículo.
 
@@ -209,7 +209,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 6.2 CU-ARRENDATARIO-01 - Creación de kits
+### 6.8 CU-ARRENDATARIO-01 - Creación de kits
 
 **Escenario:** Un usuario crea y alquila un kit.
 
@@ -228,7 +228,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 6.3 CU-ARRENDATARIO-05 - Seguimiento de alquileres activos
+### 6.9 CU-ARRENDATARIO-05 - Seguimiento de alquileres activos
 
 **Escenario:** Un usuario revisa los kits que ha alquilado.
 
@@ -246,7 +246,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 6.1 CU-ARRENDATARIO-06 - Confirmar recepción de kit
+### 6.10 CU-ARRENDATARIO-06 - Confirmar recepción de kit
 
 **Escenario:** Un usuario desea confirmar que ha recibido satisfactoriamente un kit.
 
@@ -263,7 +263,7 @@ Se implementarán mediante el testing de interfaz de usuario, replicando el proc
 
 ---
 
-### 6.4 CU-ARRENDADOR-02 - Listado de artículos subidos
+### 6.11 CU-ARRENDADOR-02 - Listado de artículos subidos
 
 **Escenario:** Un usuario revisa su inventario de artículos subidos en la aplicación.
 
