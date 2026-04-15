@@ -412,6 +412,8 @@
 
 - Arrendador can now rate an arrendatario ([9c4d64e](https://github.com/KeaKit/KeaKit/commit/9c4d64ee4d90e523cc7b1f50103e86d725518a30))
 
+- Services now appear when creating a default kit ([a780ba0](https://github.com/KeaKit/KeaKit/commit/a780ba029618c8a362279b3d0cd3067928da0360))
+
 
 ### Docs
 
