@@ -117,7 +117,7 @@ class ArticleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"t\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Owner not found"));
+            .andExpect(content().string("Propietario no encontrado"));
     }
 
     @Test

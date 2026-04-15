@@ -25,19 +25,19 @@ public class CloudinaryService {
     public String uploadImage(MultipartFile file) throws IOException {
         // Validate file is not empty
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("File is empty");
+            throw new IllegalArgumentException("El archivo no puede estar vacío");
         }
 
         // Validate file is an image
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("File must be an image");
+            throw new IllegalArgumentException("El archivo debe ser una imagen");
         }
 
         // Validate file size (max 10MB)
         long maxSize = 10 * 1024 * 1024; // 10MB
         if (file.getSize() > maxSize) {
-            throw new IllegalArgumentException("File size must not exceed 10MB");
+            throw new IllegalArgumentException("El tamaño del archivo no debe exceder los 10MB");
         }
 
         // Upload with transformations

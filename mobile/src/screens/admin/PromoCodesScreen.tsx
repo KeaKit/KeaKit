@@ -170,6 +170,17 @@ const PromoCodesScreen: React.FC = () => {
                   Descuento: <Text style={styles.infoValue}>{(item.discountRate * 100).toFixed(0)}%</Text>
                 </Text>
               </View>
+              <View style={styles.infoRow}>
+                <Ionicons name="pricetag-outline" size={14} color={KC.gray} />
+                <Text style={styles.infoText}>
+                  Tipo:{' '}
+                  <Text style={styles.infoValue}>
+                    {(item.type ?? 'TENANT_DISCOUNT') === 'OWNER_COMMISSION_REDUCTION'
+                      ? 'Comisión owner'
+                      : 'Alquiler kit'}
+                  </Text>
+                </Text>
+              </View>
               {item.pilotUserOnly && (
                 <View style={styles.infoRow}>
                   <Ionicons name="people-outline" size={14} color={KC.blue} />

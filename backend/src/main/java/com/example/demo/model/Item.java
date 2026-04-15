@@ -70,6 +70,12 @@ public abstract class Item {
     @OnDelete(action = OnDeleteAction.CASCADE)
     protected User owner;
 
+    @Column(name = "owner_commission_promo_code", length = 80)
+    protected String ownerCommissionPromoCode;
+
+    @Column(name = "owner_commission_promo_consumed", nullable = false)
+    protected boolean ownerCommissionPromoConsumed = false;
+
     public Item() {}
 
     public Item (String title, String description, String city, Double pricePerMonth, LocalDate availableFrom, LocalDate availableUntil, Category category, User owner) {
@@ -161,6 +167,22 @@ public abstract class Item {
 
     public void setOwner(User owner) {
         this.owner = owner;
+    }
+
+    public String getOwnerCommissionPromoCode() {
+        return ownerCommissionPromoCode;
+    }
+
+    public void setOwnerCommissionPromoCode(String ownerCommissionPromoCode) {
+        this.ownerCommissionPromoCode = ownerCommissionPromoCode;
+    }
+
+    public boolean isOwnerCommissionPromoConsumed() {
+        return ownerCommissionPromoConsumed;
+    }
+
+    public void setOwnerCommissionPromoConsumed(boolean ownerCommissionPromoConsumed) {
+        this.ownerCommissionPromoConsumed = ownerCommissionPromoConsumed;
     }
 
     public Integer getTotalUnits() {
