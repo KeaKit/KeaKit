@@ -16,7 +16,6 @@
 | Guillermo Ciria González | [Guillermociria](https://github.com/Guillermociria) | [gciria@us.es](mailto:gciria@us.es) |
 | Marta De la Calle González  | [martadelacalle](https://github.com/martadelacalle) | [mardegon7@alum.us.es](mailto:mardegon7@alum.us.es) | 
 | Rafael Harana Mancilla | [rharana](https://github.com/rharana) | [rafharman@alum.us.es](mailto:@rafharman@us.es) |  
-|
 
 
 ## 1. Sprint Goal
