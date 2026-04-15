@@ -22,7 +22,7 @@ import {
 
 // Mock global fetch
 const mockFetch = jest.fn() as jest.Mock;
-(globalThis as any).fetch = mockFetch;
+(globalThis as unknown as { fetch: jest.Mock }).fetch = mockFetch;
 
 const TOKEN = "test-jwt-token";
 

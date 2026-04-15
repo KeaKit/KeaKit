@@ -29,7 +29,7 @@ import {
 } from "../src/services/cityService";
 
 const mockFetch = jest.fn() as jest.Mock;
-(globalThis as any).fetch = mockFetch;
+(globalThis as unknown as { fetch: jest.Mock }).fetch = mockFetch;
 
 const TOKEN = "test-jwt-token";
 const PLATFORM_COURIER_PRICE = 9.99;
@@ -232,8 +232,8 @@ describe("CU-ARRENDATARIO-10: Selección de ciudad destino (RN-KIT-24)", () => {
     const coords = await getCityCoordinates("Sevilla", "España");
 
     expect(coords).not.toBeNull();
-    expect(coords!.lat).toBeCloseTo(37.3886, 2);
-    expect(coords!.lng).toBeCloseTo(-5.9823, 2);
+    expect(coords?.lat).toBeCloseTo(37.3886, 2);
+    expect(coords?.lng).toBeCloseTo(-5.9823, 2);
   });
 
   it("AC-09: Se gestiona correctamente una ciudad inexistente", async () => {
