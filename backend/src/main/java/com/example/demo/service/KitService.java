@@ -340,8 +340,13 @@ public class KitService {
     }
 
     public void confirmKitStatus(Long id) {
+        Long tenantId = authService.getAuthenticatedUserId();
         Kit kit = kitRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Kit not found"));
+
+        if (kit.getTenant() == null || !kit.getTenant().getId().equals(tenantId)) {
+            throw new RuntimeException("Kit does not belong to the specified tenant");
+        }
 
         if (kit.getStatus() != KitStatus.PAID) {
             throw new RuntimeException("The kit can only be confirmed if its status is PAID");

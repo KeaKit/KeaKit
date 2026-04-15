@@ -9,7 +9,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -212,15 +211,19 @@ public class KitServiceTest {
 
     @Test
     void confirmKitStatus_when_paid_changesToActive() {
+        User tenant = createTestUser(1L, "Tenant");
         Kit kit = new Kit();
         kit.setId(1L);
         kit.setStatus(KitStatus.PAID);
+        kit.setTenant(tenant);
 
+        when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
 
         kitService.confirmKitStatus(1L);
 
         assertEquals(KitStatus.ACTIVE, kit.getStatus());
+        verify(kitRepository).save(kit);
     }
 
     @Test
@@ -232,8 +235,12 @@ public class KitServiceTest {
 
     @Test
     void confirmKitStatus_when_statusNotPaid_throwsExceptionWithCorrectMessage() {
+        User tenant = createTestUser(1L, "Tenant");
         Kit kit = new Kit();
         kit.setStatus(KitStatus.DRAFT);
+        kit.setTenant(tenant);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
 
         Exception exception = assertThrows(RuntimeException.class, () -> 
@@ -245,8 +252,12 @@ public class KitServiceTest {
 
     @Test
     void confirmKitStatus_calls_save_repository() {
+        User tenant = createTestUser(1L, "Tenant");
         Kit kit = new Kit();
         kit.setStatus(KitStatus.PAID);
+        kit.setTenant(tenant);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
 
         kitService.confirmKitStatus(1L);
@@ -256,8 +267,12 @@ public class KitServiceTest {
 
     @Test
     void confirmKitStatus_savesWithCorrectStatus() {
+        User tenant = createTestUser(1L, "Tenant");
         Kit kit = new Kit();
         kit.setStatus(KitStatus.PAID);
+        kit.setTenant(tenant);
+
+        when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
 
         kitService.confirmKitStatus(1L);
@@ -266,6 +281,39 @@ public class KitServiceTest {
         verify(kitRepository).save(kitCaptor.capture());
         
         assertEquals(KitStatus.ACTIVE, kitCaptor.getValue().getStatus());
+    }
+
+    @Test
+    void confirmKitStatus_when_tenantNotMatches_throwsException() {
+        User owner = createTestUser(99L, "Owner");
+        Kit kit = new Kit();
+        kit.setTenant(owner);
+        kit.setStatus(KitStatus.PAID);
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
+
+        assertEquals("Kit does not belong to the specified tenant", exception.getMessage());
+    }
+
+    @Test
+    void confirmKitStatus_when_tenantIsNull_throwsException() {
+        Kit kit = new Kit();
+        kit.setTenant(null);
+        kit.setStatus(KitStatus.PAID);
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+        when(authService.getAuthenticatedUserId()).thenReturn(1L);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> 
+            kitService.confirmKitStatus(1L)
+        );
+
+        assertEquals("Kit does not belong to the specified tenant", exception.getMessage());
     }
 
 // ==========================================
