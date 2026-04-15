@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
@@ -25,13 +25,13 @@ import {
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
-import { createKit } from "../../services/kitService";
+import { createKit, filterItemsForKit } from "../../services/kitService";
 import {
   getNearbyArticles,
   getArticlesForMap,
 } from "../../services/articleService";
 import { getCityCoordinates } from "../../services/cityService";
-import { processPaymentWithWallet } from "../../services";
+import { fetchAllCategories } from "../../services/categoryService";
 import { API_ROUTES } from "../../config/api";
 import {
   RootStackParamList,
@@ -39,6 +39,8 @@ import {
   KitStatus,
   ArticleNearby,
   KitPaymentDTO,
+  Category,
+  ArticleCondition,
 } from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
@@ -55,8 +57,8 @@ import {
 import { styles } from "../../styles/uploadArticleScreenStyles";
 import { formatRentalDuration, calculateMonthsBetween } from "../../utils/duration";
 
-const COMISION = 0; // todos son usuarios pilotos y no se cobra comision
-const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
+const COMISION = 0;
+const GUARANTEE_PERCENTAGE = 0.2;
 const PLATFORM_COURIER_PRICE = 9.99;
 
 type CreateKitNav = NativeStackNavigationProp<RootStackParamList, "CreateKit">;
@@ -80,8 +82,9 @@ type CatalogProduct = {
   itemType: "ARTICLE" | "SERVICE" | string;
   title: string;
   pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | "ACTIVE" | string;
   category?: string;
+  condition?: ArticleCondition | null;
   city?: string;
   ownerId: number;
   ownerName?: string;
@@ -96,14 +99,38 @@ type CatalogProduct = {
   cityLng?: number;
 };
 
+type CatalogFilterOverrides = {
+  showOnlyMyCity?: boolean;
+  selectedCategoryId?: string;
+  selectedCondition?: string;
+  minPrice?: string;
+  maxPrice?: string;
+};
+
+const CONDITION_OPTIONS = [
+  { label: "Cualquier estado", value: "" },
+  { label: "Nuevo", value: "NEW" },
+  { label: "Poco usado", value: "LIGHTLY_USED" },
+  { label: "Usado", value: "USED" },
+  { label: "Desgastado", value: "WORN" },
+];
+
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
   const route = useRoute<any>();
   const { user } = useAuth();
-  
-  // Obtener kitToCreate de los parámetros de ruta
-  const kitToCreate : Partial<KitCreateRequest> | null = route.params?.kitToCreate;
-  const isEditable : boolean = route.params?.isEditable ?? true;
+
+  const resetToMyKits = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: "Home" }, { name: "MyKits" }],
+      }),
+    );
+  };
+
+  const kitToCreate: Partial<KitCreateRequest> | null = route.params?.kitToCreate;
+  const isEditable: boolean = route.params?.isEditable ?? true;
 
   const {
     selectedCountry,
@@ -115,7 +142,6 @@ const CreateKitScreen: React.FC = () => {
     onCountryChange,
   } = useLocationPicker();
 
-  
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -131,7 +157,11 @@ const CreateKitScreen: React.FC = () => {
   const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
 
   const [searchText, setSearchText] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
+  const [catalogCategories, setCatalogCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedCondition, setSelectedCondition] = useState("");
+  const [minPriceFilter, setMinPriceFilter] = useState("");
+  const [maxPriceFilter, setMaxPriceFilter] = useState("");
   const [showOnlyMyCity, setShowOnlyMyCity] = useState(false);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -139,7 +169,7 @@ const CreateKitScreen: React.FC = () => {
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  
+
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [expandedSearch, setExpandedSearch] = useState(false);
   const [nearbyProducts, setNearbyProducts] = useState<ArticleNearby[]>([]);
@@ -147,10 +177,6 @@ const CreateKitScreen: React.FC = () => {
   const [targetCityCoords, setTargetCityCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
 
-  // Estado para saber si pagamos con wallet o con stripe
-  const [paymentType, setPaymentType] = useState<"WALLET" | "NORMAL">("NORMAL");
-  
-  // Prerrellenado de campos inicial - usar useEffect
   useEffect(() => {
     if (kitToCreate) {
       if (kitToCreate.name) setName(kitToCreate.name);
@@ -164,20 +190,16 @@ const CreateKitScreen: React.FC = () => {
     }
   }, [kitToCreate]);
 
-  // Establecer país y ciudad del usuario cuando estén disponibles
   useEffect(() => {
     if (user?.country) {
       setCountry(user.country);
       void onCountryChange(user.country);
     }
-
     if (user?.city) {
       setCity(user.city);
-
       setSelectedCity(user.city);
     }
   }, []);
-
 
   useEffect(() => {
     if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
@@ -217,7 +239,29 @@ const CreateKitScreen: React.FC = () => {
     setErrors((prev) => ({ ...prev, [field]: undefined, general: undefined }));
   };
 
-  const loadCatalog = useCallback(async () => {
+  useEffect(() => {
+    if (!user?.token) return;
+
+    let cancelled = false;
+    const loadCategories = async () => {
+      try {
+        const data = await fetchAllCategories(user.token);
+        if (!cancelled) {
+          setCatalogCategories(data.filter((category) => category.status === "ACTIVE"));
+        }
+      } catch (error) {
+        console.warn("No se pudieron cargar las categorías del catálogo:", error);
+      }
+    };
+
+    void loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.token]);
+
+  const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
     if (!user?.token) {
       setAvailableProducts([]);
       setLoadingCatalog(false);
@@ -225,56 +269,71 @@ const CreateKitScreen: React.FC = () => {
       return;
     }
 
+    const nextShowOnlyMyCity = overrides?.showOnlyMyCity ?? showOnlyMyCity;
+    const nextSelectedCategoryId = overrides?.selectedCategoryId ?? selectedCategoryId;
+    const nextSelectedCondition = overrides?.selectedCondition ?? selectedCondition;
+    const nextMinPrice = overrides?.minPrice ?? minPriceFilter;
+    const nextMaxPrice = overrides?.maxPrice ?? maxPriceFilter;
+
     try {
       setLoadingCatalog(true);
 
-      const res = await fetch(API_ROUTES.ITEMS_FOR_RENT(user.id), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+      const response = await filterItemsForKit(
+        {
+          country: undefined,
+          city: nextShowOnlyMyCity && city.trim() ? city.trim() : undefined,
+          categoryId: nextSelectedCategoryId ? Number(nextSelectedCategoryId) : undefined,
+          condition: nextSelectedCondition ? (nextSelectedCondition as ArticleCondition) : undefined,
+          minPrice: nextMinPrice ? parseFloat(nextMinPrice) : undefined,
+          maxPrice: nextMaxPrice ? parseFloat(nextMaxPrice) : undefined,
+          page: 0,
+          size: 100,
         },
-      });
+        user.token,
+      );
 
-      const contentType = res.headers.get("content-type") || "";
-      const text = await res.text();
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-
-      if (!contentType.includes("application/json")) {
-        throw new Error(`Respuesta no JSON: ${text}`);
-      }
-
-      const raw = JSON.parse(text);
-
-      const mapped: CatalogProduct[] = (raw ?? []).map((p: any) => ({
+      const mapped: CatalogProduct[] = response.content.map((p) => ({
         id: Number(p.id),
         itemType: String(p.itemType ?? "ARTICLE"),
         title: p.title ?? "Sin título",
         pricePerMonth: Number(p.pricePerMonth ?? 0),
         status: String(p.status ?? "AVAILABLE"),
-        category: typeof p.category === "string" ? p.category : p.category?.name ?? "",
+        category: typeof p.category === "string" ? p.category : "",
+        condition: (p as any).condition ?? null,
         city: p.city ?? "",
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
-        imageUrl: p.imageUrl ?? null,
+        imageUrl: (p as any).imageUrl ?? null,
         totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
-        availableFrom: p.availableFrom ?? null,
-        availableUntil: p.availableUntil ?? null,
+        availableFrom: (p as any).availableFrom ?? undefined,
+        availableUntil: (p as any).availableUntil ?? undefined,
       }));
 
-      setAvailableProducts(mapped);
+      const filteredByOwner = mapped.filter(p => p.ownerId !== user?.id);
+
+      setAvailableProducts(filteredByOwner);
       setErrors((prev) => ({ ...prev, general: undefined }));
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo cargar el catálogo.";
-      setErrors((prev) => ({ ...prev, general: message }));
+      if (message.toLowerCase().includes("no items found")) {
+        setErrors((prev) => ({ ...prev, general: undefined }));
+      } else {
+        setErrors((prev) => ({ ...prev, general: message }));
+      }
       setAvailableProducts([]);
     } finally {
       setLoadingCatalog(false);
     }
-  }, [user?.token, user?.id]);
+  }, [
+    city,
+    maxPriceFilter,
+    minPriceFilter,
+    selectedCategoryId,
+    selectedCondition,
+    showOnlyMyCity,
+    user?.token,
+    user?.id,
+  ]);
 
   useEffect(() => {
     loadCatalog();
@@ -295,7 +354,6 @@ const CreateKitScreen: React.FC = () => {
         }
       }
     };
-
     fetchWalletBalance();
   }, [loadCatalog, user?.token, user?.id]);
 
@@ -324,8 +382,8 @@ const CreateKitScreen: React.FC = () => {
 
   const courierPrice = deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
-  const kitPayment : KitPaymentDTO = useMemo(() => {
-    const subtotal = Math.round(totalPrice * 100); 
+  const kitPayment: KitPaymentDTO = useMemo(() => {
+    const subtotal = Math.round(totalPrice * 100);
     const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
     const platformfee = Math.round(subtotal * COMISION);
     const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
@@ -337,8 +395,7 @@ const CreateKitScreen: React.FC = () => {
       platformfee: platformfee,
       courierPrice: courier,
       totalPrice: total,
-      discount: 0, // TODO: Añadir lógica de descuentos a esta pantalla si es necesario
-
+      discount: 0,
     };
   }, [totalPrice, deliveryMethod]);
 
@@ -348,83 +405,41 @@ const CreateKitScreen: React.FC = () => {
     return totalPrice + guarantee + commission + courierPrice;
   }, [totalPrice, courierPrice]);
 
-  const categories = useMemo(() => {
-    const set = new Set(
-      availableProducts.map((p) => p.category?.trim()).filter((c): c is string => Boolean(c)),
-    );
-    return ["ALL", ...Array.from(set)];
-  }, [availableProducts]);
+  const categoryOptions = useMemo(
+    () => [
+      { label: "Todas las categorías", value: "" },
+      ...catalogCategories.map((category) => ({
+        label: category.name,
+        value: String(category.id),
+      })),
+    ],
+    [catalogCategories],
+  );
 
   const filteredProducts = useMemo(() => {
     const q = searchText.trim().toLowerCase();
-
-    const local = availableProducts.filter((p) => {
-      const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
-      const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
-      const byCity = !showOnlyMyCity || !city.trim() || (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
+    return availableProducts.filter((p) => {
+      const notInactive = p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
       const bySearch =
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
         (p.city ?? "").toLowerCase().includes(q) ||
-        (p.category ?? "").toLowerCase().includes(q);
+        (p.category ?? "").toLowerCase().includes(q) ||
+        (p.ownerName ?? "").toLowerCase().includes(q) ||
+        (p.condition ?? "").toLowerCase().includes(q);
 
-      return notInactive && byCategory && byCity && bySearch;
+      return notInactive && bySearch;
     });
-
-    if (!expandedSearch || nearbyProducts.length === 0) return local;
-
-    const localIds = new Set(local.map((p) => p.id));
-    const nearby: CatalogProduct[] = nearbyProducts
-      .filter((p) => {
-        if (localIds.has(p.id)) return false;
-        const byCategory = categoryFilter === "ALL" || p.category === categoryFilter;
-        const bySearch =
-          q.length === 0 ||
-          p.title.toLowerCase().includes(q) ||
-          (p.city ?? "").toLowerCase().includes(q) ||
-          (p.category ?? "").toLowerCase().includes(q);
-        return byCategory && bySearch;
-      })
-      .map((p) => ({
-        id: p.id,
-        itemType: p.itemType,
-        title: p.title,
-        pricePerMonth: p.pricePerMonth,
-        status: p.status ?? "AVAILABLE",
-        category: p.category ?? undefined,
-        city: p.city,
-        ownerId: p.ownerId ?? 0,
-        ownerName: p.ownerName ?? undefined,
-        imageUrl: p.imageUrl,
-        totalUnits: p.totalUnits ?? 1,
-        availableFrom: p.availableFrom ?? undefined,
-        availableUntil: p.availableUntil ?? undefined,
-        distanceKm: p.distanceKm,
-        cityLat: p.cityLat,
-        cityLng: p.cityLng,
-      }));
-
-    return [...local, ...nearby];
-  }, [
-    availableProducts,
-    nearbyProducts,
-    searchText,
-    categoryFilter,
-    showOnlyMyCity,
-    city,
-    expandedSearch,
-  ]);
+  }, [availableProducts, searchText]);
 
   const openAddProductModal = async () => {
-    await loadCatalog();
+    const useCityFilter = city.trim().length > 0;
+    setShowOnlyMyCity(useCityFilter);
+    await loadCatalog({ showOnlyMyCity: useCityFilter });
     setTempSelectedQuantities(selectedQuantities);
-
     setSearchText("");
-    setCategoryFilter("ALL");
-    setShowOnlyMyCity(city.trim().length > 0);
     setShowOnlyAvailable(true);
 
-    // Cargar productos del mapa solo si el usuario está autenticado
     if (user?.token) {
       try {
         const mapData = await getArticlesForMap(user.token, country.trim() || undefined);
@@ -438,6 +453,26 @@ const CreateKitScreen: React.FC = () => {
     }
 
     setCatalogModalVisible(true);
+  };
+
+  const handleApplyCatalogFilters = async () => {
+    await loadCatalog();
+  };
+
+  const handleClearCatalogFilters = async () => {
+    const resetCityFilter = city.trim().length > 0;
+    setSelectedCategoryId("");
+    setSelectedCondition("");
+    setMinPriceFilter("");
+    setMaxPriceFilter("");
+    setShowOnlyMyCity(resetCityFilter);
+    await loadCatalog({
+      selectedCategoryId: "",
+      selectedCondition: "",
+      minPrice: "",
+      maxPrice: "",
+      showOnlyMyCity: resetCityFilter,
+    });
   };
 
   const toggleTempSelection = (id: number) => {
@@ -488,22 +523,26 @@ const CreateKitScreen: React.FC = () => {
   const checkItemsAvailability = (start: Date, end: Date): string[] => {
     const invalidTitles: string[] = [];
 
-    const kitStartNum = start.getFullYear() * 10000 + (start.getMonth() + 1) * 100 + start.getDate();
-    const kitEndNum = end.getFullYear() * 10000 + (end.getMonth() + 1) * 100 + end.getDate();
+    // Normalizar fechas
+    const kitStart = new Date(start);
+    kitStart.setHours(0, 0, 0, 0);
+    
+    const kitEnd = new Date(end);
+    kitEnd.setHours(0, 0, 0, 0);
 
     selectedProducts.forEach((product) => {
-      if (!product.availableFrom || !product.availableUntil) return;
+      if (!product.availableFrom || !product.availableUntil) {
+        invalidTitles.push(product.title);
+        return;
+      }
 
-      const rawFrom = product.availableFrom.split('T')[0];
-      const rawUntil = product.availableUntil.split('T')[0];
+      const productFrom = new Date(product.availableFrom);
+      productFrom.setHours(0, 0, 0, 0);
+      
+      const productUntil = new Date(product.availableUntil);
+      productUntil.setHours(0, 0, 0, 0);
 
-      const fromParts = rawFrom.split('-');
-      const untilParts = rawUntil.split('-');
-
-      const pStartNum = parseInt(fromParts[0]) * 10000 + parseInt(fromParts[1]) * 100 + parseInt(fromParts[2]);
-      const pEndNum = parseInt(untilParts[0]) * 10000 + parseInt(untilParts[1]) * 100 + parseInt(untilParts[2]);
-
-      const isAvailable = (kitStartNum >= pStartNum) && (kitEndNum <= pEndNum);
+      const isAvailable = kitStart >= productFrom && kitEnd <= productUntil;
 
       if (!isAvailable) {
         invalidTitles.push(product.title);
@@ -512,7 +551,6 @@ const CreateKitScreen: React.FC = () => {
 
     return invalidTitles;
   };
-
 
   const validate = (isDraft: boolean = false): {
     valid: boolean;
@@ -524,10 +562,25 @@ const CreateKitScreen: React.FC = () => {
     if (!startDate) nextErrors.startDate = "Debes seleccionar una fecha inicial.";
     if (!endDate) nextErrors.endDate = "Debes seleccionar una fecha final.";
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (startDate && startDate < today) {
+      nextErrors.startDate = "La fecha de inicio no puede ser pasada.";
+    }
+
+    if (endDate && endDate < today) {
+      nextErrors.endDate = "La fecha de fin no puede ser pasada.";
+    }
+
+    if (startDate && endDate && endDate < startDate) {
+      nextErrors.endDate = "La fecha de fin debe ser posterior a la de inicio.";
+    }
+
     if (!isDraft) {
       if (!country.trim()) nextErrors.country = "El país es obligatorio.";
       if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
-      
+
       if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
         nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
       }
@@ -547,12 +600,12 @@ const CreateKitScreen: React.FC = () => {
       if (startDate && endDate) {
         const invalidItems = checkItemsAvailability(startDate, endDate);
         if (invalidItems.length > 0) {
-          setErrors(prev => ({...prev, items: `Aviso: Algunos artículos no están disponibles en estas fechas.`}));
+          setErrors(prev => ({ ...prev, items: `Aviso: Algunos artículos no están disponibles en estas fechas.` }));
         }
       }
     }
     setErrors(prev => ({ ...prev, ...nextErrors }));
-    
+
     if (Object.keys(nextErrors).length > 0 || !startDate || !endDate)
       return { valid: false };
 
@@ -578,12 +631,9 @@ const CreateKitScreen: React.FC = () => {
       startDate: validation.payloadDates.startIso,
       endDate: validation.payloadDates.endIso,
       deliveryMethod,
-      meetingPoint:
-        deliveryMethod === "MEETING_POINT"
-          ? meetingPoint.trim()
-          : courierAddress.trim(),
+      meetingPoint: deliveryMethod === "MEETING_POINT" ? meetingPoint.trim() : courierAddress.trim(),
       tenantId: user.id,
-      status: KitStatus.DRAFT, // SIEMPRE LO CREAMOS COMO DRAFT INICIALMENTE
+      status: KitStatus.DRAFT,
       itemSelections: selectedProducts.map((p) => ({
         itemId: p.id,
         quantity: selectedQuantities[p.id] ?? 1,
@@ -593,28 +643,15 @@ const CreateKitScreen: React.FC = () => {
 
     try {
       setSubmitting(true);
-      
+
       const createdKit = await createKit(payload, user.token);
       if (!createdKit) {
         throw new Error("No se pudo crear el kit.");
       }
 
-      if (paymentType === "WALLET") {
-        // Multiplicamos por 100 para pasarlo a céntimos
-        const amountInCents = Math.round(finalPrice * 100);
+      navigation.navigate("Checkout", { kitId: createdKit.id });
 
-        await processPaymentWithWallet(
-          createdKit.id,
-          user.token,
-          amountInCents
-        );
-        
-        navigation.navigate("MyKits");
-      } else {
-        navigation.navigate("Checkout", { kitId: createdKit.id });
-      }
-
-   } catch (err) {
+    } catch (err) {
       console.error("ERROR al procesar la creación/pago del kit:", err);
 
       const error = err as {
@@ -624,12 +661,8 @@ const CreateKitScreen: React.FC = () => {
 
       const errorMsg = error.response?.data?.message || error.message || "";
 
-      // 3. Aplicamos tu lógica de validación
-      if (errorMsg.includes("ya no está disponible") || 
-                errorMsg.includes("unidades"))
-      {
-        setErrors({ items: errorMsg }); // Se mostrará debajo de la lista de artículos
-
+      if (errorMsg.includes("ya no está disponible") || errorMsg.includes("unidades")) {
+        setErrors({ items: errorMsg });
       } else {
         setErrors({ general: "Ha ocurrido un error al procesar el kit o el pago." });
       }
@@ -663,19 +696,12 @@ const CreateKitScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={createKitStyles.headerRow}>
-            {/* Botón de volver */}
-            <TouchableOpacity
-              style={componentStyles.iconButton}
-              onPress={() => navigation.goBack()}
-            >
+            <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={24} color={Colors.primary} />
             </TouchableOpacity>
-
             <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
               {kitToCreate ? "Personaliza tu kit" : "Crea un kit"}
             </Text>
-
-            {/* Mantener espacio a la derecha para centrar el título */}
             <View style={componentStyles.iconButton} />
           </View>
 
@@ -692,25 +718,13 @@ const CreateKitScreen: React.FC = () => {
             outlineColor={Colors.border}
             activeOutlineColor={Colors.primary}
           />
-          {errors.name ? (
-            <Text style={commonStyles.errorText}>{errors.name}</Text>
-          ) : null}
+          {errors.name ? <Text style={commonStyles.errorText}>{errors.name}</Text> : null}
 
           {/* País */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>País</Text>
-            <View
-              style={[
-                styles.pickerWrapper,
-                errors.country ? styles.pickerWrapperError : null,
-              ]}
-            >
-              <Ionicons
-                name="earth-outline"
-                size={18}
-                color={Colors.textSecondary}
-                style={styles.pickerIcon}
-              />
+            <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
+              <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
               <SelectPicker
                 options={countries}
                 selectedValue={selectedCountry}
@@ -734,27 +748,15 @@ const CreateKitScreen: React.FC = () => {
           {/* Ciudad */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Ciudad</Text>
-            <View
-              style={[
-                styles.pickerWrapper,
-                errors.city ? styles.pickerWrapperError : null,
-              ]}
-            >
-              <Ionicons
-                name="location-outline"
-                size={18}
-                color={Colors.textSecondary}
-                style={styles.pickerIcon}
-              />
+            <View style={[styles.pickerWrapper, errors.city ? styles.pickerWrapperError : null]}>
+              <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
               {loadingCities ? (
                 <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
               ) : (
                 <SelectPicker
                   options={cities.map((c) => ({ label: c, value: c }))}
                   selectedValue={selectedCity}
-                  placeholder={
-                    selectedCountry ? "Selecciona una ciudad" : "Primero elige un país"
-                  }
+                  placeholder={selectedCountry ? "Selecciona una ciudad" : "Primero elige un país"}
                   disabled={cities.length === 0}
                   onValueChange={(value: string) => {
                     setSelectedCity(value);
@@ -777,37 +779,18 @@ const CreateKitScreen: React.FC = () => {
               commonStyles.input,
               createKitStyles.dateInput,
               (errors.startDate || errors.endDate) && commonStyles.inputError,
-              {
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              },
+              { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
             ]}
             onPress={() => setShowDateRangePicker(true)}
           >
-            <Text
-              style={[
-                {
-                  color:
-                    startDate && endDate
-                      ? Colors.textPrimary
-                      : Colors.textSecondary,
-                },
-              ]}
-            >
+            <Text style={{ color: startDate && endDate ? Colors.textPrimary : Colors.textSecondary }}>
               {startDate && endDate
-                ? `${String(startDate.getDate()).padStart(2, "0")}/${String(
-                    startDate.getMonth() + 1,
-                  ).padStart(2, "0")}/${startDate.getFullYear()} - ${String(
-                    endDate.getDate(),
-                  ).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(
-                    2,
-                    "0",
-                  )}/${endDate.getFullYear()}`
+                ? `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${startDate.getFullYear()} - ${String(endDate.getDate()).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${endDate.getFullYear()}`
                 : "Selecciona rango de fechas del alquiler"}
             </Text>
             <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
           </TouchableOpacity>
+
           <DatePickerModal
             locale="es"
             mode="range"
@@ -816,14 +799,12 @@ const CreateKitScreen: React.FC = () => {
             startDate={startDate || undefined}
             endDate={endDate || undefined}
             allowEditing={false}
-            // Busca el DatePickerModal y reemplaza el onConfirm:
+            validRange={{ startDate: new Date() }}
             onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
               setShowDateRangePicker(false);
               if (params.startDate && params.endDate) {
                 const invalidItems = checkItemsAvailability(params.startDate, params.endDate);
-                
                 if (invalidItems.length > 0) {
-                  // Seteamos el error para que se vea el texto, pero el validate(true) lo ignorará
                   setErrors((prev) => ({
                     ...prev,
                     items: `Atención: Algunos productos no están disponibles en estas fechas: ${invalidItems.join(", ")}`,
@@ -831,22 +812,17 @@ const CreateKitScreen: React.FC = () => {
                 } else {
                   clearFieldError("items");
                 }
-
                 setStartDate(params.startDate);
                 setEndDate(params.endDate);
                 clearFieldError("startDate");
                 clearFieldError("endDate");
               }
             }}
-        />
-          {errors.startDate ? (
-            <Text style={commonStyles.errorText}>{errors.startDate}</Text>
-          ) : null}
-          {errors.endDate ? (
-            <Text style={commonStyles.errorText}>{errors.endDate}</Text>
-          ) : null}
+          />
 
-          {/* Duración del alquiler */}
+          {errors.startDate && <Text style={commonStyles.errorText}>{errors.startDate}</Text>}
+          {errors.endDate && <Text style={commonStyles.errorText}>{errors.endDate}</Text>}
+
           {monthsBetween !== null && monthsBetween > 0 && (
             <View style={{ marginTop: 8, marginBottom: 16 }}>
               <Text style={commonStyles.bodySecondary}>
@@ -856,10 +832,7 @@ const CreateKitScreen: React.FC = () => {
           )}
 
           <View style={createKitStyles.deliverySection}>
-            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
-              Método de entrega
-            </Text>
-
+            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>Método de entrega</Text>
             <SegmentedButtons
               value={deliveryMethod}
               onValueChange={(value) => {
@@ -868,16 +841,8 @@ const CreateKitScreen: React.FC = () => {
                 clearFieldError("courierAddress");
               }}
               buttons={[
-                {
-                  value: "COURIER",
-                  label: "Mensajería",
-                  icon: "truck-delivery",
-                },
-                {
-                  value: "MEETING_POINT",
-                  label: "Punto de encuentro",
-                  icon: "map-marker",
-                },
+                { value: "COURIER", label: "Mensajería", icon: "truck-delivery" },
+                { value: "MEETING_POINT", label: "Punto de encuentro", icon: "map-marker" },
               ]}
               style={{ marginVertical: 12 }}
             />
@@ -894,21 +859,14 @@ const CreateKitScreen: React.FC = () => {
                     clearFieldError("meetingPoint");
                   }}
                   error={!!errors.meetingPoint}
-                  style={{
-                    backgroundColor: Colors.backgroundWhite,
-                    marginTop: 12,
-                  }}
+                  style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
                   outlineColor={Colors.border}
                   activeOutlineColor={Colors.primary}
                   multiline
                 />
-                {errors.meetingPoint ? (
-                  <Text style={commonStyles.errorText}>{errors.meetingPoint}</Text>
-                ) : null}
+                {errors.meetingPoint && <Text style={commonStyles.errorText}>{errors.meetingPoint}</Text>}
               </>
-            ) : null}
-
-            {deliveryMethod === "COURIER" ? (
+            ) : (
               <>
                 <PaperTextInput
                   mode="outlined"
@@ -919,52 +877,38 @@ const CreateKitScreen: React.FC = () => {
                     clearFieldError("courierAddress");
                   }}
                   error={!!errors.courierAddress}
-                  style={{
-                    backgroundColor: Colors.backgroundWhite,
-                    marginTop: 12,
-                  }}
+                  style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
                   outlineColor={Colors.border}
                   activeOutlineColor={Colors.primary}
                   multiline
                 />
-                {errors.courierAddress ? (
-                  <Text style={commonStyles.errorText}>{errors.courierAddress}</Text>
-                ) : null}
+                {errors.courierAddress && <Text style={commonStyles.errorText}>{errors.courierAddress}</Text>}
+                <Text style={commonStyles.bodySecondary}>
+                  Se aplicará una tarifa fija de mensajería de {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
+                </Text>
               </>
-            ) : null}
-
-            {deliveryMethod === "COURIER" ? (
-              <Text style={commonStyles.bodySecondary}>
-                Se aplicará una tarifa fija de mensajería de{" "}
-                {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
-              </Text>
-            ) : null}
+            )}
           </View>
 
           <View style={createKitStyles.productsHeader}>
-            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>
-              Tus Productos
-            </Text>
+            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>Tus Productos</Text>
             {isEditable && (
-            <Button
-              mode="contained"
-              onPress={openAddProductModal}
-              icon="plus"
-              compact
-              style={{ borderRadius: 8 }}
-            >
-              {selectedItemsCount > 0? "Añadir más productos":"Añadir producto"}
-            </Button>
+              <Button
+                mode="contained"
+                onPress={openAddProductModal}
+                icon="plus"
+                compact
+                style={{ borderRadius: 8 }}
+              >
+                {selectedItemsCount > 0 ? "Añadir más productos" : "Añadir producto"}
+              </Button>
             )}
           </View>
 
           <View style={createKitStyles.counterBadge}>
-            <Text style={createKitStyles.counterBadgeText}>
-              Seleccionados: {selectedItemsCount}
-            </Text>
+            <Text style={createKitStyles.counterBadgeText}>Seleccionados: {selectedItemsCount}</Text>
           </View>
 
-          {/* Lista de items añadidos al kit */}
           {loadingCatalog ? (
             <View style={createKitStyles.loaderArea}>
               <ActivityIndicator color={Colors.primary} />
@@ -989,22 +933,14 @@ const CreateKitScreen: React.FC = () => {
             ))
           )}
 
-          {errors.items ? (
-            <Text style={commonStyles.errorText}>{errors.items}</Text>
-          ) : null}
-          {errors.general ? (
-            <Text style={commonStyles.errorText}>{errors.general}</Text>
-          ) : null}
+          {errors.items && <Text style={commonStyles.errorText}>{errors.items}</Text>}
+          {errors.general && <Text style={commonStyles.errorText}>{errors.general}</Text>}
         </ScrollView>
-          
+
         <View style={createKitStyles.footerRow}>
-          {/* Resumen de precios */}
           <View style={{ flex: 1 }}>
-            
-            {/* Componente del Resumen que reemplaza la vista manual antigua */}
             <KitPaymentResumeComponent kitPrices={kitPayment} />
 
-            {/* Vista con el saldo de la cartera */}
             <View
               style={{
                 flexDirection: "row",
@@ -1020,28 +956,8 @@ const CreateKitScreen: React.FC = () => {
                 <Ionicons name="wallet-outline" size={20} color={Colors.primary} />
                 <Text style={commonStyles.body}>Saldo en cartera</Text>
               </View>
-              <Text style={[commonStyles.body, { fontWeight: "bold" }]}>
-                {walletBalance.toFixed(2)}€
-              </Text>
+              <Text style={[commonStyles.body, { fontWeight: "bold" }]}>{walletBalance.toFixed(2)}€</Text>
             </View>
-
-            {/* Botones de acción */}
-            <Button
-              mode="contained"
-              buttonColor={Colors.primary}
-              disabled={submitting || walletBalance < finalPrice || finalPrice === 0}
-              onPress={() => {
-                setPaymentType("WALLET");
-                setConfirmVisible(true);
-              }}
-              icon="wallet"
-              style={{ borderRadius: 8, marginBottom: 8 }}
-              contentStyle={{ paddingVertical: 8 }}
-            >
-              {walletBalance >= finalPrice
-                ? "Pagar con Cartera"
-                : "Saldo insuficiente en cartera"}
-            </Button>
 
             <Button
               mode="outlined"
@@ -1061,10 +977,7 @@ const CreateKitScreen: React.FC = () => {
                   startDate: validation.payloadDates.startIso,
                   endDate: validation.payloadDates.endIso,
                   deliveryMethod,
-                  meetingPoint:
-                    deliveryMethod === "MEETING_POINT"
-                      ? meetingPoint.trim()
-                      : courierAddress.trim(),
+                  meetingPoint: deliveryMethod === "MEETING_POINT" ? meetingPoint.trim() : courierAddress.trim(),
                   tenantId: user.id,
                   itemSelections: selectedProducts.map((p) => ({
                     itemId: p.id,
@@ -1082,7 +995,6 @@ const CreateKitScreen: React.FC = () => {
                   }
                 } catch (error: any) {
                   console.error("Error guardando borrador:", error);
-                  
                   const errorMsg = error.response?.data?.message || error.message || "";
                   if (errorMsg.includes("ya no está disponible")) {
                     setErrors({ items: errorMsg });
@@ -1100,10 +1012,7 @@ const CreateKitScreen: React.FC = () => {
 
             <Button
               mode="contained"
-              onPress={() => {
-                setConfirmVisible(true);
-                setPaymentType("NORMAL");
-              }}
+              onPress={() => setConfirmVisible(true)}
               disabled={submitting}
               loading={submitting}
               icon="cart-outline"
@@ -1120,9 +1029,19 @@ const CreateKitScreen: React.FC = () => {
           onDismiss={() => setCatalogModalVisible(false)}
           searchText={searchText}
           onSearchChange={setSearchText}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
-          categories={categories}
+          categoryOptions={categoryOptions}
+          selectedCategoryId={selectedCategoryId}
+          onCategoryChange={setSelectedCategoryId}
+          conditionOptions={CONDITION_OPTIONS}
+          selectedCondition={selectedCondition}
+          onConditionChange={setSelectedCondition}
+          minPrice={minPriceFilter}
+          maxPrice={maxPriceFilter}
+          onMinPriceChange={setMinPriceFilter}
+          onMaxPriceChange={setMaxPriceFilter}
+          onApplyFilters={handleApplyCatalogFilters}
+          onClearFilters={handleClearCatalogFilters}
+          filtersLoading={loadingCatalog}
           filteredProducts={filteredProducts}
           tempSelectedQuantities={tempSelectedQuantities}
           onToggleSelection={toggleTempSelection}
@@ -1142,65 +1061,16 @@ const CreateKitScreen: React.FC = () => {
           mapProducts={mapProducts}
         />
 
-        <Modal
-          visible={confirmVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setConfirmVisible(false)}
-        >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              justifyContent: "center",
-              alignItems: "center",
-              padding: 20,
-            }}
-          >
-            <View
-              style={{
-                width: "100%",
-                backgroundColor: "white",
-                borderRadius: 16,
-                padding: 20,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  marginBottom: 10,
-                  color: "#111",
-                }}
-              >
-                Depósito de garantía
-              </Text>
-
+        <Modal visible={confirmVisible} transparent animationType="fade" onRequestClose={() => setConfirmVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+            <View style={{ width: "100%", backgroundColor: "white", borderRadius: 16, padding: 20 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#111" }}>Depósito de garantía</Text>
               <Text style={{ fontSize: 15, color: "#444", marginBottom: 20 }}>
-                Recuerda que el 20% se retendrá como garantía y se te devolverá
-                cuando el kit sea devuelto en buen estado.
+                Recuerda que el 20% se retendrá como garantía y se te devolverá cuando el kit sea devuelto en buen estado.
               </Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "flex-end",
-                  gap: 10,
-                }}
-              >
-                <Button mode="outlined" onPress={() => setConfirmVisible(false)}>
-                  Cancelar
-                </Button>
-
-                <Button
-                  mode="contained"
-                  onPress={() => {
-                    setConfirmVisible(false);
-                    handleSubmit();
-                  }}
-                >
-                  Aceptar
-                </Button>
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
+                <Button mode="outlined" onPress={() => setConfirmVisible(false)}>Cancelar</Button>
+                <Button mode="contained" onPress={() => { setConfirmVisible(false); handleSubmit(); }}>Aceptar</Button>
               </View>
             </View>
           </View>

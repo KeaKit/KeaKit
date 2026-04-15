@@ -1,0 +1,24 @@
+services:
+  backend-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: keakit-backend
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      # Usa exactamente las mismas que espera Spring, mapeándolas desde tu .env
+      - SPRING_DATASOURCE_URL=${DB_URL}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      # Forzar el dialecto ayuda a que Hibernate no tenga que preguntar a la DB (evita el segundo error)
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+    networks:
+      - keakit-network
+
+networks:
+  keakit-network:
+    driver: bridge

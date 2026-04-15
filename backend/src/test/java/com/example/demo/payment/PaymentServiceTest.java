@@ -3,8 +3,10 @@ package com.example.demo.payment;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
@@ -21,6 +23,7 @@ import com.example.demo.TestDataFactory;
 
 import com.example.demo.dto.KitPaymentDTO;
 import com.example.demo.dto.KitResponse;
+import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.dto.UserResponse;
 
 import com.example.demo.model.Kit;
@@ -30,12 +33,14 @@ import com.example.demo.model.Wallet;
 import com.example.demo.model.Transaction;
 
 import com.example.demo.repository.KitRepository;
+import com.example.demo.repository.PilotUserRepository;
 import com.example.demo.repository.TransactionRepository;
 
 import com.example.demo.service.ItemService;
 import com.example.demo.service.KitService;
 import com.example.demo.service.OrderConfirmationEmailService;
 import com.example.demo.service.PlatformConfigService;
+import com.example.demo.service.PromoCodeService;
 import com.example.demo.service.UserService;
 import com.example.demo.service.WalletService;
 import com.example.demo.service.GuaranteeReturnEmailService;
@@ -79,6 +84,12 @@ public class PaymentServiceTest {
     @Mock
     private KitRepository kitRepository;
 
+    @Mock 
+    private PromoCodeService promoCodeService;
+
+    @Mock 
+    private PilotUserRepository pilotUserRepository;
+
     private PaymentService paymentService;
 
     @BeforeEach
@@ -94,6 +105,8 @@ public class PaymentServiceTest {
         ReflectionTestUtils.setField(paymentService, "kitRepository", kitRepository);
         ReflectionTestUtils.setField(paymentService, "stripeApiKey", STRIPE_API_KEY);
         ReflectionTestUtils.setField(paymentService, "KEAKIT_ADMIN_EMAIL", ADMIN_EMAIL);
+        ReflectionTestUtils.setField(paymentService, "promoCodeService", promoCodeService);
+        ReflectionTestUtils.setField(paymentService, "pilotUserRepository", pilotUserRepository);
         paymentService.init();
     }
 
@@ -225,8 +238,10 @@ public class PaymentServiceTest {
 
     @Test
     void processPayment_ShouldProcessMultipleItems_WhenKitHasThreeItems() throws Exception {
-        // KIT_RESPONSE ya tiene 3 items configurados en el TestDataFactory
         assertEquals(3, KIT_RESPONSE.getItems().size(), "El kit de prueba debería tener 3 items");
+
+        com.example.demo.model.PilotUser activePilot = new com.example.demo.model.PilotUser("owner@test.com");
+        activePilot.setActive(true);
 
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
         when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
@@ -234,38 +249,23 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+        // Con promoCodeService inyectado, itemService.findById se llama → mockear el item
+        when(userService.getUserById(OWNER.getId())).thenReturn(TestDataFactory.createMockUserResponse(OWNER));
+        when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com")).thenReturn(Optional.of(activePilot));
+        when(itemService.findById(anyLong())).thenReturn(TestDataFactory.createDefaultItem());
 
         paymentService.processPayment(KIT_ID, false, null, null);
 
-        verify(itemService, never()).findById(anyLong());
+        // Con promoCodeService inyectado, itemService SÍ se llama (para markOwnerPromosAsUsedFromItems)
+        verify(itemService, atLeast(3)).findById(anyLong());
         verify(transactionRepository, atLeast(3)).save(any(Transaction.class));
         verify(emailService).sendOrderConfirmation(any(), anyDouble(), isNull());
     }
 
     @Test
     void processPayment_ShouldCompleteSuccessfully_WhenPilotUserTierBronze() throws Exception {
-        User tenantPilot = TestDataFactory.createMockTenantUser();
-        ReflectionTestUtils.setField(tenantPilot, "isPilotUser", true);
-
-        when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
-        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
-        when(userService.getUserByEmail(ADMIN_EMAIL)).thenReturn(ADMIN_RESPONSE); 
-        when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
-        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
-        when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
-        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
-
-        assertDoesNotThrow(() -> paymentService.processPayment(KIT_ID, true));
-
-        verify(transactionRepository, atLeast(3)).save(any(Transaction.class));
-        verify(platformConfigService, never()).getCommissionRate(); 
-        verify(emailService).sendOrderConfirmation(eq(KIT), anyDouble(), isNull());
-    }
-
-    @Test
-    void processPayment_ShouldCompleteSuccessfully_WhenPilotUserTierSilver() throws Exception {
-        User tenantPilot = TestDataFactory.createMockTenantUser();
-        ReflectionTestUtils.setField(tenantPilot, "isPilotUser", true);
+        com.example.demo.model.PilotUser activePilot = new com.example.demo.model.PilotUser("owner@test.com");
+        activePilot.setActive(true);
 
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
         when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
@@ -274,6 +274,31 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+        // Mock para isPilotUser: getUserById devuelve el owner, pilotUserRepository lo encuentra activo
+        when(userService.getUserById(OWNER.getId())).thenReturn(TestDataFactory.createMockUserResponse(OWNER));
+        when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com")).thenReturn(Optional.of(activePilot));
+
+        assertDoesNotThrow(() -> paymentService.processPayment(KIT_ID, true));
+
+        verify(transactionRepository, atLeast(3)).save(any(Transaction.class));
+        verify(platformConfigService, never()).getCommissionRate();
+        verify(emailService).sendOrderConfirmation(eq(KIT), anyDouble(), isNull());
+    }
+
+    @Test
+    void processPayment_ShouldCompleteSuccessfully_WhenPilotUserTierSilver() throws Exception {
+        com.example.demo.model.PilotUser activePilot = new com.example.demo.model.PilotUser("owner@test.com");
+        activePilot.setActive(true);
+
+        when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
+        when(userService.getUserByEmail(ADMIN_EMAIL)).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+        when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+        when(userService.getUserById(OWNER.getId())).thenReturn(TestDataFactory.createMockUserResponse(OWNER));
+        when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com")).thenReturn(Optional.of(activePilot));
 
         assertDoesNotThrow(() -> paymentService.processPayment(KIT_ID, true));
 
@@ -284,8 +309,8 @@ public class PaymentServiceTest {
 
     @Test
     void processPayment_ShouldCompleteSuccessfully_WhenPilotUserTierGold() throws Exception {
-        User tenantPilot = TestDataFactory.createMockTenantUser();
-        ReflectionTestUtils.setField(tenantPilot, "isPilotUser", true);
+        com.example.demo.model.PilotUser activePilot = new com.example.demo.model.PilotUser("owner@test.com");
+        activePilot.setActive(true);
 
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
         when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
@@ -294,6 +319,8 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+        when(userService.getUserById(OWNER.getId())).thenReturn(TestDataFactory.createMockUserResponse(OWNER));
+        when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com")).thenReturn(Optional.of(activePilot));
 
         assertDoesNotThrow(() -> paymentService.processPayment(KIT_ID, true));
 
@@ -360,6 +387,117 @@ public class PaymentServiceTest {
         assertThat(ex.getMessage()).contains("IBAN valido");
         verify(walletService, never()).getWalletByUserId(anyLong());
     }
+    
+    @Test
+    void processPayment_WithNullPromoCode_SendsEmailWithZeroDiscount() throws Exception {
+        when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+        when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+    
+        paymentService.processPayment(KIT_ID, false, null, null);
+    
+        verify(emailService).sendOrderConfirmation(eq(KIT), eq(0.0), isNull());
+    }
+    
+    @Test
+    void processPayment_WithBlankPromoCode_TreatedAsNoPromo() throws Exception {
+        when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
+        when(kitService.getKitPayment(eq(KIT_ID), eq(""), isNull())).thenReturn(KIT_PAYMENT);
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+        when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+    
+        assertDoesNotThrow(() -> paymentService.processPayment(KIT_ID, false, "", null));
+    }
+    
+    @Test
+    void processPayment_OwnerIsPilotUser_NoCommissionApplied() throws Exception {
+        com.example.demo.model.PilotUser activePilot = new com.example.demo.model.PilotUser("owner@test.com");
+        activePilot.setActive(true);
+    
+        when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+        when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+    
+        UserResponse ownerResponse = TestDataFactory.createMockUserResponse(OWNER);
+        when(userService.getUserById(OWNER.getId())).thenReturn(ownerResponse);
+        when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com"))
+                .thenReturn(Optional.of(activePilot));
+    
+        paymentService.processPayment(KIT_ID, false);
+    
+        verify(platformConfigService, never()).getCommissionRate();
+    }
+    
+    @Test
+    void processPayment_OwnerIsNotPilotUser_CommissionApplied() throws Exception {
+        when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+        when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+    
+        UserResponse ownerResponse = TestDataFactory.createMockUserResponse(OWNER);
+        when(userService.getUserById(OWNER.getId())).thenReturn(ownerResponse);
+        when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com"))
+                .thenReturn(Optional.empty());  // no es piloto
+        when(platformConfigService.getCommissionRate()).thenReturn(0.20);
+    
+        paymentService.processPayment(KIT_ID, false);
+    
+        verify(platformConfigService, atLeast(1)).getCommissionRate();
+    }
 
+    @Test
+    void processGuaranteeReturn_GoodCondition_RefundsTenant() throws Exception {
+        KitPaymentDTO paymentInfo = new KitPaymentDTO(12000, 8000, 2000, 999, 0);
+        when(kitService.getKitPayment(KIT_ID)).thenReturn(paymentInfo);
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+    
+        Wallet tenantWallet = TestDataFactory.createMockWallet(10L, TENANT, 100.0);
+        when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(tenantWallet);
+    
+        Double result = paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "GOOD");
+    
+        assertThat(result).isEqualTo(20.0); // 2000 céntimos = 20€
+        // Fianza se devuelve al tenant: keakit -20, tenant +20
+        verify(transactionRepository, times(2)).save(any(Transaction.class));
+    }
+    
+    @Test
+    void processGuaranteeReturn_DamagedCondition_CompensatesOwner() throws Exception {
+        KitPaymentDTO paymentInfo = new KitPaymentDTO(12000, 8000, 2000, 999, 0);
+        when(kitService.getKitPayment(KIT_ID)).thenReturn(paymentInfo);
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+    
+        Wallet ownerWallet = TestDataFactory.createMockWallet(20L, OWNER, 100.0);
+        when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(ownerWallet);
+    
+        Double result = paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "DAMAGED");
+    
+        assertThat(result).isEqualTo(20.0);
+        verify(transactionRepository, times(2)).save(any(Transaction.class));
+    }
+    
+    @Test
+    void processGuaranteeReturn_InvalidCondition_ThrowsIllegalArgumentException() {
+        KitPaymentDTO paymentInfo = new KitPaymentDTO(12000, 8000, 2000, 999, 0);
+        when(kitService.getKitPayment(KIT_ID)).thenReturn(paymentInfo);
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+    
+        assertThrows(Exception.class,
+                () -> paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "INVALID"));
+    }
 
     }

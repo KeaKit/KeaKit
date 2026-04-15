@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DeliveryStatus, TrackingNotification } from "../types";
+import { useAuth } from "./AuthContext"
 
 type TrackingNotificationsContextType = {
   notifications: TrackingNotification[];
@@ -11,25 +12,35 @@ type TrackingNotificationsContextType = {
   removeNotification: (id: string) => Promise<void>;
 };
 
-const STORAGE_KEY = "@tracking_notifications";
+const BASE_STORAGE_KEY = "@tracking_notifications";
 
 const TrackingNotificationsContext = createContext<TrackingNotificationsContextType | undefined>(undefined);
 
 export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<TrackingNotification[]>([]);
 
+  const { user } = useAuth();
+  const storageKey = user?.id ? `${BASE_STORAGE_KEY}_${user.id}` : null;
+  
   useEffect(() => {
+    if(!storageKey) {
+      setNotifications([]);
+      return;
+    }
     (async () => {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      const stored = await AsyncStorage.getItem(storageKey);
       if (stored) {
         setNotifications(JSON.parse(stored));
+      } else {
+        setNotifications([]);
       }
     })();
-  }, []);
+  }, [storageKey]);
 
   const persist = async (list: TrackingNotification[]) => {
+    if (!storageKey) return;
     setNotifications(list);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    await AsyncStorage.setItem(storageKey, JSON.stringify(list));
   };
 
   const addNotification = async (n: TrackingNotification) => {

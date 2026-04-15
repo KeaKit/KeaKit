@@ -142,6 +142,7 @@ export interface Article {
   rentedUntil: string | null;
   totalUnits?: number;
   condition: ArticleCondition | null;
+  ownerCommissionPromoCode?: string | null;
 }
 
 export interface ArticlePayload {
@@ -157,6 +158,7 @@ export interface ArticlePayload {
   purchaseDate?: string;
   totalUnits?: number;
   condition?: ArticleCondition;
+  ownerCommissionPromoCode?: string;
 }
 
 export interface Item {
@@ -166,6 +168,46 @@ export interface Item {
   pricePerMonth: number;
   category: string;
   quantity?: number;
+}
+
+export interface ItemCatalog {
+  id: number;
+  itemType: "ARTICLE" | "SERVICE" | string;
+  title: string;
+  description: string;
+  city: string;
+  country?: string | null;
+  pricePerMonth: number;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  category?: string | null;
+  totalUnits: number;
+  ownerId: number;
+  ownerName?: string | null;
+  status?: "AVAILABLE" | "RENTED" | "INACTIVE" | string | null;
+  condition?: ArticleCondition | null;
+  imageUrl?: string | null;
+}
+
+export interface ItemFilterRequest {
+  minPrice?: number;
+  maxPrice?: number;
+  country?: string;
+  city?: string;
+  categoryId?: number;
+  condition?: ArticleCondition;
+  page?: number;
+  size?: number;
+}
+
+export interface ItemFilterResponse {
+  content: ItemCatalog[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
 export interface ItemCatalogResponse {
@@ -330,6 +372,15 @@ export interface RentedItemResponse {
   endDate: string;
 }
 
+export interface DemandAnalysisItem {
+  itemId: number;
+  title: string;
+  categoryName: string;
+  imageUrl: string | null;
+  totalTimesRented: number;
+  totalUnitsRented: number;
+}
+
 export type NavbarScreen =
   | "Home"
   | "Profile"
@@ -460,6 +511,7 @@ export interface Service {
   category: Category;
   status: ServiceStatus;
   totalUnits?: number;
+  ownerCommissionPromoCode?: string | null;
 }
 
 export interface ServicePayload {
@@ -472,6 +524,7 @@ export interface ServicePayload {
   category: { id: number };
   status?: ServiceStatus;
   totalUnits?: number;
+  ownerCommissionPromoCode?: string;
 }
 
 export interface UserService {
@@ -541,6 +594,7 @@ export interface PromoCodeFormData {
   discountRate: number;
   active: boolean;
   singleUse: boolean;
+  type?: 'TENANT_DISCOUNT' | 'OWNER_COMMISSION_REDUCTION';
   pilotUserOnly: boolean;
   pilotEmails: string[];
 }
