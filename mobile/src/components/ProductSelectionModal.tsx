@@ -213,17 +213,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     (onMaxPriceChange ?? (() => {}))(sanitizePriceInput(value));
   };
 
-  const handleApplyFiltersPress = () => {
-    if (hasPriceErrors) {
-      setPriceValidationError(
-        "Revisa los precios antes de aplicar los filtros.",
-      );
-      return;
-    }
-    setPriceValidationError("");
-    (onApplyFilters ?? (() => {}))();
-  };
-
   const handleCategorySelection = (value: string) => {
     if (onCategoryChange) {
       onCategoryChange(value);
@@ -469,16 +458,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   contentStyle={{ paddingVertical: 4 }}
                 >
                   Limpiar
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={handleApplyFiltersPress}
-                  loading={filtersLoading}
-                  disabled={filtersLoading || hasPriceErrors}
-                  style={{ flex: 1, borderRadius: 8 }}
-                  contentStyle={{ paddingVertical: 4 }}
-                >
-                  Aplicar filtros
                 </Button>
               </View>
             </View>

@@ -455,10 +455,6 @@ const CreateKitScreen: React.FC = () => {
     setCatalogModalVisible(true);
   };
 
-  const handleApplyCatalogFilters = async () => {
-    await loadCatalog();
-  };
-
   const handleClearCatalogFilters = async () => {
     const resetCityFilter = city.trim().length > 0;
     setSelectedCategoryId("");
@@ -1039,7 +1035,6 @@ const CreateKitScreen: React.FC = () => {
           maxPrice={maxPriceFilter}
           onMinPriceChange={setMinPriceFilter}
           onMaxPriceChange={setMaxPriceFilter}
-          onApplyFilters={handleApplyCatalogFilters}
           onClearFilters={handleClearCatalogFilters}
           filtersLoading={loadingCatalog}
           filteredProducts={filteredProducts}
