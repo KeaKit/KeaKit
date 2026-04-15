@@ -1054,6 +1054,10 @@
 
 - Restructure feedback analysis for SPRINT 2 ([17ead83](https://github.com/KeaKit/KeaKit/commit/17ead83e44f544979ba09a7755932cc8e084b0f2))
 
+- Add finished kits to seeder to rate ([dc770d2](https://github.com/KeaKit/KeaKit/commit/dc770d251a55a16f7fb6bf010539f6889c361ae1))
+
+- Add kits sample data to confirm kits ([e178f1d](https://github.com/KeaKit/KeaKit/commit/e178f1ddc0a78730896fb141600ad305b00ec452))
+
 
 ### Refactorizaciones
 
