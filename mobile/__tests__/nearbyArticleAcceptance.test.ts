@@ -393,3 +393,104 @@ describe("CU-ARRENDATARIO-10: Manejo de errores", () => {
     );
   });
 });
+
+// ==========================================
+// Cobertura adicional de flujos
+// ==========================================
+
+describe("CU-ARRENDATARIO-10: Flujos adicionales", () => {
+  it("AC-19: El mapa funciona sin especificar un país", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve([mockArticleCordoba, mockArticleMadrid]),
+    });
+
+    const result = await getArticlesForMap(TOKEN);
+
+    expect(result).toHaveLength(2);
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).not.toContain("country=");
+  });
+
+  it("AC-20: Los artículos del mapa incluyen imageUrl (puede ser null)", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve([mockArticleCordoba, mockArticleMadrid]),
+    });
+
+    const result = await getArticlesForMap(TOKEN, "España");
+
+    // mockArticleCordoba tiene imageUrl, mockArticleMadrid tiene null
+    expect(result[0].imageUrl).toBe("http://img.test/taladro-bosch.jpg");
+    expect(result[1].imageUrl).toBeNull();
+  });
+
+  it("AC-21: Error JSON del servidor al buscar artículos cercanos se parsea correctamente", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ message: "Radio no válido" }),
+      text: () => Promise.resolve(""),
+    });
+
+    await expect(
+      getNearbyArticles("Sevilla", "España", TOKEN),
+    ).rejects.toThrow("Radio no válido");
+  });
+
+  it("AC-22: Se puede buscar artículos cercanos con radio mínimo", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve([]),
+    });
+
+    const result = await getNearbyArticles("Sevilla", "España", TOKEN, 1);
+
+    expect(result).toEqual([]);
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toContain("radiusKm=1");
+  });
+
+  it("AC-23: Cada artículo cercano tiene un itemType definido", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve([mockArticleCordoba, mockArticleHuelva]),
+    });
+
+    const result = await getNearbyArticles("Sevilla", "España", TOKEN);
+
+    result.forEach((article) => {
+      expect(article.itemType).toBe("ARTICLE");
+    });
+  });
+
+  it("AC-24: Las coordenadas de una ciudad se obtienen con los parámetros correctos", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ lat: 40.4168, lng: -3.7038 }),
+    });
+
+    const coords = await getCityCoordinates("Madrid", "España");
+
+    expect(coords).toEqual({ lat: 40.4168, lng: -3.7038 });
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toContain("city=Madrid");
+    expect(url).toContain("country=Espa");
+  });
+
+  it("AC-25: Error de red en coordenadas se propaga correctamente", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Timeout"));
+
+    await expect(
+      getCityCoordinates("Sevilla", "España"),
+    ).rejects.toThrow("Timeout");
+  });
+});

@@ -406,4 +406,221 @@ class NearbyArticleServiceTest {
 
         assertEquals(0.0, result.get(0).distanceKm());
     }
+
+    // =====================================================
+    // Null branches en findNearbyArticles
+    // =====================================================
+
+    @Test
+    void findNearbyArticles_articleWithNullCategory_returnsNullCategoryName() {
+        when(cityService.getCityCoordinates("Sevilla", "España")).thenReturn(SEVILLA_COORDS);
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA_COORDS);
+        when(articleRepository.findDistinctCitiesByStatus(ArticleStatus.AVAILABLE))
+            .thenReturn(List.of("Córdoba"));
+
+        Article a = createArticle(1L, "Taladro", "Córdoba", 30.0);
+        a.setCategory(null);
+        when(articleRepository.findByStatusAndCityIn(eq(ArticleStatus.AVAILABLE), anyList()))
+            .thenReturn(List.of(a));
+
+        List<ArticleNearbyDTO> result = articleService.findNearbyArticles("Sevilla", "España", 200);
+
+        assertEquals(1, result.size());
+        assertNull(result.get(0).category());
+    }
+
+    @Test
+    void findNearbyArticles_articleWithNullOwner_returnsNullOwnerFields() {
+        when(cityService.getCityCoordinates("Sevilla", "España")).thenReturn(SEVILLA_COORDS);
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA_COORDS);
+        when(articleRepository.findDistinctCitiesByStatus(ArticleStatus.AVAILABLE))
+            .thenReturn(List.of("Córdoba"));
+
+        Article a = createArticle(1L, "Taladro", "Córdoba", 30.0);
+        a.setOwner(null);
+        when(articleRepository.findByStatusAndCityIn(eq(ArticleStatus.AVAILABLE), anyList()))
+            .thenReturn(List.of(a));
+
+        List<ArticleNearbyDTO> result = articleService.findNearbyArticles("Sevilla", "España", 200);
+
+        assertEquals(1, result.size());
+        assertNull(result.get(0).ownerName());
+        assertNull(result.get(0).ownerId());
+    }
+
+    @Test
+    void findNearbyArticles_articleWithNullStatus_returnsNullStatus() {
+        when(cityService.getCityCoordinates("Sevilla", "España")).thenReturn(SEVILLA_COORDS);
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA_COORDS);
+        when(articleRepository.findDistinctCitiesByStatus(ArticleStatus.AVAILABLE))
+            .thenReturn(List.of("Córdoba"));
+
+        Article a = createArticle(1L, "Taladro", "Córdoba", 30.0);
+        a.setStatus(null);
+        when(articleRepository.findByStatusAndCityIn(eq(ArticleStatus.AVAILABLE), anyList()))
+            .thenReturn(List.of(a));
+
+        List<ArticleNearbyDTO> result = articleService.findNearbyArticles("Sevilla", "España", 200);
+
+        assertEquals(1, result.size());
+        assertNull(result.get(0).status());
+    }
+
+    @Test
+    void findNearbyArticles_caseInsensitiveExcludesTargetCity() {
+        when(cityService.getCityCoordinates("sevilla", "España")).thenReturn(SEVILLA_COORDS);
+        when(articleRepository.findDistinctCitiesByStatus(ArticleStatus.AVAILABLE))
+            .thenReturn(List.of("Sevilla", "Córdoba"));
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA_COORDS);
+
+        Article a = createArticle(1L, "Taladro", "Córdoba", 30.0);
+        when(articleRepository.findByStatusAndCityIn(eq(ArticleStatus.AVAILABLE), anyList()))
+            .thenReturn(List.of(a));
+
+        // Target city "sevilla" (minúscula) debe excluir "Sevilla" (mayúscula)
+        List<ArticleNearbyDTO> result = articleService.findNearbyArticles("sevilla", "España", 200);
+
+        result.forEach(dto -> assertNotEquals("Sevilla", dto.city()));
+    }
+
+    @Test
+    void findNearbyArticles_articleWithNullImageUrl_returnsNullImageUrl() {
+        when(cityService.getCityCoordinates("Sevilla", "España")).thenReturn(SEVILLA_COORDS);
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA_COORDS);
+        when(articleRepository.findDistinctCitiesByStatus(ArticleStatus.AVAILABLE))
+            .thenReturn(List.of("Córdoba"));
+
+        Article a = createArticle(1L, "Taladro", "Córdoba", 30.0);
+        a.setImageUrl(null);
+        when(articleRepository.findByStatusAndCityIn(eq(ArticleStatus.AVAILABLE), anyList()))
+            .thenReturn(List.of(a));
+
+        List<ArticleNearbyDTO> result = articleService.findNearbyArticles("Sevilla", "España", 200);
+
+        assertEquals(1, result.size());
+        assertNull(result.get(0).imageUrl());
+    }
+
+    @Test
+    void findNearbyArticles_returnsCorrectItemType() {
+        when(cityService.getCityCoordinates("Sevilla", "España")).thenReturn(SEVILLA_COORDS);
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA_COORDS);
+        when(articleRepository.findDistinctCitiesByStatus(ArticleStatus.AVAILABLE))
+            .thenReturn(List.of("Córdoba"));
+
+        Article a = createArticle(1L, "Taladro", "Córdoba", 30.0);
+        when(articleRepository.findByStatusAndCityIn(eq(ArticleStatus.AVAILABLE), anyList()))
+            .thenReturn(List.of(a));
+
+        List<ArticleNearbyDTO> result = articleService.findNearbyArticles("Sevilla", "España", 200);
+
+        assertEquals("ARTICLE", result.get(0).itemType());
+    }
+
+    // =====================================================
+    // Cobertura adicional: null branches en findAllWithCoords
+    // =====================================================
+
+    @Test
+    void findAllWithCoords_articleWithNullCategory_returnsNullCategoryName() {
+        Article a = createArticle(1L, "Taladro", "Madrid", 30.0);
+        a.setCountry("España");
+        a.setCategory(null);
+
+        when(articleRepository.findByStatus(ArticleStatus.AVAILABLE)).thenReturn(List.of(a));
+        when(cityService.getCityCoordinates("Madrid", "España")).thenReturn(MADRID_COORDS);
+
+        List<ArticleNearbyDTO> result = articleService.findAllWithCoords("España");
+
+        assertEquals(1, result.size());
+        assertNull(result.get(0).category());
+    }
+
+    @Test
+    void findAllWithCoords_articleWithNullOwner_returnsNullOwnerFields() {
+        Article a = createArticle(1L, "Taladro", "Madrid", 30.0);
+        a.setCountry("España");
+        a.setOwner(null);
+
+        when(articleRepository.findByStatus(ArticleStatus.AVAILABLE)).thenReturn(List.of(a));
+        when(cityService.getCityCoordinates("Madrid", "España")).thenReturn(MADRID_COORDS);
+
+        List<ArticleNearbyDTO> result = articleService.findAllWithCoords("España");
+
+        assertEquals(1, result.size());
+        assertNull(result.get(0).ownerName());
+        assertNull(result.get(0).ownerId());
+    }
+
+    @Test
+    void findAllWithCoords_articleWithNullStatus_returnsNullStatus() {
+        Article a = createArticle(1L, "Taladro", "Madrid", 30.0);
+        a.setCountry("España");
+        a.setStatus(null);
+
+        when(articleRepository.findByStatus(ArticleStatus.AVAILABLE)).thenReturn(List.of(a));
+        when(cityService.getCityCoordinates("Madrid", "España")).thenReturn(MADRID_COORDS);
+
+        List<ArticleNearbyDTO> result = articleService.findAllWithCoords("España");
+
+        assertEquals(1, result.size());
+        assertNull(result.get(0).status());
+    }
+
+    @Test
+    void findAllWithCoords_distanceIsAlwaysZero() {
+        Article a = createArticle(1L, "Taladro", "Madrid", 30.0);
+        a.setCountry("España");
+
+        when(articleRepository.findByStatus(ArticleStatus.AVAILABLE)).thenReturn(List.of(a));
+        when(cityService.getCityCoordinates("Madrid", "España")).thenReturn(MADRID_COORDS);
+
+        List<ArticleNearbyDTO> result = articleService.findAllWithCoords("España");
+
+        assertEquals(0.0, result.get(0).distanceKm());
+    }
+
+    @Test
+    void findAllWithCoords_multipleArticles_sameCity() {
+        Article a1 = createArticle(1L, "Taladro", "Madrid", 30.0);
+        a1.setCountry("España");
+        Article a2 = createArticle(2L, "Sierra", "Madrid", 45.0);
+        a2.setCountry("España");
+
+        when(articleRepository.findByStatus(ArticleStatus.AVAILABLE)).thenReturn(List.of(a1, a2));
+        when(cityService.getCityCoordinates("Madrid", "España")).thenReturn(MADRID_COORDS);
+
+        List<ArticleNearbyDTO> result = articleService.findAllWithCoords("España");
+
+        assertEquals(2, result.size());
+        assertEquals("ARTICLE", result.get(0).itemType());
+        assertEquals("ARTICLE", result.get(1).itemType());
+    }
+
+    @Test
+    void findAllWithCoords_mapsAllDTOFieldsCorrectly() {
+        Article a = createArticle(1L, "Taladro", "Madrid", 30.0);
+        a.setCountry("España");
+        a.setImageUrl("http://img.test/taladro.jpg");
+
+        when(articleRepository.findByStatus(ArticleStatus.AVAILABLE)).thenReturn(List.of(a));
+        when(cityService.getCityCoordinates("Madrid", "España")).thenReturn(MADRID_COORDS);
+
+        List<ArticleNearbyDTO> result = articleService.findAllWithCoords("España");
+
+        ArticleNearbyDTO dto = result.get(0);
+        assertEquals(1L, dto.id());
+        assertEquals("ARTICLE", dto.itemType());
+        assertEquals("Taladro", dto.title());
+        assertEquals("Madrid", dto.city());
+        assertEquals(30.0, dto.pricePerMonth());
+        assertEquals("Bricolaje", dto.category());
+        assertEquals("Owner", dto.ownerName());
+        assertEquals(1L, dto.ownerId());
+        assertEquals("AVAILABLE", dto.status());
+        assertEquals("http://img.test/taladro.jpg", dto.imageUrl());
+        assertEquals(40.4168, dto.cityLat(), 0.001);
+        assertEquals(-3.7038, dto.cityLng(), 0.001);
+        assertEquals(0.0, dto.distanceKm());
+    }
 }

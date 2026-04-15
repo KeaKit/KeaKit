@@ -237,4 +237,92 @@ class NearbyArticleControllerTest {
                 .param("country", "España"))
             .andExpect(status().isInternalServerError());
     }
+
+    // =====================================================
+    // Edge cases
+    // =====================================================
+
+    @Test
+    void getNearbyArticles_withSpecialCharactersInCity_handledCorrectly() throws Exception {
+        when(articleService.findNearbyArticles("São Paulo", "España", 150.0))
+            .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/article/nearby")
+                .param("city", "São Paulo")
+                .param("country", "España"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void getNearbyArticles_withZeroRadius_accepted() throws Exception {
+        when(articleService.findNearbyArticles("Sevilla", "España", 0.0))
+            .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/article/nearby")
+                .param("city", "Sevilla")
+                .param("country", "España")
+                .param("radiusKm", "0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void getNearbyArticles_withLargeRadius_accepted() throws Exception {
+        when(articleService.findNearbyArticles("Sevilla", "España", 10000.0))
+            .thenReturn(List.of(sampleDTO(1L, "Madrid", 390.0)));
+
+        mockMvc.perform(get("/api/article/nearby")
+                .param("city", "Sevilla")
+                .param("country", "España")
+                .param("radiusKm", "10000"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void getArticlesForMap_withSpecialCharactersInCountry_handledCorrectly() throws Exception {
+        when(articleService.findAllWithCoords("São Paulo"))
+            .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/article/map")
+                .param("country", "São Paulo"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void getArticlesForMap_responseDTOFieldsCorrect() throws Exception {
+        ArticleNearbyDTO dto = new ArticleNearbyDTO(
+            1L, "ARTICLE", "Taladro", "Descripción", "Madrid",
+            25.0, FROM, UNTIL, "Bricolaje", 2, 3L, "Owner",
+            "AVAILABLE", "http://img.test/foto.jpg", 40.41, -3.70, 0.0
+        );
+        when(articleService.findAllWithCoords("España"))
+            .thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/article/map")
+                .param("country", "España"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].itemType").value("ARTICLE"))
+            .andExpect(jsonPath("$[0].title").value("Taladro"))
+            .andExpect(jsonPath("$[0].city").value("Madrid"))
+            .andExpect(jsonPath("$[0].pricePerMonth").value(25.0))
+            .andExpect(jsonPath("$[0].cityLat").value(40.41))
+            .andExpect(jsonPath("$[0].cityLng").value(-3.70))
+            .andExpect(jsonPath("$[0].distanceKm").value(0.0));
+    }
+
+    @Test
+    void getNearbyArticles_returnsNullBodyOnServiceError() throws Exception {
+        when(articleService.findNearbyArticles(anyString(), anyString(), anyDouble()))
+            .thenThrow(new RuntimeException("Fallo"));
+
+        mockMvc.perform(get("/api/article/nearby")
+                .param("city", "Sevilla")
+                .param("country", "España"))
+            .andExpect(status().isInternalServerError())
+            .andExpect(jsonPath("$").doesNotExist());
+    }
 }

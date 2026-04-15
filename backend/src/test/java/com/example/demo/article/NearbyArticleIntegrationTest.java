@@ -259,4 +259,114 @@ class NearbyArticleIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
     }
+
+    // =====================================================
+    // Edge cases integración
+    // =====================================================
+
+    @Test
+    void nearby_integration_caseInsensitiveCityExclusion() throws Exception {
+        saveArticle("Taladro local", "Sevilla", 30.0, ArticleStatus.AVAILABLE);
+        saveArticle("Taladro cercano", "Córdoba", 35.0, ArticleStatus.AVAILABLE);
+
+        when(cityService.getCityCoordinates("sevilla", "España")).thenReturn(
+            new CityCoordinatesDTO("sevilla", "España", 37.3886, -5.9823));
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA);
+
+        // Buscar con "sevilla" (minúscula) debe excluir "Sevilla" de la BD
+        mockMvc.perform(get("/api/article/nearby")
+                .param("city", "sevilla")
+                .param("country", "España"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.city == 'Sevilla')]").doesNotExist());
+    }
+
+    @Test
+    void nearby_integration_multipleArticlesSameCityReturnAll() throws Exception {
+        saveArticle("Taladro 1", "Córdoba", 30.0, ArticleStatus.AVAILABLE);
+        saveArticle("Taladro 2", "Córdoba", 35.0, ArticleStatus.AVAILABLE);
+        saveArticle("Taladro 3", "Córdoba", 40.0, ArticleStatus.AVAILABLE);
+
+        when(cityService.getCityCoordinates("Sevilla", "España")).thenReturn(SEVILLA);
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA);
+
+        mockMvc.perform(get("/api/article/nearby")
+                .param("city", "Sevilla")
+                .param("country", "España"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(3));
+    }
+
+    @Test
+    void nearby_integration_zeroRadius_returnsEmpty() throws Exception {
+        saveArticle("Taladro", "Córdoba", 30.0, ArticleStatus.AVAILABLE);
+
+        when(cityService.getCityCoordinates("Sevilla", "España")).thenReturn(SEVILLA);
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA);
+
+        mockMvc.perform(get("/api/article/nearby")
+                .param("city", "Sevilla")
+                .param("country", "España")
+                .param("radiusKm", "0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void nearby_integration_responseDTOContainsAllFields() throws Exception {
+        Article a = saveArticle("Taladro Pro", "Córdoba", 49.99, ArticleStatus.AVAILABLE);
+
+        when(cityService.getCityCoordinates("Sevilla", "España")).thenReturn(SEVILLA);
+        when(cityService.getCityCoordinates("Córdoba", "España")).thenReturn(CORDOBA);
+
+        mockMvc.perform(get("/api/article/nearby")
+                .param("city", "Sevilla")
+                .param("country", "España"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").isNumber())
+            .andExpect(jsonPath("$[0].itemType").value("ARTICLE"))
+            .andExpect(jsonPath("$[0].title").value("Taladro Pro"))
+            .andExpect(jsonPath("$[0].city").value("Córdoba"))
+            .andExpect(jsonPath("$[0].pricePerMonth").value(49.99))
+            .andExpect(jsonPath("$[0].category").value("Bricolaje"))
+            .andExpect(jsonPath("$[0].ownerName").value("Juan"))
+            .andExpect(jsonPath("$[0].status").value("AVAILABLE"))
+            .andExpect(jsonPath("$[0].distanceKm").isNumber())
+            .andExpect(jsonPath("$[0].cityLat").isNumber())
+            .andExpect(jsonPath("$[0].cityLng").isNumber());
+    }
+
+    @Test
+    void map_integration_responseDTOContainsAllFields() throws Exception {
+        saveArticle("Taladro Madrid", "Madrid", 30.0, ArticleStatus.AVAILABLE);
+
+        when(cityService.getCityCoordinates("Madrid", "España")).thenReturn(MADRID);
+
+        mockMvc.perform(get("/api/article/map")
+                .param("country", "España"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").isNumber())
+            .andExpect(jsonPath("$[0].itemType").value("ARTICLE"))
+            .andExpect(jsonPath("$[0].title").value("Taladro Madrid"))
+            .andExpect(jsonPath("$[0].city").value("Madrid"))
+            .andExpect(jsonPath("$[0].pricePerMonth").value(30.0))
+            .andExpect(jsonPath("$[0].status").value("AVAILABLE"))
+            .andExpect(jsonPath("$[0].distanceKm").value(0.0))
+            .andExpect(jsonPath("$[0].cityLat").isNumber())
+            .andExpect(jsonPath("$[0].cityLng").isNumber());
+    }
+
+    @Test
+    void map_integration_excludesNonAvailableArticles() throws Exception {
+        saveArticle("Taladro disponible", "Madrid", 30.0, ArticleStatus.AVAILABLE);
+        saveArticle("Taladro alquilado", "Madrid", 35.0, ArticleStatus.RENTED);
+
+        when(cityService.getCityCoordinates("Madrid", "España")).thenReturn(MADRID);
+
+        mockMvc.perform(get("/api/article/map")
+                .param("country", "España"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Taladro disponible"));
+    }
 }

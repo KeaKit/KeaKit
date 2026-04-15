@@ -182,6 +182,98 @@ describe("getNearbyArticles", () => {
     const [url] = mockFetch.mock.calls[0];
     expect(url).toContain(encodeURIComponent("São Paulo"));
   });
+
+  it("propaga error de red (fetch rechazado)", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Network failure"));
+
+    await expect(
+      getNearbyArticles("Sevilla", "España", TOKEN),
+    ).rejects.toThrow("Network failure");
+  });
+
+  it("maneja error JSON con campo 'message'", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ message: "Ciudad no válida" }),
+      text: () => Promise.resolve(""),
+    });
+
+    await expect(
+      getNearbyArticles("??", "España", TOKEN),
+    ).rejects.toThrow("Ciudad no válida");
+  });
+
+  it("maneja error JSON con campo 'error'", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 422,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ error: "Parámetros inválidos" }),
+      text: () => Promise.resolve(""),
+    });
+
+    await expect(
+      getNearbyArticles("Sevilla", "España", TOKEN),
+    ).rejects.toThrow("Parámetros inválidos");
+  });
+
+  it("maneja error JSON sin message ni error (stringify fallback)", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ code: 123, detail: "algo" }),
+      text: () => Promise.resolve(""),
+    });
+
+    await expect(
+      getNearbyArticles("Sevilla", "España", TOKEN),
+    ).rejects.toThrow();
+  });
+
+  it("normaliza error 'owner not found' en getNearbyArticles", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      headers: { get: () => "text/plain" },
+      json: () => Promise.reject(new Error("not json")),
+      text: () => Promise.resolve("Owner not found"),
+    });
+
+    await expect(
+      getNearbyArticles("Sevilla", "España", TOKEN),
+    ).rejects.toThrow("El propietario no existe.");
+  });
+
+  it("normaliza error 'article not found'", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      headers: { get: () => "text/plain" },
+      json: () => Promise.reject(new Error("not json")),
+      text: () => Promise.resolve("Article not found"),
+    });
+
+    await expect(
+      getNearbyArticles("Sevilla", "España", TOKEN),
+    ).rejects.toThrow("El artículo no existe.");
+  });
+
+  it("normaliza error 'unauthorized'", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      headers: { get: () => "text/plain" },
+      json: () => Promise.reject(new Error("not json")),
+      text: () => Promise.resolve("Unauthorized access"),
+    });
+
+    await expect(
+      getNearbyArticles("Sevilla", "España", TOKEN),
+    ).rejects.toThrow("No tienes permiso para realizar esta acción.");
+  });
 });
 
 // ==========================================
@@ -245,6 +337,60 @@ describe("getArticlesForMap", () => {
 
     await expect(getArticlesForMap(TOKEN, "España")).rejects.toThrow();
   });
+
+  it("propaga error de red (fetch rechazado)", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+    await expect(getArticlesForMap(TOKEN, "España")).rejects.toThrow(
+      "Network error",
+    );
+  });
+
+  it("maneja error JSON con campo 'message' en getArticlesForMap", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ message: "País no válido" }),
+      text: () => Promise.resolve(""),
+    });
+
+    await expect(getArticlesForMap(TOKEN, "???")).rejects.toThrow(
+      "País no válido",
+    );
+  });
+
+  it("maneja error JSON con campo 'error' en getArticlesForMap", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 422,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ error: "Solicitud incorrecta" }),
+      text: () => Promise.resolve(""),
+    });
+
+    await expect(getArticlesForMap(TOKEN, "España")).rejects.toThrow(
+      "Solicitud incorrecta",
+    );
+  });
+
+  it("devuelve artículos con todos los campos esperados", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve([mockNearbyArticle]),
+    });
+
+    const result = await getArticlesForMap(TOKEN, "España");
+
+    expect(result[0].id).toBe(1);
+    expect(result[0].title).toBe("Taladro");
+    expect(result[0].city).toBe("Córdoba");
+    expect(result[0].pricePerMonth).toBe(30.0);
+    expect(result[0].ownerName).toBe("Juan García");
+    expect(result[0].status).toBe("AVAILABLE");
+    expect(result[0].imageUrl).toBe("http://img.test/taladro.jpg");
+  });
 });
 
 // ==========================================
@@ -276,6 +422,24 @@ describe("fetchCities", () => {
       "No se pudieron cargar las ciudades",
     );
   });
+
+  it("propaga error de red al obtener ciudades", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+
+    await expect(fetchCities("España")).rejects.toThrow("Connection refused");
+  });
+
+  it("codifica correctamente el país en la URL", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(["São Paulo"]),
+    });
+
+    await fetchCities("São Paulo");
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toContain(encodeURIComponent("São Paulo"));
+  });
 });
 
 // ==========================================
@@ -305,6 +469,23 @@ describe("fetchCountries", () => {
     await expect(fetchCountries()).rejects.toThrow(
       "Error al obtener los países",
     );
+  });
+
+  it("propaga error de red al obtener países", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Timeout"));
+
+    await expect(fetchCountries()).rejects.toThrow("Timeout");
+  });
+
+  it("devuelve lista vacía si el servidor responde con array vacío", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
+
+    const result = await fetchCountries();
+
+    expect(result).toEqual([]);
   });
 });
 
@@ -349,5 +530,36 @@ describe("getCityCoordinates", () => {
 
     const [url] = mockFetch.mock.calls[0];
     expect(url).toContain(encodeURIComponent("São Paulo"));
+  });
+
+  it("propaga error de red al obtener coordenadas", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("DNS error"));
+
+    await expect(
+      getCityCoordinates("Sevilla", "España"),
+    ).rejects.toThrow("DNS error");
+  });
+
+  it("devuelve null para cualquier respuesta no-ok (no solo 404)", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+    });
+
+    const result = await getCityCoordinates("Sevilla", "España");
+
+    expect(result).toBeNull();
+  });
+
+  it("extrae lat y lng correctamente del JSON de respuesta", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ lat: 40.4168, lng: -3.7038, extra: "ignored" }),
+    });
+
+    const result = await getCityCoordinates("Madrid", "España");
+
+    expect(result).toEqual({ lat: 40.4168, lng: -3.7038 });
   });
 });
