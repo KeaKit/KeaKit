@@ -1072,6 +1072,8 @@
 
 - Add incident and risk log for Sprint 3 ([0cf337c](https://github.com/KeaKit/KeaKit/commit/0cf337cb28c7697f6167dd299bebdcbc612d0e0f))
 
+- Remove unnecessary kit as paid sample data ([b73ea2a](https://github.com/KeaKit/KeaKit/commit/b73ea2aca8b59009afadc94ce0e0ee1961ed1429))
+
 
 ### Refactorizaciones
 
