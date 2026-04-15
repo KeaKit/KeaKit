@@ -60,7 +60,7 @@ public class ArticleController {
     public ResponseEntity<?> uploadArticle(@RequestParam Long ownerId, @RequestParam Long categoryId, @RequestBody Article article) {
         try {
             User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new RuntimeException("Owner not found"));
+                .orElseThrow(() -> new RuntimeException("Propietario no encontrado"));
 
             Category category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new RuntimeException("Category not found"));

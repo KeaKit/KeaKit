@@ -104,7 +104,7 @@ class ArticleReturnExtendedTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, otherUser.getId(), request));
-        assertThat(ex.getMessage()).contains("Only the owner can confirm the return");
+    assertThat(ex.getMessage()).contains("Solo el propietario puede confirmar la devolución");
     }
 
     // ═══════════════ RN-DEV-02: Only RENTED articles can be returned ═══════════════
@@ -121,7 +121,7 @@ class ArticleReturnExtendedTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-        assertThat(ex.getMessage()).contains("not currently rented");
+    assertThat(ex.getMessage()).contains("Este artículo no está actualmente alquilado");
     }
 
     @Test
@@ -136,7 +136,7 @@ class ArticleReturnExtendedTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-        assertThat(ex.getMessage()).contains("not currently rented");
+    assertThat(ex.getMessage()).contains("Este artículo no está actualmente alquilado");
     }
 
     // ═══════════════ Article not found ═══════════════
@@ -149,7 +149,7 @@ class ArticleReturnExtendedTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(999L, owner.getId(), request));
-        assertThat(ex.getMessage()).contains("Article not found");
+    assertThat(ex.getMessage()).contains("Artículo no encontrado");
     }
 
     // ═══════════════ RN-DEV-03: Must have active kit ═══════════════
@@ -164,7 +164,7 @@ class ArticleReturnExtendedTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-        assertThat(ex.getMessage()).contains("No active Kit found");
+    assertThat(ex.getMessage()).contains("No se encontró un Kit activo para este artículo");
     }
 
     // ═══════════════ RN-DEV-05 / HU-ARRENDATARIO-40: GOOD → deposit returned ═══════════════

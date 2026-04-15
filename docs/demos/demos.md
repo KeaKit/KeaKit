@@ -16,5 +16,7 @@
 
 ### 🔹 Sprint 3
 * **Semana 1:** [Ver video](https://drive.google.com/file/d/1WV_KULISfubn-ek3TC7dperHrzuWH0aG/view?usp=sharing)
+* **Entrega Sprint 3:** [Ver video](https://youtu.be/v1b5bybfyv0)
+* **Semana 3 Presentación:** [Ver video](https://youtu.be/76NuQMeXwQ8)
 
 ---

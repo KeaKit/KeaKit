@@ -159,8 +159,6 @@ El siguiente paso clave será **convertir esta captación en participación acti
 
 ## Análisis de respuestas
 
-A continuación se presenta un análisis unificado de las respuestas obtenidas sobre el registro, inicio de sesión y edición de perfil, combinando los datos de arrendatarios y arrendadores para obtener una visión global del funcionamiento de la plataforma. 
-
 Este análisis ha seguido el [plan de gestión de usuarios](../fase%20DP/gestion-de-usuarios-piloto.md).
 
 ---
@@ -481,7 +479,6 @@ El hecho de que 3 usuarios no hayan tenido problemas confirma que los fallos son
 | **MUST** | Información incompleta o no visible en detalles del kit | Revisar carga de datos y estructura del detalle |
 | **MUST** | Confusión entre “Crear kit” y “Alquilar kit” | Separar botones, renombrar o rediseñar flujo |
 | **MUST** | Error en proceso de pago (importe parcial) | Revisar cálculo y visualización del total |
-
 | **SHOULD** | Mensajes de error poco útiles | Rediseñar mensajes claros y accionables |
 | **SHOULD** | Resumen de precios ocupa demasiado espacio | Reducir tamaño o hacerlo colapsable |
 | **SHOULD** | Interfaz poco amplia en creación de kit | Reorganizar elementos y espaciados |
@@ -489,12 +486,10 @@ El hecho de que 3 usuarios no hayan tenido problemas confirma que los fallos son
 | **SHOULD** | Dificultad para encontrar dónde reportar incidencias | Mejorar visibilidad del acceso al portal |
 | **SHOULD** | Falta de claridad en formulario de artículos | Simplificar campos y mejorar etiquetas |
 | **SHOULD** | Inconsistencia en selección de ciudad | Unificar selección mediante lista desplegable |
-
 | **COULD** | Emojis no cargan | Revisar compatibilidad del componente |
 | **COULD** | Nombre no editable correctamente | Permitir editar nombre y apellidos por separado |
 | **COULD** | Añadir botón grande de “Publicar artículo” | Mejorar visibilidad en pantalla principal |
 | **COULD** | Mejorar visibilidad de “Ver mis kits alquilados” | Añadir acceso directo o icono |
-
 | **WON’T (por ahora)** | Cambios estéticos menores no reportados por usuarios | Se revisarán en fases posteriores |
 
 # Resultados del plan de acción tomado

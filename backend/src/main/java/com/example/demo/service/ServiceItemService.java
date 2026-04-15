@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import com.example.demo.dto.PromoCodeValidationResponse;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -15,12 +16,14 @@ public class ServiceItemService {
     private final ServiceRepository serviceRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final PromoCodeService promoCodeService;
 
     public ServiceItemService(ServiceRepository serviceRepository, UserRepository userRepository, 
-                              CategoryRepository categoryRepository) {
+                              CategoryRepository categoryRepository, PromoCodeService promoCodeService) {
         this.serviceRepository = serviceRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
+        this.promoCodeService = promoCodeService;
     }
 
     public List<ServiceItem> findAll() {
@@ -29,7 +32,7 @@ public class ServiceItemService {
 
     public ServiceItem findById(Long id) {
         return serviceRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Service not found"));
+            .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
     }
 
     /**
@@ -38,12 +41,15 @@ public class ServiceItemService {
     @Transactional
     public ServiceItem createAndPromote(ServiceItem service, Long ownerId, Long categoryId) {
         User owner = userRepository.findById(ownerId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
         Category category = categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new RuntimeException("Category not found"));
+            .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
         validateServiceData(service, true);
+        normalizeOwnerCommissionPromoState(service, false);
+        validateOwnerCommissionPromoCode(service.getOwnerCommissionPromoCode(), owner.getEmail());
+        reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), owner.getEmail());
 
         service.setOwner(owner);
         service.setCategory(category);
@@ -58,14 +64,14 @@ public class ServiceItemService {
     @Transactional
     public ServiceItem update(Long id, Long ownerId, ServiceItem updateData) {
         ServiceItem service = serviceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Service not found"));
+                .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
 
         if (!service.getOwner().getId().equals(ownerId)) {
-            throw new RuntimeException("Only the owner can modify this service");
+            throw new RuntimeException("Solo el propietario puede modificar este servicio");
         }
 
         if (service.getStatus() == ServiceStatus.UNAVAILABLE) {
-            throw new RuntimeException("The service is currently rented and cannot be modified.");
+            throw new RuntimeException("El servicio está actualmente alquilado y no puede ser modificado.");
         }
 
         if (updateData.getTitle() != null) service.setTitle(updateData.getTitle());
@@ -87,10 +93,19 @@ public class ServiceItemService {
             if (updateData.getStatus() == ServiceStatus.ACTIVE || updateData.getStatus() == ServiceStatus.DRAFT) {
                 service.setStatus(updateData.getStatus());
             } else {
-                throw new RuntimeException("Service status can only be ACTIVE or DRAFT");
+                throw new RuntimeException("El estado del servicio solo puede ser ACTIVE o DRAFT");
             }
         }
+
+        if (updateData.getOwnerCommissionPromoCode() != null) {
+            String previousCode = service.getOwnerCommissionPromoCode();
+            service.setOwnerCommissionPromoCode(updateData.getOwnerCommissionPromoCode());
+            normalizeOwnerCommissionPromoState(service, !sameCode(previousCode, service.getOwnerCommissionPromoCode()));
+        }
+
         validateServiceData(service, startMonthChanged);
+        validateOwnerCommissionPromoCode(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
+        reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
 
         return serviceRepository.save(service);
     }
@@ -101,10 +116,10 @@ public class ServiceItemService {
     @Transactional
     public ServiceItem requestService(Long serviceId) {
         ServiceItem service = serviceRepository.findById(serviceId)
-            .orElseThrow(() -> new RuntimeException("Service not found"));
+            .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
 
         if (service.getStatus() != ServiceStatus.ACTIVE) {
-            throw new RuntimeException("The service is not active and cannot be requested");
+            throw new RuntimeException("El servicio no está activo y no puede ser solicitado");
         }
         service.setStatus(ServiceStatus.UNAVAILABLE); 
         return serviceRepository.save(service);
@@ -116,7 +131,7 @@ public class ServiceItemService {
     @Transactional
     public ServiceItem releaseService(Long serviceId) {
         ServiceItem service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new RuntimeException("Service not found"));
+                .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
 
         service.setAvailableFrom(LocalDate.now());
         
@@ -134,14 +149,14 @@ public class ServiceItemService {
      */
     public void delete(Long serviceId, Long ownerId) {
        ServiceItem service = serviceRepository.findById(serviceId)
-        .orElseThrow(() -> new RuntimeException("Service not found"));
+        .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
 
         if (!service.getOwner().getId().equals(ownerId)) {
-            throw new RuntimeException("You do not have permission to delete this service");
+            throw new RuntimeException("No tienes permiso para eliminar este servicio");
         }
 
         if (service.getStatus() == ServiceStatus.UNAVAILABLE) {
-            throw new RuntimeException("The service is currently rented and cannot be deleted");
+            throw new RuntimeException("El servicio está actualmente alquilado y no puede ser eliminado");
         }
         serviceRepository.delete(service);
     }
@@ -169,24 +184,24 @@ public class ServiceItemService {
      */
     private void validateServiceData(ServiceItem service, boolean checkFromFuture) {
         if (service.getTitle() == null || service.getTitle().isEmpty()) 
-            throw new RuntimeException("Title is required");
+            throw new RuntimeException("Título requerido");
         if (service.getCity() == null || service.getCity().isEmpty()) 
-            throw new RuntimeException("City is required");
+            throw new RuntimeException("Ciudad requerida");
         
         if (service.getPricePerMonth() == null || service.getPricePerMonth() <= 0) 
-            throw new RuntimeException("Monthly price must be positive");
+            throw new RuntimeException("El precio mensual debe ser positivo");
 
         LocalDate from = service.getAvailableFrom();
         LocalDate until = service.getAvailableUntil();
 
         if (from == null || until == null) 
-            throw new RuntimeException("You must specify the date range (From/Until)");
+            throw new RuntimeException("Debes especificar el rango de fechas (Desde/Hasta)");
 
         if (checkFromFuture && from.isBefore(LocalDate.now())) {
-            throw new RuntimeException("Start date cannot be in the past");
+            throw new RuntimeException("La fecha de inicio no puede ser en el pasado");
         }
         if (until.isBefore(from)) 
-            throw new RuntimeException("End date must be after the start date");
+            throw new RuntimeException("La fecha de finalización debe ser después de la fecha de inicio");
         
         if (until.isBefore(LocalDate.now())) {
              service.setStatus(ServiceStatus.DRAFT);
@@ -199,5 +214,67 @@ public class ServiceItemService {
 
     public List<ServiceItem> findByOwner(Long ownerId) {
         return serviceRepository.findByOwnerId(ownerId);
+    }
+
+    private void validateOwnerCommissionPromoCode(String promoCode, String ownerEmail) {
+        if (promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+
+        if (promoCodeService == null) {
+            return;
+        }
+
+        if (ownerEmail == null || ownerEmail.isBlank()) {
+            throw new RuntimeException("Owner email is required to validate owner promo code");
+        }
+
+        PromoCodeValidationResponse validation = promoCodeService
+            .validateForOwnerCommissionReductionAllowReservedByUser(promoCode.trim(), ownerEmail);
+
+        if (!validation.isValid()) {
+            throw new RuntimeException(validation.getMessage());
+        }
+    }
+
+    private void reserveOwnerSingleUseIfNeeded(String promoCode, String ownerEmail) {
+        if (promoCodeService == null || promoCode == null || promoCode.isBlank()) {
+            return;
+        }
+        promoCodeService.reserveOwnerSingleUseIfNeeded(promoCode, ownerEmail);
+    }
+
+    private void normalizeOwnerCommissionPromoState(ServiceItem service, boolean resetConsumedFlag) {
+        String normalized = normalizePromoCode(service.getOwnerCommissionPromoCode());
+        service.setOwnerCommissionPromoCode(normalized);
+
+        if (normalized == null) {
+            service.setOwnerCommissionPromoConsumed(false);
+            return;
+        }
+
+        if (resetConsumedFlag) {
+            service.setOwnerCommissionPromoConsumed(false);
+        }
+    }
+
+    private String normalizePromoCode(String code) {
+        if (code == null) {
+            return null;
+        }
+        String normalized = code.trim().toUpperCase();
+        return normalized.isBlank() ? null : normalized;
+    }
+
+    private boolean sameCode(String left, String right) {
+        String l = normalizePromoCode(left);
+        String r = normalizePromoCode(right);
+        if (l == null && r == null) {
+            return true;
+        }
+        if (l == null || r == null) {
+            return false;
+        }
+        return l.equals(r);
     }
 }

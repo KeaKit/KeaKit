@@ -131,7 +131,7 @@ class IncidentServiceTest {
         when(incidentRepository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> incidentService.getIncidentById(99L));
-        assertThat(ex.getMessage()).contains("Incident not found");
+        assertThat(ex.getMessage()).contains("Incidencia no encontrada");
     }
 
     @Test

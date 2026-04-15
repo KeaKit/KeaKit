@@ -1,12 +1,15 @@
 import BASE_URL from '../config/api';
 import { fetchWithTimeout, handleResponse, jsonHeaders } from './utils';
 
+export type PromoCodeType = 'TENANT_DISCOUNT' | 'OWNER_COMMISSION_REDUCTION';
+
 export interface PromoCodeResponse {
   id: number;
   code: string;
   discountRate: number;
   active: boolean;
   singleUse: boolean;
+  type?: PromoCodeType;
   pilotUserOnly: boolean;
   pilotEmails: string[];
 }
@@ -16,6 +19,7 @@ export interface PromoCodeRequest {
   discountRate: number;
   active: boolean;
   singleUse: boolean;
+  type?: PromoCodeType;
   pilotUserOnly: boolean;
   pilotEmails: string[];
 }
@@ -55,9 +59,10 @@ export const validatePromoCode = async (
   token: string,
   code: string,
   email: string,
+  type: PromoCodeType = 'TENANT_DISCOUNT',
 ): Promise<PromoCodeValidationResponse> => {
   const res = await fetchWithTimeout(
-    `${BASE_URL}/api/promo-codes/validate?code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
+    `${BASE_URL}/api/promo-codes/validate?code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}&type=${encodeURIComponent(type)}`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   return handleResponse<PromoCodeValidationResponse>(res);
