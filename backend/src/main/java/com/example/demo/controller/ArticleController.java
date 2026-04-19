@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.ArticleNearbyDTO;
 import com.example.demo.dto.ArticleRecordDTO;
+import com.example.demo.dto.ReturnRequest;
+import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
@@ -223,6 +225,16 @@ public class ArticleController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+    @PostMapping("/{articleId}/return")
+    public ResponseEntity<ReturnResponse> processReturn(
+            @PathVariable Long articleId,
+            @RequestParam Long ownerId,
+            @RequestBody ReturnRequest request) {
+        
+        ReturnResponse response = articleService.processReturn(articleId, ownerId, request);
+        return ResponseEntity.ok(response);
     }
     
     @GetMapping("/nearby")
