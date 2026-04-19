@@ -343,6 +343,9 @@ public class ArticleService {
         if (!article.getOwner().getId().equals(ownerId))
             throw new RuntimeException("Solo el propietario puede confirmar la devolución");
 
+        System.out.println("INTENTO DE DEVOLUCIÓN - Artículo ID: " + articleId);
+        System.out.println("ESTADO REAL EN BD: " + article.getStatus());
+
         if (article.getStatus() != ArticleStatus.RENTED)
             throw new RuntimeException("Este artículo no está actualmente alquilado");
 
