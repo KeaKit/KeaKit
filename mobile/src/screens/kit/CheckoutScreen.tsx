@@ -44,6 +44,17 @@ import {
 } from "../../components";
 import { Ionicons } from "@expo/vector-icons";
 
+type Item = {
+  itemId: number;
+  ownerId: number;
+  quantity: number;
+  pricePerMonth: number;
+  name: string;
+  category: string;
+  imageUrl: string;
+  ownerName: string;
+};
+
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
@@ -217,14 +228,15 @@ export default function CheckoutScreen({ route }: Props) {
       } else {
         await executeStripePayment(prices.totalPrice);
       }
-      if (kitDetails && kitDetails.items) { 
+      if (kitDetails?.items?.length) { 
         console.log("Actualizando estado de los artículos a RENTED...");
         await Promise.all(
           // Usamos 'any' temporalmente por si TypeScript se queja con tu interfaz real
-          kitDetails.items.map(async (item: any) => {
-            // Buscamos los IDs de forma dinámica según tu DTO
-            const articleId = item.itemId || item.article?.id || item.id;
-            const ownerId = item.ownerId || item.article?.owner?.id || item.owner?.id;
+          kitDetails.items.map(async (item: Item) => {
+            console.log(typeof item, item);
+            
+            const articleId = item.itemId;
+            const ownerId = item.ownerId;
 
             if (articleId && ownerId) {
               await toggleRent(articleId, ownerId, user?.token ?? "");
