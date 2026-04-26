@@ -19,6 +19,7 @@ import {
   processPaymentWithStripe,
 } from "../../services";
 import { getKitPaymentWithPromo } from "../../services/kitService";
+import { toggleRent } from "../../services/articleService";
 import {
   processPaymentWithWalletPromo,
   processPaymentWithStripePromo,
@@ -42,6 +43,17 @@ import {
   FadeInItem,
 } from "../../components";
 import { Ionicons } from "@expo/vector-icons";
+
+type Item = {
+  itemId: number;
+  ownerId: number;
+  quantity: number;
+  pricePerMonth: number;
+  name: string;
+  category: string;
+  imageUrl: string;
+  ownerName: string;
+};
 
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
@@ -215,6 +227,24 @@ export default function CheckoutScreen({ route }: Props) {
         }
       } else {
         await executeStripePayment(prices.totalPrice);
+      }
+      if (kitDetails?.items?.length) { 
+        console.log("Actualizando estado de los artículos a RENTED...");
+        await Promise.all(
+          // Usamos 'any' temporalmente por si TypeScript se queja con tu interfaz real
+          kitDetails.items.map(async (item: Item) => {
+            console.log(typeof item, item);
+            
+            const articleId = item.itemId;
+            const ownerId = item.ownerId;
+
+            if (articleId && ownerId) {
+              await toggleRent(articleId, ownerId, user?.token ?? "");
+            } else {
+              console.warn("⚠️ No se pudo hacer toggleRent: faltan IDs en el item", item);
+            }
+          })
+        );
       }
       resetToMyKits();
     } catch (error) {
