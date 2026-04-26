@@ -31,7 +31,7 @@ import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
 import com.example.demo.model.Wallet;
 import com.example.demo.model.Transaction;
-
+import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.PilotUserRepository;
 import com.example.demo.repository.TransactionRepository;
@@ -90,6 +90,9 @@ public class PaymentServiceTest {
     @Mock 
     private PilotUserRepository pilotUserRepository;
 
+    @Mock
+    private ArticleRepository articleRepository;
+
     private PaymentService paymentService;
 
     @BeforeEach
@@ -107,6 +110,7 @@ public class PaymentServiceTest {
         ReflectionTestUtils.setField(paymentService, "KEAKIT_ADMIN_EMAIL", ADMIN_EMAIL);
         ReflectionTestUtils.setField(paymentService, "promoCodeService", promoCodeService);
         ReflectionTestUtils.setField(paymentService, "pilotUserRepository", pilotUserRepository);
+        ReflectionTestUtils.setField(paymentService, "articleRepository", articleRepository);
         paymentService.init();
     }
 
