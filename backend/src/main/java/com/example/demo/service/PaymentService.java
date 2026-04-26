@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.model.Transaction;
 import com.example.demo.model.TransactionType;
 import com.example.demo.model.Wallet;
+import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Item;
+import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.KitResponse.KitItemResponse;
@@ -17,6 +19,7 @@ import com.example.demo.dto.KitPaymentDTO;
 import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.repository.TransactionRepository;
+import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.PilotUserRepository;
 
@@ -72,6 +75,9 @@ public class PaymentService {
 
     @Autowired
     private PilotUserRepository pilotUserRepository;
+
+    @Autowired
+    private ArticleRepository articleRepository;
 
 
     @Value("${stripe.api.key}")
@@ -131,6 +137,16 @@ public class PaymentService {
         kitService.markAsPaid(kitId);
         Kit kitEntity = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit not found for email confirmation"));
+
+        // Bucle en el backend (seguro y transaccional)
+        if (kitEntity.getSnapshots() != null) {
+            for (ItemMemento snapshot : kitEntity.getSnapshots()) {
+                articleRepository.findById(snapshot.getOriginalItemId()).ifPresent(article -> {
+                    article.setStatus(ArticleStatus.RENTED);
+                    articleRepository.save(article);
+                });
+            }
+        }
 
         double discountEuros = paymentInfo.discount() != null ? paymentInfo.discount() / 100.0 : 0.0;
         emailService.sendOrderConfirmation(kitEntity, discountEuros, promoCode);
