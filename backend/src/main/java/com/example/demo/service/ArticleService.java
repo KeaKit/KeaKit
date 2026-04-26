@@ -4,6 +4,7 @@ package com.example.demo.service;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -17,6 +18,7 @@ import com.example.demo.dto.CityCoordinatesDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
@@ -337,14 +339,17 @@ public class ArticleService {
 
     @Transactional
     public ReturnResponse processReturn(Long articleId, Long ownerId, ReturnRequest request) {
+        // 0. NUEVO: Validación estricta de la condición (Arregla Fallos 4 y 8)
+        if (!"GOOD".equalsIgnoreCase(request.condition()) && !"DAMAGED".equalsIgnoreCase(request.condition())) {
+            throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
+        }
+
+        // 1. Validaciones iniciales
         Article article = articleRepository.findById(articleId)
             .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         if (!article.getOwner().getId().equals(ownerId))
             throw new RuntimeException("Solo el propietario puede confirmar la devolución");
-
-        System.out.println("INTENTO DE DEVOLUCIÓN - Artículo ID: " + articleId);
-        System.out.println("ESTADO REAL EN BD: " + article.getStatus());
 
         if (article.getStatus() != ArticleStatus.RENTED)
             throw new RuntimeException("Este artículo no está actualmente alquilado");
@@ -354,38 +359,71 @@ public class ArticleService {
 
         Long tenantId = activeKit.getTenant().getId();
         String tenantEmail = activeKit.getTenant().getEmail();
-        
-        Double amountProcessed;
-        try {
-            // Delegamos TODA la lógica de transacciones al PaymentService
-            amountProcessed = paymentService.processGuaranteeReturn(
-                activeKit.getId(), 
-                ownerId, 
-                tenantId, 
-                request.condition()
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Error procesando la devolución de la garantía: " + e.getMessage());
-        }
 
-        String resolution;
-        String message;
-
-        if ("GOOD".equalsIgnoreCase(request.condition())) {
-            resolution = "DEPOSIT_RETURNED";
-            message = "Artículo devuelto en buen estado. Se devuelve la garantía exacta (" + amountProcessed + "€) al monedero del arrendatario.";
-        } else if ("DAMAGED".equalsIgnoreCase(request.condition())) {
-            resolution = "DEPOSIT_RETAINED";
-            message = "Artículo con daños. Se retiene la garantía de " + amountProcessed + "€ y se ha añadido al monedero del propietario.";
+        // 2. Actualizar estado del artículo individual
+        if ("DAMAGED".equalsIgnoreCase(request.condition())) {
+            article.setStatus(ArticleStatus.DAMAGED); 
         } else {
-            throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
+            article.setStatus(ArticleStatus.AVAILABLE);
+        }
+        article.setAvailableUntil(null);
+        
+        // Evitamos NPE en tests donde el repositorio no devuelve el objeto guardado
+        Article updatedArticle = articleRepository.save(article);
+        if (updatedArticle == null) {
+            updatedArticle = article; 
         }
 
-        // Liberar el artículo
-        article.setStatus(ArticleStatus.AVAILABLE);
-        article.setAvailableUntil(null);
-        Article updatedArticle = articleRepository.save(article);
-        availabilityRequestService.notifyWatchersWhenAvailable(updatedArticle);
+        // 3. Verificar si quedan artículos pendientes
+        boolean isKitPending = activeKit.getSnapshots().stream()
+            .anyMatch(snapshot -> {
+                Long originalId = snapshot.getOriginalItemId(); 
+                Article a = articleRepository.findById(originalId).orElse(null);
+                return a != null && a.getStatus() == ArticleStatus.RENTED;
+            });
+
+        Double amountProcessed = 0.0;
+        String resolution = "PENDING_KITS_ITEMS";
+        String message = "Artículo devuelto. La fianza se procesará cuando se devuelvan todos los artículos del kit.";
+
+        // 4. Cierre del Kit
+        if (!isKitPending) {
+            activeKit.setStatus(KitStatus.FINISHED);
+            kitRepository.save(activeKit);
+
+            Optional<Article> damagedArticle = activeKit.getSnapshots().stream()
+                .map(snapshot -> articleRepository.findById(snapshot.getOriginalItemId()).orElse(null))
+                .filter(a -> a != null && a.getStatus() == ArticleStatus.DAMAGED)
+                .findFirst();
+
+            String finalCondition = damagedArticle.isPresent() ? "DAMAGED" : "GOOD";
+            Long effectiveOwnerId = damagedArticle.isPresent() ? damagedArticle.get().getOwner().getId() : ownerId;
+
+            try {
+                amountProcessed = paymentService.processGuaranteeReturn(
+                    activeKit.getId(),
+                    effectiveOwnerId,
+                    tenantId,
+                    finalCondition
+                );
+                
+                if (damagedArticle.isPresent()) {
+                    resolution = "DEPOSIT_RETAINED";
+                    message = "Artículo con daños. Se retiene la garantía de " + amountProcessed + "€ y se ha añadido al monedero del propietario.";
+                } else {
+                    resolution = "DEPOSIT_RETURNED";
+                    message = "Artículo devuelto en buen estado. Se devuelve la garantía exacta (" + amountProcessed + "€) al monedero del arrendatario.";
+                }
+            } catch (Exception e) {
+                // Restaurado el string original (Arregla Fallo 6)
+                throw new RuntimeException("Error procesando la devolución de la garantía: " + e.getMessage());
+            }
+        }
+
+        // 5. Notificar
+        if (updatedArticle.getStatus() == ArticleStatus.AVAILABLE) {
+            availabilityRequestService.notifyWatchersWhenAvailable(updatedArticle);
+        }
 
         return new ReturnResponse(
             articleId,
@@ -395,6 +433,7 @@ public class ArticleService {
             message
         );
     }
+
 
     public long countArticlesByCategory(Long categoryId) {
         return articleRepository.countByCategoryId(categoryId);
