@@ -2,8 +2,9 @@
 
 > **Plan de negocio · Escenario optimista y pesimista · Horizonte 24 meses · Modelo Freemium · 48 €/alquiler**
 
-![Ver análisis interactivo completo → analisis_financiero.html](./analisis_financiero.html)
 
+[Ver análisis interactivo completo → analisis_financiero.html](./analisis_financiero.html)
+> Para ver el enlace descargue el archivo en su dispositivo
 ---
 
 ## Sección 1 · Costes, ingresos y umbral de rentabilidad
