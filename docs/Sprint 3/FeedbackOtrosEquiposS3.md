@@ -106,6 +106,205 @@ Bug anteiores revisados y arreglados, se han detectado nuevas failure condition.
 **Failure condition:** T-12 No se ha solucionado el error anteriormente marcado, al recibir una solicitud para entrar en un grupo privado, al presionar aceptar o rechazar el sistema no hace nada.
 
 ---
+#### Profesores
+
+Casos de uso probados:
+
+* UC-32 Crear / editar perfil de profesor.
+* UC-33 Solicitar verificación de profesor.
+* UC-34 Listar profesores.
+* UC-35 Listar profesores verificados.
+* UC-36 Pago para verificación / promoción.
+* UC-37 Valorar profesor.
+* UC-38 Chat con profesor.
+
+---
+
+###### UC-32 Crear / editar perfil de profesor.
+
+**Funcionamiento detectado**
+* La creación y edición del perfil de profesor sigue funcionando correctamente.
+* El sistema permite guardar correctamente la información del perfil cuando los datos introducidos son válidos.
+
+**Funcionamiento mejorable**
+* Las validaciones de los campos siguen siendo poco específicas.
+* Al introducir un correo electrónico con formato inválido, el sistema impide continuar, pero no muestra ningún mensaje indicando que el formato es incorrecto.
+* Al introducir texto excesivamente largo en algunos campos, el sistema tampoco informa del motivo exacto del error, limitándose a bloquear la acción.
+
+**Failure condition detectada**
+* **T12** - El sistema no proporciona feedback claro al usuario sobre qué validación está fallando, dificultando la corrección de errores.
+
+---
+
+###### UC-33 Solicitar verificación de profesor.
+
+**Funcionamiento detectado**
+* La solicitud de verificación del perfil funciona correctamente.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### UC-34 Listar profesores.
+
+**Funcionamiento detectado**
+* El listado de profesores funciona correctamente y permite visualizar los perfiles disponibles.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### UC-35 Listar profesores verificados.
+
+**Funcionamiento detectado**
+* El filtrado de profesores verificados funciona correctamente.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### UC-36 Pago para verificación / promoción.
+
+**Funcionamiento detectado**
+* El flujo de pago para la promoción o verificación del perfil de profesor funciona correctamente.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### UC-37 Valorar profesor.
+
+**Funcionamiento detectado**
+* No se ha podido validar completamente la funcionalidad.
+
+**Funcionamiento mejorable**
+* No ha sido posible completar el flujo de valoración porque no se proporcionó una cuenta de profesor promocionado para realizar una contratación real.
+* El proceso requería verificar información personal y profesional real, lo que impedía continuar con datos de prueba.
+
+**Failure condition detectada**
+* **T12** - No se ha podido comprobar el flujo completo de contratación y valoración, por falta de datos de prueba adecuados.
+
+---
+
+###### UC-38 Chat con profesor.
+
+**Funcionamiento detectado**
+* El chat entre usuario y profesor funciona correctamente y permite la comunicación privada en tiempo real.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### FINANZAS Y SISTEMA DE PAGOS
+
+Casos de uso probados:
+
+* UC-39 Ver planes.
+* UC-40 Suscribirse a un plan.
+* UC-41 Procesar pago.
+* UC-42 Cancelar suscripción.
+
+---
+
+###### UC-39 Ver planes.
+
+**Funcionamiento detectado**
+* La visualización de planes sigue funcionando correctamente para todos los tipos de usuario.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### UC-40 Suscribirse a un plan.
+
+**Funcionamiento detectado**
+* La suscripción a planes continúa funcionando correctamente.
+
+**Funcionamiento mejorable**
+* Sigue existiendo una gestión poco clara cuando un usuario tiene varios planes activos simultáneamente.
+* El sistema permite mantener suscripciones Premium y Pro activas al mismo tiempo, generando confusión sobre cuál es la suscripción principal o prioritaria.
+
+**Failure condition detectada**
+* **T12** - Persisten inconsistencias en la gestión de múltiples planes simultáneos.
+
+---
+
+###### UC-41 Procesar pago.
+
+**Funcionamiento detectado**
+* El procesamiento de pagos continúa funcionando correctamente y el flujo de pago se completa sin incidencias.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### UC-42 Cancelar suscripción.
+
+**Funcionamiento detectado**
+* La cancelación de suscripción, que anteriormente no estaba implementada, ahora funciona correctamente.
+* El sistema permite cancelar la renovación del plan de forma adecuada.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### Notificaciones
+
+Casos de uso probados:
+
+* UC-43 Enviar notificación.
+* UC-44 Recibir notificación.
+* UC-45 Ver historial de notificaciones.
+* UC-46 Marcar notificación como leída.
+
+---
+
+###### UC-43 Enviar notificación.
+
+**Funcionamiento detectado**
+* El envío de notificaciones sigue funcionando correctamente.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### UC-44 Recibir notificación.
+
+**Funcionamiento detectado**
+* La recepción de notificaciones en tiempo real funciona correctamente.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### UC-45 Ver historial de notificaciones.
+
+**Funcionamiento detectado**
+* El historial de notificaciones se muestra correctamente.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### UC-46 Marcar notificación como leída.
+
+**Funcionamiento detectado**
+* El marcado de notificaciones como leídas funciona correctamente y actualiza su estado.
+
+**Failure condition detectada**
+* Ninguna.
+---
 
 #### VIDEOLLAMADAS
 
@@ -196,6 +395,8 @@ Bug anteiores revisados y arreglados, se han detectado nuevas failure condition.
 | Versión | Fecha       | Descripción | Autor(es) |
 |---------|------------|-------------|-----------|
 | 1.0.0 | 28/04/2026 | Creación del documento y casos de uso de meerkateers y Nexus | Luis Emmanuel Chavez Malave|
+| 1.1.0 | 28/04/2026 | Feedback casos de uso Meerkatters | Salma El Hakimy Etorabi|
+
 ---
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
