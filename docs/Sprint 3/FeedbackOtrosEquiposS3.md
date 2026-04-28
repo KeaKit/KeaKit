@@ -401,4 +401,4 @@ Casos de uso probados:
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
 **Fecha de redacción:** 28/04/2026
-**Versión:** 1.0.0
+**Versión:** 1.1.0
