@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis Financiero — Estimación de Costes y Rentabilidad</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F3EF;
+    --bg2: #EDEAE3;
+    --bg3: #E4E0D7;
+    --card: #FFFFFF;
+    --text1: #1A1814;
+    --text2: #4A4640;
+    --text3: #8A857C;
+    --blue: #185FA5;
+    --blue-light: #E8F0FA;
+    --red: #C0392B;
+    --green: #1A6B48;
+    --green2: #4A8C2A;
+    --amber: #B5631A;
+    --border: #D8D3CA;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text1);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--text1);
+    color: #F5F3EF;
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    right: -80px; top: -80px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    right: 60px; bottom: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+    pointer-events: none;
+  }
+  .header-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245,243,239,0.5);
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.15;
+    font-weight: 400;
+    max-width: 600px;
+    margin-bottom: 16px;
+  }
+  header h1 em {
+    font-style: italic;
+    color: rgba(245,243,239,0.7);
+  }
+  .header-meta {
+    font-size: 13px;
+    color: rgba(245,243,239,0.45);
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .header-meta span::before { content: '— '; }
+
+  /* NAV */
+  nav {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  }
+  .nav-tab {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text3);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 16px 20px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-tab:hover { color: var(--text1); }
+  .nav-tab.active {
+    color: var(--text1);
+    border-bottom-color: var(--text1);
+  }
+
+  /* SECTIONS */
+  .section {
+    display: none;
+    padding: 36px 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .section.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-intro {
+    margin-bottom: 32px;
+  }
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 400;
+    color: var(--text1);
+    margin-bottom: 12px;
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.7;
+    max-width: 680px;
+  }
+
+  /* SCENARIO TOGGLE */
+  .scenario-toggle {
+    display: inline-flex;
+    background: var(--bg2);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 28px;
+    gap: 2px;
+  }
+  .scen-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 20px;
+    border: none;
+    background: none;
+    color: var(--text3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .scen-btn.active {
+    background: var(--card);
+    color: var(--text1);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  }
+
+  /* KPI GRID */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    transition: box-shadow 0.2s;
+  }
+  .kpi:hover { box-shadow: var(--shadow); }
+  .kpi-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .kpi-value { font-family: 'DM Serif Display', serif; font-size: 26px; line-height: 1; margin-bottom: 4px; }
+  .kpi-sub { font-size: 11px; color: var(--text3); }
+  .kpi-value.blue { color: var(--blue); }
+  .kpi-value.red { color: var(--red); }
+  .kpi-value.green { color: var(--green); }
+
+  /* CHART CARDS */
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text1);
+    margin-bottom: 4px;
+  }
+  .chart-sub {
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .chart-sub strong { color: var(--text2); font-weight: 500; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .legend-line { width: 20px; height: 2px; flex-shrink: 0; }
+  .legend-dashed { width: 20px; height: 0; border-top: 2px dashed; flex-shrink: 0; }
+
+  /* INSIGHT BOX */
+  .insight {
+    background: var(--blue-light);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-top: 16px;
+  }
+  .insight strong { color: var(--blue); }
+
+  /* VIEW TOGGLE (chart 2) */
+  .view-toggle {
+    display: inline-flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .view-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .view-btn.active {
+    background: var(--text1);
+    border-color: var(--text1);
+    color: #F5F3EF;
+  }
+
+  /* BREAKEVEN CARDS */
+  .be-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .be-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .be-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .be-value { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 4px; }
+  .be-value.opt { color: var(--green); }
+  .be-value.pes { color: var(--green2); }
+  .be-sub { font-size: 11px; color: var(--text3); }
+
+  /* FOOTNOTE */
+  .footnote {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 32px 20px 28px; }
+    nav { padding: 0 12px; overflow-x: auto; }
+    .section { padding: 24px 16px; }
+    .be-grid { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="header-eyebrow">Plan de negocio · Análisis financiero</p>
+  <h1>Estimación de costes <em>y rentabilidad</em></h1>
+  <div class="header-meta">
+    <span>Escenario optimista y pesimista</span>
+    <span>Horizonte 24 meses</span>
+    <span>Modelo Freemium · 48 €/alquiler</span>
+  </div>
+</header>
+
+<nav>
+  <button class="nav-tab active" onclick="showSection('costes')">Costes y escenarios</button>
+  <button class="nav-tab" onclick="showSection('rentabilidad')">Rentabilidad acumulada</button>
+</nav>
+
+<!-- ─────────────────────────────────────────── SECCIÓN 1 ─ -->
+<section class="section active" id="sec-costes">
+  <div class="section-intro">
+    <p class="section-label">Sección 1</p>
+    <h2 class="section-title">Costes, ingresos y umbral de rentabilidad</h2>
+    <p class="section-desc">
+      Análisis mensual de los primeros 6 meses con desglose por partidas y cálculo del número mínimo de usuarios
+      activos necesarios para cubrir el OPEX mensual. Alterna entre escenarios con los botones inferiores.
+    </p>
+  </div>
+
+  <div class="scenario-toggle">
+    <button class="scen-btn active" onclick="setScenario('opt')">Escenario optimista</button>
+    <button class="scen-btn" onclick="setScenario('pes')">Escenario pesimista</button>
+  </div>
+
+  <!-- KPIs -->
+  <div id="kpi-opt" class="kpi-grid">
+    <div class="kpi"><p class="kpi-label">Coste total</p><p class="kpi-value blue">91.715 €</p><p class="kpi-sub">incl. marketing</p></div>
+    <div class="kpi"><p class="kpi-label">OPEX mensual</p><p class="kpi-value blue">1.060 €</p><p class="kpi-sub">base + marketing</p></div>
+    <div class="kpi"><p class="kpi-label">Usuarios mínimos</p><p class="kpi-value green">17</p><p class="kpi-sub">para cubrir OPEX</p></div>
+    <div class="kpi"><p class="kpi-label">Break-even</p><p class="kpi-value green">~9–10 m.</p><p class="kpi-sub">≈ 1.911 alquileres</p></div>
+  </div>
+  <div id="kpi-pes" class="kpi-grid" style="display:none;">
+    <div class="kpi"><p class="kpi-label">Coste total</p><p class="kpi-value red">93.815 €</p><p class="kpi-sub">incl. marketing</p></div>
+    <div class="kpi"><p class="kpi-label">OPEX mensual</p><p class="kpi-value red">1.410 €</p><p class="kpi-sub">base + marketing</p></div>
+    <div class="kpi"><p class="kpi-label">Usuarios mínimos</p><p class="kpi-value green">22</p><p class="kpi-sub">para cubrir OPEX</p></div>
+    <div class="kpi"><p class="kpi-label">Break-even</p><p class="kpi-value green">~12–13 m.</p><p class="kpi-sub">≈ 1.954 alquileres</p></div>
+  </div>
+
+  <!-- CHART 1: Ingresos vs OPEX -->
+  <div class="chart-card">
+    <p class="chart-title">Ingresos vs. OPEX — Primeros 6 meses</p>
+    <p class="chart-sub">Las barras muestran el crecimiento mensual de ingresos brutos en cada escenario. <strong>En ambos casos los ingresos superan el OPEX desde el primer mes</strong>, aunque el margen es notablemente mayor en el optimista (×15 en el mes 6).</p>
+    <div style="position:relative;height:280px;">
+      <canvas id="chartIngresos" aria-label="Ingresos brutos mensuales por escenario durante los primeros 6 meses"></canvas>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#185FA5;"></span>Ingresos optimista</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#E24B4A;"></span>Ingresos pesimista</span>
+      <span class="legend-item"><span class="legend-dashed" style="border-color:#185FA5;"></span>OPEX optimista (1.060 €)</span>
+      <span class="legend-item"><span class="legend-dashed" style="border-color:#E24B4A;"></span>OPEX pesimista (1.410 €)</span>
+    </div>
+  </div>
+
+  <!-- CHART 2: Desglose costes -->
+  <div class="chart-card">
+    <p class="chart-title">Desglose de costes del proyecto</p>
+    <p class="chart-sub">Los RRHH concentran el <strong>74% del presupuesto total</strong> (68.234 €), seguidos del capital en equipamiento (18.900 €). El marketing, aunque variable según escenario, representa una fracción pequeña del total (&lt;7%).</p>
+    <div style="position:relative;height:220px;">
+      <canvas id="chartCostes" aria-label="Desglose de costes por categoría"></canvas>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#185FA5;"></span>RRHH</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>Capital</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#BA7517;"></span>Marketing opt.</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#D85A30;"></span>Marketing pes.</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#888780;"></span>Licencias</span>
+    </div>
+  </div>
+
+  <!-- CHART 3: Usuarios mínimos -->
+  <div class="chart-card">
+    <p class="chart-title">Usuarios mínimos para cubrir el OPEX mensual</p>
+    <p class="chart-sub">El dato más llamativo del análisis: con solo <strong>17 usuarios activos</strong> (optimista) o <strong>22</strong> (pesimista) la plataforma cubre sus gastos operativos mensuales, lo que implica un riesgo de negocio muy bajo.</p>
+    <div style="position:relative;height:110px;">
+      <canvas id="chartUsuarios" aria-label="Usuarios mínimos necesarios para cubrir el OPEX mensual por escenario"></canvas>
+    </div>
+    <div class="legend" style="margin-top:10px;">
+      <span class="legend-item"><span class="legend-dot" style="background:#185FA5;"></span>Optimista (17 usuarios)</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#E24B4A;"></span>Pesimista (22 usuarios)</span>
+    </div>
+    <div class="insight">
+      <strong>Nota metodológica:</strong> Calculado sobre ~1,35 alquileres/usuario/mes · 48 €/alquiler (comisión Freemium 20%).
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── SECCIÓN 2 ─ -->
+<section class="section" id="sec-rentabilidad">
+  <div class="section-intro">
+    <p class="section-label">Sección 2</p>
+    <h2 class="section-title">Rentabilidad acumulada a 24 meses</h2>
+    <p class="chart-sub" style="margin-top:8px;">
+      La gráfica muestra las curvas de gastos e ingresos acumulados. Los gastos no son una línea plana: parten del coste inicial del proyecto y siguen creciendo mes a mes por el OPEX recurrente. Los <strong>puntos azules</strong> marcan el momento exacto de break-even en cada escenario.
+    </p>
+  </div>
+
+  <div class="view-toggle">
+    <button class="view-btn active" id="btn-both" onclick="setView('both')">Ambos escenarios</button>
+    <button class="view-btn" id="btn-opt" onclick="setView('opt')">Solo optimista</button>
+    <button class="view-btn" id="btn-pes" onclick="setView('pes')">Solo pesimista</button>
+  </div>
+
+  <div class="chart-card">
+    <p class="chart-title">Gastos acumulados vs. Ingresos acumulados — 24 meses</p>
+    <div class="legend" style="margin-bottom:18px;">
+      <span class="legend-item"><span class="legend-line" style="background:#E24B4A;"></span>Gastos acumulados</span>
+      <span class="legend-item"><span class="legend-line" style="background:#1A6B48;"></span>Ingresos optimista</span>
+      <span class="legend-item"><span class="legend-dashed" style="border-color:#4A8C2A;"></span>Ingresos pesimista</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#185FA5;border-radius:50%;"></span>Punto de equilibrio</span>
+    </div>
+    <div style="position:relative;height:360px;">
+      <canvas id="chartRent" aria-label="Gastos vs ingresos acumulados a 24 meses"></canvas>
+    </div>
+  </div>
+
+  <div class="be-grid">
+    <div class="be-card">
+      <p class="be-label">Break-even optimista</p>
+      <p class="be-value opt">Mes ~9–10</p>
+      <p class="be-sub">≈ 1.911 alquileres totales</p>
+    </div>
+    <div class="be-card">
+      <p class="be-label">Break-even pesimista</p>
+      <p class="be-value pes">Mes ~12–13</p>
+      <p class="be-sub">≈ 1.954 alquileres totales</p>
+    </div>
+  </div>
+
+  <div class="insight" style="margin-top:16px;">
+    Puedes filtrar por escenario con los botones superiores para presentar cada caso por separado. La diferencia entre escenarios es de apenas <strong>2–3 meses</strong> en el break-even, lo que refleja la solidez del modelo incluso en el caso más conservador.
+  </div>
+
+  <p class="footnote">
+    Proyección basada en: alquileres iniciales de 40 (opt.) / 30 (pes.) con tasa de crecimiento mensual del 20% / 12% respectivamente.
+    Comisión de 48 €/alquiler. OPEX mensual recurrente sumado al coste inicial del proyecto.
+  </p>
+</section>
+
+<script>
+// ── CHARTS SECTION 1 ──────────────────────────────────────────
+
+const meses = ['Mes 1','Mes 2','Mes 3','Mes 4','Mes 5','Mes 6'];
+const optIngresos = [1920, 3360, 5760, 8640, 12000, 16800];
+const pesIngresos = [1440, 2400, 3840, 5760, 8160, 11040];
+
+new Chart(document.getElementById('chartIngresos'), {
+  type: 'bar',
+  data: {
+    labels: meses,
+    datasets: [
+      { label: 'Ingresos optimista', data: optIngresos, backgroundColor: '#185FA5', borderRadius: 5, borderSkipped: false },
+      { label: 'Ingresos pesimista', data: pesIngresos, backgroundColor: '#E24B4A', borderRadius: 5, borderSkipped: false },
+      { label: 'OPEX optimista', data: Array(6).fill(1059.80), type: 'line', borderColor: '#185FA5', borderDash: [6,4], borderWidth: 2, pointRadius: 0, fill: false, tension: 0 },
+      { label: 'OPEX pesimista',  data: Array(6).fill(1409.80), type: 'line', borderColor: '#E24B4A', borderDash: [6,4], borderWidth: 2, pointRadius: 0, fill: false, tension: 0 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { ticks: { callback: v => v.toLocaleString('es-ES') + ' €', font: { size: 11 } }, grid: { color: 'rgba(128,128,128,0.08)' } },
+      x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+
+new Chart(document.getElementById('chartCostes'), {
+  type: 'bar',
+  data: {
+    labels: ['RRHH', 'Capital', 'Marketing opt.', 'Marketing pes.', 'Licencias'],
+    datasets: [{
+      label: 'Coste (€)',
+      data: [68234, 18900, 4050, 6150, 531.20],
+      backgroundColor: ['#185FA5','#1D9E75','#BA7517','#D85A30','#888780'],
+      borderRadius: 5, borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { callback: v => v.toLocaleString('es-ES') + ' €', font: { size: 11 } }, grid: { color: 'rgba(128,128,128,0.08)' } },
+      y: { ticks: { font: { size: 12 } }, grid: { display: false } }
+    }
+  }
+});
+
+new Chart(document.getElementById('chartUsuarios'), {
+  type: 'bar',
+  data: {
+    labels: ['Optimista', 'Pesimista'],
+    datasets: [{
+      label: 'Usuarios mínimos',
+      data: [17, 22],
+      backgroundColor: ['#185FA5', '#E24B4A'],
+      borderRadius: 6, borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      datalabels: { display: false }
+    },
+    scales: {
+      x: { max: 30, ticks: { stepSize: 5, font: { size: 11 } }, grid: { color: 'rgba(128,128,128,0.08)' } },
+      y: { ticks: { font: { size: 13 } }, grid: { display: false } }
+    }
+  }
+});
+
+function setScenario(tab) {
+  document.querySelectorAll('.scen-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i===0 && tab==='opt') || (i===1 && tab==='pes'));
+  });
+  document.getElementById('kpi-opt').style.display = tab==='opt' ? 'grid' : 'none';
+  document.getElementById('kpi-pes').style.display = tab==='pes' ? 'grid' : 'none';
+}
+
+// ── CHART SECTION 2 ──────────────────────────────────────────
+
+const MESES = 24;
+const COSTE_OPT = 91715.20, COSTE_PES = 93815.20;
+const OPEX_OPT = 1059.80,   OPEX_PES  = 1409.80;
+const COMISION = 48;
+
+function proyectar(base, tasa, meses) {
+  const arr = []; let mes = base;
+  for (let i = 0; i < meses; i++) { arr.push(Math.round(mes)); mes *= (1 + tasa); }
+  return arr;
+}
+function acumular(arr, com) {
+  let s = 0; return arr.map(v => { s += v * com; return Math.round(s); });
+}
+function gastosAcum(ci, opex, m) {
+  return Array.from({length: m}, (_, i) => Math.round(ci + opex * (i + 1)));
+}
+function findBE(ing, gas) {
+  for (let i = 0; i < ing.length; i++) if (ing[i] >= gas[i]) return i;
+  return -1;
+}
+
+const alqOpt = proyectar(40, 0.20, MESES);
+const alqPes = proyectar(30, 0.12, MESES);
+const ingOptAcum = acumular(alqOpt, COMISION);
+const ingPesAcum = acumular(alqPes, COMISION);
+const gastOptAcum = gastosAcum(COSTE_OPT, OPEX_OPT, MESES);
+const gastPesAcum = gastosAcum(COSTE_PES, OPEX_PES, MESES);
+const beOpt = findBE(ingOptAcum, gastOptAcum);
+const bePes = findBE(ingPesAcum, gastPesAcum);
+const labels24 = Array.from({length: MESES}, (_, i) => 'Mes ' + (i + 1));
+
+const chartRent = new Chart(document.getElementById('chartRent'), {
+  type: 'line',
+  data: {
+    labels: labels24,
+    datasets: [
+      { label: 'Gastos acumulados', data: gastOptAcum, borderColor: '#E24B4A', borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false },
+      { label: 'Ingresos optimista', data: ingOptAcum, borderColor: '#1A6B48', borderWidth: 2.5, pointRadius: 0, tension: 0.4, fill: false },
+      { label: 'Ingresos pesimista', data: ingPesAcum, borderColor: '#4A8C2A', borderWidth: 2, borderDash: [7,4], pointRadius: 0, tension: 0.4, fill: false },
+      { label: 'BE optimista', data: Array.from({length: MESES}, (_, i) => i === beOpt ? gastOptAcum[beOpt] : null), borderColor: 'transparent', backgroundColor: '#185FA5', pointRadius: Array.from({length: MESES}, (_, i) => i === beOpt ? 8 : 0), showLine: false },
+      { label: 'BE pesimista',  data: Array.from({length: MESES}, (_, i) => i === bePes ? gastPesAcum[bePes] : null), borderColor: 'transparent', backgroundColor: '#185FA5', pointRadius: Array.from({length: MESES}, (_, i) => i === bePes ? 8 : 0), showLine: false }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label.startsWith('BE') ? null : ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('es-ES') + ' €' } }
+    },
+    scales: {
+      y: { ticks: { callback: v => (v >= 1000 ? (v/1000).toFixed(0)+'k' : v) + ' €', font: { size: 11 }, maxTicksLimit: 8 }, grid: { color: 'rgba(128,128,128,0.08)' } },
+      x: { ticks: { autoSkip: false, maxRotation: 0, callback: (val, i) => (i % 3 === 0) ? 'Mes '+(i+1) : '', font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+
+function setView(mode) {
+  ['btn-both','btn-opt','btn-pes'].forEach(id => {
+    document.getElementById(id).classList.toggle('active', id === 'btn-' + mode);
+  });
+  const h = { both: [false,false,false,false,false], opt: [false,false,true,false,true], pes: [false,true,false,true,false] };
+  h[mode].forEach((hide, i) => { chartRent.data.datasets[i].hidden = hide; });
+  chartRent.update();
+}
+
+// ── NAV ──────────────────────────────────────────────────────
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && id === 'costes') || (i === 1 && id === 'rentabilidad'));
+  });
+}
+</script>
+</body>
+</html>
