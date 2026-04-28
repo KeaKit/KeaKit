@@ -6,10 +6,19 @@
 
 ####  Autenticación
 
+###### Limitar tamaño máximo de contraseña
+
+**Revisión:** Bugs anteriores revisados y arreglados, no se han detectado nuevas failure conditions.
+
+**Funcionamiento mejorable**
+* El mensaje de error "Este campo no puede tener mas de 128 caracteres" no aparece justo debajo ni encima de contraseña, sino flotante en la parte de arriba del modal de creación de nuevo residente. Por lo que si se rellenan más campos aparte de la contraseña, no se sabe exactamente cuál es "este campo" en concreto.
+
+---
 ###### Edición de perfil.
 
 **Revision:** Bugs anteriores revisados y arreglados, no se han detectado nuevas failure condition.
-
+**Funcionamiento mejorable**
+* El mensaje de error "Este campo no puede tener mas de 128 caracteres" no aparece justo debajo ni encima de contraseña, sino flotante en la parte de arriba del modal de creación de nuevo residente. Por lo que si se rellenan más campos aparte de la contraseña, no se sabe exactamente cuál es "este campo" en concreto.
 ---
 
 #### Panel residencias
@@ -32,8 +41,114 @@ Bug anteiores revisados y arreglados, se han detectado nuevas failure condition.
 **Failure condition:** T-12 Te puedes quitar el admin a ti mismo y ya una vez sin admin, seguir modificando el chat.
 
 ---
+#### Onboarding
+
+###### Dar de alta a nuevos residentes / Edición
+
+**Revisión:** Bugs anteriores revisados y arreglados (el error T-12 y la visualización mejorable donde la fecha de check-in no se guardaba ni se mostraba han sido solucionados). No se han detectado nuevas failure conditions.
+
+---
 
 ### Nuevos casos de uso Sprint 3 
+
+#### EVENTOS
+
+###### Recomendación de eventos
+
+**Funcionamiento detectado**
+* Funciona bien.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### Creación de chats para eventos
+
+**Funcionamiento detectado**
+* Funciona bien.
+
+**Funcionamiento mejorable**
+* Estaría bien que el administrador pueda entrar a los chats para supervisar.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### MATCHING
+
+###### Funcionalidad de likes entre matches
+
+**Funcionamiento detectado**
+* Funciona bien la acción de dar el like.
+
+**Funcionamiento mejorable**
+* Actualmente no influye en nada (por ejemplo, en el porcentaje de match) y no lo recibe ni se le notifica a la persona a quien se le da el like.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### COMEDOR
+
+###### Analíticas del comedor
+
+**Funcionamiento detectado**
+* El resto de la funcionalidad opera correctamente y muestra los datos.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* **T-13:** En los filtros, el sistema deja poner una fecha de fin anterior a la fecha de inicio.
+
+---
+
+###### Borrar foto del menú, Avanzar semana y Ver menús publicados
+
+**Funcionamiento detectado**
+* Todas estas funcionalidades operan correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### GESTIÓN DE ACCESO
+
+###### Historial de pases expirados, Filtrar invitados e Introducir hora de salida
+
+**Funcionamiento detectado**
+* Estas funcionalidades operan correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### Generación código qr/código numérico
+
+**Funcionamiento detectado**
+* Sale un QR en la pantalla al solicitarlo.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* **T-12:** Al comparar los códigos QR de dos usuarios distintos, resulta que son iguales.
+
+---
 
 #### PANEL DE RESIDENCIA
 
@@ -395,7 +510,7 @@ Casos de uso probados:
 | Versión | Fecha       | Descripción | Autor(es) |
 |---------|------------|-------------|-----------|
 | 1.0.0 | 28/04/2026 | Creación del documento y casos de uso de meerkateers y Nexus | Luis Emmanuel Chavez Malave|
-| 1.1.0 | 28/04/2026 | Feedback casos de uso Meerkatters | Salma El Hakimy Etorabi|
+| 1.1.0 | 28/04/2026 | Feedback casos de uso Nexus y Meerkatters | Salma El Hakimy Etorabi|
 
 ---
 
