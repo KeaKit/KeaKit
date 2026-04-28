@@ -192,6 +192,136 @@ Bug anteiores revisados y arreglados, se han detectado nuevas failure condition.
 * Ninguna, aunque por la forma ambigua del nombre tampoco se ha probado esta funcionalidad
 
 ---
+
+#### NOTIFICACIONES
+
+###### Notificación al administrador para informar de invitados fuera del horario permitido
+
+**Funcionamiento detectado**
+* Se han detectado nuevas failure conditions.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* **T-12:** El sistema permite al administrador rechazar pases aunque el período de visita ya haya finalizado.
+
+---
+
+###### Notificación al residente para avisar de hora próxima de salida del invitado
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### Descartar notificaciones para residente y administrador
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### ANALÍTICAS
+
+###### Interfaz de analíticas para administrador
+
+**Funcionamiento detectado**
+* La interfaz funciona correctamente y permite visualizar los datos.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### Métricas de análisis (visitas, habitaciones, incidencias y paquetería)
+
+**Funcionamiento detectado**
+* Todas las métricas se muestran correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+###### Analíticas por membership (staff o residentes)
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### INCIDENCIAS
+
+###### Lógica de priorización automática de incidencias
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### RESERVAS
+
+###### Sistema de recordatorio automático de reservas de espacios
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### ESPACIOS COMUNES
+
+###### Añadir imagen al crear/editar un espacio
+
+**Revision:** Se han detectado nuevas failure conditions.
+
+**Funcionamiento detectado**
+* Permite subir imágenes correctamente.
+
+**Funcionamiento mejorable**
+* Validar el tipo de archivo subido para evitar formatos incorrectos.
+
+**Failure condition detectada**
+* **T-12:** El sistema permite subir archivos que no son imágenes (por ejemplo, PDF) al crear o editar espacios/eventos.
+
+---
+---
   
 ## 2. MeerKatters 
 
@@ -505,15 +635,198 @@ Casos de uso probados:
 **Failure condition detectada**
 * Ninguna
 
+---
+
+---
+
+#### EVENTOS
+
+Casos de uso probados:
+
+* UC-14 Publicar contenido en comunidad
+* UC-15 Moderar contenido de comunidad
+* UC-16 Crear evento
+* UC-17 Configurar privacidad de evento
+* UC-18 Especificar información del evento
+* UC-19 Seleccionar ubicación (mapa interactivo)
+* UC-20 Ver ubicaciones recomendadas
+* UC-21 Unirse a evento
+* UC-22 Cancelar asistencia
+* UC-23 Ver asistentes
+* UC-24 Editar evento
+* UC-25 Cancelar evento
+
+---
+
+###### UC-20 Ver ubicaciones recomendadas
+
+**Revision:** Se han detectado nuevas failure conditions.
+
+**Failure condition:**  
+* **T-12:** En la selección de la ubicación en la creación o edición de eventos, no aparecen ubicaciones recomendadas.
+
+---
+
+###### Resto de casos de uso de EVENTOS
+
+**Funcionamiento detectado**
+* Todas las funcionalidades restantes funcionan correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### CONTENIDO
+
+Casos de uso probados:
+
+* UC-26 Subir archivo
+* UC-27 Visualizar archivo
+* UC-28 Descargar archivo
+* UC-29 Eliminar archivo
+
+---
+
+###### Gestión de archivos
+
+**Funcionamiento detectado**
+* Todas las funcionalidades funcionan correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### MAPAS Y UBICACIÓN
+
+Casos de uso probados:
+
+* UC-30 Búsqueda por ubicación
+* UC-31 Visualizar mapa de meetings
+
+---
+
+###### Funcionalidad de mapas
+
+**Funcionamiento detectado**
+* Todas las funcionalidades funcionan correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### CUESTIONARIOS
+
+Casos de uso probados:
+
+* UC-64 Crear cuestionario
+* UC-65 Resolver cuestionario
+* UC-66 Dar feedback o calificación a profesor
+
+---
+
+###### UC-64 Crear cuestionario
+
+**Revision:** Se han detectado nuevas failure conditions.
+
+**Failure condition:**  
+* **T-12:** Permite introducir valores decimales como "0,3" en el tiempo estimado; sin embargo, tras crear el cuestionario se muestra "Tiempo estimado: - min".
+
+---
+
+###### UC-65 Resolver cuestionario
+
+**Revision:** Se han detectado nuevas failure conditions.
+
+**Failure condition:**  
+* **T-12:** Una vez superado el tiempo límite del cuestionario, el sistema sigue permitiendo enviar respuestas.
+
+---
+
+###### UC-66 Dar feedback o calificación a profesor
+
+**Funcionamiento detectado**
+* Funciona correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
+#### COMUNICACIÓN Y ANUNCIOS
+
+Casos de uso probados:
+
+* UC-67 Publicar anuncio en comunidad
+* UC-68 Comentar en anuncio
+* UC-69 Enviar mensaje directo (1-a-1)
+* UC-70 Recuperación de contraseña olvidada
+* UC-71 Abandonar una comunidad voluntariamente
+* UC-72 Comunicación en tiempo real (Chat de comunidad)
+* UC-73 Edición de un mensaje propio en la comunidad
+* UC-74 Eliminación de mensajes en la comunidad
+* UC-75 Contratación de planes institucionales (Planes B2B)
+* UC-76 Cancelación de reservas por parte del estudiante
+* UC-77 Confirmación de lectura (Read Receipts)
+* UC-78 Buscar usuarios generales
+
+---
+
+###### UC-68 Comentar en anuncio
+
+**Revision:** Se han detectado nuevas failure conditions.
+
+**Failure condition:**  
+* **T-12:** No permite eliminar un anuncio si este tiene comentarios, incluso cuando los comentarios son del propio usuario.
+
+---
+
+###### UC-75 Contratación de planes institucionales (Planes B2B)
+
+**Revision:** Se han detectado nuevas failure conditions.
+
+**Failure condition:**  
+* **T-12:** El precio estimado no varía al modificar la cantidad de usuarios durante la contratación del plan.
+
+---
+
+###### Resto de casos de uso de COMUNICACIÓN Y ANUNCIOS
+
+**Funcionamiento detectado**
+* Todas las funcionalidades restantes funcionan correctamente.
+
+**Funcionamiento mejorable**
+* Ninguno.
+
+**Failure condition detectada**
+* Ninguna.
+
+---
+
 ## Historial de versiones
 
 | Versión | Fecha       | Descripción | Autor(es) |
 |---------|------------|-------------|-----------|
 | 1.0.0 | 28/04/2026 | Creación del documento y casos de uso de meerkateers y Nexus | Luis Emmanuel Chavez Malave|
 | 1.1.0 | 28/04/2026 | Feedback casos de uso Nexus y Meerkatters | Salma El Hakimy Etorabi|
+| 1.2.0 | 28/04/2026 | Feedback casos de uso Nexus y Meerkatters | Marta Aguilar Morcillo|
 
 ---
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
 **Fecha de redacción:** 28/04/2026
-**Versión:** 1.1.0
+**Versión:** 1.2.0
