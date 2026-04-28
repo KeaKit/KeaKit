@@ -1,4 +1,4 @@
-# Informe de Feedback Sprint 2: NexUS y MeerKatters
+# Informe de Feedback Sprint 3: NexUS y MeerKatters
 
 ## 1. NexUS
 
