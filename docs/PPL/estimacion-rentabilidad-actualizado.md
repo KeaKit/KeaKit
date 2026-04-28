@@ -14,48 +14,6 @@ El modelo de ingresos es sencillo, escalable y no requiere inversión en inventa
 
 ---
 
-## Planes de precios
-
-La plataforma contempla dos modalidades de acceso con el objetivo de adaptarse a diferentes perfiles de usuario y maximizar la conversión desde el primer uso.
-
-### Plan Gratuito (Freemium)
-
-Dirigido a nuevos usuarios que quieren probar la plataforma antes de comprometerse. Incluye:
-
-- Publicación de hasta **2 kits** en activo de forma simultánea.
-- Acceso al catálogo completo de kits disponibles para alquiler.
-- Comisión estándar del **20 %** por cada alquiler completado.
-- Soporte básico por email.
-
-Este plan no tiene coste fijo para el usuario, por lo que reduce la barrera de entrada y facilita la captación inicial.
-
-### Plan Premium (Suscripción mensual)
-
-Dirigido a arrendadores frecuentes o empresas que gestionan múltiples kits. Incluye, además de todo lo del plan gratuito:
-
-- Publicación de kits **ilimitados**.
-- Visibilidad prioritaria en los resultados de búsqueda.
-- Comisión reducida del **15 %** por cada alquiler completado.
-- Panel de analítica avanzada (ingresos, tasa de ocupación, valoraciones).
-- Soporte prioritario con respuesta en menos de 24 horas.
-
-**Precio**: 9,99 €/mes por arrendador.
-
----
-
-## Modelo de comisión por alquiler
-
-El precio medio de un kit de alquiler en la plataforma se sitúa en torno a **240 €**, tomando como referencia productos similares como el **Kit Quick Muv**. A partir de este valor se pueden calcular los ingresos por comisión según el plan del usuario:
-
-| Plan | Comisión | Ingreso por alquiler |
-|---|---|---|
-| Freemium | 20 % | 48 € |
-| Premium | 15 % | 36 € |
-
-Para las proyecciones financieras se utilizará la **comisión media de 48 € por alquiler** (plan Freemium), ya que representa el perfil de usuario mayoritario en la fase inicial.
-
----
-
 ## Escenario inicial: usuarios piloto
 
 En el momento del lanzamiento, la aplicación cuenta con un grupo inicial de **30 usuarios piloto**, lo que permite validar el modelo de negocio en condiciones reales.
@@ -83,18 +41,121 @@ Partiendo de los **30 usuarios piloto**, se establece una hipótesis de crecimie
 | Mes 6 | 74 |
 
 ---
+## Cálculo del coste por hora de cada rol
 
+Para estimar el coste total del proyecto se ha calculado previamente el coste por hora de cada uno de los roles implicados en el desarrollo. Estos valores se han obtenido a partir de salarios medios del sector tecnológico en España y posteriormente se ha aplicado un incremento del **30 % correspondiente a las cotizaciones empresariales a la Seguridad Social**, con el objetivo de reflejar el coste real que asumiría una empresa por cada trabajador.
+
+La siguiente tabla muestra el salario base estimado para cada rol y su correspondiente coste empresa tras aplicar dicho incremento.
+
+| Rol | Salario base | Coste empresa (+30%) |
+|---|---|---|
+| Ingeniero de testing | 15 €/h | 19,50 €/h |
+| Programador junior | 14,10 €/h | 18,33 €/h |
+| Jefe de proyecto | 28 €/h | 36,40 €/h |
+| Jefe de equipo | 28 €/h | 36,40 €/h |
+| Marketing junior | 11 €/h | 14,30 €/h |
+| Ingeniero DevOps junior | 18,23 €/h | 23,70 €/h |
+| GDPR Officer | 29,07 €/h | 37,80 €/h |
+
+Estos valores permiten calcular posteriormente el coste total de recursos humanos en función de las horas dedicadas por cada rol durante el desarrollo del proyecto.
+
+---
+
+## Horas totales del proyecto
+
+El equipo de desarrollo está compuesto por **21 integrantes**, y cada uno de ellos dedica **150 horas de trabajo al proyecto**, lo que equivale aproximadamente a **6 créditos ECTS** dentro del marco académico en el que se desarrolla el proyecto.
+
+Por tanto, el número total de horas invertidas en el desarrollo de la aplicación es el siguiente:
+
+21 integrantes × 150 horas  
+
+**= 3150 horas totales de trabajo**
+
+Estas horas se distribuyen entre diferentes roles y responsabilidades dentro del equipo.
+
+---
+
+## Distribución de horas por rol
+
+La mayor parte del tiempo del proyecto se dedica a tareas relacionadas directamente con el desarrollo del producto, principalmente programación y testing. En total, entre todos los miembros del equipo se destinan **2520 horas a estas actividades técnicas**.
+
+La distribución de estas horas entre programación y testing se muestra en la siguiente tabla:
+
+| Rol | Horas |
+|---|---|
+| Programación | 1512 h |
+| Testing | 1008 h |
+
+Además de las tareas de desarrollo, el proyecto requiere la participación de distintos roles de apoyo como gestión del proyecto, coordinación de equipos, DevOps, marketing y cumplimiento legal (protección de datos). En total, **650 horas del proyecto se destinan a estos roles adicionales**.
+
+La siguiente tabla muestra la distribución de estas horas según el rol y el número de personas que lo desempeñan.
+
+| Rol | Personas | Horas/persona | Total |
+|---|---|---|---|
+| Jefes de proyecto | 2 | 80 h | 160 h |
+| Jefes de equipo | 5 | 60 h | 300 h |
+| DevOps | 1 | 100 h | 100 h |
+| Marketing | 2 | 35 h | 70 h |
+| GDPR Officer | 1 | 20 h | 20 h |
+
+---
+
+## Coste de recursos humanos
+
+A partir del coste por hora de cada rol y de la distribución de horas previamente definida, se puede calcular el coste total asociado a los recursos humanos del proyecto.
+
+| Rol | Coste |
+|---|---|
+| Programación | 27.707 € |
+| Testing | 19.656 € |
+| Jefes de proyecto | 5.824 € |
+| Jefes de equipo | 10.920 € |
+| DevOps | 2.370 € |
+| Marketing | 1.001 € |
+| GDPR Officer | 756 € |
+| **Total recursos humanos** | **68.234 €** |
+
+Como puede observarse, el coste de recursos humanos representa la mayor parte del presupuesto del proyecto, lo cual es habitual en proyectos de desarrollo de software.
+
+---
+
+## Recursos no humanos
+
+Además de los recursos humanos, el proyecto también requiere una serie de recursos materiales y servicios tecnológicos que generan costes adicionales. Estos costes se clasifican en **costes de capital** y **costes operativos**.
+
+### Coste de capital
+
+El coste de capital corresponde a la inversión en equipamiento informático necesario para el desarrollo del proyecto. En este caso se considera la adquisición de **21 portátiles**, uno para cada integrante del equipo.
+
+Tomando como referencia un precio medio de **900 € por portátil**, el coste total del equipamiento sería:
+
+21 × 60 €  
+
+**= 1260 €**
+
+Este gasto se considera una inversión amortizable, ya que los equipos pueden seguir utilizándose en proyectos futuros.
+
+---
 ## Costes operativos recurrentes (OPEX)
 
-Tras el lanzamiento, la aplicación genera costes mensuales necesarios para su funcionamiento. Se distingue entre el **OPEX base** (infraestructura y cumplimiento normativo) y el **OPEX de marketing** (presencia activa en redes sociales).
+El coste operativo incluye los gastos asociados al uso de herramientas y servicios necesarios para el desarrollo y despliegue de la aplicación.
+
+En este proyecto se utilizan diversas herramientas de software, muchas de ellas gratuitas, mientras que otras requieren una suscripción de pago. Aunque en el contexto académico algunas de estas licencias pueden ser proporcionadas por la universidad, en este análisis se simula un escenario real de empresa.
+Además, la aplicación genera costes mensuales necesarios para su funcionamiento. 
+
+Se distingue entre el **OPEX base** (infraestructura y cumplimiento normativo) y el **OPEX de marketing** (presencia activa en redes sociales).
 
 ### OPEX base mensual
 
-| Concepto | Coste mensual |
-|---|---|
-| Infraestructura cloud (Google Sites) | 6,80 € |
-| GDPR Officer (10 h/mes × 37,80 €/h) | 378,00 € |
-| **Total OPEX base** | **384,80 €/mes** |
+- **Google Workspace Business Starter**: 6,8 € × 4 meses = **27,20 €**
+
+- Licencias de herramientas de desarrollo (equipo completo):  
+  21 × 24 € = **504 €**
+- GDPR Officer (10 h/mes × 37,80 €/h): **384,80 €/mes**
+
+**Total licencias desarrollo = 916.00 €**
+
+---
 
 ### OPEX de marketing mensual (post-lanzamiento)
 
@@ -103,16 +164,11 @@ Una vez finalizada la fase inicial de 6 meses, si se mantiene la actividad de ma
 | Concepto | Escenario optimista | Escenario pesimista |
 |---|---|---|
 | Community Manager | 500,00 €/mes | 500,00 €/mes |
+|Infraestructura cloud (DigitalOcean)|6,8 €/mes| 6,8 €/mes|
+|GDPR Officer (10 h/mes)|378 €/mes|384.80 €/mes|
 | Campañas publicitarias | 150,00 €/mes | 500,00 €/mes |
 | Herramientas de marketing | 25,00 €/mes | 25,00 €/mes |
-| **Total OPEX marketing** | **675,00 €/mes** | **1.025,00 €/mes** |
-
-### OPEX total mensual (base + marketing)
-
-| Escenario | OPEX mensual total |
-|---|---|
-| Optimista | 1.059,80 €/mes |
-| Pesimista | 1.409,80 €/mes |
+| **Total OPEX** | **1059,80 €/mes** | **1.416,60 €/mes** |
 
 ---
 
@@ -164,16 +220,16 @@ El coste total del proyecto varía según el escenario de marketing aplicado:
 | Escenario | Coste total del proyecto |
 |---|---|
 | Sin marketing | 87.665,20 € |
-| Optimista | 91.715,20 € |
-| Pesimista | 93.815,20 € |
+| Optimista | 71.469,80 € |
+| Pesimista | 71.826,60 € |
 
 Dado que el ingreso por comisión es de **48 € por alquiler** (plan Freemium), el número de alquileres necesarios para recuperar la inversión es:
 
 | Escenario | Coste total | Alquileres para break-even |
 |---|---|---|
 | Sin marketing | 87.665,20 € | ≈ 1.826 kits |
-| Optimista | 91.715,20 € | ≈ 1.911 kits |
-| Pesimista | 93.815,20 € | ≈ 1.954 kits |
+| Optimista |  71.469,80 € | ≈ 1.489 kits |
+| Pesimista | 71.826,60 € | ≈ 1.497 kits |
 
 ### Usuarios mínimos para cubrir costes (OPEX mensual)
 
@@ -190,89 +246,90 @@ Esto confirma que la plataforma puede ser operativamente rentable con un **núme
 
 ## Estimación de recuperación de la inversión
 
-Manteniendo el crecimiento estimado en el número de alquileres, se proyecta el momento en el que se recuperará la inversión inicial.
+Calculamos el punto de equilibrio comparando el coste total de puesta en marcha (Desarrollo + Equipamiento + OPEX acumulado) frente a los ingresos netos previstos.
 
-### Escenario optimista
-
-| Hito | Mes estimado |
-|---|---|
-| Ingresos acumulados > 50.000 € | Mes 7 |
-| Ingresos acumulados > 91.715 € | Entre mes 9 y mes 10 |
-
-### Escenario pesimista
+### Escenario Optimista
+*Inversión total a recuperar: **91.715,20 €***
 
 | Hito | Mes estimado |
 |---|---|
-| Ingresos acumulados > 50.000 € | Mes 10 |
-| Ingresos acumulados > 93.815 € | Entre mes 12 y mes 13 |
+| Ingresos netos acumulados > 50.000 € | Mes 7 |
+| **Recuperación total de la inversión** | **Mes 9** |
 
-En ambos casos, el proyecto recupera la inversión en **menos de 13 meses** desde el lanzamiento, lo que representa un horizonte de retorno atractivo para proyectos de software en etapa early-stage.
+### Escenario Pesimista
+*Inversión total a recuperar: **93.815,20 €***
 
----
-
-## Evolución de la estimación de obtención de usuarios con respecto a la realidad
-
-Con el objetivo de validar la hipótesis inicial de crecimiento, se ha comparado la evolución prevista de usuarios piloto con el crecimiento real observado durante el desarrollo.
-
-La estimación inicial asumía un **crecimiento mensual del 20 %**, partiendo de **30 usuarios piloto**. Tomando como marco temporal la evolución desde el Sprint 2 hasta la situación actual, el número de usuarios piloto ha pasado de **17 a 19 usuarios**, lo que supone un crecimiento real del:
-
-**((19 − 17) / 17) × 100 = 11,76 %**
-
-El crecimiento real es del **11,76 %**, por debajo de la hipótesis optimista del 20 %. Esta diferencia es esperable en fases tempranas y confirma la validez del escenario pesimista como referencia conservadora para las proyecciones financieras.
-
-No obstante, la tendencia es positiva y la captación de usuarios sigue activa. Este contraste aporta mayor solidez al análisis: las proyecciones se ajustan progresivamente con datos reales, reduciendo la incertidumbre del modelo financiero.
+| Hito | Mes estimado |
+|---|---|
+| Ingresos netos acumulados > 50.000 € | Mes 10 |
+| **Recuperación total de la inversión** | **Mes 13** |
 
 ---
 
-## Presentación para inversores
+## 2. Validación de Hipótesis: Usuarios Reales vs. Estimados
 
-### Resumen ejecutivo
+Se ha comparado el crecimiento teórico del modelo de negocio con la tracción real medida durante las fases de desarrollo (del Sprint 2 a la actualidad).
 
-La plataforma es un **marketplace de alquiler de equipamiento entre particulares** con un modelo de negocio probado, comisionista y sin necesidad de inventario propio. Tras una fase de validación con usuarios reales, la plataforma está lista para escalar.
+* **Hipótesis de crecimiento (Optimista):** 20,00 % mensual.
+* **Crecimiento real observado:** De 17 a 19 usuarios piloto.
+* **Cálculo real:** `((19 - 17) / 17) * 100` = **11,76 %**.
 
-### ¿Por qué invertir ahora?
+**Conclusión:** La realidad del mercado (11,76 %) se aproxima más a nuestro escenario conservador/pesimista. Esto valida que las proyecciones financieras no están infladas y que el escenario pesimista es una base sólida y realista para la toma de decisiones.
 
-- **Modelo validado**: 19 usuarios piloto activos, con crecimiento sostenido y tasa de retención alta.
-- **Costes bajos**: el OPEX mensual es inferior a **1.100 € en el escenario optimista**, lo que permite operar con pocos recursos.
-- **Mercado con potencial**: el sector de la economía circular y el alquiler entre particulares crece a doble dígito anual en Europa.
-- **Break-even alcanzable**: la inversión se recupera en menos de un año con una actividad de alquiler moderada.
-- **Escalabilidad**: el modelo no requiere inversión adicional en infraestructura para crecer; los costes de tecnología son marginales por usuario añadido.
+---
 
-### Uso previsto de la inversión
+## 3. Estructura de Costes de Inversión (CAPEX y RRHH)
 
-| Destino | Importe estimado | Objetivo |
+La inversión inicial se desglosa en los recursos necesarios para construir y lanzar la plataforma.
+
+### Recursos Humanos (3.150 horas totales)
+| Rol | Coste Total |
+|---|---|
+| Programación (1.512 h) | 27.707 € |
+| Testing (1.008 h) | 19.656 € |
+| Jefes de Equipo y Proyecto | 16.744 € |
+| DevOps, Marketing y GDPR | 4.127 € |
+| **Total Recursos Humanos** | **68.234 €** |
+
+### Recursos Materiales y Operativos Iniciales
+* **Equipamiento (21 portátiles):** 1.260 €
+* **Software y Licencias (Desarrollo):** 916 €
+* **OPEX de lanzamiento:** Incluido en el cálculo de los escenarios.
+
+---
+
+## 4. Modelo de Operación Post-Lanzamiento (OPEX)
+
+Una vez la plataforma está en producción, el coste de mantenimiento mensual es extremadamente bajo, lo que reduce el riesgo de quiebra técnica.
+
+| Concepto | Escenario Optimista | Escenario Pesimista |
 |---|---|---|
-| Marketing y captación de usuarios | 4.050 – 6.150 € | Acelerar el crecimiento hasta el break-even |
-| Infraestructura y escalabilidad | 2.000 – 5.000 € | Preparar la plataforma para mayor volumen |
-| Mejoras de producto (nuevas funcionalidades) | 5.000 – 10.000 € | Aumentar la retención y el ticket medio |
-| Fondo operativo (6 meses OPEX) | ~6.500 € | Garantizar la continuidad operativa |
+| Marketing y Campañas | 175,00 € | 525,00 € |
+| Gestión (CM, GDPR, Herramientas) | 878,00 € | 884,80 € |
+| Infraestructura (Cloud) | 6,80 € | 6,80 € |
+| **Total OPEX Mensual** | **1.059,80 €** | **1.416,60 €** |
 
-### Proyección financiera a 12 meses
-
-| Indicador | Escenario optimista | Escenario pesimista |
-|---|---|---|
-| Alquileres totales (12 meses) | ~4.500 | ~2.800 |
-| Ingresos brutos estimados | ~216.000 € | ~134.400 € |
-| OPEX total (12 meses) | ~12.718 € | ~16.918 € |
-| **Beneficio neto estimado** | **~203.000 €** | **~117.000 €** |
-
-> Nota: estas proyecciones asumen que la tendencia de crecimiento del 20 % mensual (optimista) o 12 % mensual (pesimista) se mantiene de forma sostenida. Los datos reales del piloto se utilizarán para ajustar estas cifras en las siguientes iteraciones del modelo.
+**Punto de Supervivencia:** La plataforma solo necesita **entre 17 y 22 usuarios activos** al mes para cubrir sus propios costes operativos.
 
 ---
 
-## Conclusión económica
+## 5. Resumen Ejecutivo para Inversores
 
-El coste total del proyecto oscila entre **87.665,20 € (sin marketing)** y **93.815,20 € (escenario pesimista)**, incluyendo desarrollo, cumplimiento normativo y estrategia de lanzamiento.
+### ¿Por qué invertir?
+1.  **Modelo de Negocio Escalable:** Marketplace basado en comisiones (48 € de media por transacción) sin gestión de stock ni logística.
+2.  **Rentabilidad Rápida:** Recuperación de la inversión en aproximadamente un año.
+3.  **Eficiencia de Capital:** Con una inversión cercana a los 90.000 €, se genera una plataforma capaz de producir beneficios netos superiores a los 100.000 € en su primer año de operación comercial completa.
+4.  **Bajo Riesgo Operativo:** Los costes fijos mensuales son mínimos, permitiendo pivotar o aguantar periodos de baja demanda sin grandes pérdidas.
 
-Este análisis incorpora una visión completa del ciclo de vida económico del proyecto:
+### Proyección a 12 meses
+| Indicador | Escenario Optimista | Escenario Pesimista |
+|---|---|---|
+| Alquileres totales | ~3.800 | ~2.500 |
+| Ingresos Brutos (Comisiones) | ~182.400 € | ~120.000 € |
+| Beneficio Neto Estimado (Año 1) | **~169.000 €** | **~103.000 €** |
 
-- **Costes de desarrollo**: totalmente cuantificados por rol, horas y coste empresa.
-- **Costes operativos recurrentes**: infraestructura, GDPR y marketing continuo.
-- **Costes de marketing**: desglosados por concepto y escenario, justificando su impacto en la captación.
+---
 
-La plataforma presenta:
+## 6. Conclusión Económica
 
-- Un modelo de ingresos **escalable y sin dependencia de inventario**.
-- Un punto de equilibrio **alcanzable en menos de 13 meses** incluso en el escenario conservador.
-- Una **baja exposición al riesgo** gracias al reducido número de usuarios necesarios para cubrir el OPEX mensual.
-- Capacidad de generar **beneficio neto sostenido** a partir del break-even, con reinversión en marketing, producto y expansión.
+El proyecto es **financieramente viable y altamente atractivo**. Presenta una barrera de entrada técnica ya superada (coste de desarrollo de 68.234 € ejecutado) y una estructura de costes que favorece el crecimiento orgánico. La validación con los 19 usuarios actuales confirma que existe interés real, y el break-even en menos de 13 meses garantiza la seguridad del capital invertido.
