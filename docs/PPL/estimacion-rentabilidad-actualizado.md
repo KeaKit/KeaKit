@@ -147,7 +147,7 @@ Se distingue entre el **OPEX base** (infraestructura y cumplimiento normativo) y
 
 ### OPEX base mensual
 
-- **Google Workspace Business Starter**: 6,8 € × 4 meses = **27,20 €**
+- **DigitalOcean**: 6,8 € × 4 meses = **27,20 €**
 
 - Licencias de herramientas de desarrollo (equipo completo):  
   21 × 24 € = **504 €**
@@ -213,13 +213,106 @@ La diferencia entre escenarios ilustra el impacto directo de la cadencia de alqu
 
 ---
 
+## Costes de marketing
+
+La estrategia de marketing tiene como objetivo acelerar la captación de usuarios, incrementar el alcance de la plataforma y posicionar la marca en el segmento objetivo. Para ello se contemplan tres tipos de costes: personal especializado en gestión de comunidad, campañas publicitarias en redes sociales y herramientas profesionales de apoyo.
+
+### Coste de personal: Community Manager
+
+Para la gestión de redes sociales, atención a la comunidad y creación de contenido se contempla la contratación de un **Community Manager externo**. Este perfil se diferencia del Marketing Junior ya incluido en el equipo de desarrollo: mientras que el Marketing Junior apoya durante la fase de construcción del producto, el Community Manager asume la presencia digital de la plataforma de cara al lanzamiento y los primeros meses de vida del producto.
+
+Según tarifas actuales del mercado español, el coste mensual de este perfil oscila entre **250 € y 1.200 €/mes**, dependiendo de la experiencia, el volumen de contenido y las plataformas gestionadas. Para este proyecto se estima un servicio de nivel intermedio que incluye:
+
+- Gestión activa de redes sociales (Instagram, X/Twitter y LinkedIn).
+- Publicación periódica de contenido orgánico (stories, posts, reels).
+- Respuesta a comentarios y mensajes de la comunidad.
+- Coordinación con el equipo de marketing interno.
+- Seguimiento de métricas de engagement y alcance.
+
+**Estimación para 6 meses:**
+
+500 €/mes × 6 meses = **3.000 €**
+
+---
+
+### Coste de campañas publicitarias en redes sociales
+
+Las campañas en redes sociales permiten aumentar el alcance de forma acelerada y atraer usuarios más allá del entorno orgánico. El objetivo principal es la captación de nuevos arrendadores y arrendatarios durante la fase de lanzamiento.
+
+Los precios habituales de campañas básicas gestionadas por un profesional parten de **300 € por campaña**, pudiendo escalar según la inversión en anuncios, la segmentación de la audiencia y la complejidad de la estrategia. Se distinguen dos niveles de inversión mensual en función del escenario:
+
+| Escenario | Inversión mensual | Alcance estimado | Duración | Total |
+|---|---|---|---|---|
+| Optimista | 150 €/mes | Pequeño, muy segmentado | 6 meses | 900 € |
+| Pesimista | 500 €/mes | Amplio, múltiples campañas | 6 meses | 3.000 € |
+
+El escenario **optimista** corresponde a una estrategia enfocada en un nicho concreto con anuncios de bajo presupuesto pero alta segmentación, maximizando el retorno por euro invertido. El escenario **pesimista** contempla una inversión más agresiva en publicidad paga, adecuada si el crecimiento orgánico no alcanza los objetivos previstos.
+
+Las plataformas de inversión contempladas son:
+
+- **Meta Ads** (Instagram y Facebook): canal principal por su capacidad de segmentación demográfica y por perfil de intereses.
+- **LinkedIn Ads**: orientado a potenciales usuarios profesionales o empresas que puedan necesitar el servicio.
+- **X (Twitter) Ads**: apoyo puntual para campañas de lanzamiento y difusión de eventos.
+
+---
+
+### Coste de herramientas de marketing digital
+
+Los Community Managers profesionales requieren herramientas especializadas de programación, diseño y analítica para operar con eficiencia. Estas herramientas forman parte del servicio y justifican parte de su tarifa, pero en este análisis se desglosan de forma independiente para mayor transparencia.
+
+Las herramientas contempladas son:
+
+- **Programación de publicaciones**: Metricool o Hootsuite (plan básico).
+- **Diseño de contenido visual**: Canva Pro o Adobe Express.
+- **Bancos de imágenes y vídeos**: recursos libres de derechos o suscripciones básicas.
+- **Analítica de redes**: métricas nativas de plataforma + panel centralizado.
+
+**Estimación para 6 meses:**
+
+25 €/mes × 6 meses = **150 €**
+
+---
+
+### Resumen de costes de marketing
+
+| Concepto | Escenario optimista | Escenario pesimista |
+|---|---|---|
+| Community Manager (6 meses) | 3.000 € | 3.000 € |
+| Campañas publicitarias (6 meses) | 900 € | 3.000 € |
+| Herramientas de marketing (6 meses) | 150 € | 150 € |
+| **Total costes de marketing** | **4.050 €** | **6.150 €** |
+
+Los costes de marketing suponen entre un **4,4 % y un 6,5 %** del presupuesto total del proyecto, lo cual se considera una proporción razonable para una plataforma en fase de lanzamiento.
+
+---
+
+## Presupuesto total del proyecto
+
+Una vez calculados todos los costes asociados al proyecto, se puede obtener el presupuesto total necesario para llevar a cabo su desarrollo, considerando los dos escenarios de marketing.
+
+| Tipo de coste | Importe |
+|---|---|
+| Coste de capital (equipamiento) | 18.900 € |
+| Recursos humanos | 68.234 € |
+| Licencias software (desarrollo) | 531,20 € |
+| **Subtotal sin marketing** | **70.025,2 €** |
+| Costes de marketing – Escenario optimista | 1.444,6 € |
+| **Coste total – Escenario optimista** | **71.469,80 €** |
+| Costes de marketing – Escenario pesimista | + 1.801,4 € |
+| **Coste total – Escenario pesimista** | **71.826,60 €** |
+
+El coste de capital corresponde a la inversión en equipamiento informático amortizable. El coste operativo incluye los gastos de recursos humanos, licencias y la estrategia de marketing durante la fase de lanzamiento.
+
+Adicionalmente, el proyecto presenta un **coste operativo recurrente mensual de 384,8 €** (base, sin marketing) necesario para mantener la aplicación en funcionamiento. Si se mantiene una presencia activa en redes sociales tras el lanzamiento, este coste se incrementaría con los costes del Community Manager y las herramientas de marketing.
+
+
 ## Punto de rentabilidad (Break-even)
 
 El coste total del proyecto varía según el escenario de marketing aplicado:
 
 | Escenario | Coste total del proyecto |
 |---|---|
-| Sin marketing | 87.665,20 € |
+| Sin marketing | 70.025,20  € |
 | Optimista | 71.469,80 € |
 | Pesimista | 71.826,60 € |
 
@@ -227,7 +320,7 @@ Dado que el ingreso por comisión es de **48 € por alquiler** (plan Freemium),
 
 | Escenario | Coste total | Alquileres para break-even |
 |---|---|---|
-| Sin marketing | 87.665,20 € | ≈ 1.826 kits |
+| Sin marketing | 70.025,20 € | ≈ 1.459 kits |
 | Optimista |  71.469,80 € | ≈ 1.489 kits |
 | Pesimista | 71.826,60 € | ≈ 1.497 kits |
 
