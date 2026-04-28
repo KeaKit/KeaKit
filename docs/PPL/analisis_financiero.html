@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis Financiero — Estimación de Rentabilidad</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0c0f0a;
+    --surface: #131610;
+    --surface2: #1a1e15;
+    --border: #2a2f22;
+    --accent: #b5f23c;
+    --accent2: #ff6b35;
+    --text: #e8edd8;
+    --text2: #8a9270;
+    --text3: #5a6048;
+    --opt: #b5f23c;
+    --pes: #ff6b35;
+    --opt-dim: rgba(181,242,60,0.12);
+    --pes-dim: rgba(255,107,53,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER */
+  .header {
+    padding: 3rem 4rem 2rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(181,242,60,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text);
+    max-width: 700px;
+  }
+  .header h1 span { color: var(--accent); }
+  .header-meta {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .meta-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text3);
+  }
+  .meta-item strong { color: var(--text2); }
+
+  /* SCENARIO SWITCHER */
+  .scenario-bar {
+    padding: 1.5rem 4rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .scenario-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-right: 0.5rem;
+  }
+  .btn-scenario {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    padding: 0.55rem 1.4rem;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .btn-scenario:hover { border-color: var(--text2); color: var(--text); }
+  .btn-scenario.active-opt {
+    background: var(--opt-dim);
+    border-color: var(--opt);
+    color: var(--opt);
+  }
+  .btn-scenario.active-pes {
+    background: var(--pes-dim);
+    border-color: var(--pes);
+    color: var(--pes);
+  }
+  .btn-scenario.active-both {
+    background: rgba(138,146,112,0.1);
+    border-color: var(--text2);
+    color: var(--text);
+  }
+
+  /* MAIN CONTENT */
+  .main { padding: 3rem 4rem; }
+
+  /* KPI GRID */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .kpi-card {
+    background: var(--surface);
+    padding: 1.5rem 1.8rem;
+    position: relative;
+  }
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 1.8rem;
+    width: 30px; height: 2px;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+  .kpi-card:hover::after { width: calc(100% - 3.6rem); }
+  .kpi-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  .kpi-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+    transition: color 0.3s;
+  }
+  .kpi-val.opt { color: var(--opt); }
+  .kpi-val.pes { color: var(--pes); }
+  .kpi-val.neutral { color: var(--text); }
+  .kpi-sub {
+    font-size: 0.72rem;
+    color: var(--text3);
+  }
+  .kpi-both {
+    display: flex;
+    gap: 0.8rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+  .kpi-both .opt-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--opt);
+  }
+  .kpi-both .pes-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--pes);
+  }
+  .kpi-both .sep { color: var(--text3); font-size: 0.8rem; }
+
+  /* SECTION HEADERS */
+  .section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .section-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-desc {
+    font-size: 0.82rem;
+    color: var(--text2);
+    line-height: 1.6;
+    max-width: 680px;
+    margin-bottom: 1.5rem;
+  }
+
+  /* CHARTS */
+  .chart-section { margin-bottom: 4rem; }
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    position: relative;
+  }
+  .chart-inner { position: relative; height: 320px; }
+
+  /* DATA TABLE */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin-top: 1.5rem;
+  }
+  .data-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 0.6rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .data-table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid rgba(42,47,34,0.5);
+    color: var(--text2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+  }
+  .data-table tr:last-child td {
+    color: var(--text);
+    font-weight: 500;
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    background: var(--surface2);
+  }
+  .data-table td.highlight-opt { color: var(--opt); }
+  .data-table td.highlight-pes { color: var(--pes); }
+  .data-table td.label { color: var(--text); font-family: 'IBM Plex Sans', sans-serif; }
+
+  /* TWO-COL TABLE */
+  .tables-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .table-box { background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; }
+  .table-box-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .table-box-title.opt { color: var(--opt); }
+  .table-box-title.pes { color: var(--pes); }
+
+  /* CALLOUT */
+  .callout {
+    border: 1px solid var(--border);
+    padding: 1.2rem 1.5rem;
+    margin: 1.5rem 0;
+    background: var(--surface2);
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .callout-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+  .callout-text { font-size: 0.82rem; color: var(--text2); line-height: 1.6; }
+  .callout-text strong { color: var(--text); }
+
+  /* CAPEX TABLE */
+  .capex-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .capex-box { background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; }
+  .capex-box h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  /* BREKAEVEN BOXES */
+  .breakeven-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .breakeven-box {
+    border: 1px solid var(--border);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .breakeven-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+  }
+  .breakeven-box.opt::before { background: var(--opt); }
+  .breakeven-box.pes::before { background: var(--pes); }
+  .breakeven-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .breakeven-label.opt { color: var(--opt); }
+  .breakeven-label.pes { color: var(--pes); }
+  .breakeven-total {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .breakeven-kits {
+    font-size: 0.8rem;
+    color: var(--text2);
+    margin-bottom: 1rem;
+  }
+  .breakeven-month {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.7rem;
+  }
+  .breakeven-month.opt { background: var(--opt-dim); color: var(--opt); }
+  .breakeven-month.pes { background: var(--pes-dim); color: var(--pes); }
+
+  /* EXECUTIVE TABLE */
+  .exec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 1.5rem;
+  }
+  .exec-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 0.7rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    text-align: left;
+  }
+  .exec-table td {
+    padding: 0.7rem 1.2rem;
+    border-bottom: 1px solid rgba(42,47,34,0.4);
+    color: var(--text2);
+  }
+  .exec-table td:first-child { color: var(--text); font-weight: 400; }
+  .exec-table td.opt { color: var(--opt); font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
+  .exec-table td.pes { color: var(--pes); font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 4rem;
+    padding: 2rem 4rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text3);
+    line-height: 1.8;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .header, .scenario-bar, .main, .footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .tables-row, .capex-grid, .breakeven-row { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* HIDDEN classes */
+  .hide { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Plan de Negocio · Análisis Financiero</div>
+  <h1>Estimación de <span>Costes</span> y <span>Rentabilidad</span></h1>
+  <div class="header-meta">
+    <div class="meta-item"><strong>Modelo</strong> · Marketplace Freemium</div>
+    <div class="meta-item"><strong>Comisión</strong> · 48 €/alquiler</div>
+    <div class="meta-item"><strong>Horizonte</strong> · 24 meses</div>
+    <div class="meta-item"><strong>Equipo</strong> · 21 integrantes · 3.150 h totales</div>
+  </div>
+</div>
+
+<div class="scenario-bar">
+  <span class="scenario-label">Escenario →</span>
+  <button class="btn-scenario active-opt" onclick="setScenario('opt')">▲ Optimista</button>
+  <button class="btn-scenario" onclick="setScenario('pes')">▼ Pesimista</button>
+  <button class="btn-scenario" onclick="setScenario('both')">≡ Ambos</button>
+</div>
+
+<div class="main">
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi-card">
+      <div class="kpi-tag">Coste total proyecto</div>
+      <div class="kpi-both">
+        <span class="opt-val" id="kpi-coste-opt">71.469,80 €</span>
+        <span class="sep">/</span>
+        <span class="pes-val" id="kpi-coste-pes">71.826,60 €</span>
+      </div>
+      <div class="kpi-sub" id="kpi-coste-sub">opt / pes · sin contar OPEX acumulado</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-tag">OPEX mensual</div>
+      <div class="kpi-both">
+        <span class="opt-val">1.059,80 €</span>
+        <span class="sep">/</span>
+        <span class="pes-val">1.416,60 €</span>
+      </div>
+      <div class="kpi-sub">opt / pes · recurrente post-lanzamiento</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-tag">Usuarios mín. activos</div>
+      <div class="kpi-both">
+        <span class="opt-val">17</span>
+        <span class="sep">/</span>
+        <span class="pes-val">22</span>
+      </div>
+      <div class="kpi-sub">opt / pes · para cubrir OPEX mensual</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-tag">Break-even inversión total</div>
+      <div class="kpi-both">
+        <span class="opt-val">Mes 9</span>
+        <span class="sep">/</span>
+        <span class="pes-val">Mes 13</span>
+      </div>
+      <div class="kpi-sub">91.715 € / 93.815 € a recuperar</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-tag">Alquileres break-even</div>
+      <div class="kpi-both">
+        <span class="opt-val">≈1.489</span>
+        <span class="sep">/</span>
+        <span class="pes-val">≈1.497</span>
+      </div>
+      <div class="kpi-sub">opt / pes · kits para recuperar inversión</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-tag">RRHH sobre presupuesto</div>
+      <div class="kpi-val neutral">68.234 €</div>
+      <div class="kpi-sub">74 % del presupuesto total · 3.150 h</div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 1: Ingresos vs OPEX 6 meses -->
+  <div class="chart-section">
+    <div class="section-header">
+      <span class="section-num">01 /</span>
+      <span class="section-title">Ingresos brutos vs. OPEX — Primeros 6 meses</span>
+    </div>
+    <p class="section-desc">
+      Proyección mensual de ingresos por comisiones frente al gasto operativo recurrente. El escenario optimista parte de 40 kits/mes con crecimiento acelerado; el pesimista de 30 kits/mes con crecimiento más conservador.
+    </p>
+    <div class="chart-wrap">
+      <div class="chart-inner">
+        <canvas id="chartIngresos"></canvas>
+      </div>
+    </div>
+
+    <div class="tables-row">
+      <div class="table-box" id="tabla-opt-ingresos">
+        <div class="table-box-title opt">▲ Escenario Optimista · OPEX 1.059,80 €/mes</div>
+        <table class="data-table">
+          <thead><tr><th>Mes</th><th>Kits</th><th>Ing. brutos</th><th>Ing. netos</th></tr></thead>
+          <tbody>
+            <tr><td>Mes 1</td><td>40</td><td class="highlight-opt">1.920 €</td><td>860,20 €</td></tr>
+            <tr><td>Mes 2</td><td>70</td><td class="highlight-opt">3.360 €</td><td>2.300,20 €</td></tr>
+            <tr><td>Mes 3</td><td>120</td><td class="highlight-opt">5.760 €</td><td>4.700,20 €</td></tr>
+            <tr><td>Mes 4</td><td>180</td><td class="highlight-opt">8.640 €</td><td>7.580,20 €</td></tr>
+            <tr><td>Mes 5</td><td>250</td><td class="highlight-opt">12.000 €</td><td>10.940,20 €</td></tr>
+            <tr><td>Mes 6</td><td>350</td><td class="highlight-opt">16.800 €</td><td>15.740,20 €</td></tr>
+            <tr><td><strong>Total</strong></td><td><strong>1.010</strong></td><td class="highlight-opt"><strong>48.480 €</strong></td><td><strong>42.121,20 €</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-box" id="tabla-pes-ingresos">
+        <div class="table-box-title pes">▼ Escenario Pesimista · OPEX 1.416,60 €/mes</div>
+        <table class="data-table">
+          <thead><tr><th>Mes</th><th>Kits</th><th>Ing. brutos</th><th>Ing. netos</th></tr></thead>
+          <tbody>
+            <tr><td>Mes 1</td><td>30</td><td class="highlight-pes">1.440 €</td><td>30,20 €</td></tr>
+            <tr><td>Mes 2</td><td>50</td><td class="highlight-pes">2.400 €</td><td>990,20 €</td></tr>
+            <tr><td>Mes 3</td><td>80</td><td class="highlight-pes">3.840 €</td><td>2.430,20 €</td></tr>
+            <tr><td>Mes 4</td><td>120</td><td class="highlight-pes">5.760 €</td><td>4.350,20 €</td></tr>
+            <tr><td>Mes 5</td><td>170</td><td class="highlight-pes">8.160 €</td><td>6.750,20 €</td></tr>
+            <tr><td>Mes 6</td><td>230</td><td class="highlight-pes">11.040 €</td><td>9.630,20 €</td></tr>
+            <tr><td><strong>Total</strong></td><td><strong>680</strong></td><td class="highlight-pes"><strong>32.640 €</strong></td><td><strong>24.181,20 €</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 2: Desglose de costes -->
+  <div class="chart-section">
+    <div class="section-header">
+      <span class="section-num">02 /</span>
+      <span class="section-title">Estructura de costes — CAPEX y RRHH</span>
+    </div>
+    <p class="section-desc">
+      Los RRHH concentran el mayor peso del presupuesto. El equipo de 21 integrantes dedicó 3.150 horas totales. El coste de capital corresponde a 21 portátiles × 900 € = 18.900 € (amortizable).
+    </p>
+    <div class="chart-wrap">
+      <div class="chart-inner" style="height: 360px;">
+        <canvas id="chartCostes"></canvas>
+      </div>
+    </div>
+
+    <div class="capex-grid">
+      <div class="capex-box">
+        <h4>Recursos Humanos · 68.234 €</h4>
+        <table class="data-table">
+          <thead><tr><th>Rol</th><th>Horas</th><th>Coste</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Programación</td><td>1.512 h</td><td class="highlight-opt">27.707 €</td></tr>
+            <tr><td class="label">Testing</td><td>1.008 h</td><td class="highlight-opt">19.656 €</td></tr>
+            <tr><td class="label">Jefes de proyecto (×2)</td><td>160 h</td><td>5.824 €</td></tr>
+            <tr><td class="label">Jefes de equipo (×5)</td><td>300 h</td><td>10.920 €</td></tr>
+            <tr><td class="label">DevOps</td><td>100 h</td><td>2.370 €</td></tr>
+            <tr><td class="label">Marketing junior (×2)</td><td>70 h</td><td>1.001 €</td></tr>
+            <tr><td class="label">GDPR Officer</td><td>20 h</td><td>756 €</td></tr>
+            <tr><td><strong>Total RRHH</strong></td><td><strong>3.150 h</strong></td><td><strong>68.234 €</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="capex-box">
+        <h4>Coste/hora por rol (+ 30% SS)</h4>
+        <table class="data-table">
+          <thead><tr><th>Rol</th><th>Base</th><th>+30% SS</th></tr></thead>
+          <tbody>
+            <tr><td class="label">Ing. testing</td><td>15,00 €/h</td><td class="highlight-opt">19,50 €/h</td></tr>
+            <tr><td class="label">Programador junior</td><td>14,10 €/h</td><td class="highlight-opt">18,33 €/h</td></tr>
+            <tr><td class="label">Jefe de proyecto</td><td>28,00 €/h</td><td>36,40 €/h</td></tr>
+            <tr><td class="label">Jefe de equipo</td><td>28,00 €/h</td><td>36,40 €/h</td></tr>
+            <tr><td class="label">Marketing junior</td><td>11,00 €/h</td><td>14,30 €/h</td></tr>
+            <tr><td class="label">DevOps junior</td><td>18,23 €/h</td><td>23,70 €/h</td></tr>
+            <tr><td class="label">GDPR Officer</td><td>29,07 €/h</td><td>37,80 €/h</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 3: Usuarios mínimos -->
+  <div class="chart-section">
+    <div class="section-header">
+      <span class="section-num">03 /</span>
+      <span class="section-title">Punto de supervivencia — Usuarios mínimos para cubrir OPEX</span>
+    </div>
+    <p class="section-desc">
+      Con un ratio estimado de ~1,35 alquileres/usuario/mes y una comisión de 48 €/alquiler, la plataforma alcanza la autosuficiencia operativa con muy pocos usuarios activos.
+    </p>
+    <div class="chart-wrap">
+      <div class="chart-inner" style="height: 260px;">
+        <canvas id="chartUsuarios"></canvas>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="callout-icon">⚡</div>
+      <div class="callout-text">
+        <strong>Riesgo operativo mínimo.</strong> Solo se necesitan <strong>17 usuarios activos</strong> (optimista) o <strong>22</strong> (pesimista) para que la plataforma cubra sus costes mes a mes. Esto representa menos del 60 % de los 30 usuarios piloto del lanzamiento, por lo que el punto de supervivencia ya está prácticamente garantizado desde el arranque.
+      </div>
+    </div>
+    <table class="data-table" style="margin-top: 1rem;">
+      <thead>
+        <tr><th>Escenario</th><th>OPEX mensual</th><th>Alquileres/mes nec.</th><th>Usuarios mínimos</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="label" style="color:var(--opt)">▲ Optimista</td>
+          <td>1.059,80 €</td>
+          <td>≈ 23 kits/mes</td>
+          <td class="highlight-opt"><strong>≈ 17 usuarios</strong></td>
+        </tr>
+        <tr>
+          <td class="label" style="color:var(--pes)">▼ Pesimista</td>
+          <td>1.416,60 €</td>
+          <td>≈ 30 kits/mes</td>
+          <td class="highlight-pes"><strong>≈ 22 usuarios</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECCIÓN 4: Rentabilidad acumulada 24 meses -->
+  <div class="chart-section">
+    <div class="section-header">
+      <span class="section-num">04 /</span>
+      <span class="section-title">Rentabilidad acumulada — Gastos vs. Ingresos (24 meses)</span>
+    </div>
+    <p class="section-desc">
+      Curvas de gastos acumulados (partiendo de la inversión inicial más OPEX recurrente) frente a ingresos acumulados por comisiones. Los puntos marcados indican el momento exacto de recuperación total de la inversión.
+    </p>
+    <div class="chart-wrap">
+      <div class="chart-inner" style="height: 380px;">
+        <canvas id="chartAcumulado"></canvas>
+      </div>
+    </div>
+
+    <div class="breakeven-row">
+      <div class="breakeven-box opt">
+        <div class="breakeven-label opt">▲ Escenario Optimista</div>
+        <div class="breakeven-total">91.715,20 €</div>
+        <div class="breakeven-kits">Inversión total a recuperar</div>
+        <div class="breakeven-month opt">Break-even → Mes 9</div>
+        <div style="margin-top:0.8rem; font-size: 0.78rem; color: var(--text2);">
+          Ingresos &gt; 50.000 € acumulados en Mes 7
+        </div>
+      </div>
+      <div class="breakeven-box pes">
+        <div class="breakeven-label pes">▼ Escenario Pesimista</div>
+        <div class="breakeven-total">93.815,20 €</div>
+        <div class="breakeven-kits">Inversión total a recuperar</div>
+        <div class="breakeven-month pes">Break-even → Mes 13</div>
+        <div style="margin-top:0.8rem; font-size: 0.78rem; color: var(--text2);">
+          Ingresos &gt; 50.000 € acumulados en Mes 10
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 5: Presupuesto total -->
+  <div class="chart-section">
+    <div class="section-header">
+      <span class="section-num">05 /</span>
+      <span class="section-title">Presupuesto total del proyecto</span>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Partida</th><th>Importe</th><th>% del total</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="label">Recursos Humanos (3.150 h)</td><td>68.234 €</td><td>~74 %</td></tr>
+        <tr><td class="label">Coste de capital (21 portátiles × 900 €)</td><td>18.900 €</td><td>~21 %</td></tr>
+        <tr><td class="label">Licencias software desarrollo (21 × 24 €)</td><td>531,20 €</td><td>&lt; 1 %</td></tr>
+        <tr><td class="label">Marketing – Escenario optimista</td><td>4.050 €</td><td>~4,4 %</td></tr>
+        <tr><td class="label">Marketing – Escenario pesimista</td><td>6.150 €</td><td>~6,5 %</td></tr>
+        <tr><td><strong>Total – Escenario optimista</strong></td><td class="highlight-opt"><strong>71.469,80 €*</strong></td><td></td></tr>
+        <tr><td><strong>Total – Escenario pesimista</strong></td><td class="highlight-pes"><strong>71.826,60 €*</strong></td><td></td></tr>
+      </tbody>
+    </table>
+    <div class="callout" style="margin-top:1rem;">
+      <div class="callout-icon">ℹ</div>
+      <div class="callout-text">
+        * El coste total de <strong>91.715 €</strong> (opt.) y <strong>93.815 €</strong> (pes.) incluye adicionalmente el <strong>OPEX acumulado</strong> durante los primeros meses antes de la recuperación, que no forma parte del presupuesto inicial pero sí del capital total a recuperar en el break-even.
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 6: Resumen ejecutivo -->
+  <div class="chart-section">
+    <div class="section-header">
+      <span class="section-num">06 /</span>
+      <span class="section-title">Resumen ejecutivo — Proyección a 12 meses</span>
+    </div>
+    <table class="exec-table">
+      <thead>
+        <tr><th>Indicador</th><th>▲ Escenario Optimista</th><th>▼ Escenario Pesimista</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Alquileres totales (12 m)</td><td class="opt">~3.800 kits</td><td class="pes">~2.500 kits</td></tr>
+        <tr><td>Ingresos brutos (comisiones)</td><td class="opt">~182.400 €</td><td class="pes">~120.000 €</td></tr>
+        <tr><td>Beneficio neto estimado (Año 1)</td><td class="opt">~169.000 €</td><td class="pes">~103.000 €</td></tr>
+        <tr><td>Break-even inversión total</td><td class="opt">Mes 9</td><td class="pes">Mes 13</td></tr>
+        <tr><td>Usuarios mínimos para supervivencia</td><td class="opt">17 usuarios/mes</td><td class="pes">22 usuarios/mes</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout" style="margin-top:1.5rem; border-color: var(--opt);">
+      <div class="callout-icon">📊</div>
+      <div class="callout-text">
+        <strong>Validación con datos reales:</strong> El crecimiento real observado (de 17 a 19 usuarios piloto) equivale a un <strong>11,76 %</strong> mensual — más cercano al escenario pesimista (12 %) que al optimista (20 %). Esto valida que las proyecciones no están infladas y que el escenario pesimista es una base sólida y realista para la toma de decisiones.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <div>Nota metodológica · Comisión de 48 €/alquiler (plan Freemium) · Ratio ~1,35 alquileres/usuario/mes estimado en el primer semestre</div>
+  <div>Salarios basados en mercado español + 30 % cotizaciones SS · Equipamiento: 21 portátiles × 900 € = 18.900 € (amortizable)</div>
+  <div>Crecimiento optimista: 20 %/mes · Crecimiento pesimista: 12 %/mes · Usuarios piloto iniciales: 30</div>
+</div>
+
+<script>
+// ───── DATA ─────
+const meses = ['Mes 1','Mes 2','Mes 3','Mes 4','Mes 5','Mes 6'];
+const ingOptBrutos = [1920, 3360, 5760, 8640, 12000, 16800];
+const ingPesBrutos = [1440, 2400, 3840, 5760, 8160, 11040];
+const opexOpt = 1059.80;
+const opexPes = 1416.60;
+const opexOptArr = meses.map(() => opexOpt);
+const opexPesArr = meses.map(() => opexPes);
+
+// Colors
+const C = {
+  opt: '#b5f23c',
+  pes: '#ff6b35',
+  optDim: 'rgba(181,242,60,0.15)',
+  pesDim: 'rgba(255,107,53,0.15)',
+  optLine: 'rgba(181,242,60,0.7)',
+  pesLine: 'rgba(255,107,53,0.7)',
+  grid: 'rgba(42,47,34,0.6)',
+  text: '#8a9270',
+};
+
+const baseChartOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      labels: { color: C.text, font: { family: 'IBM Plex Mono', size: 11 }, boxWidth: 14, padding: 16 }
+    },
+    tooltip: {
+      backgroundColor: '#1a1e15',
+      borderColor: '#2a2f22',
+      borderWidth: 1,
+      titleColor: '#e8edd8',
+      bodyColor: '#8a9270',
+      titleFont: { family: 'IBM Plex Mono' },
+      bodyFont: { family: 'IBM Plex Mono', size: 11 },
+      callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw.toLocaleString('es-ES', {style:'currency', currency:'EUR'}) }
+    }
+  },
+  scales: {
+    x: { grid: { color: C.grid }, ticks: { color: C.text, font: { family: 'IBM Plex Mono', size: 10 } } },
+    y: {
+      grid: { color: C.grid },
+      ticks: {
+        color: C.text, font: { family: 'IBM Plex Mono', size: 10 },
+        callback: v => (v/1000).toFixed(0) + 'k €'
+      }
+    }
+  }
+};
+
+// ───── CHART 1: Ingresos vs OPEX ─────
+let chartIngresos;
+function buildChartIngresos(scenario) {
+  if (chartIngresos) chartIngresos.destroy();
+  const ctx = document.getElementById('chartIngresos').getContext('2d');
+  const datasets = [];
+  if (scenario !== 'pes') {
+    datasets.push(
+      { label: 'Ingresos brutos (Opt.)', data: ingOptBrutos, type: 'bar', backgroundColor: C.optDim, borderColor: C.opt, borderWidth: 1.5 },
+      { label: 'OPEX (Opt.)', data: opexOptArr, type: 'line', borderColor: C.opt, borderWidth: 2, pointBackgroundColor: C.opt, pointRadius: 4, tension: 0.3, fill: false }
+    );
+  }
+  if (scenario !== 'opt') {
+    datasets.push(
+      { label: 'Ingresos brutos (Pes.)', data: ingPesBrutos, type: 'bar', backgroundColor: C.pesDim, borderColor: C.pes, borderWidth: 1.5 },
+      { label: 'OPEX (Pes.)', data: opexPesArr, type: 'line', borderColor: C.pes, borderWidth: 2, pointBackgroundColor: C.pes, pointRadius: 4, tension: 0.3, fill: false, borderDash: [5,3] }
+    );
+  }
+  chartIngresos = new Chart(ctx, { type: 'bar', data: { labels: meses, datasets }, options: { ...baseChartOpts } });
+}
+
+// ───── CHART 2: Costes ─────
+let chartCostes;
+function buildChartCostes() {
+  if (chartCostes) chartCostes.destroy();
+  const ctx = document.getElementById('chartCostes').getContext('2d');
+  chartCostes = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Programación', 'Testing', 'Jefes Proy./Equipo', 'DevOps+Mktg+GDPR', 'Capital (portátiles)', 'Marketing Opt.', 'Marketing Pes. (extra)', 'Licencias'],
+      datasets: [{
+        data: [27707, 19656, 16744, 4127, 18900, 4050, 2100, 531],
+        backgroundColor: ['#b5f23c','#8ab82e','#647a21','#ff6b35','#cc4f20','#3cb5f2','#1e7ab5','#5a6048'],
+        borderColor: '#0c0f0a',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: C.text, font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 12, padding: 12 }
+        },
+        tooltip: {
+          backgroundColor: '#1a1e15',
+          borderColor: '#2a2f22',
+          borderWidth: 1,
+          titleColor: '#e8edd8',
+          bodyColor: '#8a9270',
+          titleFont: { family: 'IBM Plex Mono' },
+          bodyFont: { family: 'IBM Plex Mono', size: 11 },
+          callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.raw.toLocaleString('es-ES', {style:'currency', currency:'EUR'}) }
+        }
+      }
+    }
+  });
+}
+
+// ───── CHART 3: Usuarios ─────
+let chartUsuarios;
+function buildChartUsuarios() {
+  if (chartUsuarios) chartUsuarios.destroy();
+  const ctx = document.getElementById('chartUsuarios').getContext('2d');
+  chartUsuarios = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['OPEX mensual', 'Alquileres/mes nec.', 'Usuarios mínimos activos'],
+      datasets: [
+        { label: 'Optimista', data: [1059.80, 23, 17], backgroundColor: C.optDim, borderColor: C.opt, borderWidth: 1.5 },
+        { label: 'Pesimista', data: [1416.60, 30, 22], backgroundColor: C.pesDim, borderColor: C.pes, borderWidth: 1.5 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: C.text, font: { family: 'IBM Plex Mono', size: 11 }, boxWidth: 14 } },
+        tooltip: {
+          backgroundColor: '#1a1e15', borderColor: '#2a2f22', borderWidth: 1,
+          titleColor: '#e8edd8', bodyColor: '#8a9270',
+          titleFont: { family: 'IBM Plex Mono' }, bodyFont: { family: 'IBM Plex Mono', size: 11 },
+          callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw }
+        }
+      },
+      scales: {
+        x: { grid: { color: C.grid }, ticks: { color: C.text, font: { family: 'IBM Plex Mono', size: 10 } } },
+        y: { grid: { color: C.grid }, ticks: { color: C.text, font: { family: 'IBM Plex Mono', size: 10 } } }
+      }
+    }
+  });
+}
+
+// ───── CHART 4: Acumulado 24 meses ─────
+let chartAcumulado;
+function buildChartAcumulado(scenario) {
+  if (chartAcumulado) chartAcumulado.destroy();
+  const ctx = document.getElementById('chartAcumulado').getContext('2d');
+
+  // Investment totals to recover
+  const invOpt = 91715.20;
+  const invPes = 93815.20;
+
+  // Generate 24 months of cumulative data
+  // Optimista: starts 40, grows ~20% but capped (realistic growth tapering)
+  // We'll use data from doc for first 6 months, then extrapolate
+  const kitsOpt = [40, 70, 120, 180, 250, 350];
+  const kitsPes = [30, 50, 80, 120, 170, 230];
+
+  // Extend 7-24 with growth rate 20%/12% respectively
+  for (let i = 6; i < 24; i++) {
+    kitsOpt.push(Math.round(kitsOpt[i-1] * 1.20));
+    kitsPes.push(Math.round(kitsPes[i-1] * 1.12));
+  }
+
+  // Cumulative income
+  let cumIncOpt = 0, cumIncPes = 0;
+  const cumIncOptArr = [], cumIncPesArr = [];
+  const cumGasOpt = [], cumGasPes = [];
+
+  for (let i = 0; i < 24; i++) {
+    cumIncOpt += kitsOpt[i] * 48;
+    cumIncPes += kitsPes[i] * 48;
+    cumIncOptArr.push(cumIncOpt);
+    cumIncPesArr.push(cumIncPes);
+    // Gastos acumulados: inversión inicial + OPEX mes a mes
+    cumGasOpt.push(invOpt + (i) * opexOpt); // invOpt already includes initial OPEX period
+    cumGasPes.push(invPes + (i) * opexPes);
+  }
+
+  const labels = Array.from({length:24}, (_,i) => 'M'+(i+1));
+  const datasets = [];
+
+  if (scenario !== 'pes') {
+    datasets.push(
+      { label: 'Gastos acum. (Opt.)', data: cumGasOpt, borderColor: 'rgba(181,242,60,0.4)', borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, fill: false, tension: 0.2 },
+      { label: 'Ingresos acum. (Opt.)', data: cumIncOptArr, borderColor: C.opt, borderWidth: 2.5, pointRadius: 0, fill: false, tension: 0.3 }
+    );
+  }
+  if (scenario !== 'opt') {
+    datasets.push(
+      { label: 'Gastos acum. (Pes.)', data: cumGasPes, borderColor: 'rgba(255,107,53,0.4)', borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, fill: false, tension: 0.2 },
+      { label: 'Ingresos acum. (Pes.)', data: cumIncPesArr, borderColor: C.pes, borderWidth: 2.5, pointRadius: 0, fill: false, tension: 0.3 }
+    );
+  }
+
+  chartAcumulado = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: C.text, font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 14, padding: 14 } },
+        tooltip: {
+          backgroundColor: '#1a1e15', borderColor: '#2a2f22', borderWidth: 1,
+          titleColor: '#e8edd8', bodyColor: '#8a9270',
+          titleFont: { family: 'IBM Plex Mono' }, bodyFont: { family: 'IBM Plex Mono', size: 11 },
+          callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw.toLocaleString('es-ES', {style:'currency', currency:'EUR', maximumFractionDigits: 0}) }
+        }
+      },
+      scales: {
+        x: { grid: { color: C.grid }, ticks: { color: C.text, font: { family: 'IBM Plex Mono', size: 9 }, maxTicksLimit: 12 } },
+        y: {
+          grid: { color: C.grid },
+          ticks: {
+            color: C.text, font: { family: 'IBM Plex Mono', size: 10 },
+            callback: v => (v/1000).toFixed(0) + 'k €'
+          }
+        }
+      }
+    }
+  });
+}
+
+// ───── SCENARIO TOGGLE ─────
+let currentScenario = 'opt';
+
+function setScenario(sc) {
+  currentScenario = sc;
+
+  // Buttons
+  document.querySelectorAll('.btn-scenario').forEach(b => {
+    b.classList.remove('active-opt','active-pes','active-both');
+  });
+  const btns = document.querySelectorAll('.btn-scenario');
+  if (sc === 'opt') btns[0].classList.add('active-opt');
+  else if (sc === 'pes') btns[1].classList.add('active-pes');
+  else btns[2].classList.add('active-both');
+
+  // Tables visibility
+  const tOpt = document.getElementById('tabla-opt-ingresos');
+  const tPes = document.getElementById('tabla-pes-ingresos');
+  if (sc === 'opt') { tOpt.style.display='block'; tPes.style.display='none'; }
+  else if (sc === 'pes') { tOpt.style.display='none'; tPes.style.display='block'; }
+  else { tOpt.style.display='block'; tPes.style.display='block'; }
+
+  // Rebuild charts
+  buildChartIngresos(sc);
+  buildChartAcumulado(sc);
+}
+
+// ───── INIT ─────
+document.addEventListener('DOMContentLoaded', () => {
+  buildChartIngresos('opt');
+  buildChartCostes();
+  buildChartUsuarios();
+  buildChartAcumulado('opt');
+});
+</script>
+</body>
+</html>
