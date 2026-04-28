@@ -2,7 +2,7 @@
 
 ## Modelo de negocio
 
-La plataforma opera como un **marketplace de alquiler de equipamiento entre particulares y empresas**, actuando como intermediario de confianza entre quienes disponen de material infrautilizado (arrendadores) y quienes necesitan acceder a él de forma puntual (arrendatarios).
+La plataforma opera como un **marketplace de alquiler de equipamiento entre particulares**, actuando como intermediario de confianza entre quienes disponen de material infrautilizado (arrendadores) y quienes necesitan acceder a él de forma puntual (arrendatarios).
 
 El modelo de ingresos es sencillo, escalable y no requiere inversión en inventario propio: la plataforma obtiene un **porcentaje de comisión sobre cada transacción completada**, lo que alinea los incentivos del negocio con los de sus usuarios.
 
