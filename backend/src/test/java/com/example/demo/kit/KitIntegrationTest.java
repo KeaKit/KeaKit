@@ -74,7 +74,7 @@ class KitIntegrationTest {
         tenant.setPhone("223456789");
         tenant = userRepository.save(tenant);
 
-        authToken = jwtUtil.generateToken(tenant.getEmail(), tenant.getId(), tenant.getRole());
+        authToken = jwtUtil.generateToken(tenant.getEmail(), tenant.getId(), tenant.getRole(), tenant.getTokenVersion());
 
         when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
 
@@ -591,7 +591,7 @@ class KitIntegrationTest {
         emptyUser.setPhone("999999999");
         emptyUser = userRepository.save(emptyUser);
         
-        String emptyUserToken = jwtUtil.generateToken(emptyUser.getEmail(), emptyUser.getId(), emptyUser.getRole());
+        String emptyUserToken = jwtUtil.generateToken(emptyUser.getEmail(), emptyUser.getId(), emptyUser.getRole(), emptyUser.getTokenVersion());
         
         when(authService.getAuthenticatedUserId()).thenReturn(emptyUser.getId());
 
@@ -618,7 +618,7 @@ class KitIntegrationTest {
         testUser.setPhone("888888888");
         testUser = userRepository.save(testUser);
         
-        String testUserToken = jwtUtil.generateToken(testUser.getEmail(), testUser.getId(), testUser.getRole());
+        String testUserToken = jwtUtil.generateToken(testUser.getEmail(), testUser.getId(), testUser.getRole(), testUser.getTokenVersion());
         
         when(authService.getAuthenticatedUserId()).thenReturn(testUser.getId());
         

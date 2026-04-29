@@ -84,9 +84,9 @@ class RatingIntegrationTest {
         walletRepository.save(new Wallet(owner));
         walletRepository.save(new Wallet(thirdUser));
 
-        tenantToken    = jwtUtil.generateToken(tenant.getEmail(), tenant.getId(), tenant.getRole());
-        ownerToken     = jwtUtil.generateToken(owner.getEmail(), owner.getId(), owner.getRole());
-        thirdUserToken = jwtUtil.generateToken(thirdUser.getEmail(), thirdUser.getId(), thirdUser.getRole());
+        tenantToken    = jwtUtil.generateToken(tenant.getEmail(), tenant.getId(), tenant.getRole(), tenant.getTokenVersion());
+        ownerToken     = jwtUtil.generateToken(owner.getEmail(), owner.getId(), owner.getRole(), owner.getTokenVersion());
+        thirdUserToken = jwtUtil.generateToken(thirdUser.getEmail(), thirdUser.getId(), thirdUser.getRole(), thirdUser.getTokenVersion());
 
         when(authService.getAuthenticatedUserEmail()).thenReturn(tenant.getEmail());
         when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
@@ -573,7 +573,7 @@ class RatingIntegrationTest {
         admin.setRole(UserRole.ADMIN);
         admin = userRepository.save(admin);
         walletRepository.save(new Wallet(admin));
-        String adminToken = jwtUtil.generateToken(admin.getEmail(), admin.getId(), admin.getRole());
+        String adminToken = jwtUtil.generateToken(admin.getEmail(), admin.getId(), admin.getRole(), admin.getTokenVersion());
 
         when(authService.getAuthenticatedUserEmail()).thenReturn(admin.getEmail());
 

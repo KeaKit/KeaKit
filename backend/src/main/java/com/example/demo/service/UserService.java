@@ -99,7 +99,7 @@ public class UserService {
             System.out.println("NO se guarda consentimiento - acceptedPolicies es: " + request.getAcceptedPolicies());
         }
 
-        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId(), savedUser.getRole());
+        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId(), savedUser.getRole(), savedUser.getTokenVersion());
         return new UserResponse(savedUser, token);
     }
 
@@ -125,7 +125,7 @@ public class UserService {
             throw new InvalidCredentialsException("Contraseña inválida");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getRole());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getRole(), user.getTokenVersion());
         return new UserResponse(user, token);
     }
 
