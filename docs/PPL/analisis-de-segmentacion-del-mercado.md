@@ -84,7 +84,7 @@ Se han identificado los siguientes segmentos:
 ### 5.1.3. Buyer persona
 | Campo | Descripción |
 |-------|-------------|
-|**Nombre**| Daniel, el nómada digital |
+|**Nombre**| Daniel |
 |**Edad**| 29 |
 |**Ocupación**| Diseñador UX freelance |
 |**Contexto personal**| Trabaja de forma remota mientras viaja entre países cada pocos meses. Vive en alojamientos temporales como Airbnb o colivings. |
@@ -115,9 +115,9 @@ Se han identificado los siguientes segmentos:
 ### 5.2.3. Buyer persona
 | Campo | Descripción |
 |-------|-------------|
-|**Nombre**| Laura, la estudiante Erasmus |
+|**Nombre**| Laura |
 |**Edad**| 21 |
-|**Ocupación**| Estudiante universitaria |
+|**Ocupación**| Estudiante de Erasmus |
 |**Contexto personal**| Se encuentra de intercambio en otro país durante 6 meses. Vive en un piso compartido amueblado parcialmente o residencia temporal. |
 |**Objetivos**| Adaptarse rápidamente a su nueva ciudad sin complicaciones, tener acceso a lo necesario sin gastar demasiado dinero. |
 |**Problemas**| No quiere comprar objetos para uso temporal, dificultad para transportar cosas desde su país de origen, presupuesto limitado. |
@@ -131,29 +131,29 @@ Se han identificado los siguientes segmentos:
 
 | Campo | Descripción |
 |-------|-------------|
-|**Características** |  |
-|**Necesidades** |  |
+|**Características** | Particulares que poseen objetos que ya no utilizan muy a menudo, como pueden ser herramientas, electrodomésticos o sábanas, y deciden alquilarlos para generar ingresos extra. |
+|**Necesidades** | Plataforma sencilla para publicar sus artículos, seguridad en pagos y transacciones, protección frente a daños o robos, visibilidad para ganar dinero. |
 
 ### 5.3.2. Análisis detallado
 | Campo | Descripción |
 |-------|-------------|
-|**Proporción esperada**|  |
-|**Poder adquisitivo**|  |
-| **Rentabilidad estimada** ||
-|**Familiaridad con la tecnología**||
+|**Proporción esperada**| Alta, debido al gran número de usuarios potenciales que necesitan dinero y deshacerse de cosas que ya no utilizan.|
+|**Poder adquisitivo**| Medio-bajo. Son personas que necesitan ingresos complementarios.|
+| **Rentabilidad estimada** |Media. Aunque cada usuario genera poco ingreso individual si son estancias cortas, el gran volumen de usuarios que podrían estar interesados permite obtener ingresos suficientes.|
+|**Familiaridad con la tecnología**| Media. Uso habitual de apps, pero pueden necesitar interfaces simples e intuitivas.|
 
 ### 5.3.3. Buyer persona
 | Campo | Descripción |
 |-------|-------------|
-|**Nombre**|  |
-|**Edad**|  |
-|**Ocupación**| |
-|**Contexto personal**|  |
-|**Objetivos**|  |
-|**Problemas**|  |
-|**Motivaciones**|  |
-|**Comportamiento** |  |
-|**Canales y comunicación**|  |
+|**Nombre**| Javier|
+|**Edad**| 35 |
+|**Ocupación**| Empleado administrativo.|
+|**Contexto personal**| Tiene en su casa artículos que prácticamente no usa. |
+|**Objetivos**| Obtener ingresos extra a partir de bienes que ya posee. |
+|**Problemas**| Miedo a impagos o daños de sus objetos. |
+|**Motivaciones**| Rentabilizar sus pertenencias sin mucho esfuerzo. |
+|**Comportamiento** | Publica objetos de forma ocasional, busca obtener ingresos extra sin dedicar demasiado tiempo. |
+|**Canales y comunicación**|  Apps móviles, Facebook Marketplace, Wallapop, Google.|
 
 ## 5.4. Segmento 4 - Empresas de alquiler
 
@@ -161,29 +161,29 @@ Se han identificado los siguientes segmentos:
 
 | Campo | Descripción |
 |-------|-------------|
-|**Características** |  |
-|**Necesidades** |  |
+|**Características** | Empresas que operan en el sector del alquiler (herramientas, mobiliario, equipos, etc.) y buscan ampliar su alcance o digitalizar sus servicios. |
+|**Necesidades** | Mayor visibilidad, digitalizar su negocio, gestionar de forma eficiente su inventario y aprovechar canales online para incrementar ingresos. |
 
 ### 5.4.2. Análisis detallado
 | Campo | Descripción |
 |-------|-------------|
-|**Proporción esperada**|  |
-|**Poder adquisitivo**|  |
-| **Rentabilidad estimada** ||
-|**Familiaridad con la tecnología**||
+|**Proporción esperada**| Baja. El número de empresas es limitado en comparación con usuarios particulares. |
+|**Poder adquisitivo**| Alto. Son negocios con capacidad de inversión y orientadas a generar ingresos.|
+| **Rentabilidad estimada** |Muy alta. Estas empresas pueden incorporar un gran volumen de productos, lo que genera numerosas transacciones dentro de la plataforma. Cada alquiler produce comisiones, por lo que el ingreso acumulado es elevado. |
+|**Familiaridad con la tecnología**|Media-alta. Hay varias empresas que aún están en proceso de digitalización.|
 
 ### 5.4.3. Buyer persona
 | Campo | Descripción |
 |-------|-------------|
-|**Nombre**|  |
-|**Edad**|  |
-|**Ocupación**| |
-|**Contexto personal**|  |
-|**Objetivos**|  |
-|**Problemas**|  |
-|**Motivaciones**|  |
-|**Comportamiento** |  |
-|**Canales y comunicación**|  |
+|**Nombre**| Carlos|
+|**Edad**| 47 |
+|**Ocupación**| Propietario de una empresa de alquiler |
+|**Contexto personal**| Gestiona un negocio con múltiples artículos disponibles para alquiler. Busca nuevas formas de aumentar la ocupación de sus productos y crecer en el entorno digital. |
+|**Objetivos**| Incrementar ingresos, mejorar la visibilidad de su negocio y maximizar el uso de sus activos.|
+|**Problemas**| Dependencia de canales tradicionales, dificultad para captar nuevos clientes online y periodos de inactividad de sus productos. |
+|**Motivaciones**| Crecimiento del negocio, optimización de recursos y aumento de la rentabilidad. |
+|**Comportamiento** | Utiliza la plataforma de forma intensiva, publicando gran parte de su catálogo, buscando maximizar reservas. Está dispuesto a pagar por visibilidad si esto aumenta sus ingresos. |
+|**Canales y comunicación**| LinkedIn, email profesional, ferias del sector, networking. |
 
 ## 5.5. Segmento 5 - Empresas que ofrecen servicios
 
@@ -191,29 +191,29 @@ Se han identificado los siguientes segmentos:
 
 | Campo | Descripción |
 |-------|-------------|
-|**Características** |  |
-|**Necesidades** |  |
+|**Características** | Empresas que ofrecen servicios como, por ejemplo, transporte, Internet, luz, agua, líneas telefónicas, etc. |
+|**Necesidades** | Acceso a una base de clientes activa, generación constante de demanda, visibilidad dentro de la plataforma, facilidad para gestionar solicitudes de servicio y optimización del tiempo de trabajo. |
 
 ### 5.5.2. Análisis detallado
 | Campo | Descripción |
 |-------|-------------|
-|**Proporción esperada**|  |
-|**Poder adquisitivo**|  |
-| **Rentabilidad estimada** ||
-|**Familiaridad con la tecnología**||
+|**Proporción esperada**| Media-baja. Existe un número relevante de empresas, aunque menor que el de usuarios particulares. |
+|**Poder adquisitivo**| Medio-alto. Varía según el tamaño del negocio. |
+| **Rentabilidad estimada** |Alta. Generación de ingresos por comisiones o servicios asociados.|
+|**Familiaridad con la tecnología**|Media. Este tipo de empresas acostumbran a estar digitalizadas, aunque también existen otras muchas que no lo están.|
 
 ### 5.5.3. Buyer persona
 | Campo | Descripción |
 |-------|-------------|
-|**Nombre**|  |
-|**Edad**|  |
-|**Ocupación**| |
-|**Contexto personal**|  |
-|**Objetivos**|  |
-|**Problemas**|  |
-|**Motivaciones**|  |
-|**Comportamiento** |  |
-|**Canales y comunicación**|  |
+|**Nombre**| Ana |
+|**Edad**| 26 |
+|**Ocupación**| Gerente de una empresa de instalación de Internet.|
+|**Contexto personal**| Gestiona una empresa que ofrece servicios de instalación de Internet en hogares y negocios. Su actividad consiste en coordinar equipos técnicos, organizar instalaciones y asegurar la correcta prestación del servicio en distintas ubicaciones. |
+|**Objetivos**|  Optimizar la captación de clientes para servicios de instalación de Internet, aumentar el volumen de instalaciones realizadas y mejorar la eficiencia en la asignación de técnicos y recursos. |
+|**Problemas**|  DDependencia de intermediarios o grandes contratos con operadoras, dificultad para captar clientes de forma directa y necesidad de mejorar la visibilidad del negocio en canales digitales.|
+|**Motivaciones**|Crecimiento de la empresa, incremento de ingresos y expansión del negocio en entornos digitales. |
+|**Comportamiento** | Utiliza la plataforma como canal para captar nuevos clientes de instalación.|
+|**Canales y comunicación**| WhatsApp, Google, plataformas profesionales, redes sociales y herramientas de gestión empresarial. |
 
 ## 6. Mapa de posicionamiento
 
@@ -224,13 +224,14 @@ Su objetivo es facilitar la interpretación del atractivo relativo de cada grupo
 | Proporción esperada | Poder adquisitivo||||
 |----:|:---:|:---:|:---:|:---:|
 | |**Bajo** | **Medio-bajo** | **Medio-alto**| **Alto** |
-|**Alta** ||Personas sujetas a estancias temporales|||
+|**Alta** ||Personas sujetas a estancias temporales, Persona común|||
 |**Media-alta** |
-|**Media-baja**|||Nómadas||
-|**Baja** | 
+|**Media-baja**||Empresas que ofrecen servicios|Nómadas||
+|**Baja** | || | Empresas de alquiler|
 
 ## 7. Historial de versiones
 
 | Versión | Fecha       | Descripción                   | Autor(es)       |
 |---------|------------|--------------------------------|------------|
 | 1.0.0   |29/04/2026 | Versión inicial con dos segmentos analizados|Lucía Ponce García de Sola |
+| 1.1.0   |29/04/2026 | Versión en la que se añaden otros tres segmentos|Enrique Nicolae Barac Ploae|
