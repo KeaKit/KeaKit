@@ -210,7 +210,7 @@ const EditArticleScreen: React.FC = () => {
     if (!selectedCity)       newErrors.city        = 'La ciudad es obligatoria';
     if (!category)           newErrors.category    = 'Selecciona una categoría';
 
-    if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0) {
+    if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) < 0) {
       newErrors.pricePerMonth = 'Introduce un precio válido';
     } else if (!hasAtMostTwoDecimals(pricePerMonth)) {
       newErrors.pricePerMonth = 'El precio no puede tener más de 2 decimales';
