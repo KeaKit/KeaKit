@@ -15,6 +15,7 @@ public class UserResponse {
     private boolean founderBadge;
     private String token;
     private String profileImageUrl;
+    private Integer tokenVersion;
 
     public UserResponse() {}
 
@@ -29,6 +30,7 @@ public class UserResponse {
         this.country = user.getCountry();
         this.founderBadge = user.isFounderBadge();
         this.profileImageUrl = user.getProfileImageUrl();
+        this.tokenVersion = user.getTokenVersion();
     }
 
     public UserResponse(User user, String token) {
@@ -42,6 +44,7 @@ public class UserResponse {
         this.country = user.getCountry();
         this.founderBadge = user.isFounderBadge(); 
         this.profileImageUrl = user.getProfileImageUrl();
+        this.tokenVersion = user.getTokenVersion();
         this.token = token;
     }
 
@@ -79,6 +82,10 @@ public class UserResponse {
 
     public String getToken() {
         return token;
+    }
+
+    public Integer getTokenVersion() {
+        return tokenVersion;
     }
 
     public boolean isFounderBadge() {
