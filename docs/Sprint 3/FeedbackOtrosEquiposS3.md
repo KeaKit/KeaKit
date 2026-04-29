@@ -425,7 +425,7 @@ Casos de uso probados:
 * El proceso requería verificar información personal y profesional real, lo que impedía continuar con datos de prueba.
 
 **Failure condition detectada**
-* **T12** - No se ha podido comprobar el flujo completo de contratación y valoración, por falta de datos de prueba adecuados.
+* No se ha podido comprobar el flujo completo de contratación y valoración, por falta de datos de prueba adecuados.
 
 ---
 
