@@ -211,8 +211,8 @@ public class DatabaseSeeder {
             audiovisualKit.setTenant(tenant);
             audiovisualKit.setStatus(KitStatus.FINISHED);
             audiovisualKit.setDeliveryMethod(DeliveryMethod.COURIER);
-            audiovisualKit.setStartDate(LocalDate.now());
-            audiovisualKit.setEndDate(LocalDate.now().plusMonths(1));
+            audiovisualKit.setStartDate(LocalDate.now().minusMonths(2));
+            audiovisualKit.setEndDate(LocalDate.now().minusMonths(2).plusWeeks(2));
             audiovisualKit.setCountry("Spain");
             audiovisualKit.setCity("Sevilla");
             kitRepo.save(audiovisualKit);
