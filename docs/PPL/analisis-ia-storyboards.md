@@ -120,6 +120,34 @@ Runway es una de las plataformas más conocidas de generación y edición de ví
 
 Puede ser útil para edición final o mejoras visuales, aunque no es la opción más rentable para generar muchos clips gratuitamente.
 
+## 2.4. Flow AI
+
+### Descripción
+
+Flow AI es una plataforma de generación de vídeo que permite transformar ideas en clips dinámicos con una alta fidelidad visual y un control preciso del movimiento.
+
+### Ventajas
+
+- Mejor rendimiento.
+
+- Gran rentabilidad gracias al plan para estudiantes.
+
+- Excelente fluidez en los movimientos generados.
+
+### Desventajas
+
+- Dependencia del sistema de créditos para generaciones de alta prioridad.
+
+### Límites de uso gratuito
+
+- Cuenta gratuita: 100 créditos.
+
+- Cuenta Estudiante/Pro: 1000 créditos.
+
+### Uso potencial en el proyecto
+
+Se ha convertido en la herramienta principal debido a su alto rendimiento y a la generosa asignación de créditos para estudiantes.
+
 ---
 
 ## 2.4. Producción manual tradicional
@@ -154,6 +182,7 @@ Aunque ofrece más control creativo, resulta poco eficiente para este proyecto d
 | Kling AI | Gratis / Pago | ~3 vídeos diarios | Muy alta | Bajo | Alta | Calidad cinematográfica | Pocos créditos |
 | Hailuo AI | Gratis / Pago | ~7 vídeos diarios | Alta | Muy bajo | Muy alta | Más generaciones gratuitas | Calidad algo menor |
 | Runway | Gratis / Pago | Créditos limitados | Muy alta | Medio | Media | Herramientas profesionales | Plan gratuito limitado |
+| Flow AI | Gratis / Pago | 100 créditos (1000 para estudiantes) | Muy alta | Muy bajo | Alta | Plan para estudiantes | Plan gratuito limitado |
 | Producción manual | Alto | Sin límite | Depende del equipo | Muy alto | Baja | Máximo control creativo | Mucho tiempo y coste |
 
 ---
@@ -166,11 +195,8 @@ La producción manual tradicional supondría un gasto considerable de tiempo, co
 
 En cambio, las herramientas de IA permiten generar los distintos planos de los storyboards de forma rápida y sencilla, reduciendo significativamente el tiempo de producción.
 
-Las herramientas seleccionadas para el proyecto son:
+La herramienta seleccionada para el proyecto ha sido:
 
-- **Kling AI**, por su alta calidad visual y acabado cinematográfico.
-- **Hailuo AI**, por ofrecer más generaciones gratuitas y permitir crear más planos sin coste.
-
-La combinación de ambas herramientas permite aprovechar sus ventajas y compensar las limitaciones de créditos gratuitos de cada una.
+- **FLow AI**, por su alta calidad visual, su facilidad de uso y por su plan para estudiantes, permitiéndonos completar el storyboard íntegramente sin limitaciones.
 
 Por tanto, se considera que el uso de IA para la creación de los storyboards es una solución eficiente, económica y adecuada para los objetivos del proyecto.
