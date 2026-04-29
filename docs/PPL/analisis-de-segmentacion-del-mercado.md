@@ -35,22 +35,23 @@ En conjunto, este análisis permitirá alinear el desarrollo del producto y las 
 
 ## 3. Descripción general del mercado
 
-Dado que la aplicación ha sido desarrollada en idioma español, su mercado objetivo principal está constituido por usuarios hispanohablantes. Este enfoque permite dirigirse a una comunidad lingüística amplia, con características culturales y de consumo relativamente homogéneas, lo que facilita la adaptación del producto y la estrategia de comunicación.
+La aplicación se enmarca dentro del ámbito de la economía colaborativa y los modelos de consumo bajo demanda, en los que los usuarios priorizan el acceso temporal a productos y servicios frente a la propiedad. Este tipo de soluciones ha experimentado un crecimiento significativo en los últimos años, impulsado por factores como la digitalización, la movilidad laboral y la búsqueda de mayor flexibilidad en el consumo.
 
-El español es una de las lenguas más habladas del mundo, con más de 600 millones de hablantes en distintos niveles de competencia, lo que lo convierte en un mercado de gran relevancia a nivel global. Además, la mayoría de estos hablantes se concentra en América Latina, donde reside aproximadamente el 90 % de la población hispanohablante.
+Dado que la aplicación ha sido desarrollada íntegramente en idioma español, su mercado objetivo principal está constituido por usuarios hispanohablantes. Este mercado abarca una amplia diversidad geográfica, incluyendo países de América Latina, Europa y África, y representa un volumen considerable de usuarios potenciales con acceso creciente a tecnologías digitales.
 
-En este contexto, la aplicación se orienta principalmente a usuarios de países donde el español es lengua oficial, entre los que destacan: México, Colombia, España, Argentina, Perú, Venezuela y Chile.
+La propuesta de valor de la aplicación —basada en el alquiler de paquetes de objetos y servicios (como suministros)— responde a la necesidad de facilitar soluciones temporales, flexibles y de rápida implementación, reduciendo los costes y la complejidad asociados a la adquisición de bienes o la contratación individual de servicios.
 
-![Mapa de los países hispanohablantes](./img/map_spanish_countries.svg)
-Este mercado presenta un alto potencial debido a su tamaño, crecimiento y progresiva digitalización. La expansión del acceso a internet y el uso de aplicaciones móviles en estos países favorecen la adopción de plataformas digitales, especialmente aquellas basadas en modelos de economía colaborativa y consumo bajo demanda.
+En este contexto, el mercado no solo está compuesto por usuarios que demandan estos productos y servicios, sino también por actores que pueden ofrecerlos. Por ello, el análisis contempla tanto perfiles de demanda (usuarios que necesitan soluciones temporales) como perfiles de oferta (particulares y empresas que buscan rentabilizar sus recursos). Esta doble perspectiva permite entender el funcionamiento de la aplicación como una plataforma que conecta distintos tipos de usuarios con intereses complementarios.
 
-No obstante, el idioma constituye únicamente un criterio de delimitación inicial del mercado. Para un análisis más preciso y orientado a la toma de decisiones, resulta necesario profundizar en el comportamiento de los usuarios. 
+A partir de esta base, en las siguientes secciones se llevará a cabo una segmentación del mercado centrada en el comportamiento de estos perfiles, diferenciando entre usuarios según sus necesidades, motivaciones y forma de interactuar con la plataforma.
 
 ## 4. Criterios de segmentación
 
-En este análisis, se llevará a cabo una segmentación de mercado de tipo conductual, basada en el comportamiento de los usuarios y en el uso potencial del servicio.
+A partir de la descripción general del mercado, se llevará a cabo una segmentación de tipo conductual, centrada en el comportamiento de los distintos perfiles que interactúan con la plataforma.
 
-En concreto, los segmentos se diferenciarán en función de sus intereses, necesidades y objetivos, ya que estos factores determinan de manera directa la forma en que los usuarios interactúan con la aplicación y el valor que esperan obtener de ella.
+Dado que la aplicación funciona como un punto de encuentro entre usuarios que demandan soluciones temporales y actores que ofrecen productos y servicios, la segmentación se realiza considerando ambos roles. De este modo, se identifican segmentos en función de su papel dentro de la plataforma y de la forma en que utilizan el servicio.
+
+En concreto, los segmentos se diferenciarán según sus intereses, necesidades y objetivos, ya que estos factores determinan directamente tanto el uso que hacen de la aplicación como el valor que esperan obtener de ella. Este enfoque permite analizar de manera más precisa la interacción de cada perfil con la plataforma y facilita la definición de estrategias adaptadas a cada tipo de usuario.
 
 ## 5. Segmentos
 
@@ -210,7 +211,7 @@ Se han identificado los siguientes segmentos:
 |**Ocupación**| Gerente de una empresa de instalación de Internet.|
 |**Contexto personal**| Gestiona una empresa que ofrece servicios de instalación de Internet en hogares y negocios. Su actividad consiste en coordinar equipos técnicos, organizar instalaciones y asegurar la correcta prestación del servicio en distintas ubicaciones. |
 |**Objetivos**|  Optimizar la captación de clientes para servicios de instalación de Internet, aumentar el volumen de instalaciones realizadas y mejorar la eficiencia en la asignación de técnicos y recursos. |
-|**Problemas**|  DDependencia de intermediarios o grandes contratos con operadoras, dificultad para captar clientes de forma directa y necesidad de mejorar la visibilidad del negocio en canales digitales.|
+|**Problemas**|  Dependencia de intermediarios o grandes contratos con operadoras, dificultad para captar clientes de forma directa y necesidad de mejorar la visibilidad del negocio en canales digitales.|
 |**Motivaciones**|Crecimiento de la empresa, incremento de ingresos y expansión del negocio en entornos digitales. |
 |**Comportamiento** | Utiliza la plataforma como canal para captar nuevos clientes de instalación.|
 |**Canales y comunicación**| WhatsApp, Google, plataformas profesionales, redes sociales y herramientas de gestión empresarial. |
@@ -221,13 +222,7 @@ A continuación se presenta el mapa de posicionamiento de los segmentos identifi
 
 Su objetivo es facilitar la interpretación del atractivo relativo de cada grupo para la aplicación, así como apoyar la toma de decisiones estratégicas.
 
-| Proporción esperada | Poder adquisitivo||||
-|----:|:---:|:---:|:---:|:---:|
-| |**Bajo** | **Medio-bajo** | **Medio-alto**| **Alto** |
-|**Alta** ||Personas sujetas a estancias temporales, Persona común|||
-|**Media-alta** |
-|**Media-baja**||Empresas que ofrecen servicios|Nómadas||
-|**Baja** | || | Empresas de alquiler|
+![Mapa de posicionamiento](./img/mapa_posicionamiento.png)
 
 ## 7. Historial de versiones
 
