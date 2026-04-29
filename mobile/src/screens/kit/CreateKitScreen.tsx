@@ -156,8 +156,6 @@ const CreateKitScreen: React.FC = () => {
   const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
   const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
 
-  const [availableServices, setAvailableServices] = useState<CatalogProduct[]>([]);
-
   const [searchText, setSearchText] = useState("");
   const [catalogCategories, setCatalogCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
@@ -337,54 +335,6 @@ const CreateKitScreen: React.FC = () => {
     user?.id,
   ]);
 
-    useEffect(() => {
-    const loadServices = async () => {
-      if (!user?.token) {
-        setAvailableServices([]);
-        return;
-      }
-
-      try {
-        const response = await getActiveServices(user.token);
-
-        console.log("Servicios activos obtenidos:", response);
-
-        const mapped: CatalogProduct[] = response.content.map((p) => ({
-          id: Number(p.id),
-          itemType: String(p.itemType ?? "ARTICLE"),
-          title: p.title ?? "Sin título",
-          pricePerMonth: Number(p.pricePerMonth ?? 0),
-          status: String(p.status ?? "AVAILABLE"),
-          category: typeof p.category === "string" ? p.category : "",
-          condition: (p as any).condition ?? null,
-          city: p.city ?? "",
-          ownerId: Number(p.ownerId),
-          ownerName: p.ownerName ?? "",
-          imageUrl: (p as any).imageUrl ?? null,
-          totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
-          availableFrom: (p as any).availableFrom ?? undefined,
-          availableUntil: (p as any).availableUntil ?? undefined,
-        }));
-
-        const filteredByOwner = mapped.filter(p => p.ownerId !== user?.id);
-
-        setAvailableServices(filteredByOwner);
-        setErrors((prev) => ({ ...prev, general: undefined }));
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "No se pudieron cargar los servicios.";
-        if (message.toLowerCase().includes("no services found")) {
-          setErrors((prev) => ({ ...prev, general: undefined }));
-        } else {
-          setErrors((prev) => ({ ...prev, general: message }));
-        }
-        setAvailableServices([]);
-      } finally {
-        setLoadingCatalog(false);
-      }
-    };
-    loadServices();
-  }, [user?.token, user?.id]);
-
   useEffect(() => {
     loadCatalog();
     const fetchWalletBalance = async () => {
@@ -412,17 +362,16 @@ const CreateKitScreen: React.FC = () => {
     [selectedQuantities],
   );
 
+  const selectedProducts = useMemo(
+    () => {
+      return availableProducts.filter((p) => selectedIds.includes(p.id));
+    },
+    [availableProducts, selectedIds],
+  );
+
   const selectedItemsCount = useMemo(
     () => Object.values(selectedQuantities).reduce((sum, quantity) => sum + quantity, 0),
     [selectedQuantities],
-  );
-
-  const selectedProducts = useMemo(
-    () => {
-      const products = [...availableProducts, ...availableServices];
-      return products.filter((p) => selectedIds.includes(p.id));
-    },
-    [availableProducts, availableServices, selectedIds],
   );
 
   const totalPrice = useMemo(() => {
