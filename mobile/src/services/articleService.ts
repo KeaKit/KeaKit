@@ -288,3 +288,31 @@ export const getArticleRecord = async (articleId: number, token: string): Promis
 
   return await response.json();
 };
+
+// Definir el tipo según el backend
+export interface ReturnRequest {
+  condition: 'GOOD' | 'DAMAGED';
+}
+
+export const processArticleReturn = async (
+  articleId: number, 
+  ownerId: number, 
+  condition: 'GOOD' | 'DAMAGED', 
+  token: string
+) => {
+  const response = await fetch(API_ROUTES.ARTICLE_RETURN(articleId, ownerId), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ condition }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al procesar la devolución');
+  }
+
+  return await response.json();
+};

@@ -170,6 +170,9 @@ export const API_ROUTES = {
   // Insignia
   TOGGLE_FOUNDER_BADGE: (id: number) => `${BASE_URL}/api/admin/users/${id}/founder-badge`,
 
+  // Article return
+  ARTICLE_RETURN: (articleId: number, ownerId: number) => `${BASE_URL}/api/article/${articleId}/return?ownerId=${ownerId}`
+
 } as const;
 
 export default BASE_URL;

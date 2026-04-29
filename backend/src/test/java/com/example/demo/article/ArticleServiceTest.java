@@ -756,11 +756,15 @@ class ArticleServiceTest {
         tenant.setEmail("damaged@example.com");
         Kit activeKit = makeActiveKit(tenant);
 
+        // NUEVO: Añadimos el snapshot al kit simulado
+        ItemMemento memento = new ItemMemento();
+        memento.setOriginalItemId(21L);
+        activeKit.setSnapshots(List.of(memento));
+
         when(articleRepository.findById(21L)).thenReturn(Optional.of(a));
         when(kitRepository.findActiveKitByItemId(21L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
         when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Simulamos la fianza retenida
         when(paymentService.processGuaranteeReturn(1L, owner.getId(), 3L, "DAMAGED")).thenReturn(40.0);
 
         ReturnRequest request = new ReturnRequest("DAMAGED", "Tiene arañazos");
@@ -772,30 +776,21 @@ class ArticleServiceTest {
         assertThat(response.tenantEmail()).isEqualTo("damaged@example.com");
         assertThat(response.message()).contains("daños");
         verify(articleRepository).save(a);
-        assertThat(a.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
+        
+        // CORRECCIÓN: El estado correcto ahora es DAMAGED, no AVAILABLE
+        assertThat(a.getStatus()).isEqualTo(ArticleStatus.DAMAGED);
     }
 
     @Test
     void processReturn_invalidCondition_throws() throws Exception {
-        Article a = makeArticle(22L, ArticleStatus.RENTED);
-        User tenant = new User();
-        tenant.setId(4L);
-        tenant.setEmail("t@example.com");
-        Kit activeKit = makeActiveKit(tenant);
-
-        when(articleRepository.findById(22L)).thenReturn(Optional.of(a));
-        when(kitRepository.findActiveKitByItemId(22L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
-
-        // Simulamos que el PaymentService lanza la excepción por condición inválida
-        when(paymentService.processGuaranteeReturn(1L, owner.getId(), 4L, "UNKNOWN"))
-                .thenThrow(new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED."));
-
+        // Al igual que en el test 4, la validación falla en la línea 1
         ReturnRequest request = new ReturnRequest("UNKNOWN", "");
 
-        // Ahora ArticleService envuelve el error en un RuntimeException
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        // CORRECCIÓN: Comprobamos el IllegalArgumentException exacto
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> articleService.processReturn(22L, owner.getId(), request));
-        assertThat(ex.getMessage()).contains("Error procesando la devolución de la garantía");
+                
+        assertThat(ex.getMessage()).isEqualTo("Condición no válida. Usa GOOD o DAMAGED.");
     }
 
     @Test

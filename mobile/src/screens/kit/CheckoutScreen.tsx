@@ -228,24 +228,6 @@ export default function CheckoutScreen({ route }: Props) {
       } else {
         await executeStripePayment(prices.totalPrice);
       }
-      if (kitDetails?.items?.length) { 
-        console.log("Actualizando estado de los artículos a RENTED...");
-        await Promise.all(
-          // Usamos 'any' temporalmente por si TypeScript se queja con tu interfaz real
-          kitDetails.items.map(async (item: Item) => {
-            console.log(typeof item, item);
-            
-            const articleId = item.itemId;
-            const ownerId = item.ownerId;
-
-            if (articleId && ownerId) {
-              await toggleRent(articleId, ownerId, user?.token ?? "");
-            } else {
-              console.warn("⚠️ No se pudo hacer toggleRent: faltan IDs en el item", item);
-            }
-          })
-        );
-      }
       resetToMyKits();
     } catch (error) {
       console.error("❌ Error:", error);
