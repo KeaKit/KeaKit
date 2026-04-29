@@ -227,13 +227,3 @@ export async function getKitPaymentWithPromo(
   return handleResponse<KitPaymentDTO>(res);
 }
 
-export async function getActiveServices(token: string): Promise<ItemFilterResponse> {
-  const res = await fetchWithTimeout(
-    API_ROUTES.ACTIVE_SERVICES,
-    {
-      method: 'GET',
-      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
-    },
-  );
-  return handleResponse<ItemFilterResponse>(res);
-}
