@@ -241,7 +241,7 @@ Por lo tanto, se ha optado por un **perfil junior** con un coste-hora base de **
 #### Dedicación y coste (30 horas/mes (aprox. 7-8 h/semana))
 
 | Fase | Cálculo | Coste |
-|---|---:|---|---:|
+|---|---:|---|
 | Pre-lanzamiento (4 meses de desarrollo) | 30 h x 15,60 €/h | 468,00 € |
 | Post-lanzamiento (recurrente) | 30 h x 15,60 €/h | 468,00 €/mes |
 
