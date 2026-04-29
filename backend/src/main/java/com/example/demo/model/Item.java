@@ -8,6 +8,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -40,7 +41,7 @@ public abstract class Item {
     protected String country;
 
     @NotNull
-    @Positive
+    @Min(0)
     protected Double pricePerMonth;
 
     protected LocalDate availableFrom;
