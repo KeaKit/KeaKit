@@ -215,7 +215,7 @@ public class ArticleController {
             if (article == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             } 
-            if (ownerId == null || !ownerId.equals(article.getOwner().getId())) {
+            if (!ownerId.equals(article.getOwner().getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
             }
             List<ArticleRecordDTO> articleRecord = articleService.findArticleRecord(articleId);

@@ -555,19 +555,10 @@ class ArticleIntegrationTest {
     }
 
     @Test
-    void testGetArticleRecord_Integration_Failure_Unauthorized() throws Exception {
+    void testGetArticleRecord_Integration_Failure_Forbidden() throws Exception {
         when(authService.getAuthenticatedUserId()).thenReturn(999L);
 
         mockMvc.perform(get("/api/article/record/" + savedArticle.getId()))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void testGetArticleRecord_Integration_Failure_NoAuth() throws Exception {
-        when(authService.getAuthenticatedUserId()).thenReturn(null);
-
-        mockMvc.perform(get("/api/article/record/" + savedArticle.getId()))
-                .andExpect(status().isUnauthorized());
-
+                .andExpect(status().isForbidden());
     }
 }

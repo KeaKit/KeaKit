@@ -441,7 +441,7 @@ class ArticleControllerTest {
     }
 
     @Test
-    void getArticleRecord_unauthorized() throws Exception {
+    void getArticleRecord_forbidden() throws Exception {
         User other = new User();
         other.setId(2L);
         sample.setOwner(other);
@@ -450,7 +450,7 @@ class ArticleControllerTest {
         when(articleService.findById(1L)).thenReturn(sample);
 
         mockMvc.perform(get("/api/article/record/1"))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isForbidden());
     }
 
     @Test
