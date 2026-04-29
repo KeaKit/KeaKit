@@ -19,7 +19,7 @@ import {
   commonStyles,
   Spacing,
 } from "../../../styles";
-import { RootStackParamList, DefaultKitCreateRequest } from "../../../types";
+import { RootStackParamList, DefaultKitCreateRequest, ArticleNearby } from "../../../types";
 import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
@@ -36,6 +36,7 @@ import {
   updateDefaultKit,
 } from "../../../services/defaultKitService";
 import { fetchItemsForRent } from "../../../services/itemService";
+import { getArticlesForMap } from "../../../services/articleService";
 
 type CreateDefaultKitNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -93,6 +94,8 @@ const DefaultKitFormScreen: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
 
   const loadCatalog = useCallback(async () => {
     if (!user?.id || !token) {
@@ -195,10 +198,23 @@ const DefaultKitFormScreen: React.FC = () => {
     });
   }, [availableProducts, searchText, categoryFilter]);
 
-  const openAddProductModal = () => {
+  const openAddProductModal = async () => {
     setTempSelectedQuantities(selectedQuantities);
     setSearchText("");
-    setCategoryFilter("ALL");
+    setShowOnlyAvailable(true);
+
+    if (user?.token) {
+      try {
+        const mapData = await getArticlesForMap(user.token, undefined);
+        setMapProducts(mapData);
+      } catch (error) {
+        console.warn('Error al cargar productos del mapa:', error);
+        setMapProducts([]);
+      }
+    } else {
+      setMapProducts([]);
+    }
+
     setCatalogModalVisible(true);
   };
 
@@ -466,6 +482,7 @@ const DefaultKitFormScreen: React.FC = () => {
           expandedSearch={false}
           onToggleExpandedSearch={() => {}}
           loadingNearby={false}
+          mapProducts={mapProducts}
         />
       </SafeAreaView>
     </PaperProvider>
