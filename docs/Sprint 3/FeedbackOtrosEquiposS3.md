@@ -6,19 +6,10 @@
 
 ####  Autenticación
 
-###### Limitar tamaño máximo de contraseña
-
-**Revisión:** Bugs anteriores revisados y arreglados, no se han detectado nuevas failure conditions.
-
-**Funcionamiento mejorable**
-* El mensaje de error "Este campo no puede tener mas de 128 caracteres" no aparece justo debajo ni encima de contraseña, sino flotante en la parte de arriba del modal de creación de nuevo residente. Por lo que si se rellenan más campos aparte de la contraseña, no se sabe exactamente cuál es "este campo" en concreto.
-
----
 ###### Edición de perfil.
 
 **Revision:** Bugs anteriores revisados y arreglados, no se han detectado nuevas failure condition.
-**Funcionamiento mejorable**
-* El mensaje de error "Este campo no puede tener mas de 128 caracteres" no aparece justo debajo ni encima de contraseña, sino flotante en la parte de arriba del modal de creación de nuevo residente. Por lo que si se rellenan más campos aparte de la contraseña, no se sabe exactamente cuál es "este campo" en concreto.
+
 ---
 
 #### Panel residencias
