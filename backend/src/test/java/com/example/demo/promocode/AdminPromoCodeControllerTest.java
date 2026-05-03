@@ -98,6 +98,24 @@ class AdminPromoCodeControllerTest extends BaseControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void createPromoCode_discountRateLessThanMinimum_returns_BadRequest() throws Exception {
+        invalidRequest = new PromoCodeRequest(
+                "PROMO10",
+                0.0, // Descuento del 0%
+                true,
+                false,
+                PromoCodeType.TENANT_DISCOUNT,
+                false,
+                List.of());
+
+        mockMvc.perform(post(BASE_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.discountRate").exists());
+    }
+
     // UPDATE PROMO CODE TESTS
 
     @Test
@@ -129,6 +147,24 @@ class AdminPromoCodeControllerTest extends BaseControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void updatePromoCode_discountRateLessThanMinimum_returns_BadRequest() throws Exception {
+        invalidRequest = new PromoCodeRequest(
+                "PROMO10",
+                0.0, // Descuento del 0%
+                true,
+                false,
+                PromoCodeType.TENANT_DISCOUNT,
+                false,
+                List.of());
+
+        mockMvc.perform(put(PROMOCODE_URL, validPromoCode.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.discountRate").exists());
     }
 
     // GET PROMO CODE TESTS

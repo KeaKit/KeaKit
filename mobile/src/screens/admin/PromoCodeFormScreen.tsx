@@ -156,7 +156,7 @@ const PromoCodeFormScreen: React.FC = () => {
     }
 
     if (errors.discountRate) {
-      setDiscountError('El descuento debe estar entre 0 y 100');
+      setDiscountError('El descuento debe estar entre 1% y 100%');
     }
 
     if (errors.pilotEmails) {
@@ -181,6 +181,8 @@ const PromoCodeFormScreen: React.FC = () => {
       setLoadingPilotEmails(false);
     }
   };
+
+  const isSavingDisabled = saving || discountError !== '' || codeError !== '' || code.trim() === '' || discountStr.trim() === '';
 
 
   return (
@@ -237,6 +239,11 @@ const PromoCodeFormScreen: React.FC = () => {
                   const num = Number(onlyNumbers);
 
                   if (num > 100) {
+                    return;
+                  }
+                  if (num < 1) {
+                    setDiscountError('El descuento debe ser al menos 1%');
+                    setDiscountStr(onlyNumbers);
                     return;
                   }
 
@@ -410,9 +417,9 @@ const PromoCodeFormScreen: React.FC = () => {
         {/* Botón guardar */}
         <FadeIn delay={240}>
           <TouchableOpacity
-            style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+            style={[styles.saveBtn, isSavingDisabled && styles.saveBtnDisabled]}
             onPress={handleSave}
-            disabled={saving}
+            disabled={isSavingDisabled}
             activeOpacity={0.85}
           >
             {saving ? (
