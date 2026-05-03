@@ -105,7 +105,7 @@ class ItemServiceTest {
 
         when(itemRepository.findAll(org.mockito.ArgumentMatchers.<Specification<Item>>any(), eq(PageRequest.of(0, 10)))).thenReturn(page);
 
-        ItemFilterResponseDTO result = itemService.filterItemsForKit(20.0, 50.0, null, null, null, "USED", 0, 10);
+        ItemFilterResponseDTO result = itemService.filterItemsForKit(20.0, 50.0, null, null, null, "USED", 0, 10, null, null);
 
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getContent().get(0).getId()).isEqualTo(1L);
@@ -122,14 +122,14 @@ class ItemServiceTest {
 
     @Test
     void filterItemsForKit_whenMinPriceIsGreaterThanMaxPrice_throws() {
-        assertThatThrownBy(() -> itemService.filterItemsForKit(60.0, 20.0, null, null, null, null, 0, 10))
+        assertThatThrownBy(() -> itemService.filterItemsForKit(60.0, 20.0, null, null, null, null, 0, 10, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("El precio mínimo no puede ser mayor que el precio máximo");
     }
 
     @Test
     void filterItemsForKit_whenConditionIsInvalid_throws() {
-        assertThatThrownBy(() -> itemService.filterItemsForKit(20.0, 50.0, null, null, null, "BROKEN", 0, 10))
+        assertThatThrownBy(() -> itemService.filterItemsForKit(20.0, 50.0, null, null, null, "BROKEN", 0, 10, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("La condición debe ser una entre: NEW, LIGHTLY_USED, USED, WORN");
     }
