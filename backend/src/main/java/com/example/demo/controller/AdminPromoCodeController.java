@@ -35,20 +35,20 @@ public class AdminPromoCodeController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody PromoCodeRequest request) {
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(promoCodeService.create(request));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<PromoCodeResponse> create(@Valid @RequestBody PromoCodeRequest request) {
+        PromoCodeResponse response = promoCodeService.create(request);
+
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody PromoCodeRequest request) {
-        try {
-            return ResponseEntity.ok(promoCodeService.update(id, request));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<PromoCodeResponse> update(@PathVariable Long id, @Valid @RequestBody PromoCodeRequest request) {
+        PromoCodeResponse response = promoCodeService.update(id, request);
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(response);
     }
 }

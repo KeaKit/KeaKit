@@ -193,4 +193,19 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(error, HttpStatus.PAYMENT_REQUIRED);
     }
+
+    @ExceptionHandler(PromoCodeAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handlePromoCodeAlreadyExists(
+            PromoCodeAlreadyExistsException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.CONFLICT.value(),
+            "Conflict",
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
 }
