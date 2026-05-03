@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -56,10 +57,12 @@ public class ItemController {
             @RequestParam(required = false) String condition,
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
+                    @RequestParam(required = false) LocalDate startDate,  
+        @RequestParam(required = false) LocalDate endDate,
             HttpServletRequest request) {
         try {
             ItemFilterResponseDTO response = itemService.filterItemsForKit(minPrice, maxPrice, country, city, categoryId,
-                    condition, page, size);
+                    condition, page, size, startDate, endDate);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -86,7 +89,7 @@ public class ItemController {
             filter.getCategoryId(),
             filter.getCondition(),
                     filter.getPage(),
-                    filter.getSize());
+                    filter.getSize(),filter.getStartDate(), filter.getEndDate());
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

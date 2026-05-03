@@ -258,7 +258,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   };
 
   // Calcular disponibilidad de productos basado en fechas para la LISTA
-  const productsWithAvailability = React.useMemo(() => {
+const productsWithAvailability = React.useMemo(() => {
     if (!startDate || !endDate) {
       return filteredProducts.map((p) => ({ ...p, isAvailable: true }));
     }
@@ -271,10 +271,11 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
     const mapped = filteredProducts.map((p) => {
       if (!p.availableFrom || !p.availableUntil) {
+        const isAvailable = p.status === "AVAILABLE" || p.status === "ACTIVE";
         return {
           ...p,
-          isAvailable: false,
-          availabilityMessage: "Sin fechas de disponibilidad",
+          isAvailable,
+          availabilityMessage: isAvailable ? undefined : "Sin fechas de disponibilidad",
         };
       }
 

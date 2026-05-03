@@ -198,6 +198,8 @@ export interface ItemFilterRequest {
   condition?: ArticleCondition;
   page?: number;
   size?: number;
+   startDate?: string;  
+  endDate?: string;   
 }
 
 export interface ItemFilterResponse {

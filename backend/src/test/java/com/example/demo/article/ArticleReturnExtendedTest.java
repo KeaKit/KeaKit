@@ -118,12 +118,13 @@ class ArticleReturnExtendedTest {
         article.setStatus(ArticleStatus.AVAILABLE);
         article.setOwner(owner);
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
+        when(kitRepository.findActiveKitByItemId(1L, KitStatus.ACTIVE)).thenReturn(Optional.empty());
 
         ReturnRequest request = new ReturnRequest("GOOD", "");
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-    assertThat(ex.getMessage()).contains("Este artículo no está actualmente alquilado");
+    assertThat(ex.getMessage()).contains("No se encontró un Kit activo para este artículo");
     }
 
     @Test
@@ -133,12 +134,13 @@ class ArticleReturnExtendedTest {
         article.setStatus(ArticleStatus.INACTIVE);
         article.setOwner(owner);
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
+        when(kitRepository.findActiveKitByItemId(1L, KitStatus.ACTIVE)).thenReturn(Optional.empty());
 
         ReturnRequest request = new ReturnRequest("GOOD", "");
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-    assertThat(ex.getMessage()).contains("Este artículo no está actualmente alquilado");
+    assertThat(ex.getMessage()).contains("No se encontró un Kit activo para este artículo");
     }
 
     // ═══════════════ Article not found ═══════════════

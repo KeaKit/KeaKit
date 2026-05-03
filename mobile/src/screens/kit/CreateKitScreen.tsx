@@ -293,6 +293,8 @@ const CreateKitScreen: React.FC = () => {
           maxPrice: nextMaxPrice ? parseFloat(nextMaxPrice) : undefined,
           page: 0,
           size: 100,
+          startDate: startDate ? `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}` : undefined,
+          endDate: endDate ? `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}` : undefined,
         },
         user.token,
       );
@@ -338,6 +340,8 @@ const CreateKitScreen: React.FC = () => {
     showOnlyMyCity,
     user?.token,
     user?.id,
+    startDate, 
+    endDate,
   ]);
 
   useEffect(() => {
@@ -521,10 +525,9 @@ const CreateKitScreen: React.FC = () => {
     changeSelectedQuantity(id, current - 1, product.totalUnits);
   };
 
-  const checkItemsAvailability = (start: Date, end: Date): string[] => {
+const checkItemsAvailability = (start: Date, end: Date): string[] => {
     const invalidTitles: string[] = [];
 
-    // Normalizar fechas
     const kitStart = new Date(start);
     kitStart.setHours(0, 0, 0, 0);
     
@@ -533,7 +536,8 @@ const CreateKitScreen: React.FC = () => {
 
     selectedProducts.forEach((product) => {
       if (!product.availableFrom || !product.availableUntil) {
-        invalidTitles.push(product.title);
+        const isAvailable = product.status === "AVAILABLE" || product.status === "ACTIVE";
+        if (!isAvailable) invalidTitles.push(product.title);
         return;
       }
 
@@ -544,14 +548,11 @@ const CreateKitScreen: React.FC = () => {
       productUntil.setHours(0, 0, 0, 0);
 
       const isAvailable = kitStart >= productFrom && kitEnd <= productUntil;
-
-      if (!isAvailable) {
-        invalidTitles.push(product.title);
-      }
+      if (!isAvailable) invalidTitles.push(product.title);
     });
 
     return invalidTitles;
-  };
+};
 
   const validate = (isDraft: boolean = false): {
     valid: boolean;

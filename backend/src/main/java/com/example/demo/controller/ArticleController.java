@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -228,13 +229,20 @@ public class ArticleController {
     }
 
     @PostMapping("/{articleId}/return")
-    public ResponseEntity<ReturnResponse> processReturn(
+    public ResponseEntity<?> processReturn(
             @PathVariable Long articleId,
             @RequestParam Long ownerId,
             @RequestBody ReturnRequest request) {
-        
-        ReturnResponse response = articleService.processReturn(articleId, ownerId, request);
-        return ResponseEntity.ok(response);
+        try {
+            ReturnResponse response = articleService.processReturn(articleId, ownerId, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", 409);
+            error.put("error", "Conflict");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        }
     }
     
     @GetMapping("/nearby")
