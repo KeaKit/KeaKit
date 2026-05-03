@@ -19,6 +19,9 @@ import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNotification } from '../../components/NotificationContext';
 
+const MAX_TITLE_LENGTH = 255;
+const MAX_TOTAL_UNITS = 2147483647; 
+
 registerTranslation('es', es);
 
 type EditNav   = NativeStackNavigationProp<RootStackParamList, 'EditArticle'>;
@@ -229,6 +232,18 @@ const EditArticleScreen: React.FC = () => {
     if (!totalUnits || isNaN(Number(totalUnits)) || Number(totalUnits) < 1 || !Number.isInteger(Number(totalUnits))) {
       newErrors.totalUnits = 'Introduce un número de unidades válido (mínimo 1)';
     }
+
+    if (title.trim().length > MAX_TITLE_LENGTH) {
+      newErrors.title = `El título no puede superar los ${MAX_TITLE_LENGTH} caracteres`;
+    }
+
+    const unitsNum = Number(totalUnits);
+    if (isNaN(unitsNum) || unitsNum < 1 || unitsNum > MAX_TOTAL_UNITS) {
+      newErrors.totalUnits = `Introduce un número de unidades válido (1 - ${MAX_TOTAL_UNITS.toLocaleString()})`;
+    } else if (!Number.isInteger(unitsNum)) {
+      newErrors.totalUnits = 'El número de unidades debe ser un número entero';
+    }
+
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
@@ -450,7 +465,13 @@ const EditArticleScreen: React.FC = () => {
             <Field
               label="Unidades disponibles"
               value={totalUnits}
-              onChange={(t) => { setTotalUnits(t); clearError('totalUnits'); }}
+              onChange={(t) => {
+                const cleaned = t.replace(/[^0-9]/g, '');
+                if (cleaned.length <= 10) {
+                  setTotalUnits(cleaned);
+                }
+                clearError('totalUnits');
+              }}
               placeholder="Ej: 1"
               keyboardType="numeric"
               error={errors.totalUnits}
