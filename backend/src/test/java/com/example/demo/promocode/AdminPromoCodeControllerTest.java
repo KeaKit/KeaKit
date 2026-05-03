@@ -131,4 +131,26 @@ class AdminPromoCodeControllerTest extends BaseControllerTest {
                 .andExpect(status().isConflict());
     }
 
+    // GET PROMO CODE TESTS
+
+    @Test
+    void getPromoCodeById_success_returns_PromoCodeResponse() throws Exception {
+        when(promoCodeService.findById(validPromoCode.getId())).thenReturn(validResponse);
+
+        mockMvc.perform(get(PROMOCODE_URL, validPromoCode.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(validResponse.getId()));
+    }
+
+    @Test
+    void getPromoCodeById_notFound_returns_NotFound() throws Exception {
+        when(promoCodeService.findById(validPromoCode.getId()))
+                .thenThrow(new ResourceNotFoundException("Código promocional no encontrado"));
+
+        mockMvc.perform(get(PROMOCODE_URL, validPromoCode.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
 }
