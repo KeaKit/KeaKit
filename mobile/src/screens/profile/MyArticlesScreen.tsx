@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, SafeAreaView, TouchableOpacity, Pressable, Image, Modal, TextInput, LayoutAnimation, Platform, UIManager } from 'react-native';
 
@@ -27,6 +26,9 @@ const CONDITION_OPTIONS = [
   { value: 'USED', label: 'Usado' },
   { value: 'WORN', label: 'Desgastado' },
 ];
+
+// Constante para precio máximo razonable
+const MAX_PRICE = 999999999;
 
 const customTheme = {
   ...MD3LightTheme,
@@ -67,6 +69,7 @@ const MyArticlesScreen: React.FC = () => {
   const [selectedCondition, setSelectedCondition] = useState<string>('');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
+  const [priceError, setPriceError] = useState<string>('');
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -161,7 +164,7 @@ const MyArticlesScreen: React.FC = () => {
           setFilteredArticles(applyFilter(filter, data));
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Error al cargar artículos');
-          showNotification('Error al cargar los artículos', 'error'); // 👈 Notificación
+          showNotification('Error al cargar los artículos', 'error');
         } finally {
           setLoading(false);
         }
@@ -170,7 +173,73 @@ const MyArticlesScreen: React.FC = () => {
     }, [user])
   );
 
+  const sanitizePriceInput = (text: string): string => {
+    let cleaned = text.replace(/[^0-9.]/g, '');
+    
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    const match = cleaned.match(/^\d*(\.\d{0,2})?/);
+    return match ? match[0] : '';
+  };
+
+  const validatePriceRange = (min: string, max: string): boolean => {
+    if (!min && !max) {
+      setPriceError('');
+      return true;
+    }
+    
+    const minNum = min ? parseFloat(min) : 0;
+    const maxNum = max ? parseFloat(max) : Infinity;
+    
+    if (min && isNaN(minNum)) {
+      setPriceError('Precio mínimo inválido');
+      return false;
+    }
+    
+    if (max && isNaN(maxNum)) {
+      setPriceError('Precio máximo inválido');
+      return false;
+    }
+    
+    if (minNum < 0) {
+      setPriceError('El precio no puede ser negativo');
+      return false;
+    }
+    
+    if (maxNum < 0) {
+      setPriceError('El precio no puede ser negativo');
+      return false;
+    }
+    
+    if (min && max && minNum > maxNum) {
+      setPriceError('El precio mínimo no puede ser mayor que el máximo');
+      return false;
+    }
+    
+    setPriceError('');
+    return true;
+  };
+
+  const handleMinPriceChange = (text: string) => {
+    const sanitized = sanitizePriceInput(text);
+    setMinPrice(sanitized);
+    validatePriceRange(sanitized, maxPrice);
+  };
+
+  const handleMaxPriceChange = (text: string) => {
+    const sanitized = sanitizePriceInput(text);
+    setMaxPrice(sanitized);
+    validatePriceRange(minPrice, sanitized);
+  };
+
   const handleApplyAdvancedFilters = () => {
+    if (!validatePriceRange(minPrice, maxPrice)) {
+      showNotification(priceError || 'Revisa los valores de precio', 'error');
+      return;
+    }
     setFiltersModalVisible(false);
     loadArticles();
   };
@@ -180,6 +249,7 @@ const MyArticlesScreen: React.FC = () => {
     setSelectedCondition('');
     setMinPrice("");
     setMaxPrice("");
+    setPriceError("");
     setFiltersModalVisible(false);
     loadArticles(true); 
   };
@@ -257,7 +327,7 @@ const MyArticlesScreen: React.FC = () => {
       showNotification(response.message || 'Devolución procesada correctamente', 'success');
       setReturnModalVisible(false);
       setArticleToReturn(null);
-      loadArticles(true); // Recargamos para que el artículo pase a DISPONIBLE
+      loadArticles(true);
     } catch (err: any) {
       showNotification(err.message || 'No se pudo procesar la devolución', 'error');
     } finally {
@@ -489,7 +559,6 @@ const MyArticlesScreen: React.FC = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Mis Artículos</Text>
           
-          {/* PASO 5: BOTÓN EN EL HEADER */}
           <View style={styles.headerRight}>
             <TouchableOpacity onPress={() => setFiltersModalVisible(true)} style={styles.filterIconButton}>
               <Ionicons name="options-outline" size={24} color={activeAdvancedFiltersCount > 0 ? Colors.primary : '#666'} />
@@ -544,7 +613,7 @@ const MyArticlesScreen: React.FC = () => {
           <Ionicons name="add" size={32} color="#fff" />
         </TouchableOpacity>
 
-        {/* PASO 6: MODAL DE FILTROS AVANZADOS */}
+        {/* MODAL DE FILTROS AVANZADOS */}
         <Modal visible={filtersModalVisible} animationType="slide" transparent={true}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -580,32 +649,31 @@ const MyArticlesScreen: React.FC = () => {
 
               <Text style={styles.filterLabel}>Rango de Precios</Text>
               <View style={styles.priceRangeContainer}>
-                <View style={styles.priceInputWrapper}>
+                <View style={[styles.priceInputWrapper, priceError ? styles.priceInputWrapperError : null]}>
                   <TextInput
                     style={styles.priceInput}
                     placeholder="Mín"
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
                     value={minPrice}
-                    onChangeText={setMinPrice}
+                    onChangeText={handleMinPriceChange}
                     placeholderTextColor="#999"
                   />
                 </View>
                 
                 <Text style={styles.priceSeparator}>a</Text>
 
-                <View style={styles.priceInputWrapper}>
+                <View style={[styles.priceInputWrapper, priceError ? styles.priceInputWrapperError : null]}>
                   <TextInput
                     style={styles.priceInput}
                     placeholder="Máx"
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
                     value={maxPrice}
-                    onChangeText={setMaxPrice}
+                    onChangeText={handleMaxPriceChange}
                     placeholderTextColor="#999"
                   />
                 </View>
               </View>
-
-              
+              {priceError ? <Text style={styles.priceErrorText}>{priceError}</Text> : null}
 
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
@@ -942,6 +1010,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
   },
+  priceInputWrapperError: {
+    borderColor: Colors.error,
+    borderWidth: 1,
+  },
   priceIcon: {
     marginRight: 5,
   },
@@ -955,7 +1027,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
     fontWeight: '600',
-    marginHorizontal: 4,},
+    marginHorizontal: 4,
+  },
+  priceErrorText: {
+    fontSize: 11,
+    color: Colors.error,
+    marginTop: 4,
+    marginBottom: 0,
+  },
   cardContainer: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -1041,7 +1120,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   processReturnButton: {
-    backgroundColor: '#007AFF', // O Colors.primary
+    backgroundColor: '#007AFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1069,7 +1148,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.primary,
     borderRadius: 8,
-    backgroundColor: '#E3F2FD', // Fondo azul muy clarito (primaryContainer)
+    backgroundColor: '#E3F2FD',
     gap: 6,
   },
   returnButtonText: {
