@@ -2,6 +2,7 @@ package com.example.demo.incident;
 
 import com.example.demo.controller.IncidentController;
 import com.example.demo.model.Incident;
+import com.example.demo.dto.IncidentRequestDTO;
 import com.example.demo.model.IncidentComment;
 import com.example.demo.model.IncidentStatus;
 import com.example.demo.model.IncidentType;
@@ -69,7 +70,7 @@ class IncidentControllerExtendedTest {
 
     @Test
     void createIncident_validationError_returnsBadRequest() throws Exception {
-        when(incidentService.createIncident(any(Incident.class)))
+        when(incidentService.createIncident(any(IncidentRequestDTO.class)))
                 .thenThrow(new IllegalArgumentException("El título de la incidencia es obligatorio."));
 
         mockMvc.perform(post("/api/incidents")
@@ -81,7 +82,7 @@ class IncidentControllerExtendedTest {
 
     @Test
     void createIncident_blankDescription_returnsBadRequest() throws Exception {
-        when(incidentService.createIncident(any(Incident.class)))
+        when(incidentService.createIncident(any(IncidentRequestDTO.class)))
                 .thenThrow(new IllegalArgumentException("La descripción de la incidencia es obligatoria."));
 
         mockMvc.perform(post("/api/incidents")
@@ -93,7 +94,7 @@ class IncidentControllerExtendedTest {
 
     @Test
     void createIncident_damagedItemWithoutItem_returnsBadRequest() throws Exception {
-        when(incidentService.createIncident(any(Incident.class)))
+        when(incidentService.createIncident(any(IncidentRequestDTO.class)))
                 .thenThrow(new IllegalArgumentException("Para incidencias de tipo objeto dañado, el ítem es obligatorio."));
 
         mockMvc.perform(post("/api/incidents")
