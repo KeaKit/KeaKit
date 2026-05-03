@@ -22,16 +22,20 @@ public class AdminPromoCodeController {
 
     @GetMapping
     public ResponseEntity<List<PromoCodeResponse>> getAll() {
-        return ResponseEntity.ok(promoCodeService.findAll());
+        List<PromoCodeResponse> response = promoCodeService.findAll();
+        
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(promoCodeService.findById(id));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+    public ResponseEntity<PromoCodeResponse> getById(@PathVariable Long id) {
+        PromoCodeResponse response = promoCodeService.findById(id);
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(response);
     }
 
     @PostMapping

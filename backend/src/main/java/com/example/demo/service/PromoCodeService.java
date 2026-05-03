@@ -28,7 +28,7 @@ public class PromoCodeService {
                 .collect(Collectors.toList());
     }
 
-    public PromoCodeResponse findById(Long id) {
+    public PromoCodeResponse findById(Long id) throws ResourceNotFoundException {
         PromoCode promoCode = promoCodeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Código promocional no encontrado"));
         return new PromoCodeResponse(promoCode);
@@ -44,7 +44,7 @@ public class PromoCodeService {
         return new PromoCodeResponse(promoCodeRepository.save(promoCode));
     }
 
-    public PromoCodeResponse update(Long id, PromoCodeRequest request) {
+    public PromoCodeResponse update(Long id, PromoCodeRequest request) throws ResourceNotFoundException, PromoCodeAlreadyExistsException {
         PromoCode promoCode = promoCodeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Código promocional no encontrado"));
 
