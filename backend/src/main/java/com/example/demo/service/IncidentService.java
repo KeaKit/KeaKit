@@ -124,15 +124,12 @@ public class IncidentService {
     }
 
     public Incident createIncident(IncidentRequestDTO dto) {
-    // 1. Instanciamos la entidad vacía
     Incident incident = new Incident();
     
-    // 2. Mapeamos los campos básicos (los que apliquen a tu modelo)
     incident.setTitle(dto.getTitle());
     incident.setDescription(dto.getDescription());
     incident.setType(dto.getType());
 
-    // 3. Tu lógica de relaciones intacta
     if (dto.getUser() != null && dto.getUser().getId() != null) {
         User user = userRepository.findById(dto.getUser().getId())
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -150,8 +147,7 @@ public class IncidentService {
             .orElseThrow(() -> new RuntimeException("Kit de alquiler no encontrado"));
         incident.setRelatedKit(relatedKit);
     }
-    
-    // 4. Validar y guardar
+
     validateIncident(incident);
     return incidentRepository.save(incident);
 }
