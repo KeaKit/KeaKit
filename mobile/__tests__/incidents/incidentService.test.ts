@@ -44,8 +44,8 @@ beforeEach(() => {
 describe('getAllIncidents', () => {
   it('llama al endpoint correcto y devuelve todas las incidencias', async () => {
     const incidents = [
-      { id: 1, title: 'Inc 1', status: 'OPEN', type: 'GENERAL' },
-      { id: 2, title: 'Inc 2', status: 'RESOLVED', type: 'DAMAGED_ITEM' },
+      { id: 1, title: 'Inc 1', status: 'OPEN', type: 'GENERAL', userId: 1, userName: 'User 1', userEmail: 'user1@test.com' },
+      { id: 2, title: 'Inc 2', status: 'RESOLVED', type: 'DAMAGED_ITEM', userId: 2, userName: 'User 2', userEmail: 'user2@test.com' },
     ];
     mockFetch.mockResolvedValueOnce(jsonResponse(incidents));
 
@@ -84,8 +84,8 @@ describe('getAllIncidents', () => {
 describe('getIncidentsByUser', () => {
   it('devuelve la lista de incidencias del usuario', async () => {
     const incidents = [
-      { id: 1, title: 'Inc 1', status: 'OPEN', type: 'GENERAL' },
-      { id: 2, title: 'Inc 2', status: 'RESOLVED', type: 'DAMAGED_ITEM' },
+      { id: 1, title: 'Inc 1', status: 'OPEN', type: 'GENERAL', userId: 42, userName: 'User 1', userEmail: 'user1@test.com' },
+      { id: 2, title: 'Inc 2', status: 'RESOLVED', type: 'DAMAGED_ITEM', userId: 42, userName: 'User 2', userEmail: 'user2@test.com' },
     ];
     mockFetch.mockResolvedValueOnce(jsonResponse(incidents));
 
@@ -139,7 +139,7 @@ describe('getReceivedIncidents', () => {
   });
 
   it('devuelve las incidencias recibidas', async () => {
-    const data = [{ id: 5, title: 'Daño reportado' }];
+    const data = [{ id: 5, title: 'Daño reportado', userId: 99, userName: 'User', userEmail: 'user@test.com' }];
     mockFetch.mockResolvedValueOnce(jsonResponse(data));
 
     const result = await getReceivedIncidents(99, TOKEN);
@@ -152,15 +152,25 @@ describe('getReceivedIncidents', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('createIncident', () => {
+  // PAYLOAD ACTUALIZADO
   const payload = {
     title: 'Problema',
     description: 'Descripción del problema',
     type: 'GENERAL' as const,
-    user: { id: 1 },
+    userId: 1,  // CAMBIADO: antes era user: { id: 1 }
   };
 
   it('envía POST con el cuerpo correcto y devuelve la incidencia creada', async () => {
-    const created = { id: 10, ...payload, status: 'OPEN' };
+    const created = { 
+      id: 10, 
+      title: 'Problema', 
+      description: 'Descripción del problema', 
+      type: 'GENERAL', 
+      status: 'OPEN',
+      userId: 1,
+      userName: 'Usuario',
+      userEmail: 'user@test.com'
+    };
     mockFetch.mockResolvedValueOnce(jsonResponse(created));
 
     const result = await createIncident(payload, TOKEN);
@@ -179,18 +189,23 @@ describe('createIncident', () => {
     );
   });
 
-  it('envía relatedItem cuando es DAMAGED_ITEM', async () => {
+  it('envía relatedItemId y relatedKitId cuando es DAMAGED_ITEM', async () => {
+    // PAYLOAD ACTUALIZADO para DAMAGED_ITEM
     const damagedPayload = {
-      ...payload,
+      title: 'Problema',
+      description: 'Descripción del problema',
       type: 'DAMAGED_ITEM' as const,
-      relatedItem: { id: 7 },
+      userId: 1,
+      relatedItemId: 7,   // CAMBIADO: antes era relatedItem: { id: 7 }
+      relatedKitId: 10,   // NUEVO: también se necesita el kitId
     };
     mockFetch.mockResolvedValueOnce(jsonResponse({ id: 11, ...damagedPayload }));
 
     await createIncident(damagedPayload, TOKEN);
 
     const callBody = JSON.parse(mockFetch.mock.calls[0][1]!.body as string);
-    expect(callBody.relatedItem).toEqual({ id: 7 });
+    expect(callBody.relatedItemId).toBe(7);
+    expect(callBody.relatedKitId).toBe(10);
     expect(callBody.type).toBe('DAMAGED_ITEM');
   });
 
@@ -209,7 +224,14 @@ describe('createIncident', () => {
 
 describe('getIncidentById', () => {
   it('llama al endpoint correcto y devuelve la incidencia', async () => {
-    const incident = { id: 3, title: 'Test', status: 'OPEN' };
+    const incident = { 
+      id: 3, 
+      title: 'Test', 
+      status: 'OPEN',
+      userId: 1,
+      userName: 'Usuario',
+      userEmail: 'user@test.com'
+    };
     mockFetch.mockResolvedValueOnce(jsonResponse(incident));
 
     const result = await getIncidentById(3, TOKEN);
@@ -236,7 +258,14 @@ describe('getIncidentById', () => {
 
 describe('updateIncident', () => {
   it('envía PUT con datos parciales', async () => {
-    const updated = { id: 3, title: 'Nuevo título', status: 'OPEN' };
+    const updated = { 
+      id: 3, 
+      title: 'Nuevo título', 
+      status: 'OPEN',
+      userId: 1,
+      userName: 'Usuario',
+      userEmail: 'user@test.com'
+    };
     mockFetch.mockResolvedValueOnce(jsonResponse(updated));
 
     const result = await updateIncident(3, { title: 'Nuevo título' }, TOKEN);
@@ -258,7 +287,13 @@ describe('updateIncident', () => {
 
 describe('resolveIncident', () => {
   it('llama al endpoint de resolución con PUT', async () => {
-    const resolved = { id: 5, status: 'RESOLVED' };
+    const resolved = { 
+      id: 5, 
+      status: 'RESOLVED',
+      userId: 1,
+      userName: 'Usuario',
+      userEmail: 'user@test.com'
+    };
     mockFetch.mockResolvedValueOnce(jsonResponse(resolved));
 
     const result = await resolveIncident(5, TOKEN);

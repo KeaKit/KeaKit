@@ -177,21 +177,24 @@ const IncidentDetailScreen: React.FC = () => {
             <Text style={styles.infoLabel}>
               {isReceived ? 'Enviada por:' : 'Creada por:'}
             </Text>
-            <Text style={styles.infoValue}>{incident.user?.name || '—'}</Text>
+            {/* CAMBIADO: usar userName en lugar de user?.name */}
+            <Text style={styles.infoValue}>{incident.userName || '—'}</Text>
           </View>
 
-          {incident.relatedItem && (
+          {/* CAMBIADO: usar relatedItemId, relatedItemTitle en lugar de incident.relatedItem */}
+          {incident.relatedItemId && (
             <>
               <View style={styles.infoRow}>
                 <Ionicons name="cube" size={16} color={Colors.textSecondary} />
                 <Text style={styles.infoLabel}>Objeto:</Text>
-                <Text style={styles.infoValue}>{incident.relatedItem.title}</Text>
+                <Text style={styles.infoValue}>{incident.relatedItemTitle || '—'}</Text>
               </View>
-              {incident.relatedItem.owner && (
+              {/* El propietario ya no está disponible directamente, se puede omitir o mostrar el ownerId */}
+              {incident.userId && (
                 <View style={styles.infoRow}>
                   <Ionicons name="person-circle" size={16} color={Colors.textSecondary} />
-                  <Text style={styles.infoLabel}>Propietario:</Text>
-                  <Text style={styles.infoValue}>{incident.relatedItem.owner.name}</Text>
+                  <Text style={styles.infoLabel}>ID del usuario:</Text>
+                  <Text style={styles.infoValue}>{incident.userId}</Text>
                 </View>
               )}
             </>
@@ -372,7 +375,7 @@ const IncidentDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Modal confirmar resolver */}
+        {/* Modales... */}
         <Modal
           visible={showResolveModal}
           transparent
@@ -405,7 +408,6 @@ const IncidentDetailScreen: React.FC = () => {
           </View>
         </Modal>
 
-        {/* Modal confirmar eliminar */}
         <Modal
           visible={showDeleteModal}
           transparent

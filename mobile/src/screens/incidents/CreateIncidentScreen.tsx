@@ -126,16 +126,28 @@ const CreateIncidentScreen: React.FC = () => {
     setLoading(true);
 
     try {
-      await createIncident(
-        {
-          title: title.trim(),
-          description: description.trim(),
-          type,
-          user: { id: user.id },
-          relatedItem: selectedItem ? { id: selectedItem.itemId } : null,
-        },
-        user.token,
-      );
+      // Definir el tipo base del payload
+      const payload: {
+        title: string;
+        description: string;
+        type: IncidentType;
+        userId: number;
+        relatedItemId?: number;
+        relatedKitId?: number;
+      } = {
+        title: title.trim(),
+        description: description.trim(),
+        type,
+        userId: user.id,
+      };
+
+      // Si es DAMAGED_ITEM, añadir los IDs
+      if (type === 'DAMAGED_ITEM' && selectedItem) {
+        payload.relatedItemId = selectedItem.itemId;
+        payload.relatedKitId = selectedItem.kitId;
+      }
+
+      await createIncident(payload, user.token);
       navigation.navigate('MyIncidents');
     } catch (err) {
       setErrors({

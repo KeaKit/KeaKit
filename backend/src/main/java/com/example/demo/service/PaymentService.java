@@ -570,8 +570,9 @@ public class PaymentService {
 
     @Transactional
     public void withdrawToBank(Long userId, Double amount, String bankAccount)
-            throws ResourceNotFoundException, NotEnoughBalanceException, StripeException {
+            throws ResourceNotFoundException, NotEnoughBalanceException {
 
+        // Validaciones
         if (amount == null || amount <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser mayor que 0");
         }
@@ -584,17 +585,27 @@ public class PaymentService {
             throw new IllegalArgumentException("La cuenta bancaria debe ser un IBAN valido");
         }
 
+        // Validar saldo
         Wallet wallet = walletService.getWalletByUserId(userId);
-
         if (wallet.getBalance() < amount) {
             throw new NotEnoughBalanceException(
-                    "Saldo insuficiente" + " Requerido: " + amount + ", Disponible: " + wallet.getBalance());
+                    "Saldo insuficiente. Requerido: " + amount + ", Disponible: " + wallet.getBalance());
         }
 
-        Long amountInCents = (long) (amount * 100);
-        // Sacar dinero de Stripe en centimos
-        createPayout(amountInCents);
-        // Restar saldo de la wallet del usuario
+        boolean isTestMode = stripeApiKey != null && stripeApiKey.startsWith("sk_test_");
+        
+        if (!isTestMode) {
+            try {
+                Long amountInCents = (long) (amount * 100);
+                createPayout(amountInCents);
+                System.out.println("Stripe payout exitoso para " + amount + "€");
+            } catch (StripeException e) {
+                throw new RuntimeException("Error al procesar el pago con Stripe: " + e.getMessage());
+            }
+        } else {
+            System.out.println("[TEST MODE] Retirada simulada de " + amount + "€. NO se llama a Stripe.");
+        }
+        
         walletService.updateWalletBalance(userId, amount);
     }
 

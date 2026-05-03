@@ -1,5 +1,6 @@
 package com.example.demo.incident;
 
+import com.example.demo.dto.IncidentCreateRequest;
 import com.example.demo.model.Article;
 import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentStatus;
@@ -64,7 +65,6 @@ class IncidentServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Configuramos el usuario de prueba como ADMIN para que pase el checkUserAdmin()
         testUser = new User();
         testUser.setId(1L);
         testUser.setName("Test User");
@@ -79,11 +79,9 @@ class IncidentServiceTest {
         testKit = new Kit();
         testKit.setId(1L);
 
-        // Simulamos el contexto de seguridad con el usuario de prueba
         lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
         lenient().when(authentication.getPrincipal()).thenReturn("test@example.com");
-
         lenient().when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
     }
 
@@ -94,12 +92,23 @@ class IncidentServiceTest {
         i.setDescription("Incident Description");
         i.setType(type);
         i.setStatus(status);
-        i.setUser(testUser); // El usuario de prueba es el autor
+        i.setUser(testUser);
         if (type == IncidentType.DAMAGED_ITEM) {
             i.setRelatedItem(testItem);
             i.setRelatedKit(testKit);
         }
         return i;
+    }
+
+    private IncidentCreateRequest makeRequest(IncidentType type, Long userId, Long itemId, Long kitId) {
+        IncidentCreateRequest request = new IncidentCreateRequest();
+        request.setTitle("Incident Title");
+        request.setDescription("Incident Description");
+        request.setType(type);
+        request.setUserId(userId);
+        request.setRelatedItemId(itemId);
+        request.setRelatedKitId(kitId);
+        return request;
     }
 
     @Test
@@ -136,23 +145,22 @@ class IncidentServiceTest {
 
     @Test
     void createIncident_successful() {
-        Incident incident = makeIncident(null, IncidentType.DAMAGED_ITEM, IncidentStatus.OPEN);
+        IncidentCreateRequest request = makeRequest(IncidentType.DAMAGED_ITEM, 1L, 1L, 1L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(itemRepository.findById(1L)).thenReturn(Optional.of(testItem));
         when(kitRepository.findById(1L)).thenReturn(Optional.of(testKit));
-
         when(incidentRepository.save(any(Incident.class))).thenAnswer(i -> {
             Incident saved = i.getArgument(0);
             saved.setId(1L);
             return saved;
         });
 
-        Incident result = incidentService.createIncident(incident);
+        Incident result = incidentService.createIncident(request);
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getTitle()).isEqualTo("Incident Title");
-        verify(incidentRepository).save(incident);
+        verify(incidentRepository).save(any(Incident.class));
     }
 
     @Test

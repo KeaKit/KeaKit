@@ -10,8 +10,10 @@ import java.util.List;
 
 @Repository
 public interface IncidentRepository extends JpaRepository<Incident, Long> {
-    List<Incident> findByUserId(Long userId);
-
+    
+    @Query("SELECT i FROM Incident i WHERE i.user.id = :userId")
+    List<Incident> findByUserId(@Param("userId") Long userId);
+    
     @Query("SELECT i FROM Incident i WHERE i.relatedItem.owner.id = :ownerId")
     List<Incident> findReceivedByOwnerId(@Param("ownerId") Long ownerId);
 }

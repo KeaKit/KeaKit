@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import com.example.demo.dto.IncidentCreateRequest;
 import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentComment;
 import com.example.demo.model.IncidentStatus;
@@ -102,22 +103,36 @@ public class IncidentService {
         return incidents;
     }
 
-    public Incident createIncident(Incident incident) {
-        if (incident.getUser() != null && incident.getUser().getId() != null) {
-            User user = userRepository.findById(incident.getUser().getId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            incident.setUser(user);
-        }
-        if (incident.getRelatedItem() != null && incident.getRelatedItem().getId() != null) {
-            Item relatedItem = itemRepository.findById(incident.getRelatedItem().getId())
+    @Transactional
+    public Incident createIncident(IncidentCreateRequest request) {
+        // Buscar usuario
+        User user = userRepository.findById(request.getUserId())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        Incident incident = new Incident();
+        incident.setTitle(request.getTitle());
+        incident.setDescription(request.getDescription());
+        incident.setType(request.getType());
+        incident.setUser(user);
+        incident.setStatus(IncidentStatus.OPEN);
+        
+        if (request.getType() == IncidentType.DAMAGED_ITEM) {
+            if (request.getRelatedItemId() == null) {
+                throw new IllegalArgumentException("Para incidencias de tipo objeto dañado, el ítem es obligatorio.");
+            }
+            if (request.getRelatedKitId() == null) {
+                throw new IllegalArgumentException("Para incidencias de tipo objeto dañado, el kit de alquiler es obligatorio.");
+            }
+            
+            Item relatedItem = itemRepository.findById(request.getRelatedItemId())
                 .orElseThrow(() -> new RuntimeException("Objeto relacionado no encontrado"));
-            incident.setRelatedItem(relatedItem);
-        }
-        if (incident.getRelatedKit() != null && incident.getRelatedKit().getId() != null) {
-            Kit relatedKit = kitRepository.findById(incident.getRelatedKit().getId())
+            Kit relatedKit = kitRepository.findById(request.getRelatedKitId())
                 .orElseThrow(() -> new RuntimeException("Kit de alquiler no encontrado"));
+            
+            incident.setRelatedItem(relatedItem);
             incident.setRelatedKit(relatedKit);
         }
+        
         validateIncident(incident);
         return incidentRepository.save(incident);
     }

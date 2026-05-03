@@ -323,27 +323,22 @@ export interface IncidentResponse {
   description: string;
   type: IncidentType;
   status: IncidentStatus;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-  };
-  relatedItem: {
-    id: number;
-    title: string;
-    owner: {
-      id: number;
-      name: string;
-    };
-  } | null;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  relatedItemId: number | null;
+  relatedItemTitle: string | null;
+  relatedKitId: number | null;
+  relatedKitName: string | null;
 }
 
 export interface IncidentCreateRequest {
   title: string;
   description: string;
   type: IncidentType;
-  user: { id: number };
-  relatedItem?: { id: number } | null;
+  userId: number;
+  relatedItemId?: number;
+  relatedKitId?: number;
 }
 
 export interface IncidentCommentResponse {

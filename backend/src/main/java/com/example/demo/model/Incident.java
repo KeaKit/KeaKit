@@ -3,6 +3,10 @@ package com.example.demo.model;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.PostLoad;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -27,36 +31,70 @@ public class Incident {
     @Column(nullable = false)
     private IncidentStatus status;
 
-    // El usuario que crea la incidencia
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
     private User user;
 
-    // El objeto reportado
     @ManyToOne(optional = true)
     @JoinColumn(name = "related_item_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
     private Item relatedItem;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "related_kit_id")
+    @JsonIgnore
     private Kit relatedKit;
 
-    public Incident() {
-        this.status = IncidentStatus.OPEN;
+    // Campos transitorios para datos que sí queremos devolver
+    @Transient
+    @JsonProperty("userId")
+    private Long userId;
+
+    @Transient
+    @JsonProperty("userName")
+    private String userName;
+
+    @Transient
+    @JsonProperty("userEmail")
+    private String userEmail;
+
+    @Transient
+    @JsonProperty("relatedItemId")
+    private Long relatedItemId;
+
+    @Transient
+    @JsonProperty("relatedItemTitle")
+    private String relatedItemTitle;
+
+    @Transient
+    @JsonProperty("relatedKitId")
+    private Long relatedKitId;
+
+    @Transient
+    @JsonProperty("relatedKitName")
+    private String relatedKitName;
+
+    @PostLoad
+    private void onLoad() {
+        if (user != null) {
+            this.userId = user.getId();
+            this.userName = user.getName();
+            this.userEmail = user.getEmail();
+        }
+        if (relatedItem != null) {
+            this.relatedItemId = relatedItem.getId();
+            this.relatedItemTitle = relatedItem.getTitle();
+        }
+        if (relatedKit != null) {
+            this.relatedKitId = relatedKit.getId();
+            this.relatedKitName = relatedKit.getName();
+        }
     }
 
-    public Incident(String title, String description, IncidentType type, User user, Item relatedItem, Kit relatedKit) {
-        this.title = title;
-        this.description = description;
-        this.type = type;
-        this.status = IncidentStatus.OPEN;
-        this.user = user;
-        this.relatedItem = relatedItem;
-        this.relatedKit = relatedKit;
-    }
-
+    // Getters y setters normales
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -80,4 +118,13 @@ public class Incident {
 
     public Kit getRelatedKit() { return relatedKit; }
     public void setRelatedKit(Kit relatedKit) { this.relatedKit = relatedKit; }
+
+    // Getters para campos transitorios
+    public Long getUserId() { return userId; }
+    public String getUserName() { return userName; }
+    public String getUserEmail() { return userEmail; }
+    public Long getRelatedItemId() { return relatedItemId; }
+    public String getRelatedItemTitle() { return relatedItemTitle; }
+    public Long getRelatedKitId() { return relatedKitId; }
+    public String getRelatedKitName() { return relatedKitName; }
 }

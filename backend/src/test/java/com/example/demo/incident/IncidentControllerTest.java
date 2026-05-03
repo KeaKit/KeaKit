@@ -1,6 +1,7 @@
 package com.example.demo.incident;
 
 import com.example.demo.controller.IncidentController;
+import com.example.demo.dto.IncidentCreateRequest;
 import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentStatus;
 import com.example.demo.model.IncidentType;
@@ -60,22 +61,22 @@ class IncidentControllerTest {
 
     @Test
     void createIncident_success() throws Exception {
-        when(incidentService.createIncident(any(Incident.class))).thenReturn(sampleIncident);
+        when(incidentService.createIncident(any(IncidentCreateRequest.class))).thenReturn(sampleIncident);
 
         mockMvc.perform(post("/api/incidents")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"title\":\"App crashing\",\"description\":\"The app closes when I tap on profile\",\"type\":\"GENERAL\"}"))
+                .content("{\"title\":\"App crashing\",\"description\":\"The app closes when I tap on profile\",\"type\":\"GENERAL\",\"userId\":1}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.title").value("App crashing"));
     }
 
     @Test
     void createIncident_failure_returnsInternalServerError() throws Exception {
-        when(incidentService.createIncident(any(Incident.class))).thenThrow(new RuntimeException("Database error"));
+        when(incidentService.createIncident(any(IncidentCreateRequest.class))).thenThrow(new RuntimeException("Database error"));
 
         mockMvc.perform(post("/api/incidents")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"title\":\"Test\"}"))
+                .content("{\"title\":\"Test\",\"userId\":1}"))
             .andExpect(status().isInternalServerError())
             .andExpect(content().string("Database error"));
     }

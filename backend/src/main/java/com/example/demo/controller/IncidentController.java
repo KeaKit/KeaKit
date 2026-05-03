@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.IncidentCreateRequest;
 import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentComment;
 import com.example.demo.service.IncidentService;
@@ -28,9 +29,9 @@ public class IncidentController {
     private IncidentService incidentService;
 
     @PostMapping
-    public ResponseEntity<?> createIncident(@RequestBody Incident incident) {
+    public ResponseEntity<?> createIncident(@RequestBody IncidentCreateRequest request) {
         try {
-            Incident savedIncident = incidentService.createIncident(incident);
+            Incident savedIncident = incidentService.createIncident(request);
             return new ResponseEntity<>(savedIncident, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -38,7 +39,7 @@ public class IncidentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
-
+        
     @GetMapping
     public ResponseEntity<?> getAllIncidents() {
         try {

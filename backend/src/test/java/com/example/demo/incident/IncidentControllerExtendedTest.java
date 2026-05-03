@@ -1,11 +1,11 @@
 package com.example.demo.incident;
 
 import com.example.demo.controller.IncidentController;
+import com.example.demo.dto.IncidentCreateRequest;
 import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentComment;
 import com.example.demo.model.IncidentStatus;
 import com.example.demo.model.IncidentType;
-import com.example.demo.model.User;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.service.IncidentService;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,10 +28,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Extended controller tests for CU-GENERAL-04 endpoints:
- * resolve, comments, user/received incidents, access denied, validation errors.
- */
 @WebMvcTest(controllers = IncidentController.class, excludeAutoConfiguration = {
         SecurityAutoConfiguration.class,
         SecurityFilterAutoConfiguration.class
@@ -65,45 +61,41 @@ class IncidentControllerExtendedTest {
         sampleIncident.setStatus(IncidentStatus.OPEN);
     }
 
-    // ═══════════════ POST /api/incidents — Validation (RN-INC-01, RN-INC-02) ═══════════════
-
     @Test
     void createIncident_validationError_returnsBadRequest() throws Exception {
-        when(incidentService.createIncident(any(Incident.class)))
+        when(incidentService.createIncident(any(IncidentCreateRequest.class)))
                 .thenThrow(new IllegalArgumentException("El título de la incidencia es obligatorio."));
 
         mockMvc.perform(post("/api/incidents")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"description\":\"Only desc\",\"type\":\"GENERAL\"}"))
+                        .content("{\"description\":\"Only desc\",\"type\":\"GENERAL\",\"userId\":1}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("El título de la incidencia es obligatorio."));
     }
 
     @Test
     void createIncident_blankDescription_returnsBadRequest() throws Exception {
-        when(incidentService.createIncident(any(Incident.class)))
+        when(incidentService.createIncident(any(IncidentCreateRequest.class)))
                 .thenThrow(new IllegalArgumentException("La descripción de la incidencia es obligatoria."));
 
         mockMvc.perform(post("/api/incidents")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Title\",\"type\":\"GENERAL\"}"))
+                        .content("{\"title\":\"Title\",\"type\":\"GENERAL\",\"userId\":1}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("La descripción de la incidencia es obligatoria."));
     }
 
     @Test
     void createIncident_damagedItemWithoutItem_returnsBadRequest() throws Exception {
-        when(incidentService.createIncident(any(Incident.class)))
+        when(incidentService.createIncident(any(IncidentCreateRequest.class)))
                 .thenThrow(new IllegalArgumentException("Para incidencias de tipo objeto dañado, el ítem es obligatorio."));
 
         mockMvc.perform(post("/api/incidents")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Damaged\",\"description\":\"Desc\",\"type\":\"DAMAGED_ITEM\"}"))
+                        .content("{\"title\":\"Damaged\",\"description\":\"Desc\",\"type\":\"DAMAGED_ITEM\",\"userId\":1}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Para incidencias de tipo objeto dañado, el ítem es obligatorio."));
     }
-
-    // ═══════════════ PUT /api/incidents/{id}/resolve ═══════════════
 
     @Test
     void resolveIncident_success() throws Exception {
@@ -139,8 +131,6 @@ class IncidentControllerExtendedTest {
                 .andExpect(content().string("No tienes permiso"));
     }
 
-    // ═══════════════ GET /api/incidents/user/{userId} ═══════════════
-
     @Test
     void getIncidentsByUser_success() throws Exception {
         when(incidentService.getIncidentsByUserId(42L)).thenReturn(List.of(sampleIncident));
@@ -170,8 +160,6 @@ class IncidentControllerExtendedTest {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
-    // ═══════════════ GET /api/incidents/received/{ownerId} ═══════════════
-
     @Test
     void getReceivedIncidents_success() throws Exception {
         Incident damaged = new Incident();
@@ -198,8 +186,6 @@ class IncidentControllerExtendedTest {
                 .andExpect(content().string("No tienes permiso"));
     }
 
-    // ═══════════════ GET /api/incidents — Admin only ═══════════════
-
     @Test
     void getAllIncidents_accessDenied_returns403() throws Exception {
         when(incidentService.getAllIncidents())
@@ -210,8 +196,6 @@ class IncidentControllerExtendedTest {
                 .andExpect(content().string("No tienes permiso para listar las incidencias."));
     }
 
-    // ═══════════════ GET /api/incidents/{id} — Access control ═══════════════
-
     @Test
     void getIncidentById_accessDenied_returns403() throws Exception {
         when(incidentService.getIncidentById(1L))
@@ -221,8 +205,6 @@ class IncidentControllerExtendedTest {
                 .andExpect(status().isForbidden())
                 .andExpect(content().string("No tienes permiso para ver esta incidencia."));
     }
-
-    // ═══════════════ PUT /api/incidents/{id} — Access control ═══════════════
 
     @Test
     void updateIncident_accessDenied_returns403() throws Exception {
@@ -247,8 +229,6 @@ class IncidentControllerExtendedTest {
                 .andExpect(content().string("El título de la incidencia es obligatorio."));
     }
 
-    // ═══════════════ DELETE /api/incidents/{id} — RN-INC-08 ═══════════════
-
     @Test
     void deleteIncident_resolved_returnsError() throws Exception {
         doThrow(new RuntimeException("No se puede eliminar una incidencia resuelta"))
@@ -268,8 +248,6 @@ class IncidentControllerExtendedTest {
                 .andExpect(status().isForbidden())
                 .andExpect(content().string("No tienes permiso"));
     }
-
-    // ═══════════════ GET /api/incidents/{incidentId}/comments ═══════════════
 
     @Test
     void getComments_success() throws Exception {
@@ -304,8 +282,6 @@ class IncidentControllerExtendedTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
-
-    // ═══════════════ POST /api/incidents/{incidentId}/comments ═══════════════
 
     @Test
     void addComment_success_returns201() throws Exception {

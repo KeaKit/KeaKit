@@ -1,5 +1,6 @@
 package com.example.demo.incident;
 
+import com.example.demo.dto.IncidentCreateRequest;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.IncidentService;
@@ -30,13 +31,20 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class IncidentServiceExtendedTest {
 
-    @Mock private IncidentRepository incidentRepository;
-    @Mock private IncidentCommentRepository incidentCommentRepository;
-    @Mock private ItemRepository itemRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private KitRepository kitRepository;
-    @Mock private SecurityContext securityContext;
-    @Mock private Authentication authentication;
+    @Mock
+    private IncidentRepository incidentRepository;
+    @Mock
+    private IncidentCommentRepository incidentCommentRepository;
+    @Mock
+    private ItemRepository itemRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private KitRepository kitRepository;
+    @Mock
+    private SecurityContext securityContext;
+    @Mock
+    private Authentication authentication;
 
     @InjectMocks
     private IncidentService incidentService;
@@ -99,100 +107,87 @@ class IncidentServiceExtendedTest {
         return i;
     }
 
+    private IncidentCreateRequest makeRequest(IncidentType type, Long userId, Long itemId, Long kitId) {
+        IncidentCreateRequest request = new IncidentCreateRequest();
+        request.setTitle("Incident Title");
+        request.setDescription("Incident Description");
+        request.setType(type);
+        request.setUserId(userId);
+        request.setRelatedItemId(itemId);
+        request.setRelatedKitId(kitId);
+        return request;
+    }
+
     // ═══════════════ RN-INC-01: Title is required ═══════════════
 
     @Test
     void createIncident_blankTitle_throwsIllegalArgument() {
         authenticateAs(regularUser);
-        Incident incident = new Incident();
-        incident.setTitle("");
-        incident.setDescription("Valid description");
-        incident.setType(IncidentType.GENERAL);
-        incident.setUser(regularUser);
+        IncidentCreateRequest request = makeRequest(IncidentType.GENERAL, 2L, null, null);
+        request.setTitle("");
 
         when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
 
-        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(incident));
+        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(request));
     }
 
     @Test
     void createIncident_nullTitle_throwsIllegalArgument() {
         authenticateAs(regularUser);
-        Incident incident = new Incident();
-        incident.setTitle(null);
-        incident.setDescription("Valid description");
-        incident.setType(IncidentType.GENERAL);
-        incident.setUser(regularUser);
+        IncidentCreateRequest request = makeRequest(IncidentType.GENERAL, 2L, null, null);
+        request.setTitle(null);
 
         when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
 
-        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(incident));
+        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(request));
     }
 
-    // ═══════════════ RN-INC-02: Description is required, max 1000 chars ═══════════════
+    // ═══════════════ RN-INC-02: Description is required, max 1000 chars
+    // ═══════════════
 
     @Test
     void createIncident_blankDescription_throwsIllegalArgument() {
         authenticateAs(regularUser);
-        Incident incident = new Incident();
-        incident.setTitle("Valid Title");
-        incident.setDescription("");
-        incident.setType(IncidentType.GENERAL);
-        incident.setUser(regularUser);
+        IncidentCreateRequest request = makeRequest(IncidentType.GENERAL, 2L, null, null);
+        request.setDescription("");
 
         when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
 
-        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(incident));
+        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(request));
     }
 
     @Test
     void createIncident_nullDescription_throwsIllegalArgument() {
         authenticateAs(regularUser);
-        Incident incident = new Incident();
-        incident.setTitle("Valid Title");
-        incident.setDescription(null);
-        incident.setType(IncidentType.GENERAL);
-        incident.setUser(regularUser);
+        IncidentCreateRequest request = makeRequest(IncidentType.GENERAL, 2L, null, null);
+        request.setDescription(null);
 
         when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
 
-        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(incident));
+        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(request));
     }
 
-    // ═══════════════ RN-INC-03: DAMAGED_ITEM requires relatedItem and relatedKit ═══════════════
+    // ═══════════════ RN-INC-03: DAMAGED_ITEM requires relatedItem and relatedKit
+    // ═══════════════
 
     @Test
     void createIncident_damagedItemWithoutRelatedItem_throwsIllegalArgument() {
         authenticateAs(regularUser);
-        Incident incident = new Incident();
-        incident.setTitle("Damaged");
-        incident.setDescription("Item is broken");
-        incident.setType(IncidentType.DAMAGED_ITEM);
-        incident.setUser(regularUser);
-        incident.setRelatedItem(null);
-        incident.setRelatedKit(testKit);
+        IncidentCreateRequest request = makeRequest(IncidentType.DAMAGED_ITEM, 2L, null, 5L);
 
         when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
-        when(kitRepository.findById(5L)).thenReturn(Optional.of(testKit));
 
-        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(incident));
+        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(request));
     }
 
     @Test
     void createIncident_damagedItemWithoutRelatedKit_throwsIllegalArgument() {
         authenticateAs(regularUser);
-        Incident incident = new Incident();
-        incident.setTitle("Damaged");
-        incident.setDescription("Item is broken");
-        incident.setType(IncidentType.DAMAGED_ITEM);
-        incident.setUser(regularUser);
-        incident.setRelatedItem(testItem);
-        incident.setRelatedKit(null);
+        IncidentCreateRequest request = makeRequest(IncidentType.DAMAGED_ITEM, 2L, 10L, null);
 
         when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
-        when(itemRepository.findById(10L)).thenReturn(Optional.of(testItem));
 
-        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(incident));
+        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(request));
     }
 
     // ═══════════════ RN-INC-05: New incident defaults to OPEN ═══════════════
@@ -200,11 +195,7 @@ class IncidentServiceExtendedTest {
     @Test
     void createIncident_defaultsToOpenStatus() {
         authenticateAs(adminUser);
-        Incident incident = new Incident();
-        incident.setTitle("Test");
-        incident.setDescription("Description");
-        incident.setType(IncidentType.GENERAL);
-        incident.setUser(adminUser);
+        IncidentCreateRequest request = makeRequest(IncidentType.GENERAL, 1L, null, null);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
         when(incidentRepository.save(any(Incident.class))).thenAnswer(i -> {
@@ -213,45 +204,34 @@ class IncidentServiceExtendedTest {
             return saved;
         });
 
-        Incident result = incidentService.createIncident(incident);
+        Incident result = incidentService.createIncident(request);
         assertThat(result.getStatus()).isEqualTo(IncidentStatus.OPEN);
     }
 
-    // ═══════════════ GENERAL type clears relatedItem and relatedKit ═══════════════
+    // ═══════════════ GENERAL type clears relatedItem and relatedKit
+    // ═══════════════
 
     @Test
     void createIncident_generalType_clearsRelatedItemAndKit() {
         authenticateAs(adminUser);
-        Incident incident = new Incident();
-        incident.setTitle("General issue");
-        incident.setDescription("Some issue");
-        incident.setType(IncidentType.GENERAL);
-        incident.setUser(adminUser);
-        incident.setRelatedItem(testItem);
-        incident.setRelatedKit(testKit);
+        IncidentCreateRequest request = makeRequest(IncidentType.GENERAL, 1L, 10L, 5L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
-        when(itemRepository.findById(10L)).thenReturn(Optional.of(testItem));
-        when(kitRepository.findById(5L)).thenReturn(Optional.of(testKit));
+        // NO mocks de itemRepository y kitRepository porque el servicio NO los busca cuando el tipo es GENERAL
         when(incidentRepository.save(any(Incident.class))).thenAnswer(i -> i.getArgument(0));
 
-        Incident result = incidentService.createIncident(incident);
+        Incident result = incidentService.createIncident(request);
         assertThat(result.getRelatedItem()).isNull();
         assertThat(result.getRelatedKit()).isNull();
     }
 
-    // ═══════════════ HU-ARRENDATARIO-33: Create DAMAGED_ITEM incident ═══════════════
+    // ═══════════════ HU-ARRENDATARIO-33: Create DAMAGED_ITEM incident
+    // ═══════════════
 
     @Test
     void createIncident_damagedItem_successful() {
         authenticateAs(regularUser);
-        Incident incident = new Incident();
-        incident.setTitle("Screen scratched");
-        incident.setDescription("The laptop screen has scratches");
-        incident.setType(IncidentType.DAMAGED_ITEM);
-        incident.setUser(regularUser);
-        incident.setRelatedItem(testItem);
-        incident.setRelatedKit(testKit);
+        IncidentCreateRequest request = makeRequest(IncidentType.DAMAGED_ITEM, 2L, 10L, 5L);
 
         when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
         when(itemRepository.findById(10L)).thenReturn(Optional.of(testItem));
@@ -262,7 +242,7 @@ class IncidentServiceExtendedTest {
             return saved;
         });
 
-        Incident result = incidentService.createIncident(incident);
+        Incident result = incidentService.createIncident(request);
 
         assertThat(result.getType()).isEqualTo(IncidentType.DAMAGED_ITEM);
         assertThat(result.getRelatedItem()).isNotNull();
@@ -285,7 +265,8 @@ class IncidentServiceExtendedTest {
         assertThat(ex.getMessage()).contains("No se puede eliminar una incidencia resuelta");
     }
 
-    // ═══════════════ RN-INC-09: Cannot add comments to RESOLVED incident ═══════════════
+    // ═══════════════ RN-INC-09: Cannot add comments to RESOLVED incident
+    // ═══════════════
 
     @Test
     void addComment_resolvedIncident_throws() {
@@ -397,8 +378,7 @@ class IncidentServiceExtendedTest {
     void getIncidentsByUserId_asAdmin_returnsIncidents() {
         authenticateAs(adminUser);
         List<Incident> incidents = List.of(
-                makeIncident(1L, IncidentType.GENERAL, IncidentStatus.OPEN, regularUser)
-        );
+                makeIncident(1L, IncidentType.GENERAL, IncidentStatus.OPEN, regularUser));
         when(incidentRepository.findByUserId(2L)).thenReturn(incidents);
 
         List<Incident> result = incidentService.getIncidentsByUserId(2L);
@@ -409,8 +389,7 @@ class IncidentServiceExtendedTest {
     void getIncidentsByUserId_asAuthor_returnsIncidents() {
         authenticateAs(regularUser);
         List<Incident> incidents = List.of(
-                makeIncident(1L, IncidentType.GENERAL, IncidentStatus.OPEN, regularUser)
-        );
+                makeIncident(1L, IncidentType.GENERAL, IncidentStatus.OPEN, regularUser));
         when(incidentRepository.findByUserId(2L)).thenReturn(incidents);
 
         List<Incident> result = incidentService.getIncidentsByUserId(2L);
@@ -550,59 +529,34 @@ class IncidentServiceExtendedTest {
     @Test
     void createIncident_userNotFound_throws() {
         authenticateAs(adminUser);
-        User unknownUser = new User();
-        unknownUser.setId(999L);
-
-        Incident incident = new Incident();
-        incident.setTitle("Test");
-        incident.setDescription("Description");
-        incident.setType(IncidentType.GENERAL);
-        incident.setUser(unknownUser);
+        IncidentCreateRequest request = makeRequest(IncidentType.GENERAL, 999L, null, null);
 
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> incidentService.createIncident(incident));
+        assertThrows(RuntimeException.class, () -> incidentService.createIncident(request));
     }
 
     @Test
     void createIncident_relatedItemNotFound_throws() {
         authenticateAs(adminUser);
-        Article unknownItem = new Article();
-        unknownItem.setId(999L);
-
-        Incident incident = new Incident();
-        incident.setTitle("Damaged");
-        incident.setDescription("Item broken");
-        incident.setType(IncidentType.DAMAGED_ITEM);
-        incident.setUser(adminUser);
-        incident.setRelatedItem(unknownItem);
-        incident.setRelatedKit(testKit);
+        IncidentCreateRequest request = makeRequest(IncidentType.DAMAGED_ITEM, 1L, 999L, 5L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
         when(itemRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> incidentService.createIncident(incident));
+        assertThrows(RuntimeException.class, () -> incidentService.createIncident(request));
     }
 
     @Test
     void createIncident_relatedKitNotFound_throws() {
         authenticateAs(adminUser);
-        Kit unknownKit = new Kit();
-        unknownKit.setId(999L);
-
-        Incident incident = new Incident();
-        incident.setTitle("Damaged");
-        incident.setDescription("Item broken");
-        incident.setType(IncidentType.DAMAGED_ITEM);
-        incident.setUser(adminUser);
-        incident.setRelatedItem(testItem);
-        incident.setRelatedKit(unknownKit);
+        IncidentCreateRequest request = makeRequest(IncidentType.DAMAGED_ITEM, 1L, 10L, 999L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
         when(itemRepository.findById(10L)).thenReturn(Optional.of(testItem));
         when(kitRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> incidentService.createIncident(incident));
+        assertThrows(RuntimeException.class, () -> incidentService.createIncident(request));
     }
 
     // ═══════════════ updateIncident partial updates ═══════════════
