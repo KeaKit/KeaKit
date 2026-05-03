@@ -79,6 +79,9 @@ public class KitService {
     @Transactional
     public Kit create(KitCreateRequest request) {
         Kit kit = new Kit();
+        if (request.name() != null && request.name().length() > 255) {
+            throw new RuntimeException("El nombre del kit no puede superar los 255 caracteres");
+        }
         kit.setName(request.name());
         kit.setCountry(request.country());
         kit.setCity(request.city());

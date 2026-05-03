@@ -115,6 +115,11 @@ const CONDITION_OPTIONS = [
   { label: "Desgastado", value: "WORN" },
 ];
 
+// Constantes de validación (movidas fuera del componente para garantizar su existencia)
+const MAX_KIT_NAME_LENGTH = 255;
+const MAX_MEETING_POINT_LENGTH = 500;
+const MAX_COURIER_ADDRESS_LENGTH = 500;
+
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
   const route = useRoute<any>();
@@ -554,7 +559,14 @@ const CreateKitScreen: React.FC = () => {
   } => {
     const nextErrors: FormErrors = {};
 
-    if (!name.trim()) nextErrors.name = "El nombre del kit es obligatorio.";
+    // Validación de nombre
+    if (!name.trim()) {
+      nextErrors.name = "El nombre del kit es obligatorio.";
+    } else if (name.trim().length > MAX_KIT_NAME_LENGTH) {
+      nextErrors.name = `El nombre no puede superar los ${MAX_KIT_NAME_LENGTH} caracteres.`;
+    }
+    
+    // Validación de fechas
     if (!startDate) nextErrors.startDate = "Debes seleccionar una fecha inicial.";
     if (!endDate) nextErrors.endDate = "Debes seleccionar una fecha final.";
 
@@ -573,26 +585,40 @@ const CreateKitScreen: React.FC = () => {
       nextErrors.endDate = "La fecha de fin debe ser posterior a la de inicio.";
     }
 
+    // Validaciones para no borrador
     if (!isDraft) {
       if (!country.trim()) nextErrors.country = "El país es obligatorio.";
       if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
 
-      if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
-        nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
+      // Validación de punto de encuentro
+      if (deliveryMethod === "MEETING_POINT") {
+        if (!meetingPoint.trim()) {
+          nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
+        } else if (meetingPoint.trim().length > MAX_MEETING_POINT_LENGTH) {
+          nextErrors.meetingPoint = `El punto de encuentro no puede superar los ${MAX_MEETING_POINT_LENGTH} caracteres.`;
+        }
       }
-      if (deliveryMethod === "COURIER" && !courierAddress.trim()) {
-        nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
+      
+      // Validación de dirección de mensajería
+      if (deliveryMethod === "COURIER") {
+        if (!courierAddress.trim()) {
+          nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
+        } else if (courierAddress.trim().length > MAX_COURIER_ADDRESS_LENGTH) {
+          nextErrors.courierAddress = `La dirección no puede superar los ${MAX_COURIER_ADDRESS_LENGTH} caracteres.`;
+        }
       }
 
+      // Validación de productos seleccionados
       if (selectedItemsCount === 0) {
         nextErrors.items = "Debes añadir al menos un producto.";
       } else if (startDate && endDate) {
         const invalidItems = checkItemsAvailability(startDate, endDate);
         if (invalidItems.length > 0) {
-          nextErrors.items = "No puedes realizar el pedido: hay productos no disponibles.";
+          nextErrors.items = "No puedes realizar el pedido: hay productos no disponibles en estas fechas.";
         }
       }
     } else {
+      // Para borrador, solo advertir sobre fechas
       if (startDate && endDate) {
         const invalidItems = checkItemsAvailability(startDate, endDate);
         if (invalidItems.length > 0) {
@@ -600,6 +626,7 @@ const CreateKitScreen: React.FC = () => {
         }
       }
     }
+    
     setErrors(prev => ({ ...prev, ...nextErrors }));
 
     if (Object.keys(nextErrors).length > 0 || !startDate || !endDate)
@@ -614,6 +641,17 @@ const CreateKitScreen: React.FC = () => {
   const handleSubmit = async () => {
     if (!user?.id || !user.token) {
       setErrors({ general: "Necesitas iniciar sesión para crear un kit." });
+      return;
+    }
+
+    // Validación explícita de nombre antes de cualquier otra cosa
+    if (name.trim().length === 0) {
+      setErrors({ name: "El nombre del kit es obligatorio." });
+      return;
+    }
+    
+    if (name.trim().length > MAX_KIT_NAME_LENGTH) {
+      setErrors({ name: `El nombre no puede superar los ${MAX_KIT_NAME_LENGTH} caracteres.` });
       return;
     }
 
@@ -649,19 +687,107 @@ const CreateKitScreen: React.FC = () => {
 
     } catch (err) {
       console.error("ERROR al procesar la creación/pago del kit:", err);
-
-      const error = err as {
-        response?: { data?: { message?: string } };
-        message?: string;
-      };
-
-      const errorMsg = error.response?.data?.message || error.message || "";
-
+      
+      let errorMsg = "";
+      
+      // Intentar extraer el mensaje de error de diferentes formas
+      if (err instanceof Error) {
+        errorMsg = err.message;
+      }
+      
+      if ((err as any)?.response?.data) {
+        const responseData = (err as any).response.data;
+        
+        // Para errores de validación de Spring Boot (MethodArgumentNotValidException)
+        if (responseData.errors && Array.isArray(responseData.errors)) {
+          // Formato de error de Spring Boot con lista de errores por campo
+          const firstError = responseData.errors[0];
+          const field = firstError.field;
+          const message = firstError.defaultMessage || firstError.message;
+          
+          if (field === "name") {
+            setErrors({ name: message });
+          } else if (field === "country") {
+            setErrors({ country: message });
+          } else if (field === "city") {
+            setErrors({ city: message });
+          } else if (field === "meetingPoint") {
+            setErrors({ meetingPoint: message });
+          } else {
+            setErrors({ general: message });
+          }
+          return;
+        }
+        
+        // Para errores con mensaje simple en string
+        if (typeof responseData === 'string') {
+          errorMsg = responseData;
+        } 
+        // Para errores con mensaje en objeto
+        else if (responseData.message) {
+          errorMsg = responseData.message;
+        }
+        // Para errores que vienen como texto plano
+        else {
+          errorMsg = JSON.stringify(responseData);
+        }
+      }
+      
+      console.log("Mensaje de error completo:", errorMsg);
+      
+      // Si el error es el de validación de Spring Boot (formato alternativo)
+      if (errorMsg.includes("Validation failed") && errorMsg.includes("name")) {
+        setErrors({ name: "El nombre del kit no puede superar los 255 caracteres" });
+        return;
+      }
+      
+      // DETECCIÓN MEJORADA - Buscar errores de longitud de campo
+      const lowerMsg = errorMsg.toLowerCase();
+      
+      // Error de nombre demasiado largo (cualquier variante)
+      if (lowerMsg.includes("name") && (lowerMsg.includes("255") || lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max") || lowerMsg.includes("caracteres"))) {
+        setErrors({ name: "El nombre del kit es demasiado largo (máximo 255 caracteres)." });
+        return;
+      }
+      
+      // Error de país demasiado largo
+      if (lowerMsg.includes("country") && (lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max"))) {
+        setErrors({ country: "El país es demasiado largo (máximo 120 caracteres)." });
+        return;
+      }
+      
+      // Error de ciudad demasiado larga
+      if (lowerMsg.includes("city") && (lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max"))) {
+        setErrors({ city: "La ciudad es demasiado larga (máximo 120 caracteres)." });
+        return;
+      }
+      
+      // Error de punto de encuentro demasiado largo
+      if (lowerMsg.includes("meeting") && (lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max"))) {
+        setErrors({ meetingPoint: "El punto de encuentro es demasiado largo (máximo 500 caracteres)." });
+        return;
+      }
+      
+      // Error de dirección demasiado larga
+      if (lowerMsg.includes("courier") && (lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max"))) {
+        setErrors({ courierAddress: "La dirección de entrega es demasiado larga (máximo 500 caracteres)." });
+        return;
+      }
+      
+      // Error de valor demasiado largo para cualquier campo (PostgreSQL genérico)
+      if (lowerMsg.includes("value too long") && lowerMsg.includes("varying")) {
+        setErrors({ general: "Uno de los campos supera la longitud máxima permitida. Por favor, revisa el nombre, país, ciudad o dirección." });
+        return;
+      }
+      
+      // Errores de disponibilidad de productos
       if (errorMsg.includes("ya no está disponible") || errorMsg.includes("unidades")) {
         setErrors({ items: errorMsg });
-      } else {
-        setErrors({ general: "Ha ocurrido un error al procesar el kit o el pago." });
+        return;
       }
+      
+      // Si llegamos aquí, mostrar el mensaje original o uno genérico
+      setErrors({ general: errorMsg || "Ha ocurrido un error al procesar el kit o el pago." });
     } finally {
       setSubmitting(false);
     }
@@ -705,14 +831,39 @@ const CreateKitScreen: React.FC = () => {
             mode="outlined"
             label="Nombre del Kit"
             value={name}
+            maxLength={MAX_KIT_NAME_LENGTH}
             onChangeText={(value) => {
               setName(value);
-              clearFieldError("name");
+              if (value.length > MAX_KIT_NAME_LENGTH) {
+                setErrors(prev => ({ ...prev, name: `El nombre no puede superar los ${MAX_KIT_NAME_LENGTH} caracteres.` }));
+              } else if (value.length > 0) {
+                clearFieldError("name");
+              } else {
+                clearFieldError("name");
+              }
+            }}
+            onBlur={() => {
+              if (name.trim().length === 0) {
+                setErrors(prev => ({ ...prev, name: "El nombre del kit es obligatorio." }));
+              } else if (name.trim().length > MAX_KIT_NAME_LENGTH) {
+                setErrors(prev => ({ ...prev, name: `El nombre no puede superar los ${MAX_KIT_NAME_LENGTH} caracteres.` }));
+              } else {
+                clearFieldError("name");
+              }
             }}
             error={!!errors.name}
             style={{ backgroundColor: Colors.backgroundWhite }}
             outlineColor={Colors.border}
             activeOutlineColor={Colors.primary}
+            right={
+              <PaperTextInput.Affix 
+                text={`${name.length}/${MAX_KIT_NAME_LENGTH}`}
+                textStyle={{ 
+                  fontSize: 12,
+                  color: name.length === MAX_KIT_NAME_LENGTH ? Colors.error : Colors.textSecondary 
+                }}
+              />
+            }
           />
           {errors.name ? <Text style={commonStyles.errorText}>{errors.name}</Text> : null}
 
@@ -850,15 +1001,30 @@ const CreateKitScreen: React.FC = () => {
                   label="Punto de encuentro"
                   placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
                   value={meetingPoint}
+                  maxLength={MAX_MEETING_POINT_LENGTH}
                   onChangeText={(value) => {
                     setMeetingPoint(value);
                     clearFieldError("meetingPoint");
+                  }}
+                  onBlur={() => {
+                    if (deliveryMethod === "MEETING_POINT" && meetingPoint.trim().length > 0 && meetingPoint.trim().length <= MAX_MEETING_POINT_LENGTH) {
+                      clearFieldError("meetingPoint");
+                    }
                   }}
                   error={!!errors.meetingPoint}
                   style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
                   outlineColor={Colors.border}
                   activeOutlineColor={Colors.primary}
                   multiline
+                  right={
+                    <PaperTextInput.Affix 
+                      text={`${meetingPoint.length}/${MAX_MEETING_POINT_LENGTH}`}
+                      textStyle={{ 
+                        fontSize: 12,
+                        color: meetingPoint.length === MAX_MEETING_POINT_LENGTH ? Colors.error : Colors.textSecondary 
+                      }}
+                    />
+                  }
                 />
                 {errors.meetingPoint && <Text style={commonStyles.errorText}>{errors.meetingPoint}</Text>}
               </>
@@ -868,15 +1034,30 @@ const CreateKitScreen: React.FC = () => {
                   mode="outlined"
                   label="Dirección de entrega"
                   value={courierAddress}
+                  maxLength={MAX_COURIER_ADDRESS_LENGTH}
                   onChangeText={(value) => {
                     setCourierAddress(value);
                     clearFieldError("courierAddress");
+                  }}
+                  onBlur={() => {
+                    if (deliveryMethod === "COURIER" && courierAddress.trim().length > 0 && courierAddress.trim().length <= MAX_COURIER_ADDRESS_LENGTH) {
+                      clearFieldError("courierAddress");
+                    }
                   }}
                   error={!!errors.courierAddress}
                   style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
                   outlineColor={Colors.border}
                   activeOutlineColor={Colors.primary}
                   multiline
+                  right={
+                    <PaperTextInput.Affix 
+                      text={`${courierAddress.length}/${MAX_COURIER_ADDRESS_LENGTH}`}
+                      textStyle={{ 
+                        fontSize: 12,
+                        color: courierAddress.length === MAX_COURIER_ADDRESS_LENGTH ? Colors.error : Colors.textSecondary 
+                      }}
+                    />
+                  }
                 />
                 {errors.courierAddress && <Text style={commonStyles.errorText}>{errors.courierAddress}</Text>}
                 <Text style={commonStyles.bodySecondary}>
