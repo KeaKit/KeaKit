@@ -6,6 +6,7 @@ import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ class ArticleIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private EntityManager entityManager;
 
     @MockitoBean private AuthService authService;
 
@@ -462,6 +464,26 @@ class ArticleIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].title").value("Taladro"));
+    }
+
+    @Test
+    void testGetMyArticles_Integration_ReturnsPersistedOwnerCommissionPromoCode() throws Exception {
+        savedArticle.setOwnerCommissionPromoCode("OWNER10");
+        articleRepository.saveAndFlush(savedArticle);
+        entityManager.clear();
+
+        Article persisted = articleRepository.findById(savedArticle.getId()).orElseThrow();
+        assertThat(persisted.getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
+
+        mockMvc.perform(get("/api/article/" + savedArticle.getId()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.ownerCommissionPromoCode").value("OWNER10"));
+
+        mockMvc.perform(get("/api/article/my-articles/" + savedOwner.getId()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(savedArticle.getId()))
+            .andExpect(jsonPath("$[0].ownerCommissionPromoCode").value("OWNER10"));
     }
 
     // Test Filtros My Articles 

@@ -17,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, RentedItemResponse, Article, DeliveryStatus, KitResponse, DemandAnalysisItem } from '../../types';
+import { RootStackParamList, RentedItemResponse, UserArticle, DeliveryStatus, KitResponse, DemandAnalysisItem } from '../../types';
 import { Colors } from '../../styles';
 import { getLoggedUserWallet, getRentedItems, getMyArticles, getTopDemandedItems } from '../../services';
 import { SkeletonPulse, FadeInItem } from '../../components';
@@ -53,7 +53,7 @@ const HomeScreen: React.FC = () => {
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [rentedItems, setRentedItems] = useState<RentedItemResponse[]>([]);
   const [loadingRentals, setLoadingRentals] = useState(false);
-  const [myArticles, setMyArticles] = useState<Article[]>([]);
+  const [myArticles, setMyArticles] = useState<UserArticle[]>([]);
   const [loadingArticles, setLoadingArticles] = useState(false);
   const [topDemandedItems, setTopDemandedItems] = useState<DemandAnalysisItem[]>([]);
   const [loadingTopDemanded, setLoadingTopDemanded] = useState(false);
