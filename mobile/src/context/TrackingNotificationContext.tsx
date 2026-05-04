@@ -39,23 +39,31 @@ export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode
 
   const persist = async (list: TrackingNotification[]) => {
     if (!storageKey) return;
-    setNotifications(list);
     await AsyncStorage.setItem(storageKey, JSON.stringify(list));
   };
 
   const addNotification = async (n: TrackingNotification) => {
-    const next = [n, ...notifications];
-    await persist(next);
+    setNotifications(prev => {
+      const next = [n, ...prev];
+      AsyncStorage.setItem(storageKey!, JSON.stringify(next));
+      return next;
+    });
   };
 
   const markAllRead = async () => {
-    const next = notifications.map((n) => ({ ...n, read: true }));
-    await persist(next);
+    setNotifications(prev => {
+      const next = prev.map(n => ({ ...n, read: true }));
+      AsyncStorage.setItem(storageKey!, JSON.stringify(next));
+      return next;
+    });
   };
 
   const removeNotification = async (id: string) => {
-    const next = notifications.filter((n) => n.id !== id);
-    await persist(next);
+    setNotifications(prev => {
+      const next = prev.filter(n => n.id !== id);
+      AsyncStorage.setItem(storageKey!, JSON.stringify(next));
+      return next;
+    });
   };
 
   const clearAll = async () => {
