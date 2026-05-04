@@ -351,9 +351,7 @@ public class ArticleService {
         if (!article.getOwner().getId().equals(ownerId))
             throw new RuntimeException("Solo el propietario puede confirmar la devolución");
 
-        if (article.getStatus() != ArticleStatus.RENTED)
-            throw new RuntimeException("Este artículo no está actualmente alquilado");
-
+        // Primero verificar si hay un Kit activo para este artículo
         Kit activeKit = kitRepository.findActiveKitByItemId(articleId, KitStatus.ACTIVE)
             .orElseThrow(() -> new RuntimeException("No se encontró un Kit activo para este artículo"));
 

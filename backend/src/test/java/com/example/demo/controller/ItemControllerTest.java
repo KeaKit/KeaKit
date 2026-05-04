@@ -61,7 +61,7 @@ class ItemControllerTest {
 
         ItemFilterResponseDTO response = new ItemFilterResponseDTO(List.of(item), 0, 10, 1, 1, false, false);
 
-        when(itemService.filterItemsForKit(eq(20.0), eq(50.0), isNull(), isNull(), isNull(), eq("USED"), eq(0), eq(10)))
+        when(itemService.filterItemsForKit(eq(20.0), eq(50.0), isNull(), isNull(), isNull(), eq("USED"), eq(0), eq(10), isNull(), isNull()))
                 .thenReturn(response);
 
         mockMvc.perform(post("/api/items/filter-for-kit")
@@ -84,7 +84,7 @@ class ItemControllerTest {
 
     @Test
     void filterItemsForKit_whenMinPriceIsGreaterThanMaxPrice_returnsBadRequest() throws Exception {
-        when(itemService.filterItemsForKit(eq(60.0), eq(20.0), isNull(), isNull(), isNull(), isNull(), eq(0), eq(10)))
+        when(itemService.filterItemsForKit(eq(60.0), eq(20.0), isNull(), isNull(), isNull(), isNull(), eq(0), eq(10), isNull(), isNull()))
                 .thenThrow(new IllegalArgumentException("minPrice cannot be greater than maxPrice"));
 
         mockMvc.perform(post("/api/items/filter-for-kit")
@@ -103,7 +103,7 @@ class ItemControllerTest {
 
     @Test
     void filterItemsForKit_whenConditionIsInvalid_returnsBadRequest() throws Exception {
-        when(itemService.filterItemsForKit(eq(20.0), eq(50.0), isNull(), isNull(), isNull(), eq("BROKEN"), eq(0), eq(10)))
+        when(itemService.filterItemsForKit(eq(20.0), eq(50.0), isNull(), isNull(), isNull(), eq("BROKEN"), eq(0), eq(10), isNull(), isNull()))
                 .thenThrow(new IllegalArgumentException("condition must be one of: NEW, LIGHTLY_USED, USED, WORN"));
 
         mockMvc.perform(post("/api/items/filter-for-kit")
