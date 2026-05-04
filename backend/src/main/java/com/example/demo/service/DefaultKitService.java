@@ -56,6 +56,25 @@ public class DefaultKitService {
         }
     }
 
+    private User getCurrentUserSafe() {
+        try {
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+                return null;
+            }
+            String email;
+            Object principal = auth.getPrincipal();
+            if (principal instanceof UserDetails) {
+                email = ((UserDetails) principal).getUsername();
+            } else {
+                email = principal.toString();
+            }
+            return userRepository.findByEmail(email).orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private void checkUserAdmin() {
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
@@ -83,10 +102,11 @@ public class DefaultKitService {
     }
 
     public List<DefaultKitResponse> getAllDefaultKits() {
+        User currentUser = getCurrentUserSafe();
         List<DefaultKit> kits = defaultKitRepository.findAll();
         return kits.stream()
-               .map(this::mapToDefaultKitResponse) 
-               .collect(Collectors.toList());
+            .map(kit -> mapToDefaultKitResponse(kit, currentUser)) 
+            .collect(Collectors.toList());
     }
 
     public DefaultKit getDefaultKitById(Long id) {
@@ -96,7 +116,7 @@ public class DefaultKitService {
 
     public DefaultKitResponse findDefaultKitById(Long id) {
         DefaultKit kit = getDefaultKitById(id);
-        return mapToDefaultKitResponse(kit); // Tu función que convierte entidad a DTO
+        return mapToDefaultKitResponse(kit, getCurrentUserSafe());
     }
 
     private void calculateAndSetBasePrice(DefaultKit defaultKit) {
@@ -166,7 +186,7 @@ public class DefaultKitService {
 
         calculateAndSetBasePrice(defaultKit);
         DefaultKit savedKit = defaultKitRepository.save(defaultKit);
-        return mapToDefaultKitResponse(savedKit);
+        return mapToDefaultKitResponse(savedKit, getCurrentUserSafe());
     }
 
     @Transactional
@@ -198,41 +218,57 @@ public class DefaultKitService {
     }
 
     public List<DefaultKitResponse> getDefaultKitsCatalog() {
+        User currentUser = getCurrentUserSafe();
         List<DefaultKit> kits = defaultKitRepository.findAll();
         return kits.stream()
-                   .map(this::mapToDefaultKitResponse)
-                   .collect(Collectors.toList());
+                .map(kit -> mapToDefaultKitResponse(kit, currentUser))
+                .collect(Collectors.toList());
     }
 
-    private DefaultKitResponse mapToDefaultKitResponse(DefaultKit kit) {
+    private DefaultKitResponse mapToDefaultKitResponse(DefaultKit kit, User currentUser) {
         DefaultKitResponse response = new DefaultKitResponse();
         response.setId(kit.getId());
         response.setName(kit.getName());
         response.setDescription(kit.getDescription());
-        response.setBasePrice(kit.getBasePrice());
 
         List<DefaultKitItemResponse> itemResponses = new ArrayList<>();
+        double dynamicBasePrice = 0.0; // Precio recalculado dinámicamente
+
         if (kit.getItems() != null) {
             for (DefaultKitItem kitItem : kit.getItems()) {
+                Item dbItem = kitItem.getItem();
+                
+                // --- LÓGICA DE AUTO-EXCLUSIÓN (OPCIÓN B) ---
+                if (currentUser != null && dbItem != null && dbItem.getOwner() != null &&
+                    dbItem.getOwner().getId().equals(currentUser.getId())) {
+                    continue; // Si el usuario es el dueño, saltamos este artículo y no lo enviamos al Front
+                }
+
                 DefaultKitItemResponse itemResp = new DefaultKitItemResponse();
                 itemResp.setId(kitItem.getId());
 
-                // Mapeamos el Item (Article) real
                 ItemCatalogResponse catalogResp = new ItemCatalogResponse();
-                if (kitItem.getItem() != null) {
-                    Item dbItem = kitItem.getItem();
+                if (dbItem != null) {
                     catalogResp.setId(dbItem.getId());
                     catalogResp.setTitle(dbItem.getTitle());
                     catalogResp.setPricePerMonth(dbItem.getPricePerMonth());
                     catalogResp.setAvailableFrom(dbItem.getAvailableFrom());
                     catalogResp.setAvailableUntil(dbItem.getAvailableUntil());
-                    // Añade aquí cualquier otro campo que necesites en el front
+                    
+                    // Sumamos al precio dinámico solo los artículos que SÍ se van a enviar
+                    if (dbItem.getPricePerMonth() != null) {
+                        dynamicBasePrice += dbItem.getPricePerMonth();
+                    }
                 }
                 itemResp.setItem(catalogResp);
                 itemResponses.add(itemResp);
             }
         }
+        
         response.setItems(itemResponses);
+        // Sobrescribimos el precio estático de la BD con el precio filtrado para este usuario
+        response.setBasePrice(dynamicBasePrice); 
+        
         return response;
     }
 
