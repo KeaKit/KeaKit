@@ -272,7 +272,7 @@ const HomeScreen: React.FC = () => {
                   styles.cardSubtitleLight,
                   { fontSize: getResponsiveFontSize(12, 14, 14) }
                 ]}>
-                  balance disponible
+                  Balance disponible
                 </Text>
               </View>
               <Ionicons 
@@ -332,7 +332,7 @@ const HomeScreen: React.FC = () => {
                   styles.cardSubtitleDark,
                   { fontSize: getResponsiveFontSize(12, 14, 14) }
                 ]}>
-                  artículos en uso
+                  Artículos en uso
                 </Text>
               </View>
               <Ionicons 
