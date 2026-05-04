@@ -195,11 +195,6 @@ const AppNavigator: React.FC = () => {
                   component={withLayout(UserRatingsScreen)}
                 />
 
-                <Stack.Screen
-                  name="Wallet"
-                  component={withLayout(WalletScreen)}
-                />
-
                 {/* Pantallas de administración */}
                 {user.role === "ADMIN" && (
                   <>
@@ -281,6 +276,12 @@ const AppNavigator: React.FC = () => {
                 <Stack.Screen
                   name="CreateRating"
                   component={CreateRatingScreen}
+                />
+
+                { /* Wallet */ }
+                <Stack.Screen
+                  name="Wallet"
+                  component={WalletScreen}
                 />
 
                 {/* Incidencias */}
