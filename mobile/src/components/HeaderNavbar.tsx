@@ -148,6 +148,12 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     { name: "Kits Predeterminados", icon: "cube-outline", screen: "DefaultKits", requiresAdmin: true },
   ];
 
+
+  // Items para repartidores
+  const courierNavItems: NavbarHeaderItem[] = [
+    { name: "Kits Asignados", icon: "cube-outline", screen: "AssignedKits", requiresAuth: true }
+  ];
+
   // Filtrar items según autenticación y rol
   const getVisibleItems = () => {
     if (!user) return [];
@@ -158,6 +164,15 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         return true;
       });
     }
+
+    if (user.role === "COURIER") {
+    return courierNavItems.filter((item) => {
+      if (item.requiresAdmin) return false;
+      if (item.requiresAuth && !user) return false;
+      return true;
+    });
+    }
+
     return userNavItems.filter((item) => {
       if (item.requiresAdmin) return false;
       if (item.requiresAuth && !user) return false;
