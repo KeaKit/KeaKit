@@ -183,6 +183,7 @@ public class DatabaseSeeder {
             setupService.setTotalUnits(10);
             setupService.setAvailableFrom(LocalDate.now());
             setupService.setAvailableUntil(LocalDate.now().plusMonths(36));
+            setupService.setStatus(ServiceStatus.ACTIVE);
             serviceRepo.save(setupService);
 
             // 7. Kit (El Alquiler)

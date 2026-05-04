@@ -416,7 +416,8 @@ export type NavbarHeaderScreen =
   | "Register"
   | "TrackingNotifications"
   | "ActivityNotifications"
-  | "Notifications";
+  | "Notifications"
+  | "AssignedKits";
 
 export interface NavbarHeaderItem {
   name: string;

@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.PromoCodeRequest;
 import com.example.demo.dto.PromoCodeResponse;
 import com.example.demo.dto.PromoCodeValidationResponse;
+import com.example.demo.exception.PromoCodeAlreadyExistsException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.PromoCode;
 import com.example.demo.model.PromoCodeType;
@@ -20,9 +21,6 @@ public class PromoCodeService {
     @Autowired
     private PromoCodeRepository promoCodeRepository;
 
-    //@Autowired
-    //private PilotUserService pilotUserService;
-
     public List<PromoCodeResponse> findAll() {
         return promoCodeRepository.findAll()
                 .stream()
@@ -30,15 +28,15 @@ public class PromoCodeService {
                 .collect(Collectors.toList());
     }
 
-    public PromoCodeResponse findById(Long id) {
+    public PromoCodeResponse findById(Long id) throws ResourceNotFoundException {
         PromoCode promoCode = promoCodeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Código promocional no encontrado"));
         return new PromoCodeResponse(promoCode);
     }
 
-    public PromoCodeResponse create(PromoCodeRequest request) {
+    public PromoCodeResponse create(PromoCodeRequest request) throws PromoCodeAlreadyExistsException {
         promoCodeRepository.findByCodeIgnoreCase(request.code()).ifPresent(existing -> {
-            throw new RuntimeException("Este código promocional ya existe");
+            throw new PromoCodeAlreadyExistsException();
         });
 
         PromoCode promoCode = new PromoCode();
@@ -46,13 +44,13 @@ public class PromoCodeService {
         return new PromoCodeResponse(promoCodeRepository.save(promoCode));
     }
 
-    public PromoCodeResponse update(Long id, PromoCodeRequest request) {
+    public PromoCodeResponse update(Long id, PromoCodeRequest request) throws ResourceNotFoundException, PromoCodeAlreadyExistsException {
         PromoCode promoCode = promoCodeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Código promocional no encontrado"));
 
         promoCodeRepository.findByCodeIgnoreCase(request.code()).ifPresent(existing -> {
             if (!existing.getId().equals(id)) {
-                throw new RuntimeException("Este código promocional ya existe");
+                throw new PromoCodeAlreadyExistsException();
             }
         });
 

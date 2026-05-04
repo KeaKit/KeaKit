@@ -25,7 +25,7 @@ import {
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
-import { createKit, filterItemsForKit } from "../../services/kitService";
+import { createKit, filterItemsForKit, getActiveServices } from "../../services/kitService";
 import {
   getNearbyArticles,
   getArticlesForMap,
@@ -371,14 +371,16 @@ const CreateKitScreen: React.FC = () => {
     [selectedQuantities],
   );
 
+  const selectedProducts = useMemo(
+    () => {
+      return availableProducts.filter((p) => selectedIds.includes(p.id));
+    },
+    [availableProducts, selectedIds],
+  );
+
   const selectedItemsCount = useMemo(
     () => Object.values(selectedQuantities).reduce((sum, quantity) => sum + quantity, 0),
     [selectedQuantities],
-  );
-
-  const selectedProducts = useMemo(
-    () => availableProducts.filter((p) => selectedIds.includes(p.id)),
-    [availableProducts, selectedIds],
   );
 
   const totalPrice = useMemo(() => {
