@@ -14,6 +14,7 @@ import { ConfirmModal } from '../../components/ConfirmModal';
 import { SelectPicker } from '../../components/SelectPicker';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal, es, registerTranslation } from 'react-native-paper-dates';
+import { formatOwnerCommissionPromoBadgeLabel } from '../../utils/ownerCommissionPromo';
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
 type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
@@ -431,6 +432,7 @@ const MyArticlesScreen: React.FC = () => {
   const renderArticle = ({ item }: { item: UserArticle }) => {
     const isDeleting = deletingId === item.id;
     const isExpanded = expandedId === item.id;
+    const ownerPromoBadgeLabel = formatOwnerCommissionPromoBadgeLabel(item.ownerCommissionPromoCode);
 
     return (
       <View style={styles.cardContainer}>
@@ -459,6 +461,18 @@ const MyArticlesScreen: React.FC = () => {
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status), alignSelf: 'flex-start' }]}>
                 <Text style={styles.statusText}>{translateStatus(item.status)}</Text>
               </View>
+              {ownerPromoBadgeLabel ? (
+                <View
+                  style={styles.ownerPromoBadge}
+                  testID={`owner-promo-badge-${item.id}`}
+                  accessibilityLabel={ownerPromoBadgeLabel}
+                >
+                  <Ionicons name="pricetag-outline" size={13} color="#2f7d50" />
+                  <Text style={styles.ownerPromoText} numberOfLines={1}>
+                    {ownerPromoBadgeLabel}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </TouchableOpacity>
 
@@ -912,6 +926,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#fff',
+  },
+  ownerPromoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#eaf7ef',
+    borderWidth: 1,
+    borderColor: '#bfe8cf',
+    maxWidth: '100%',
+  },
+  ownerPromoText: {
+    marginLeft: 4,
+    color: '#2f7d50',
+    fontSize: 12,
+    fontWeight: '700',
   },
   dateRow: {
     flexDirection: 'row',
