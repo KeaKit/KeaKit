@@ -132,6 +132,7 @@ export interface Article {
   title: string;
   description: string;
   city: string;
+  country: string;
   pricePerMonth: number;
   availableFrom: string;
   availableUntil: string;
@@ -506,6 +507,7 @@ export interface Service {
   title: string;
   description: string;
   city: string;
+  country: string;
   pricePerMonth: number;
   availableFrom: string;
   availableUntil: string;
