@@ -12,6 +12,7 @@ import com.example.demo.model.ServiceStatus;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.ItemRepository;
+import com.example.demo.repository.ArticleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ItemServiceTest {
 
+    @Mock private ArticleRepository articleRepository;
     @Mock private ItemRepository itemRepository;
     @Mock private DefaultKitService defaultKitService;
 
