@@ -163,6 +163,10 @@ const NotificationsScreen: React.FC = () => {
 
       {/* NUEVO: APARTADOS PARA REDIRIGIR (Pestañas/Botones) */}
       <View style={styles.navigationRow}>
+        <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} style={{ marginLeft: -15 }}/>
+        </TouchableOpacity>
+
         <TouchableOpacity 
           style={styles.navButton} 
           onPress={() => navigation.navigate("ActivityNotifications")}
