@@ -111,7 +111,11 @@ const IncidentDetailScreen: React.FC = () => {
     setResolving(true);
     try {
       await resolveIncident(incidentId, user.token);
-      navigation.navigate('MyIncidents');
+      if (user.role === 'ADMIN') {
+        navigation.navigate('AdminIncidents');
+      } else {
+        navigation.navigate('MyIncidents');
+      }
     } catch (err) {
       console.error('Error al resolver la incidencia:', err);
     } finally {
@@ -124,7 +128,11 @@ const IncidentDetailScreen: React.FC = () => {
     setDeleting(true);
     try {
       await deleteIncident(incidentId, user.token);
-      navigation.navigate('MyIncidents');
+      if (user.role === 'ADMIN') {
+        navigation.navigate('AdminIncidents');
+      } else {
+        navigation.navigate('MyIncidents');
+      }
     } catch (err) {
       console.error('Error al eliminar la incidencia:', err);
       setDeleting(false);
