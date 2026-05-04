@@ -80,7 +80,7 @@ class UserServiceTest {
             saved.setId(10L);
             return saved;
         });
-        when(jwtUtil.generateToken("new.user@test.com", 10L, UserRole.USER)).thenReturn("jwt-token");
+        when(jwtUtil.generateToken("new.user@test.com", 10L, UserRole.USER, 0)).thenReturn("jwt-token");
 
         // CORREGIDO: Ahora pasamos la IP
         UserResponse response = userService.register(registerRequest, TEST_IP);
@@ -101,7 +101,7 @@ class UserServiceTest {
         assertEquals(UserRole.USER, userToSave.getRole());
 
         verify(walletRepository).save(any());
-        verify(jwtUtil).generateToken("new.user@test.com", 10L, UserRole.USER);
+        verify(jwtUtil).generateToken("new.user@test.com", 10L, UserRole.USER, 0);
     }
 
     @Test
@@ -113,14 +113,14 @@ class UserServiceTest {
 
         verify(userRepository, never()).save(any(User.class));
         verify(walletRepository, never()).save(any());
-        verify(jwtUtil, never()).generateToken(any(), any(), any());
+        verify(jwtUtil, never()).generateToken(any(), any(), any(), any());
     }
 
     @Test
     void login_success_returnsUserResponseWithToken() {
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(loginRequest.getPassword(), existingUser.getPassword())).thenReturn(true);
-        when(jwtUtil.generateToken(existingUser.getEmail(), existingUser.getId(), existingUser.getRole())).thenReturn("jwt-token");
+        when(jwtUtil.generateToken(existingUser.getEmail(), existingUser.getId(), existingUser.getRole(), existingUser.getTokenVersion())).thenReturn("jwt-token");
 
         UserResponse response = userService.login(loginRequest);
 
@@ -129,7 +129,7 @@ class UserServiceTest {
         assertEquals(existingUser.getEmail(), response.getEmail());
         assertEquals("jwt-token", response.getToken());
 
-        verify(jwtUtil).generateToken(eq(existingUser.getEmail()), eq(existingUser.getId()), eq(existingUser.getRole()));
+        verify(jwtUtil).generateToken(eq(existingUser.getEmail()), eq(existingUser.getId()), eq(existingUser.getRole()), eq(existingUser.getTokenVersion()));
     }
 
     @Test
@@ -139,7 +139,7 @@ class UserServiceTest {
         assertThrows(UserNotFoundException.class, () -> userService.login(loginRequest));
 
         verify(passwordEncoder, never()).matches(any(), any());
-        verify(jwtUtil, never()).generateToken(any(), any(), any());
+        verify(jwtUtil, never()).generateToken(any(), any(), any(), any());
     }
 
     @Test
@@ -149,7 +149,7 @@ class UserServiceTest {
 
         assertThrows(InvalidCredentialsException.class, () -> userService.login(loginRequest));
 
-        verify(jwtUtil, never()).generateToken(any(), any(), any());
+        verify(jwtUtil, never()).generateToken(any(), any(), any(), any());
     }
 
     @Test

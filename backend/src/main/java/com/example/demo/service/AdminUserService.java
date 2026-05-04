@@ -116,6 +116,8 @@ public class AdminUserService {
             user.setCountry(request.getCountry());
         }
 
+        user.incrementTokenVersion();
+
         User updatedUser = userRepository.save(user);
 
         return new UserResponse(updatedUser);

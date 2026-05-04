@@ -28,11 +28,12 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email, Long userId, UserRole role) {
+    public String generateToken(String email, Long userId, UserRole role, Integer tokenVersion) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", email);
         claims.put("userId", userId);
         claims.put("role", role.name());
+        claims.put("tokenVersion", tokenVersion);
         return createToken(claims, email);
     }
 
@@ -105,5 +106,9 @@ public class JwtUtil {
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
+    }
+
+    public Integer extractTokenVersion(String token) {
+        return extractClaim(token, claims -> claims.get("tokenVersion", Integer.class));
     }
 }
