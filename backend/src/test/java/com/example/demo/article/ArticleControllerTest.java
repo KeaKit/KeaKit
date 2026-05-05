@@ -11,6 +11,7 @@ import com.example.demo.security.TokenBlacklistService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
@@ -23,10 +24,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -105,6 +108,33 @@ class ArticleControllerTest {
                 .content("{\"title\":\"t\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.title").value("t"));
+    }
+
+    @Test
+    void uploadArticle_withOwnerCommissionPromoCode_sendsFieldToServiceAndResponseIncludesIt() throws Exception {
+        Article saved = new Article();
+        saved.setId(10L);
+        saved.setTitle("Taladro");
+        saved.setDescription("d");
+        saved.setCity("c");
+        saved.setPricePerMonth(10.0);
+        saved.setStatus(ArticleStatus.AVAILABLE);
+        saved.setOwnerCommissionPromoCode("OWNER10");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(articleService.save(any(Article.class))).thenReturn(saved);
+
+        mockMvc.perform(post("/api/article/upload")
+                .param("ownerId", "1")
+                .param("categoryId", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"Taladro\",\"description\":\"d\",\"city\":\"c\",\"pricePerMonth\":10.0,\"ownerCommissionPromoCode\":\"OWNER10\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.ownerCommissionPromoCode").value("OWNER10"));
+
+        ArgumentCaptor<Article> captor = ArgumentCaptor.forClass(Article.class);
+        verify(articleService).save(captor.capture());
+        assertThat(captor.getValue().getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
     }
 
     @Test
@@ -197,6 +227,24 @@ class ArticleControllerTest {
         mockMvc.perform(get("/api/article/all"))
             .andExpect(status().isInternalServerError())
             .andExpect(content().string("DB error"));
+    }
+
+    @Test
+    void getArticleById_withOwnerCommissionPromoCode_returnsField() throws Exception {
+        Article articleWithOwnerPromo = new Article();
+        articleWithOwnerPromo.setId(1L);
+        articleWithOwnerPromo.setTitle("Taladro");
+        articleWithOwnerPromo.setDescription("d");
+        articleWithOwnerPromo.setCity("c");
+        articleWithOwnerPromo.setPricePerMonth(10.0);
+        articleWithOwnerPromo.setStatus(ArticleStatus.AVAILABLE);
+        articleWithOwnerPromo.setOwnerCommissionPromoCode("OWNER10");
+
+        when(articleService.findById(1L)).thenReturn(articleWithOwnerPromo);
+
+        mockMvc.perform(get("/api/article/1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.ownerCommissionPromoCode").value("OWNER10"));
     }
 
 
@@ -314,8 +362,8 @@ class ArticleControllerTest {
 
     @Test
     void getMyArticles_success() throws Exception {
-        UserArticle dto1 = new UserArticle(10L, "Taladro", "url1", 15.0, "AVAILABLE", null);
-        UserArticle dto2 = new UserArticle(11L, "Bicicleta", "url2", 30.0, "RENTED", LocalDate.of(2026, 12, 31));
+        UserArticle dto1 = new UserArticle(10L, "Taladro", "url1", 15.0, "AVAILABLE", null, null);
+        UserArticle dto2 = new UserArticle(11L, "Bicicleta", "url2", 30.0, "RENTED", LocalDate.of(2026, 12, 31), null);
 
         when(articleService.findArticlesByUserId(eq(1L), any(), any(), any(), any())).thenReturn(List.of(dto1, dto2));
 
@@ -329,6 +377,18 @@ class ArticleControllerTest {
             .andExpect(jsonPath("$[1].title").value("Bicicleta"))
             .andExpect(jsonPath("$[1].status").value("RENTED"))
             .andExpect(jsonPath("$[1].rentedUntil").value("2026-12-31"));
+    }
+
+    @Test
+    void getMyArticles_withOwnerCommissionPromoCode_returnsField() throws Exception {
+        UserArticle dto = new UserArticle(10L, "Taladro", "url1", 15.0, "AVAILABLE", null, "OWNER10");
+
+        when(articleService.findArticlesByUserId(eq(1L), any(), any(), any(), any())).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/article/my-articles/1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].title").value("Taladro"))
+            .andExpect(jsonPath("$[0].ownerCommissionPromoCode").value("OWNER10"));
     }
 
     @Test
@@ -371,7 +431,7 @@ class ArticleControllerTest {
 
     @Test
     void getLatestArticlesByCategory_success() throws Exception {
-        UserArticle dto = new UserArticle(10L, "Taladro de prueba", "url_img", 15.0, "AVAILABLE", null);
+        UserArticle dto = new UserArticle(10L, "Taladro de prueba", "url_img", 15.0, "AVAILABLE", null, null);
 
         when(articleService.findLatestArticlesByCategory(1L)).thenReturn(List.of(dto));
 
@@ -386,7 +446,7 @@ class ArticleControllerTest {
     // Test filtros MyArticles
     @Test
     void getMyArticles_withAllFilters_success() throws Exception {
-        UserArticle dtoFiltered = new UserArticle(12L, "Taladro Nuevo", "url3", 25.0, "AVAILABLE", null);
+        UserArticle dtoFiltered = new UserArticle(12L, "Taladro Nuevo", "url3", 25.0, "AVAILABLE", null, null);
 
       
         when(articleService.findArticlesByUserId(eq(1L), eq(5L), eq("NEW"), eq(10.0), eq(50.0)))
@@ -406,7 +466,7 @@ class ArticleControllerTest {
 
     @Test
     void getMyArticles_withPartialFilters_success() throws Exception {
-        UserArticle dtoFiltered = new UserArticle(13L, "Bicicleta Barata", "url4", 15.0, "AVAILABLE", null);
+        UserArticle dtoFiltered = new UserArticle(13L, "Bicicleta Barata", "url4", 15.0, "AVAILABLE", null, null);
 
        
         when(articleService.findArticlesByUserId(eq(1L), isNull(), eq("USED"), isNull(), eq(20.0)))

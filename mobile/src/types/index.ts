@@ -87,6 +87,7 @@ export interface UserArticle {
   pricePerMonth: number;
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
+  ownerCommissionPromoCode?: string | null;
   totalUnits?: number;
   rentals?: ArticleRecordDTO[];
 }

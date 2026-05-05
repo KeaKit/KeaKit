@@ -333,7 +333,8 @@ public class ArticleService {
                 article.getImageUrl(),
                 article.getPricePerMonth(),
                 finalStatus,
-                rentedUntil
+                rentedUntil,
+                article.getOwnerCommissionPromoCode()
         );
     }
 
@@ -449,7 +450,8 @@ public class ArticleService {
                 article.getImageUrl(),
                 article.getPricePerMonth(),
                 article.getStatus() != null ? article.getStatus().name() : "UNKNOWN",
-                rentedUntil
+                rentedUntil,
+                article.getOwnerCommissionPromoCode()
             );
         }).collect(Collectors.toList());
     }

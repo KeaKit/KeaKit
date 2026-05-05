@@ -1,5 +1,5 @@
 import { API_ROUTES } from '../config/api';
-import { Article, ArticleNearby, ArticlePayload, ArticleRecordDTO } from '../types';
+import { Article, ArticleNearby, ArticlePayload, ArticleRecordDTO, UserArticle } from '../types';
 import { Platform } from 'react-native';
 
 const normalizeErrorMessage = (raw: string): string => {
@@ -40,7 +40,7 @@ export async function getMyArticles(
     minPrice?: number; 
     maxPrice?: number 
   }
-): Promise<Article[]> {
+): Promise<UserArticle[]> {
  
 
   let url = API_ROUTES.MY_ARTICLES(userId);
@@ -78,7 +78,7 @@ export async function getMyArticles(
     },
   });
   
-  return handleResponse<Article[]>(res);
+  return handleResponse<UserArticle[]>(res);
 }
 
 export async function getArticleById(id: number, token: string): Promise<Article> {
