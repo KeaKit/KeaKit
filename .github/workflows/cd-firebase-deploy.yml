@@ -1,10 +1,7 @@
 name: CD - Deploy Frontend to Firebase
 
 on:
-  workflow_run:
-    workflows: ["Frontend CI"]
-    types:
-      - completed
+  push:
     branches:
       - main
       - 'release/*.*.*'
