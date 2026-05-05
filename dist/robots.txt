@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://keakitv1.web.app/sitemap.xml
