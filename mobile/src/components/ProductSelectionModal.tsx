@@ -19,7 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import { ArticleMapView } from "./ArticleMapView";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "./NotificationContext";
-import { requestArticleAvailabilityNotification } from "../services/articleService";
+import { requestArticleAvailabilityNotification, createDemandAlert } from "../services/articleService";
 import { SelectPicker } from "./SelectPicker";
 
 const sanitizePriceInput = (value: string): string => value.replace(/\D/g, "");
@@ -236,13 +236,22 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     setRequestingIds((prev) => ({ ...prev, [articleId]: true }));
 
     try {
+      // Solicitar notificación cuando el artículo esté disponible
       await requestArticleAvailabilityNotification(
         articleId,
         user.id,
         user.token,
       );
+      
+      // Crear alerta de demanda para notificar al propietario del artículo
+      await createDemandAlert(
+        articleId,
+        user.id,
+        user.token,
+      );
+      
       showNotification(
-        "Te avisaremos cuando el artículo vuelva a estar disponible.",
+        "Te avisaremos cuando el artículo vuelva a estar disponible, y el propietario ha sido notificado de tu interés.",
         "success",
       );
     } catch (error) {

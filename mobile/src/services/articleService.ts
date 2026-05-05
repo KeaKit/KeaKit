@@ -120,6 +120,37 @@ export async function requestArticleAvailabilityNotification(
   return res.text();
 }
 
+export async function createDemandAlert(
+  articleId: number,
+  requesterId: number,
+  token: string,
+): Promise<string> {
+  const res = await fetch(API_ROUTES.CREATE_DEMAND_ALERT(articleId, requesterId), {
+    method: 'POST',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try {
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        errorMessage = data.message || data.error || JSON.stringify(data);
+      } else {
+        errorMessage = await res.text();
+      }
+    } catch {}
+    throw new Error(normalizeErrorMessage(errorMessage));
+  }
+
+  const contentType = res.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    return res.json();
+  }
+  return res.text();
+}
+
 export async function uploadArticle(
   ownerId: number,
   categoryId: number,

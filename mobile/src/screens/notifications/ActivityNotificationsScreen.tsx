@@ -114,30 +114,47 @@ const ActivityNotificationsScreen: React.FC = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: ActivityNotification }) => (
-    <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
-      {!item.read && <View style={styles.unreadIndicator} />}
-      <View style={styles.cardHeader}>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-            {item.type === "ITEM_RENTED" ? "Objeto alquilado" : "Fin de alquiler"}
-          </Text>
-          <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
+  const renderItem = ({ item }: { item: ActivityNotification }) => {
+    const getNotificationTitle = (type: string) => {
+      switch (type) {
+        case "ITEM_RENTED":
+          return "Objeto alquilado";
+        case "RETURN_REMINDER":
+          return "Fin de alquiler";
+        case "DEMAND_ALERT":
+          return "Interés en tu artículo";
+        case "ARTICLE_AVAILABLE":
+          return "Artículo disponible";
+        default:
+          return "Notificación";
+      }
+    };
+
+    return (
+      <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
+        {!item.read && <View style={styles.unreadIndicator} />}
+        <View style={styles.cardHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
+              {getNotificationTitle(item.type)}
+            </Text>
+            <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
+          </View>
+          {!item.read && (
+            <TouchableOpacity
+              style={styles.markReadButton}
+              onPress={() => handleMarkSingleRead(item.id)}
+            >
+              <Ionicons name="checkmark-circle-outline" size={20} color={Colors.primary} />
+            </TouchableOpacity>
+          )}
         </View>
-        {!item.read && (
-          <TouchableOpacity
-            style={styles.markReadButton}
-            onPress={() => handleMarkSingleRead(item.id)}
-          >
-            <Ionicons name="checkmark-circle-outline" size={20} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
+        <Text style={[styles.cardMessage, item.read && styles.cardMessageRead]}>
+          {item.message}
+        </Text>
       </View>
-      <Text style={[styles.cardMessage, item.read && styles.cardMessageRead]}>
-        {item.message}
-      </Text>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={commonStyles.container}>
