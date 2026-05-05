@@ -21,6 +21,12 @@ import { useAuth } from "../context/AuthContext";
 import { useNotification } from "./NotificationContext";
 import { requestArticleAvailabilityNotification } from "../services/articleService";
 import { SelectPicker } from "./SelectPicker";
+import {
+  buildSelectableKitMapProducts,
+  hasAvailableUnits,
+  isCatalogProductAvailableForKitRange,
+  isRentableStatus,
+} from "../utils/kitAvailability";
 
 const sanitizePriceInput = (value: string): string => value.replace(/\D/g, "");
 
@@ -29,6 +35,9 @@ const parsePrice = (value?: string): number | undefined => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 };
+
+const formatDate = (date: Date): string =>
+  `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
 
 type ProductSelectionNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -154,10 +163,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   const [requestingIds, setRequestingIds] = React.useState<
     Record<number, boolean>
   >({});
-  const filteredProductIds = React.useMemo(
-    () => new Set(filteredProducts.map((product) => product.id)),
-    [filteredProducts],
-  );
   const resolvedCategoryOptions = React.useMemo(() => {
     if (categoryOptions && categoryOptions.length > 0) {
       return categoryOptions;
@@ -258,44 +263,50 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   };
 
   // Calcular disponibilidad de productos basado en fechas para la LISTA
-const productsWithAvailability = React.useMemo(() => {
-    if (!startDate || !endDate) {
-      return filteredProducts.map((p) => ({ ...p, isAvailable: true }));
-    }
-
-    const requestStart = new Date(startDate);
-    requestStart.setHours(0, 0, 0, 0);
-    
-    const requestEnd = new Date(endDate);
-    requestEnd.setHours(0, 0, 0, 0);
-
+  const productsWithAvailability = React.useMemo(() => {
     const mapped = filteredProducts.map((p) => {
-      if (!p.availableFrom || !p.availableUntil) {
-        const isAvailable = p.status === "AVAILABLE" || p.status === "ACTIVE";
+      const isAvailable = isCatalogProductAvailableForKitRange(
+        p,
+        startDate,
+        endDate,
+      );
+
+      if (isAvailable) {
+        return { ...p, isAvailable: true };
+      }
+
+      if (!hasAvailableUnits(p.totalUnits)) {
         return {
           ...p,
-          isAvailable,
-          availabilityMessage: isAvailable ? undefined : "Sin fechas de disponibilidad",
+          isAvailable: false,
+          availabilityMessage: "Sin unidades disponibles",
         };
       }
 
-      const productFrom = new Date(p.availableFrom);
-      productFrom.setHours(0, 0, 0, 0);
-      
-      const productUntil = new Date(p.availableUntil);
-      productUntil.setHours(0, 0, 0, 0);
-
-      const isAvailable = requestStart >= productFrom && requestEnd <= productUntil;
-
-      if (!isAvailable) {
-        const formatDate = (date: Date) => {
-          return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+      if (!isRentableStatus(p.status)) {
+        return {
+          ...p,
+          isAvailable: false,
+          availabilityMessage: "No disponible",
         };
+      }
+
+      if (startDate && endDate && p.availableFrom && p.availableUntil) {
+        const productFrom = new Date(p.availableFrom);
+        productFrom.setHours(0, 0, 0, 0);
+
+        const productUntil = new Date(p.availableUntil);
+        productUntil.setHours(0, 0, 0, 0);
+
         const availabilityMessage = `Disponible: ${formatDate(productFrom)} - ${formatDate(productUntil)}`;
         return { ...p, isAvailable: false, availabilityMessage };
       }
 
-      return { ...p, isAvailable: true };
+      return {
+        ...p,
+        isAvailable: false,
+        availabilityMessage: "No disponible en estas fechas",
+      };
     });
 
     if (showOnlyAvailable) {
@@ -305,53 +316,26 @@ const productsWithAvailability = React.useMemo(() => {
     return mapped;
   }, [filteredProducts, startDate, endDate, showOnlyAvailable]);
 
-  // Productos para el mapa (con marca de disponibilidad, sin filtrar)
+  // Productos para el mapa: solo los seleccionables segun el catalogo filtrado.
   const mapProductsWithAvailability = React.useMemo(() => {
-    let products = (showOnlyMyCity && userCity
-      ? mapProducts.filter(
-          (a) =>
-            filteredProductIds.has(a.id) &&
-            a.city?.toLowerCase() === userCity.toLowerCase(),
-        )
-      : mapProducts.filter((a) => filteredProductIds.has(a.id))
-    ).map((a) => ({
-      ...a,
-      city: a.city ?? undefined,
-      ownerName: a.ownerName ?? undefined,
-    }));
-
-    if (!startDate || !endDate) {
-      return products;
-    }
-
-    const requestStart = new Date(startDate);
-    requestStart.setHours(0, 0, 0, 0);
-    
-    const requestEnd = new Date(endDate);
-    requestEnd.setHours(0, 0, 0, 0);
-
-    const processedProducts = products.map((product) => {
-      if (!product.availableFrom || !product.availableUntil) {
-        return { ...product, isAvailableForDates: false };
-      }
-
-      const productFrom = new Date(product.availableFrom);
-      productFrom.setHours(0, 0, 0, 0);
-      
-      const productUntil = new Date(product.availableUntil);
-      productUntil.setHours(0, 0, 0, 0);
-
-      const isAvailable = requestStart >= productFrom && requestEnd <= productUntil;
-      
-      return { ...product, isAvailableForDates: isAvailable };
-    });
-
-    if (showOnlyAvailable) {
-      return processedProducts.filter(p => p.isAvailableForDates === true);
-    }
-    
-    return processedProducts;
-  }, [mapProducts, filteredProductIds, showOnlyMyCity, userCity, startDate, endDate, showOnlyAvailable]);
+    return buildSelectableKitMapProducts(
+      mapProducts,
+      filteredProducts,
+      {
+        startDate,
+        endDate,
+        showOnlyMyCity,
+        userCity,
+      },
+    );
+  }, [
+    mapProducts,
+    filteredProducts,
+    showOnlyMyCity,
+    userCity,
+    startDate,
+    endDate,
+  ]);
   
   const navigateToUserReviews = (ownerId: number, ownerName: string) => {
     onDismiss();
@@ -614,8 +598,7 @@ const productsWithAvailability = React.useMemo(() => {
                   p.id,
                 );
                 const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
-                const isRentableStatus = p.status === "AVAILABLE" || p.status === "ACTIVE";
-                const canBeAdded = p.isAvailable && isRentableStatus;
+                const canBeAdded = p.isAvailable === true;
 
                 return (
                   <Pressable

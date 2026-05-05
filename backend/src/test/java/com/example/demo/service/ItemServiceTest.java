@@ -7,12 +7,16 @@ import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Category;
 import com.example.demo.model.CategoryStatus;
 import com.example.demo.model.Item;
+import com.example.demo.model.ItemMemento;
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 import com.example.demo.model.ServiceItem;
 import com.example.demo.model.ServiceStatus;
 import com.example.demo.model.User;
 import com.example.demo.model.UserRole;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.KitRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +46,7 @@ class ItemServiceTest {
     @Mock private ArticleRepository articleRepository;
     @Mock private ItemRepository itemRepository;
     @Mock private DefaultKitService defaultKitService;
+    @Mock private KitRepository kitRepository;
 
     @InjectMocks
     private ItemService itemService;
@@ -97,6 +102,26 @@ class ItemServiceTest {
         return service;
     }
 
+    private Kit makeKitWithSnapshot(
+            Long itemId,
+            int selectedUnits,
+            LocalDate startDate,
+            LocalDate endDate,
+            KitStatus status
+    ) {
+        Kit kit = new Kit();
+        kit.setStartDate(startDate);
+        kit.setEndDate(endDate);
+        kit.setStatus(status);
+
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(itemId);
+        snapshot.setSelectedUnits(selectedUnits);
+        kit.setSnapshots(List.of(snapshot));
+
+        return kit;
+    }
+
     @Test
     void filterItemsForKit_withConditionAndPriceRange_returnsMappedResponse() {
         List<Item> items = List.of(
@@ -120,6 +145,58 @@ class ItemServiceTest {
         assertThat(result.getSize()).isEqualTo(10);
 
         verify(itemRepository).findAll(org.mockito.ArgumentMatchers.<Specification<Item>>any(), eq(PageRequest.of(0, 10)));
+    }
+
+    @Test
+    void filterItemsForKit_whenArticleFullyBookedForRequestedDates_returnsZeroUnitsAndRentedStatus() {
+        LocalDate startDate = LocalDate.of(2026, 5, 10);
+        LocalDate endDate = LocalDate.of(2026, 5, 12);
+        Article article = makeArticle(1L, ArticleCondition.USED, ArticleStatus.AVAILABLE, 25.0);
+        article.setTotalUnits(2);
+
+        Page<Item> page = new PageImpl<>(List.of(article), PageRequest.of(0, 10), 1);
+        Kit paidKit = makeKitWithSnapshot(1L, 2, startDate, endDate, KitStatus.PAID);
+
+        when(itemRepository.findAll(org.mockito.ArgumentMatchers.<Specification<Item>>any(), eq(PageRequest.of(0, 10)))).thenReturn(page);
+        when(kitRepository.findOverlappingKitsForItem(
+                eq(1L),
+                eq(startDate),
+                eq(endDate),
+                eq(List.of(KitStatus.PAID, KitStatus.ACTIVE))
+        )).thenReturn(List.of(paidKit));
+
+        ItemFilterResponseDTO result = itemService.filterItemsForKit(null, null, null, null, null, null, 0, 10, startDate, endDate);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getId()).isEqualTo(1L);
+        assertThat(result.getContent().get(0).getTotalUnits()).isZero();
+        assertThat(result.getContent().get(0).getStatus()).isEqualTo("RENTED");
+    }
+
+    @Test
+    void filterItemsForKit_whenOnlySomeUnitsAreBookedForRequestedDates_returnsRemainingUnitsAndAvailableStatus() {
+        LocalDate startDate = LocalDate.of(2026, 5, 10);
+        LocalDate endDate = LocalDate.of(2026, 5, 13);
+        Article article = makeArticle(1L, ArticleCondition.USED, ArticleStatus.AVAILABLE, 25.0);
+        article.setTotalUnits(3);
+
+        Page<Item> page = new PageImpl<>(List.of(article), PageRequest.of(0, 10), 1);
+        Kit firstOverlappingKit = makeKitWithSnapshot(1L, 2, LocalDate.of(2026, 5, 10), LocalDate.of(2026, 5, 11), KitStatus.PAID);
+        Kit secondOverlappingKit = makeKitWithSnapshot(1L, 1, LocalDate.of(2026, 5, 12), LocalDate.of(2026, 5, 13), KitStatus.ACTIVE);
+
+        when(itemRepository.findAll(org.mockito.ArgumentMatchers.<Specification<Item>>any(), eq(PageRequest.of(0, 10)))).thenReturn(page);
+        when(kitRepository.findOverlappingKitsForItem(
+                eq(1L),
+                eq(startDate),
+                eq(endDate),
+                eq(List.of(KitStatus.PAID, KitStatus.ACTIVE))
+        )).thenReturn(List.of(firstOverlappingKit, secondOverlappingKit));
+
+        ItemFilterResponseDTO result = itemService.filterItemsForKit(null, null, null, null, null, null, 0, 10, startDate, endDate);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getTotalUnits()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getStatus()).isEqualTo("AVAILABLE");
     }
 
     @Test

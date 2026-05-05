@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -80,6 +81,46 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.content[0].title").value("Taladro"))
                 .andExpect(jsonPath("$.content[0].condition").value("USED"))
                 .andExpect(jsonPath("$.content[0].status").value("AVAILABLE"));
+    }
+
+    @Test
+    void filterItemsForKit_withRequestedDates_returnsAvailabilityFromService() throws Exception {
+        LocalDate startDate = LocalDate.of(2026, 5, 10);
+        LocalDate endDate = LocalDate.of(2026, 5, 12);
+
+        ItemCatalogResponse item = new ItemCatalogResponse();
+        item.setId(2L);
+        item.setTitle("Taladro ya reservado");
+        item.setPricePerMonth(25.0);
+        item.setStatus("RENTED");
+        item.setItemType("ARTICLE");
+        item.setTotalUnits(0);
+        item.setAvailableFrom(LocalDate.of(2026, 5, 1));
+        item.setAvailableUntil(LocalDate.of(2026, 5, 31));
+
+        ItemFilterResponseDTO response = new ItemFilterResponseDTO(List.of(item), 0, 100, 1, 1, false, false);
+
+        when(itemService.filterItemsForKit(isNull(), isNull(), isNull(), eq("Sevilla"), isNull(), isNull(), eq(0), eq(100), eq(startDate), eq(endDate)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/items/filter-for-kit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "city": "Sevilla",
+                                  "page": 0,
+                                  "size": 100,
+                                  "startDate": "2026-05-10",
+                                  "endDate": "2026-05-12"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(2))
+                .andExpect(jsonPath("$.content[0].status").value("RENTED"))
+                .andExpect(jsonPath("$.content[0].totalUnits").value(0))
+                .andExpect(jsonPath("$.content[0].availableFrom").value("2026-05-01"))
+                .andExpect(jsonPath("$.content[0].availableUntil").value("2026-05-31"));
     }
 
     @Test

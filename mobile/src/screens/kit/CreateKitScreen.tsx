@@ -25,7 +25,7 @@ import {
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
-import { createKit, filterItemsForKit, getActiveServices } from "../../services/kitService";
+import { createKit, filterItemsForKit } from "../../services/kitService";
 import {
   getNearbyArticles,
   getArticlesForMap,
@@ -114,6 +114,11 @@ const CONDITION_OPTIONS = [
   { label: "Usado", value: "USED" },
   { label: "Desgastado", value: "WORN" },
 ];
+
+const normalizeTotalUnits = (value: unknown): number => {
+  const units = Number(value ?? 1);
+  return Number.isFinite(units) ? Math.max(0, units) : 1;
+};
 
 // Constantes de validación (movidas fuera del componente para garantizar su existencia)
 const MAX_KIT_NAME_LENGTH = 255;
@@ -311,7 +316,7 @@ const CreateKitScreen: React.FC = () => {
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
         imageUrl: (p as any).imageUrl ?? null,
-        totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
+        totalUnits: normalizeTotalUnits(p.totalUnits),
         availableFrom: (p as any).availableFrom ?? undefined,
         availableUntil: (p as any).availableUntil ?? undefined,
       }));
