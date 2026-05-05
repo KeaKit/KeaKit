@@ -517,6 +517,7 @@ export interface Service {
   status: ServiceStatus;
   totalUnits?: number;
   ownerCommissionPromoCode?: string | null;
+  rentedUnitsNow: number;
 }
 
 export interface ServicePayload {
