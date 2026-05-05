@@ -76,6 +76,7 @@ public class ItemService {
                         .anyMatch(k -> k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE);
                 }
                 if (isRentedInKit) dto.setStatus("RENTED");
+                else dto.setStatus("AVAILABLE");
             }
             return dto;
         });
