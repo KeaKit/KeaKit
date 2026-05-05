@@ -145,7 +145,7 @@ public class DatabaseSeeder {
             proyector.setTitle("Proyector Epson 4K");
             proyector.setDescription("3000 lúmenes, ideal para presentaciones y cine en casa");
             proyector.setCategory(catTech);
-            proyector.setCity("Cordoba");
+            proyector.setCity("Córdoba");
             proyector.setCountry("Spain");
             proyector.setOwner(owner);
             proyector.setPricePerMonth(60.0);
@@ -179,6 +179,7 @@ public class DatabaseSeeder {
             setupService.setDescription("Configuración inicial a domicilio");
             setupService.setCategory(catTech);
             setupService.setCity("Sevilla");
+            setupService.setCountry("Spain");
             setupService.setOwner(owner);
             setupService.setPricePerMonth(50.0);
             setupService.setTotalUnits(10);

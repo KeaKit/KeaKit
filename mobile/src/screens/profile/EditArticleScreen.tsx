@@ -106,6 +106,7 @@ const EditArticleScreen: React.FC = () => {
   const { showNotification } = useNotification();
 
   const originalCity = article.city ?? '';
+  const originalCountry = article.country ?? '';
 
   const [title,          setTitle]          = useState(article.title ?? '');
   const [description,    setDescription]    = useState(article.description ?? '');
@@ -133,7 +134,7 @@ const EditArticleScreen: React.FC = () => {
     loadingCities,
     countries,
     onCountryChange,
-  } = useLocationPicker('', originalCity);
+  } = useLocationPicker(originalCountry, originalCity);
 
   const [showDateRangePicker,    setShowDateRangePicker]    = useState(false);
   const [startDate,              setStartDate]              = useState<Date | undefined>(isoToDate(article.availableFrom));

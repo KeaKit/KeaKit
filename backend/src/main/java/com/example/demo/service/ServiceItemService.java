@@ -3,12 +3,14 @@ package com.example.demo.service;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.dto.PromoCodeValidationResponse;
+import com.example.demo.dto.ServiceWithRentalsDTO;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ServiceItemService {
@@ -17,13 +19,15 @@ public class ServiceItemService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final PromoCodeService promoCodeService;
+    private final KitRepository kitRepository;
 
     public ServiceItemService(ServiceRepository serviceRepository, UserRepository userRepository, 
-                              CategoryRepository categoryRepository, PromoCodeService promoCodeService) {
+                              CategoryRepository categoryRepository, PromoCodeService promoCodeService, KitRepository kitRepository) {
         this.serviceRepository = serviceRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.promoCodeService = promoCodeService;
+        this.kitRepository = kitRepository;
     }
 
     public List<ServiceItem> findAll() {
@@ -212,9 +216,27 @@ public class ServiceItemService {
         return serviceRepository.findByStatus(ServiceStatus.ACTIVE);
     }
 
-    public List<ServiceItem> findByOwner(Long ownerId) {
-        return serviceRepository.findByOwnerId(ownerId);
-    }
+    public List<ServiceWithRentalsDTO> findByOwner(Long ownerId) {
+    List<ServiceItem> services = serviceRepository.findByOwnerId(ownerId);
+    LocalDate today = LocalDate.now();
+
+    return services.stream().map(service -> {
+        // Calculamos cuántas unidades de este servicio específico están en kits pagados/activos hoy
+        int rentedUnits = kitRepository.countActiveAndFutureRentedUnits(service.getId(), today);
+
+        return new ServiceWithRentalsDTO(
+            service.getId(),
+            service.getTitle(),
+            service.getCity(),
+            service.getPricePerMonth(),
+            service.getStatus(),
+            service.getTotalUnits(),
+            rentedUnits,
+            service.getAvailableFrom(),
+            service.getAvailableUntil()
+        );
+    }).collect(Collectors.toList());
+}
 
     private void validateOwnerCommissionPromoCode(String promoCode, String ownerEmail) {
         if (promoCode == null || promoCode.isBlank()) {

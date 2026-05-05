@@ -7,6 +7,7 @@ import com.example.demo.model.Article;
 import com.example.demo.model.ArticleCondition;
 import com.example.demo.model.Item;
 import com.example.demo.model.ItemFilter;
+import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.ServiceItem;
 import com.example.demo.repository.ArticleRepository;
@@ -61,22 +62,51 @@ public class ItemService {
 
         Page<ItemCatalogResponse> resultPage = itemRepository.findAll(spec, pageable).map(item -> {
             ItemCatalogResponse dto = toCatalogResponse(item);
-            if ("ARTICLE".equals(dto.getItemType())) {
-                boolean isRentedInKit;
-                if (startDate != null && endDate != null) {
-                    // Solo RENTED si hay solapamiento real de fechas
-                    isRentedInKit = !kitRepository.findOverlappingKitsForItem(
-                        item.getId(), startDate, endDate,
-                        List.of(KitStatus.PAID, KitStatus.ACTIVE)
-                    ).isEmpty();
+            
+            if (startDate != null && endDate != null) {
+                List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
+                    item.getId(), startDate, endDate,
+                    List.of(KitStatus.PAID, KitStatus.ACTIVE)
+                );
+
+                if (!overlappingKits.isEmpty()) {
+                    int maxRented = 0;
+                    for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                        int rentedToday = 0;
+                        for (Kit kit : overlappingKits) {
+                            if (!date.isBefore(kit.getStartDate()) && !date.isAfter(kit.getEndDate())) {
+                                rentedToday += kit.getSnapshots().stream()
+                                    .filter(snap -> snap.getOriginalItemId().equals(item.getId()))
+                                    .mapToInt(snap -> snap.getSelectedUnits())
+                                    .sum();
+                            }
+                        }
+                        if (rentedToday > maxRented) {
+                            maxRented = rentedToday;
+                        }
+                    }
+
+                    int available = dto.getTotalUnits() - maxRented;
+                    dto.setTotalUnits(Math.max(0, available));
+
+                    if ("ARTICLE".equals(dto.getItemType())) {
+                        if (available <= 0) dto.setStatus("RENTED");
+                        else dto.setStatus("AVAILABLE");
+                    }
                 } else {
-                    // Sin fechas, marcar como RENTED si tiene kit activo
-                    isRentedInKit = articleRepository.findAllKitsWhereArticleHasBeen(item.getId())
-                        .stream()
-                        .anyMatch(k -> k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE);
+                    if ("ARTICLE".equals(dto.getItemType())) {
+                        dto.setStatus("AVAILABLE");
+                    }
                 }
+            } else if ("ARTICLE".equals(dto.getItemType())) {
+                boolean isRentedInKit = articleRepository.findAllKitsWhereArticleHasBeen(item.getId())
+                    .stream()
+                    .anyMatch(k -> k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE);
+                
                 if (isRentedInKit) dto.setStatus("RENTED");
+                else dto.setStatus("AVAILABLE");
             }
+            
             return dto;
         });
 

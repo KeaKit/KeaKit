@@ -59,6 +59,13 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
                                          @Param("endDate") LocalDate endDate,
                                          @Param("statuses") List<KitStatus> statuses);
 
+    @Query("SELECT COALESCE(SUM(m.selectedUnits), 0) " +
+           "FROM Kit k JOIN k.snapshots m " +
+           "WHERE m.originalItemId = :serviceId " +
+           "AND k.status IN (com.example.demo.model.KitStatus.PAID, com.example.demo.model.KitStatus.ACTIVE) " +
+           "AND k.endDate >= :currentDate") 
+    int countActiveAndFutureRentedUnits(@Param("serviceId") Long serviceId, @Param("currentDate") LocalDate currentDate);
+
     @Query("SELECT DISTINCT k FROM Kit k JOIN k.snapshots s " +
             "WHERE (k.status = PAID " +
             "OR k.status = ACTIVE) " +
