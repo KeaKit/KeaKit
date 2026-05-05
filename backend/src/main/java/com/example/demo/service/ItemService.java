@@ -64,7 +64,6 @@ public class ItemService {
             ItemCatalogResponse dto = toCatalogResponse(item);
             
             if (startDate != null && endDate != null) {
-                // 1. Con fechas: Buscamos solapamientos para TODOS los ítems (Artículos y Servicios)
                 List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
                     item.getId(), startDate, endDate,
                     List.of(KitStatus.PAID, KitStatus.ACTIVE)
@@ -72,7 +71,6 @@ public class ItemService {
 
                 if (!overlappingKits.isEmpty()) {
                     int maxRented = 0;
-                    // Calculamos el pico máximo de unidades ocupadas en el periodo
                     for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
                         int rentedToday = 0;
                         for (Kit kit : overlappingKits) {
@@ -88,23 +86,19 @@ public class ItemService {
                         }
                     }
 
-                    // Calculamos lo que queda libre y actualizamos el DTO
                     int available = dto.getTotalUnits() - maxRented;
                     dto.setTotalUnits(Math.max(0, available));
 
-                    // Ajustamos el estado solo si es un Artículo
                     if ("ARTICLE".equals(dto.getItemType())) {
                         if (available <= 0) dto.setStatus("RENTED");
                         else dto.setStatus("AVAILABLE");
                     }
                 } else {
-                    // Si no hay solapamiento y es Artículo, está libre
                     if ("ARTICLE".equals(dto.getItemType())) {
                         dto.setStatus("AVAILABLE");
                     }
                 }
             } else if ("ARTICLE".equals(dto.getItemType())) {
-                // 2. Sin fechas: Mantenemos tu lógica original intacta (exclusiva para ARTICLE)
                 boolean isRentedInKit = articleRepository.findAllKitsWhereArticleHasBeen(item.getId())
                     .stream()
                     .anyMatch(k -> k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE);
