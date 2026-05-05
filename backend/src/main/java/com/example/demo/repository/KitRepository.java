@@ -58,5 +58,12 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
                                          @Param("startDate") LocalDate startDate,
                                          @Param("endDate") LocalDate endDate,
                                          @Param("statuses") List<KitStatus> statuses);
+
+    @Query("SELECT DISTINCT k FROM Kit k JOIN k.snapshots s " +
+            "WHERE (k.status = PAID " +
+            "OR k.status = ACTIVE) " +
+            "AND k.deliveryMethod = COURIER " +
+            "AND k.tenant.id = :tenantId")
+    List<Kit> findTrackingUpdateableByTenantId(@Param("tenantId") Long tenantId);
 }
 

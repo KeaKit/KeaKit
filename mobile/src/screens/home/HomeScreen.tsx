@@ -24,7 +24,7 @@ import { SkeletonPulse, FadeInItem } from '../../components';
 import ProfileMenuModal from './ProfileMenuModal';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
-import { getMyKits, getKitTracking } from "../../services/kitService";
+import { getMyKits, getKitTracking, getUpdatrableTrackingKits } from "../../services/kitService";
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -95,7 +95,7 @@ const HomeScreen: React.FC = () => {
     const stored = await AsyncStorage.getItem(userUpdatesKey);
     const lastUpdates: Record<string, string> = stored ? JSON.parse(stored) : {};
 
-    const kits = await getMyKits(user.id, user.token);
+    const kits = await getUpdatrableTrackingKits(user.id, user.token);
 
     for (const kit of kits) {
       try {
@@ -115,13 +115,13 @@ const HomeScreen: React.FC = () => {
           });
           lastUpdates[String(kit.id)] = lastUpdate;
         }
-      } catch {
+      } catch (error) {
+        console.log("Error al obtener tracking:", error);
       }
     }
 
     await AsyncStorage.setItem(userUpdatesKey, JSON.stringify(lastUpdates));
   };
-
 
   const fetchData = async () => {
     if (!user?.id || !user?.token) return;
