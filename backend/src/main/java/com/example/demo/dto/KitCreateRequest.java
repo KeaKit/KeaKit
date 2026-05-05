@@ -25,6 +25,7 @@ public record KitCreateRequest(
         @NotNull LocalDate endDate,
         KitStatus status,
         @NotNull DeliveryMethod deliveryMethod,
+        @Size(max = 500, message = "El punto de encuentro no puede superar los 500 caracteres")
         String meetingPoint,
         @NotNull Long tenantId,
         List<ItemSelectionRequest> itemSelections) {
