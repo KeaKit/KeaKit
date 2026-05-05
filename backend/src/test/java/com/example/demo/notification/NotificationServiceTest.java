@@ -3,6 +3,7 @@ package com.example.demo.notification;
 import com.example.demo.model.*;
 import com.example.demo.repository.ArticleAvailabilityRequestRepository;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.UserRepository;
@@ -41,6 +42,9 @@ class NotificationServiceTest {
 
     @Mock
     private ArticleRepository articleRepository;
+
+    @Mock
+    private ItemRepository itemRepository;
 
     @Mock
     private UserRepository userRepository;
@@ -184,7 +188,7 @@ class NotificationServiceTest {
         article.setStatus(ArticleStatus.RENTED);
         article.setOwner(owner);
 
-        when(articleRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
         when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -205,7 +209,7 @@ class NotificationServiceTest {
         article.setId(5L);
         article.setStatus(ArticleStatus.AVAILABLE);
 
-        when(articleRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
 
         assertThrows(IllegalStateException.class, () -> notificationService.createDemandAlert(5L, 20L));
         verify(notificationRepository, never()).save(any());
@@ -213,10 +217,35 @@ class NotificationServiceTest {
 
     @Test
     void createDemandAlert_articleNotFound_throwsRuntimeException() {
-        when(articleRepository.findById(99L)).thenReturn(Optional.empty());
+        when(itemRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> notificationService.createDemandAlert(99L, 20L));
         verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    void createDemandAlert_serviceCreatesNotificationForOwner() {
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(6L);
+        serviceItem.setTitle("Servicio de limpieza");
+        serviceItem.setStatus(ServiceStatus.UNAVAILABLE);
+        serviceItem.setOwner(owner);
+
+        requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(6L, 20L);
+
+        assertThat(result.getUser()).isEqualTo(owner);
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getMessage()).contains("contratar tu servicio");
+        assertThat(result.getMessage()).contains("Servicio de limpieza");
+        assertThat(result.getRelatedArticleId()).isNull();
     }
 
     @Test
@@ -230,7 +259,7 @@ class NotificationServiceTest {
         article.setStatus(ArticleStatus.RENTED);
         article.setOwner(owner);
 
-        when(articleRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
         when(userRepository.findById(10L)).thenReturn(Optional.of(owner));
 
         assertThrows(IllegalStateException.class, () -> notificationService.createDemandAlert(5L, 10L));
@@ -270,9 +299,9 @@ class NotificationServiceTest {
 
     @Test
     void requestAvailability_Success() {
-        when(articleRepository.findById(10L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
         when(userRepository.findById(2L)).thenReturn(Optional.of(requester));
-        when(requestRepository.findByArticleIdAndRequesterId(10L, 2L)).thenReturn(Optional.empty());
+        when(requestRepository.findByItemIdAndRequesterId(10L, 2L)).thenReturn(Optional.empty());
 
         service.requestAvailabilityNotification(10L, 2L);
 
@@ -282,7 +311,7 @@ class NotificationServiceTest {
     @Test
     void requestAvailability_ThrowsIfArticleAlreadyAvailable() {
         article.setStatus(ArticleStatus.AVAILABLE);
-        when(articleRepository.findById(10L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
 
         Exception exception = assertThrows(IllegalStateException.class, () -> {
             service.requestAvailabilityNotification(10L, 2L);
@@ -293,7 +322,7 @@ class NotificationServiceTest {
 
     @Test
     void requestAvailability_ThrowsIfRequesterIsOwner() {
-        when(articleRepository.findById(10L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
         when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
 
         Exception exception = assertThrows(IllegalStateException.class, () -> {

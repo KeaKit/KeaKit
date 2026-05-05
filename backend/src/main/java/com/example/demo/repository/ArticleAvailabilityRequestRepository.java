@@ -12,11 +12,11 @@ import java.util.Optional;
 @Repository
 public interface ArticleAvailabilityRequestRepository extends JpaRepository<ArticleAvailabilityRequest, Long> {
 
-    List<ArticleAvailabilityRequest> findByArticleId(Long articleId);
+    List<ArticleAvailabilityRequest> findByItemId(Long itemId);
 
-    Optional<ArticleAvailabilityRequest> findByArticleIdAndRequesterId(Long articleId, Long requesterId);
+    Optional<ArticleAvailabilityRequest> findByItemIdAndRequesterId(Long itemId, Long requesterId);
 
     @Modifying
     @Transactional
-    void deleteByArticleId(Long articleId);
+    void deleteByItemId(Long itemId);
 }

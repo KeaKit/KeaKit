@@ -31,6 +31,7 @@ class ServiceItemServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private CategoryRepository categoryRepository;
     @Mock private PromoCodeService promoCodeService;
+    @Mock private ArticleAvailabilityRequestService availabilityRequestService;
 
     @InjectMocks
     private ServiceItemService serviceItemService;
@@ -188,6 +189,20 @@ class ServiceItemServiceTest {
         assertThat(result.getOwner()).isEqualTo(owner);
         assertThat(result.getCategory()).isEqualTo(category);
         verify(serviceRepository).save(any());
+        verify(availabilityRequestService).notifyWatchersWhenAvailable(result);
+    }
+
+    @Test
+    void releaseService_whenBecomesActive_notifiesWatchers() {
+        ServiceItem unavailableService = makeService(3L, ServiceStatus.UNAVAILABLE);
+        unavailableService.setAvailableUntil(LocalDate.now().plusDays(5));
+        when(serviceRepository.findById(3L)).thenReturn(Optional.of(unavailableService));
+        when(serviceRepository.save(any(ServiceItem.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem result = serviceItemService.releaseService(3L);
+
+        assertThat(result.getStatus()).isEqualTo(ServiceStatus.ACTIVE);
+        verify(availabilityRequestService).notifyWatchersWhenAvailable(result);
     }
 
     @Test

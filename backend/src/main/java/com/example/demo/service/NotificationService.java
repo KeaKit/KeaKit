@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.UserRepository;
@@ -26,6 +27,9 @@ public class NotificationService {
 
     @Autowired
     private ArticleRepository articleRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -55,30 +59,70 @@ public class NotificationService {
 
     // CU-ARRENDADOR-06: Alerta de demanda
     @Transactional
-    public Notification createDemandAlert(Long articleId, Long requesterId) {
-        Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new RuntimeException("Artículo no encontrado con id: " + articleId));
+    public Notification createDemandAlert(Long itemId, Long requesterId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Elemento no encontrado con id: " + itemId));
 
-        if (article.getStatus() == ArticleStatus.AVAILABLE) {
-            throw new IllegalStateException("El artículo ya está disponible para alquilar");
+        if (isAvailableForDemandAlert(item)) {
+            throw new IllegalStateException(buildAvailableForDemandAlertMessage(item));
         }
 
         User requester = userRepository.findById(requesterId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + requesterId));
 
-        User owner = article.getOwner();
+        User owner = item.getOwner();
         if (owner == null) {
-            throw new IllegalStateException("El artículo no tiene propietario asignado");
+            throw new IllegalStateException(buildMissingOwnerMessage(item));
         }
 
         if (owner.getId().equals(requesterId)) {
-            throw new IllegalStateException("El propietario no puede solicitar su propio artículo");
+            throw new IllegalStateException(buildOwnItemInterestMessage(item));
         }
 
-        String message = requester.getName() + " está interesado en alquilar tu artículo \"" + article.getTitle() + "\", que actualmente no está disponible.";
+        String message = requester.getName() + buildDemandAlertMessageSuffix(item);
         Notification notification = new Notification(owner, message, NotificationType.DEMAND_ALERT, null);
-        notification.setRelatedArticleId(articleId);
+        if (item instanceof Article) {
+            notification.setRelatedArticleId(itemId);
+        }
         return notificationRepository.save(notification);
+    }
+
+    private boolean isAvailableForDemandAlert(Item item) {
+        if (item instanceof Article article) {
+            return article.getStatus() == ArticleStatus.AVAILABLE;
+        }
+        if (item instanceof ServiceItem serviceItem) {
+            return serviceItem.getStatus() == ServiceStatus.ACTIVE;
+        }
+        return false;
+    }
+
+    private String buildAvailableForDemandAlertMessage(Item item) {
+        if (item instanceof ServiceItem) {
+            return "El servicio ya está disponible para alquilar";
+        }
+        return "El artículo ya está disponible para alquilar";
+    }
+
+    private String buildMissingOwnerMessage(Item item) {
+        if (item instanceof ServiceItem) {
+            return "El servicio no tiene propietario asignado";
+        }
+        return "El artículo no tiene propietario asignado";
+    }
+
+    private String buildOwnItemInterestMessage(Item item) {
+        if (item instanceof ServiceItem) {
+            return "El propietario no puede solicitar su propio servicio";
+        }
+        return "El propietario no puede solicitar su propio artículo";
+    }
+
+    private String buildDemandAlertMessageSuffix(Item item) {
+        if (item instanceof ServiceItem) {
+            return " está interesado en contratar tu servicio \"" + item.getTitle() + "\", que actualmente no está disponible.";
+        }
+        return " está interesado en alquilar tu artículo \"" + item.getTitle() + "\", que actualmente no está disponible.";
     }
 
     // Lógica de RN-NOT-05: Objeto alquilado

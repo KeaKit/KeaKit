@@ -14,7 +14,7 @@ public class ArticleAvailabilityRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "article_id", nullable = false)
-    private Article article;
+    private Item item;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id", nullable = false)
@@ -33,12 +33,12 @@ public class ArticleAvailabilityRequest {
         this.id = id;
     }
 
-    public Article getArticle() {
-        return article;
+    public Item getItem() {
+        return item;
     }
 
-    public void setArticle(Article article) {
-        this.article = article;
+    public void setItem(Item item) {
+        this.item = item;
     }
 
     public User getRequester() {

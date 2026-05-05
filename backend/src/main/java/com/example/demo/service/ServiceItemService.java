@@ -17,13 +17,16 @@ public class ServiceItemService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final PromoCodeService promoCodeService;
+    private final ArticleAvailabilityRequestService availabilityRequestService;
 
     public ServiceItemService(ServiceRepository serviceRepository, UserRepository userRepository, 
-                              CategoryRepository categoryRepository, PromoCodeService promoCodeService) {
+                              CategoryRepository categoryRepository, PromoCodeService promoCodeService,
+                              ArticleAvailabilityRequestService availabilityRequestService) {
         this.serviceRepository = serviceRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.promoCodeService = promoCodeService;
+        this.availabilityRequestService = availabilityRequestService;
     }
 
     public List<ServiceItem> findAll() {
@@ -55,7 +58,11 @@ public class ServiceItemService {
         service.setCategory(category);
         service.setStatus(ServiceStatus.ACTIVE); 
         
-        return serviceRepository.save(service);
+        ServiceItem savedService = serviceRepository.save(service);
+        if (savedService.getStatus() == ServiceStatus.ACTIVE) {
+            availabilityRequestService.notifyWatchersWhenAvailable(savedService);
+        }
+        return savedService;
     }
 
     /**
@@ -107,7 +114,11 @@ public class ServiceItemService {
         validateOwnerCommissionPromoCode(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
         reserveOwnerSingleUseIfNeeded(service.getOwnerCommissionPromoCode(), service.getOwner().getEmail());
 
-        return serviceRepository.save(service);
+        ServiceItem savedService = serviceRepository.save(service);
+        if (savedService.getStatus() == ServiceStatus.ACTIVE) {
+            availabilityRequestService.notifyWatchersWhenAvailable(savedService);
+        }
+        return savedService;
     }
 
     /**
@@ -141,7 +152,11 @@ public class ServiceItemService {
             service.setStatus(ServiceStatus.ACTIVE);
         }
 
-        return serviceRepository.save(service);
+        ServiceItem savedService = serviceRepository.save(service);
+        if (savedService.getStatus() == ServiceStatus.ACTIVE) {
+            availabilityRequestService.notifyWatchersWhenAvailable(savedService);
+        }
+        return savedService;
     }
 
     /**
