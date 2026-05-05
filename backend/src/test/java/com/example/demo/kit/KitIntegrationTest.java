@@ -927,7 +927,7 @@ class KitIntegrationTest {
                 .andExpect(content().string("Kit does not belong to the specified tenant"));
     }
 
-@Test
+    @Test
     void testGetTrackingUpdateableKits_success() throws Exception {
         Article article = createTestArticle("Laptop Pro", tenant); 
 

@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -17,6 +19,8 @@ public class KitDelivery {
 
     @OneToOne
     @JoinColumn(name = "kit_id", nullable = false, unique = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
     private Kit kit;
 
     @Enumerated(EnumType.STRING)
