@@ -32,6 +32,7 @@ public class Kit {
     @Enumerated(EnumType.STRING)
     private DeliveryMethod deliveryMethod;
 
+    @Column(length = 500)
     private String meetingPoint;
 
     private Double courierPrice;
