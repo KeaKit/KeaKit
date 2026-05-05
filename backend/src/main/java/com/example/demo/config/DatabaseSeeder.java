@@ -434,7 +434,7 @@ public class DatabaseSeeder {
             KitDelivery delivery1 = new KitDelivery();
             delivery1.setKit(myKit);
             delivery1.setStatus(DeliveryStatus.DELIVERED);
-            delivery1.setEstimatedArrival(LocalDateTime.now().plusDays(2));
+            delivery1.setEstimatedArrival(LocalDateTime.now());
             delivery1.setLastLocation("Sevilla");
             delivery1.setLastUpdate(LocalDateTime.now());
             kitDeliveryRepo.save(delivery1);

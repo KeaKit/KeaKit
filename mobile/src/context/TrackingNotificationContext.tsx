@@ -44,8 +44,10 @@ export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode
 
   const addNotification = async (n: TrackingNotification) => {
     setNotifications(prev => {
-      const next = [n, ...prev];
-      AsyncStorage.setItem(storageKey!, JSON.stringify(next));
+      const exists = prev.some(x => x.id === n.id);
+      const next = exists ? prev : [n, ...prev];
+
+      save(next);
       return next;
     });
   };
@@ -53,7 +55,7 @@ export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode
   const markAllRead = async () => {
     setNotifications(prev => {
       const next = prev.map(n => ({ ...n, read: true }));
-      AsyncStorage.setItem(storageKey!, JSON.stringify(next));
+      save(next);
       return next;
     });
   };
@@ -61,13 +63,19 @@ export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode
   const removeNotification = async (id: string) => {
     setNotifications(prev => {
       const next = prev.filter(n => n.id !== id);
-      AsyncStorage.setItem(storageKey!, JSON.stringify(next));
+      save(next);
       return next;
     });
   };
 
+  const save = async (list: TrackingNotification[]) => {
+    if (!storageKey) return;
+    await AsyncStorage.setItem(storageKey, JSON.stringify(list));
+  };
+
   const clearAll = async () => {
-    await persist([]);
+    setNotifications([]);
+    await save([]);
   };
 
   const unreadCount = useMemo(
