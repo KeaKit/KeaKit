@@ -23,21 +23,6 @@ const jsonResponse = (body: unknown, status = 200) =>
     json: () => Promise.resolve(body),
   }) as Response;
 
-const getFetchCall = (index: number): [RequestInfo | URL, RequestInit] => {
-  const call = mockFetch.mock.calls[index];
-  expect(call).toBeDefined();
-
-  const [url, options] = call;
-  expect(options).toBeDefined();
-
-  return [url, options as RequestInit];
-};
-
-const parseJsonBody = (body: BodyInit | null | undefined): unknown => {
-  expect(typeof body).toBe("string");
-  return JSON.parse(body as string);
-};
-
 describe("E2E ligero CU-ARRENDATARIO-01 lista/mapa", () => {
   beforeEach(() => {
     mockFetch.mockReset();
@@ -135,21 +120,39 @@ describe("E2E ligero CU-ARRENDATARIO-01 lista/mapa", () => {
       },
     );
 
-    const [catalogUrl, catalogOptions] = getFetchCall(0);
-    expect(String(catalogUrl)).toContain("/api/items/filter-for-kit");
-    expect(catalogOptions.method).toBe("POST");
-    expect(parseJsonBody(catalogOptions.body)).toEqual(
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("/api/items/filter-for-kit"),
       expect.objectContaining({
-        city: "Sevilla",
-        startDate: "2026-05-10",
-        endDate: "2026-05-12",
+        method: "POST",
+        body: expect.stringContaining('"city":"Sevilla"'),
+      }),
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      expect.any(String),
+      expect.objectContaining({
+        body: expect.stringContaining('"startDate":"2026-05-10"'),
+      }),
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      expect.any(String),
+      expect.objectContaining({
+        body: expect.stringContaining('"endDate":"2026-05-12"'),
       }),
     );
 
-    const [mapUrl, mapOptions] = getFetchCall(1);
-    expect(String(mapUrl)).toContain("/api/article/map");
-    expect(String(mapUrl)).toContain("country=Espa");
-    expect(mapOptions.method).toBe("GET");
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("/api/article/map"),
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("country=Espa"),
+      expect.any(Object),
+    );
 
     expect(mapArticles.map((article) => article.id)).toEqual([1]);
     expect(mapArticles).not.toEqual(

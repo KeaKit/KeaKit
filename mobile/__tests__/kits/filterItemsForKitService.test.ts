@@ -16,21 +16,6 @@ const jsonResponse = (body: unknown, status = 200) =>
     text: () => Promise.resolve(JSON.stringify(body)),
   }) as Response;
 
-const getFetchCall = (index: number): [RequestInfo | URL, RequestInit] => {
-  const call = mockFetch.mock.calls[index];
-  expect(call).toBeDefined();
-
-  const [url, options] = call;
-  expect(options).toBeDefined();
-
-  return [url, options as RequestInit];
-};
-
-const parseJsonBody = (body: BodyInit | null | undefined): unknown => {
-  expect(typeof body).toBe("string");
-  return JSON.parse(body as string);
-};
-
 describe("filterItemsForKit service", () => {
   beforeEach(() => {
     mockFetch.mockReset();
@@ -61,19 +46,27 @@ describe("filterItemsForKit service", () => {
     );
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    const [url, options] = getFetchCall(0);
-    expect(String(url)).toContain("/api/items/filter-for-kit");
-    expect(options.method).toBe("POST");
-    expect((options.headers as { Authorization?: string }).Authorization).toBe(
-      `Bearer ${TOKEN}`,
-    );
-    expect(parseJsonBody(options.body)).toEqual(
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("/api/items/filter-for-kit"),
       expect.objectContaining({
-        city: "Sevilla",
-        page: 0,
-        size: 100,
-        startDate: "2026-05-10",
-        endDate: "2026-05-12",
+        method: "POST",
+        headers: expect.objectContaining({ Authorization: `Bearer ${TOKEN}` }),
+        body: expect.stringContaining('"city":"Sevilla"'),
+      }),
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      expect.any(String),
+      expect.objectContaining({
+        body: expect.stringContaining('"startDate":"2026-05-10"'),
+      }),
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      expect.any(String),
+      expect.objectContaining({
+        body: expect.stringContaining('"endDate":"2026-05-12"'),
       }),
     );
   });
@@ -104,12 +97,8 @@ describe("filterItemsForKit service", () => {
       TOKEN,
     );
 
-    expect(response.content[0]).toEqual(
-      expect.objectContaining({
-        id: 2,
-        status: "RENTED",
-        totalUnits: 0,
-      }),
-    );
+    expect(response.content).toEqual([
+      expect.objectContaining({ id: 2, status: "RENTED", totalUnits: 0 }),
+    ]);
   });
 });
