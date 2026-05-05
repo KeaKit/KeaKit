@@ -56,6 +56,7 @@ const EditServiceScreen: React.FC = () => {
   const { showNotification } = useNotification();
 
   const originalCity = service.city ?? '';
+  const originalCountry = service.country ?? '';
 
   const [title, setTitle] = useState(service.title ?? '');
   const [description, setDescription] = useState(service.description ?? '');
@@ -73,7 +74,7 @@ const EditServiceScreen: React.FC = () => {
     countries,
     loadingCities,
     onCountryChange,
-  } = useLocationPicker('', originalCity);
+  } = useLocationPicker(originalCountry, originalCity);
 
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(isoToDate(service.availableFrom));
