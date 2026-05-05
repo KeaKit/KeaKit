@@ -25,8 +25,6 @@ import com.example.demo.model.Item;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
-import com.example.demo.model.ServiceItem;
-import com.example.demo.model.ServiceStatus;
 import com.example.demo.model.User;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
@@ -395,15 +393,6 @@ public class KitService {
         if (kit.getSnapshots() != null) {
             for (ItemMemento snapshot : kit.getSnapshots()) {
                 validateItemAvailability(snapshot.getOriginalItemId(), snapshot.getSelectedUnits(), kit.getStartDate(), kit.getEndDate());
-                
-                Item item = itemRepository.findById(snapshot.getOriginalItemId())
-                        .orElseThrow(() -> new RuntimeException("Artículo/Servicio no encontrado"));
-                
-                if (item instanceof ServiceItem) {
-                    ServiceItem serviceItem = (ServiceItem) item;
-                    serviceItem.setStatus(ServiceStatus.UNAVAILABLE); 
-                    itemRepository.save(serviceItem);
-                }
             }
         }
 
