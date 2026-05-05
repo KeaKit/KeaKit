@@ -323,11 +323,11 @@ const AppNavigator: React.FC = () => {
 
                 <Stack.Screen
                   name="TrackingNotifications"
-                  component={TrackingNotificationsScreen}
+                  component={withLayout(TrackingNotificationsScreen)}
                 />
                 <Stack.Screen
                   name="ActivityNotifications"
-                  component={ActivityNotificationsScreen}
+                  component={withLayout(ActivityNotificationsScreen)}
                 />
                 <Stack.Screen name="Notifications">
                   {() => (
