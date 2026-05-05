@@ -1,7 +1,7 @@
 import { filterItemsForKit } from "../../src/services/kitService";
 
-const mockFetch = jest.fn() as jest.Mock;
-(globalThis as any).fetch = mockFetch;
+const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
+globalThis.fetch = mockFetch;
 
 const TOKEN = "tenant-token";
 
@@ -15,6 +15,21 @@ const jsonResponse = (body: unknown, status = 200) =>
     },
     text: () => Promise.resolve(JSON.stringify(body)),
   }) as Response;
+
+const getFetchCall = (index: number): [RequestInfo | URL, RequestInit] => {
+  const call = mockFetch.mock.calls[index];
+  expect(call).toBeDefined();
+
+  const [url, options] = call;
+  expect(options).toBeDefined();
+
+  return [url, options as RequestInit];
+};
+
+const parseJsonBody = (body: BodyInit | null | undefined): unknown => {
+  expect(typeof body).toBe("string");
+  return JSON.parse(body as string);
+};
 
 describe("filterItemsForKit service", () => {
   beforeEach(() => {
@@ -46,11 +61,13 @@ describe("filterItemsForKit service", () => {
     );
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain("/api/items/filter-for-kit");
+    const [url, options] = getFetchCall(0);
+    expect(String(url)).toContain("/api/items/filter-for-kit");
     expect(options.method).toBe("POST");
-    expect(options.headers.Authorization).toBe(`Bearer ${TOKEN}`);
-    expect(JSON.parse(options.body)).toEqual(
+    expect((options.headers as { Authorization?: string }).Authorization).toBe(
+      `Bearer ${TOKEN}`,
+    );
+    expect(parseJsonBody(options.body)).toEqual(
       expect.objectContaining({
         city: "Sevilla",
         page: 0,

@@ -4,8 +4,8 @@ import { getArticlesForMap } from "../../src/services/articleService";
 import { filterItemsForKit } from "../../src/services/kitService";
 import { buildSelectableKitMapProducts } from "../../src/utils/kitAvailability";
 
-const mockFetch = jest.fn() as jest.Mock;
-(globalThis as any).fetch = mockFetch;
+const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
+globalThis.fetch = mockFetch;
 
 const TOKEN = "tenant-token";
 const startDate = new Date("2026-05-10T00:00:00.000Z");
@@ -22,6 +22,21 @@ const jsonResponse = (body: unknown, status = 200) =>
     text: () => Promise.resolve(JSON.stringify(body)),
     json: () => Promise.resolve(body),
   }) as Response;
+
+const getFetchCall = (index: number): [RequestInfo | URL, RequestInit] => {
+  const call = mockFetch.mock.calls[index];
+  expect(call).toBeDefined();
+
+  const [url, options] = call;
+  expect(options).toBeDefined();
+
+  return [url, options as RequestInit];
+};
+
+const parseJsonBody = (body: BodyInit | null | undefined): unknown => {
+  expect(typeof body).toBe("string");
+  return JSON.parse(body as string);
+};
 
 describe("E2E ligero CU-ARRENDATARIO-01 lista/mapa", () => {
   beforeEach(() => {
@@ -120,10 +135,10 @@ describe("E2E ligero CU-ARRENDATARIO-01 lista/mapa", () => {
       },
     );
 
-    const [catalogUrl, catalogOptions] = mockFetch.mock.calls[0];
-    expect(catalogUrl).toContain("/api/items/filter-for-kit");
+    const [catalogUrl, catalogOptions] = getFetchCall(0);
+    expect(String(catalogUrl)).toContain("/api/items/filter-for-kit");
     expect(catalogOptions.method).toBe("POST");
-    expect(JSON.parse(catalogOptions.body)).toEqual(
+    expect(parseJsonBody(catalogOptions.body)).toEqual(
       expect.objectContaining({
         city: "Sevilla",
         startDate: "2026-05-10",
@@ -131,9 +146,9 @@ describe("E2E ligero CU-ARRENDATARIO-01 lista/mapa", () => {
       }),
     );
 
-    const [mapUrl, mapOptions] = mockFetch.mock.calls[1];
-    expect(mapUrl).toContain("/api/article/map");
-    expect(mapUrl).toContain("country=Espa");
+    const [mapUrl, mapOptions] = getFetchCall(1);
+    expect(String(mapUrl)).toContain("/api/article/map");
+    expect(String(mapUrl)).toContain("country=Espa");
     expect(mapOptions.method).toBe("GET");
 
     expect(mapArticles.map((article) => article.id)).toEqual([1]);
