@@ -31,7 +31,7 @@ const transactionTypeLabels: Record<string, string> = {
 
 const getTransactionLabel = (transaction: Transaction) => {
   if (transaction.type === "PAYOUT") {
-    return transaction.amount < 0 ? "Payout" : "Ingreso";
+    return transaction.amount < 0 ? "Pago" : "Ingreso";
   }
 
   return transactionTypeLabels[transaction.type] ?? transaction.type.replaceAll("_", " ");
