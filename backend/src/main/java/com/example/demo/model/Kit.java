@@ -41,6 +41,8 @@ public class Kit {
 
     private Double appliedGuaranteeRate;
 
+    private Double appliedDiscount = 0.0;
+
     @ManyToOne
     @JoinColumn(name = "tenant_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -191,6 +193,14 @@ public class Kit {
         }
     }
 
+    public Double getAppliedDiscount() { 
+        return appliedDiscount; 
+    }
+
+    public void setAppliedDiscount(Double appliedDiscount) { 
+        this.appliedDiscount = appliedDiscount != null ? appliedDiscount : 0.0; 
+    }
+
     @Transient
     public Double calculateSubtotal() {
         if (this.snapshots == null || this.snapshots.isEmpty()) {
@@ -227,7 +237,9 @@ public class Kit {
     @Transient
     public Double calculateTotal() {
         double courier = this.courierPrice != null ? this.courierPrice : 0.0;
-        return calculateSubtotal() + calculateTotalGuarantee() + courier;
+        double rate = this.appliedDiscount != null ? this.appliedDiscount : 0.0;
+        double discount = calculateSubtotal() * rate;        
+        return calculateSubtotal() + calculateTotalGuarantee() + courier - discount;
     }
 
     @Transient

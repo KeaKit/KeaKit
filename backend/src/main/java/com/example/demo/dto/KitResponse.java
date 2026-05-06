@@ -102,6 +102,7 @@ public class KitResponse {
     private Double totalPrice;
     private Double appliedCommissionRate;
     private Double appliedGuaranteeRate;
+    private Double appliedDiscount;
 
     public KitResponse(Kit kit) {
         this.id = kit.getId();
@@ -151,6 +152,7 @@ public class KitResponse {
         this.totalPrice = kit.calculateTotal();
         this.appliedCommissionRate = kit.getAppliedCommissionRate();
         this.appliedGuaranteeRate = kit.getAppliedGuaranteeRate();
+        this.appliedDiscount = kit.getAppliedDiscount();
     }
 
     public Long getId() {
@@ -251,6 +253,10 @@ public class KitResponse {
 
     public Double getAppliedGuaranteeRate() {
         return appliedGuaranteeRate;
+    }
+
+    public Double getAppliedDiscount() {
+        return appliedDiscount;
     }
 
     private LocalDate calculateEstimatedDeliveryDate(LocalDate orderDate, LocalDate startDate) {
