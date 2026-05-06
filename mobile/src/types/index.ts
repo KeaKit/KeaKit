@@ -174,21 +174,21 @@ export interface Item {
 
 export interface ItemCatalog {
   id: number;
-  itemType: "ARTICLE" | "SERVICE" | string;
+  itemType: string;
   title: string;
   description: string;
   city: string;
-  country?: string | null;
+  country: string;
   pricePerMonth: number;
-  availableFrom?: string | null;
-  availableUntil?: string | null;
-  category?: string | null;
+  availableFrom: string; // ISO date (yyyy-mm-dd)
+  availableUntil: string; // ISO date
+  category: string;
   totalUnits: number;
   ownerId: number;
-  ownerName?: string | null;
-  status?: "AVAILABLE" | "RENTED" | "INACTIVE" | string | null;
-  condition?: ArticleCondition | null;
-  imageUrl?: string | null;
+  ownerName: string;
+  status?: string;     // solo para ARTICLE
+  condition?: string;  // solo para ARTICLE
+  imageUrl?: string;   // solo para ARTICLE
 }
 
 export interface ItemFilterRequest {

@@ -1,19 +1,4 @@
-export interface ItemCatalog {
-  id: number;
-  itemType: string;
-  title: string;
-  description: string;
-  city: string;
-  pricePerMonth: number;
-  availableFrom: Date;
-  availableUntil: Date;
-  category: string;
-  totalUnits: number;
-  ownerId: number;
-  ownerName: string;
-  status: string; // solo para ARTICLE
-  imageUrl: string; // solo para ARTICLE
-}
+import { ItemCatalog } from "./index";
 
 export interface DefaultKitItem {
   id: number;
