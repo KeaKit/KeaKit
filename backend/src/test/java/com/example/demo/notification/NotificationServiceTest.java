@@ -249,6 +249,71 @@ class NotificationServiceTest {
     }
 
     @Test
+    void createDemandAlert_serviceActiveWithZeroUnits_createsNotificationForOwner() {
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(6L);
+        serviceItem.setTitle("Instalación Software");
+        serviceItem.setStatus(ServiceStatus.ACTIVE);
+        serviceItem.setTotalUnits(0);
+        serviceItem.setOwner(owner);
+
+        requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(6L, 20L);
+
+        assertThat(result.getUser()).isEqualTo(owner);
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isNull();
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void createDemandAlert_serviceActiveFullyRentedForDates_createsNotification() {
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(6L);
+        serviceItem.setTitle("Instalación Software");
+        serviceItem.setStatus(ServiceStatus.ACTIVE);
+        serviceItem.setTotalUnits(1);
+        serviceItem.setOwner(owner);
+
+        requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        LocalDate start = LocalDate.of(2026, 5, 7);
+        LocalDate end = LocalDate.of(2026, 5, 20);
+
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(6L);
+        snapshot.setSelectedUnits(1);
+
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStatus(KitStatus.ACTIVE);
+        overlappingKit.setStartDate(start);
+        overlappingKit.setEndDate(end);
+        overlappingKit.setSnapshots(List.of(snapshot));
+
+        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
+        when(kitRepository.findOverlappingKitsForItem(6L, start, end,
+                List.of(KitStatus.PAID, KitStatus.ACTIVE))).thenReturn(List.of(overlappingKit));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(6L, 20L, start, end);
+
+        assertThat(result.getUser()).isEqualTo(owner);
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isNull();
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
     void createDemandAlert_ownerIsRequester_throwsIllegalState() {
         User owner = new User();
         owner.setId(10L);
@@ -374,6 +439,65 @@ class NotificationServiceTest {
         });
 
         assertTrue(exception.getMessage().contains("propietario no puede solicitar el aviso"));
+    }
+
+
+    @Test
+    void createDemandAlert_forArticle_relatedArticleIdShouldNotBeNull() {
+        User owner = new User();
+        owner.setId(10L);
+        owner.setName("Owner");
+
+        User requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        Article article = new Article();
+        article.setId(5L);
+        article.setTitle("Taladro");
+        article.setStatus(ArticleStatus.RENTED);
+        article.setOwner(owner);
+
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(5L, 20L);
+
+        // Verificar que para artículos, relatedArticleId debe ser el ID del artículo
+        assertThat(result.getRelatedArticleId()).isEqualTo(5L);
+        assertThat(result.getMessage()).contains("Taladro");
+        assertThat(result.getMessage()).contains("Requester");
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void createDemandAlert_forService_relatedArticleIdShouldBeNull() {
+        User owner = new User();
+        owner.setId(10L);
+        owner.setName("Owner");
+
+        User requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(6L);
+        serviceItem.setTitle("Servicio de limpieza");
+        serviceItem.setStatus(ServiceStatus.UNAVAILABLE);
+        serviceItem.setOwner(owner);
+
+        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(6L, 20L);
+
+        // Verificar que para servicios, relatedArticleId debe ser null
+        assertThat(result.getRelatedArticleId()).isNull();
+        assertThat(result.getMessage()).contains("contratar tu servicio");
+        assertThat(result.getMessage()).contains("Servicio de limpieza");
+        verify(notificationRepository).save(any(Notification.class));
     }
 
     

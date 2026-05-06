@@ -127,7 +127,23 @@ public class ArticleAvailabilityRequestService {
             return true;
         }
         if (item instanceof ServiceItem serviceItem) {
-            return serviceItem.getStatus() == ServiceStatus.ACTIVE;
+            if (serviceItem.getStatus() != ServiceStatus.ACTIVE) {
+                return false;
+            }
+            int totalUnits = serviceItem.getTotalUnits() != null ? serviceItem.getTotalUnits() : 1;
+            if (totalUnits <= 0) {
+                return false;
+            }
+            if (startDate != null && endDate != null) {
+                List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
+                        item.getId(), startDate, endDate,
+                        List.of(KitStatus.PAID, KitStatus.ACTIVE));
+                if (!overlappingKits.isEmpty()) {
+                    int maxRented = computeMaxRented(item.getId(), overlappingKits, startDate, endDate);
+                    return (totalUnits - maxRented) > 0;
+                }
+            }
+            return true;
         }
         return false;
     }
