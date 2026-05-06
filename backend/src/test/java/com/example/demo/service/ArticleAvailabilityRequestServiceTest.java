@@ -124,45 +124,53 @@ class ArticleAvailabilityRequestServiceTest {
     // Tests para el nuevo overload con startDate / endDate
     // -----------------------------------------------------------------------
 
+    private static final LocalDate TEST_START = LocalDate.of(2026, 6, 1);
+    private static final LocalDate TEST_END   = LocalDate.of(2026, 6, 10);
+
+    private Article buildAvailableArticle(int totalUnits) {
+        Article article = new Article();
+        article.setId(100L);
+        article.setTitle("MacBook Pro");
+        article.setStatus(ArticleStatus.AVAILABLE);
+        article.setTotalUnits(totalUnits);
+        User owner = new User();
+        owner.setId(200L);
+        article.setOwner(owner);
+        return article;
+    }
+
+    private Kit buildKit(Long articleId, int selectedUnits) {
+        ItemMemento snap = new ItemMemento();
+        snap.setOriginalItemId(articleId);
+        snap.setSelectedUnits(selectedUnits);
+
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setStatus(KitStatus.ACTIVE);
+        kit.setStartDate(TEST_START);
+        kit.setEndDate(TEST_END);
+        kit.setSnapshots(List.of(snap));
+        return kit;
+    }
+
     /**
      * Artículo AVAILABLE pero todas sus unidades están alquiladas en las fechas
      * solicitadas → el aviso debe registrarse (no es "disponible" para esas fechas).
      */
     @Test
     void requestAvailabilityNotification_withDates_allUnitsRented_success() {
-        Article article = new Article();
-        article.setId(100L);
-        article.setTitle("MacBook Pro");
-        article.setStatus(ArticleStatus.AVAILABLE);
-        article.setTotalUnits(1);
-        User owner = new User();
-        owner.setId(200L);
-        article.setOwner(owner);
-
-        LocalDate start = LocalDate.of(2026, 6, 1);
-        LocalDate end   = LocalDate.of(2026, 6, 10);
-
-        // Kit que ocupa la única unidad durante esas fechas
-        ItemMemento snap = new ItemMemento();
-        snap.setOriginalItemId(100L);
-        snap.setSelectedUnits(1);
-
-        Kit kit = new Kit();
-        kit.setId(1L);
-        kit.setStatus(KitStatus.ACTIVE);
-        kit.setStartDate(start);
-        kit.setEndDate(end);
-        kit.setSnapshots(List.of(snap));
+        Article article = buildAvailableArticle(1);
+        Kit kit = buildKit(100L, 1);
 
         when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
-        when(kitRepository.findOverlappingKitsForItem(100L, start, end,
+        when(kitRepository.findOverlappingKitsForItem(100L, TEST_START, TEST_END,
                 List.of(KitStatus.PAID, KitStatus.ACTIVE))).thenReturn(List.of(kit));
         when(userRepository.findById(300L)).thenReturn(Optional.of(requester));
         when(requestRepository.findByItemIdAndRequesterId(100L, 300L)).thenReturn(Optional.empty());
         when(requestRepository.save(any(ArticleAvailabilityRequest.class))).thenAnswer(i -> i.getArgument(0));
 
         ArticleAvailabilityRequest result =
-                availabilityRequestService.requestAvailabilityNotification(100L, 300L, start, end);
+                availabilityRequestService.requestAvailabilityNotification(100L, 300L, TEST_START, TEST_END);
 
         assertNotNull(result);
         verify(requestRepository).save(any(ArticleAvailabilityRequest.class));
@@ -174,36 +182,15 @@ class ArticleAvailabilityRequestServiceTest {
      */
     @Test
     void requestAvailabilityNotification_withDates_unitsAvailable_throws() {
-        Article article = new Article();
-        article.setId(100L);
-        article.setTitle("MacBook Pro");
-        article.setStatus(ArticleStatus.AVAILABLE);
-        article.setTotalUnits(2);
-        User owner = new User();
-        owner.setId(200L);
-        article.setOwner(owner);
-
-        LocalDate start = LocalDate.of(2026, 6, 1);
-        LocalDate end   = LocalDate.of(2026, 6, 10);
-
-        // Kit que ocupa solo 1 de las 2 unidades → queda 1 libre
-        ItemMemento snap = new ItemMemento();
-        snap.setOriginalItemId(100L);
-        snap.setSelectedUnits(1);
-
-        Kit kit = new Kit();
-        kit.setId(1L);
-        kit.setStatus(KitStatus.ACTIVE);
-        kit.setStartDate(start);
-        kit.setEndDate(end);
-        kit.setSnapshots(List.of(snap));
+        Article article = buildAvailableArticle(2);
+        Kit kit = buildKit(100L, 1); // ocupa solo 1 de las 2 unidades → queda 1 libre
 
         when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
-        when(kitRepository.findOverlappingKitsForItem(100L, start, end,
+        when(kitRepository.findOverlappingKitsForItem(100L, TEST_START, TEST_END,
                 List.of(KitStatus.PAID, KitStatus.ACTIVE))).thenReturn(List.of(kit));
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> availabilityRequestService.requestAvailabilityNotification(100L, 300L, start, end));
+                () -> availabilityRequestService.requestAvailabilityNotification(100L, 300L, TEST_START, TEST_END));
 
         assertEquals("El artículo ya está disponible. No es necesario crear un aviso.", ex.getMessage());
         verify(requestRepository, never()).save(any());
@@ -214,24 +201,14 @@ class ArticleAvailabilityRequestServiceTest {
      */
     @Test
     void requestAvailabilityNotification_withDates_noOverlappingKits_throws() {
-        Article article = new Article();
-        article.setId(100L);
-        article.setTitle("MacBook Pro");
-        article.setStatus(ArticleStatus.AVAILABLE);
-        article.setTotalUnits(1);
-        User owner = new User();
-        owner.setId(200L);
-        article.setOwner(owner);
-
-        LocalDate start = LocalDate.of(2026, 6, 1);
-        LocalDate end   = LocalDate.of(2026, 6, 10);
+        Article article = buildAvailableArticle(1);
 
         when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
-        when(kitRepository.findOverlappingKitsForItem(100L, start, end,
+        when(kitRepository.findOverlappingKitsForItem(100L, TEST_START, TEST_END,
                 List.of(KitStatus.PAID, KitStatus.ACTIVE))).thenReturn(List.of());
 
         assertThrows(IllegalStateException.class,
-                () -> availabilityRequestService.requestAvailabilityNotification(100L, 300L, start, end));
+                () -> availabilityRequestService.requestAvailabilityNotification(100L, 300L, TEST_START, TEST_END));
 
         verify(requestRepository, never()).save(any());
     }

@@ -27,6 +27,7 @@ import {
   getUserNotifications,
   markNotificationRead,
   deleteNotification,
+  buildMarkSingleReadHandler,
 } from "../../services/notificationService";
 import {
   formatNotificationDateTime,
@@ -107,18 +108,10 @@ const NotificationsScreen: React.FC = () => {
     }, [user?.id, user?.token]),
   );
 
-  const handleMarkSingleRead = async (notificationId: number) => {
-    if (!user?.token) return;
-
-    try {
-      await markNotificationRead(notificationId, user.token);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
-      );
-    } catch (err) {
-      console.error("Error al marcar notificación como leída:", err);
-    }
-  };
+  const handleMarkSingleRead = React.useMemo(
+    () => buildMarkSingleReadHandler(user?.token, setNotifications),
+    [user?.token],
+  );
 
   const renderItem = ({ item }: { item: ActivityNotification }) => (
     <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>

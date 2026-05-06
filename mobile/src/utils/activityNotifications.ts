@@ -9,19 +9,13 @@ export const formatNotificationDateTime = (value: string): string => {
   });
 };
 
+const NOTIFICATION_TITLES: Record<ActivityNotificationType, string> = {
+  ITEM_RENTED: "Objeto alquilado",
+  RETURN_REMINDER: "Fin de alquiler",
+  DEMAND_ALERT: "Interés en tu artículo",
+  ARTICLE_AVAILABLE: "Artículo disponible",
+};
+
 export const getActivityNotificationTitle = (
   type: ActivityNotificationType,
-): string => {
-  switch (type) {
-    case "ITEM_RENTED":
-      return "Objeto alquilado";
-    case "RETURN_REMINDER":
-      return "Fin de alquiler";
-    case "DEMAND_ALERT":
-      return "Interés en tu artículo";
-    case "ARTICLE_AVAILABLE":
-      return "Artículo disponible";
-    default:
-      return "Notificación";
-  }
-};
+): string => NOTIFICATION_TITLES[type] ?? "Notificación";

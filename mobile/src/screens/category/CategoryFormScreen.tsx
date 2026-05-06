@@ -26,6 +26,33 @@ const { scrollContent, formCard, inputRow, inputLabel,
 type CategoryFormNav = NativeStackNavigationProp<RootStackParamList, 'CategoryForm'>;
 type CategoryFormRoute = RouteProp<RootStackParamList, 'CategoryForm'>;
 
+const showAlert = (title: string, msg: string, onOk?: () => void) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}: ${msg}`);
+    onOk?.();
+  } else {
+    Alert.alert(title, msg, onOk ? [{ text: 'OK', onPress: onOk }] : undefined);
+  }
+};
+
+type PriceInputFieldProps = {
+  value: string;
+  placeholder: string;
+  editable: boolean;
+  onChange: (text: string) => void;
+};
+
+const PriceInputField: React.FC<PriceInputFieldProps> = ({ value, placeholder, editable, onChange }) => (
+  <TextInput
+    style={[priceInput, !editable && { color: Colors.textSecondary }]}
+    keyboardType="numeric"
+    placeholder={placeholder}
+    value={value}
+    onChangeText={onChange}
+    editable={editable}
+  />
+);
+
 const CategoryFormScreen: React.FC = () => {
   const navigation = useNavigation<CategoryFormNav>();
   const route = useRoute<CategoryFormRoute>();
@@ -99,8 +126,7 @@ const CategoryFormScreen: React.FC = () => {
 
   const handleSave = async () => {
     if (!name || !description || !minPrice || !maxPrice) {
-      const msg = 'Error: Por favor rellena todos los campos.';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Error', msg);
+      showAlert('Error', 'Por favor rellena todos los campos.');
       return;
     }
 
@@ -119,15 +145,10 @@ const CategoryFormScreen: React.FC = () => {
         await createCategory(payload, token);
       }
 
-      if (Platform.OS === 'web') {
-        window.alert(successMessage);
-        navigation.goBack(); 
-      } else {
-        Alert.alert('Éxito', successMessage, [{ text: 'OK', onPress: () => navigation.goBack() }]);
-      }
+      showAlert('Éxito', successMessage, () => navigation.goBack());
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      Platform.OS === 'web' ? window.alert(errorMessage) : Alert.alert('Error', errorMessage);
+      showAlert('Error', errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -217,22 +238,18 @@ const CategoryFormScreen: React.FC = () => {
 
           <View style={inputRow}>
             <Text style={inputLabel}>Rango de precios: </Text>
-            <TextInput
-              style={[priceInput, !isEditable && { color: Colors.textSecondary }]}
-              keyboardType="numeric"
+            <PriceInputField
               placeholder="Mín"
               value={minPrice}
-              onChangeText={(text) => handlePriceChange(text, setMinPrice)}
               editable={isEditable}
+              onChange={(text) => handlePriceChange(text, setMinPrice)}
             />
             <Text style={priceSeparator}>€  -  </Text>
-            <TextInput
-              style={[priceInput, !isEditable && { color: Colors.textSecondary }]}
-              keyboardType="numeric"
+            <PriceInputField
               placeholder="Máx"
               value={maxPrice}
-              onChangeText={(text) => handlePriceChange(text, setMaxPrice)}
               editable={isEditable}
+              onChange={(text) => handlePriceChange(text, setMaxPrice)}
             />
             <Text style={priceSeparator}>€</Text>
           </View>
