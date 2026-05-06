@@ -6,6 +6,7 @@ import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -145,12 +146,34 @@ public class KitResponse {
             .distinct()
             .collect(Collectors.toCollection(ArrayList::new));
 
-        this.subtotalPrice = kit.calculateSubtotal();
-        this.guaranteePrice = kit.calculateTotalGuarantee();
-        this.platformFee = kit.calculatePlatformFee();
-        this.totalPrice = kit.calculateTotal();
+        double rentalMonths = calculateMonthsBetween(kit.getStartDate(), kit.getEndDate());
+        double subtotal = snapshots.stream()
+            .filter(s -> s.getPriceAtRental() != null && s.getSelectedUnits() != null)
+            .mapToDouble(s -> s.getPriceAtRental() * s.getSelectedUnits() * rentalMonths)
+            .sum();
+        double guaranteeRate = kit.getAppliedGuaranteeRate() != null ? kit.getAppliedGuaranteeRate() : 0.0;
+        double commissionRate = kit.getAppliedCommissionRate() != null ? kit.getAppliedCommissionRate() : 0.0;
+        double courier = kit.getCourierPrice() != null ? kit.getCourierPrice() : 0.0;
+
+        this.subtotalPrice = roundMoney(subtotal);
+        this.guaranteePrice = roundMoney(subtotal * guaranteeRate);
+        this.platformFee = roundMoney(subtotal * commissionRate);
+        this.totalPrice = roundMoney(this.subtotalPrice + this.guaranteePrice + courier);
         this.appliedCommissionRate = kit.getAppliedCommissionRate();
         this.appliedGuaranteeRate = kit.getAppliedGuaranteeRate();
+    }
+
+    private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
+        if (start == null || end == null) {
+            return 0.0;
+        }
+
+        long diffDays = ChronoUnit.DAYS.between(start, end) + 1;
+        return diffDays / 30.0;
+    }
+
+    private static double roundMoney(double amount) {
+        return Math.round(amount * 100.0) / 100.0;
     }
 
     public Long getId() {

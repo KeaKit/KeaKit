@@ -4,7 +4,6 @@ package com.example.demo.service;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -18,7 +17,6 @@ import com.example.demo.dto.CityCoordinatesDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
-import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
@@ -403,25 +401,28 @@ public class ArticleService {
             activeKit.setStatus(KitStatus.FINISHED);
             kitRepository.save(activeKit);
 
-            Optional<Article> damagedArticle = activeKit.getSnapshots().stream()
+            List<Article> damagedArticles = activeKit.getSnapshots().stream()
                 .map(snapshot -> articleRepository.findById(snapshot.getOriginalItemId()).orElse(null))
                 .filter(a -> a != null && a.getStatus() == ArticleStatus.DAMAGED)
-                .findFirst();
+                .collect(Collectors.toList());
 
-            String finalCondition = damagedArticle.isPresent() ? "DAMAGED" : "GOOD";
-            Long effectiveOwnerId = damagedArticle.isPresent() ? damagedArticle.get().getOwner().getId() : ownerId;
+            String finalCondition = damagedArticles.isEmpty() ? "GOOD" : "DAMAGED";
 
             try {
                 amountProcessed = paymentService.processGuaranteeReturn(
                     activeKit.getId(),
-                    effectiveOwnerId,
+                    ownerId,
                     tenantId,
                     finalCondition
                 );
 
-                if (damagedArticle.isPresent()) {
+                if (!damagedArticles.isEmpty()) {
                     resolution = "DEPOSIT_RETAINED";
-                    message = "Artículo con daños. Se retiene la garantía de " + amountProcessed + "€ y se ha añadido al monedero del propietario.";
+                    if (damagedArticles.size() < activeKit.getSnapshots().size()) {
+                        message = "Se han retenido " + amountProcessed + "€ de la garantía por los artículos dañados y el resto se ha devuelto al arrendatario.";
+                    } else {
+                        message = "Artículo con daños. Se retiene la garantía de " + amountProcessed + "€ y se ha añadido al monedero del propietario.";
+                    }
                 } else {
                     resolution = "DEPOSIT_RETURNED";
                     message = "Artículo devuelto en buen estado. Se devuelve la garantía exacta (" + amountProcessed + "€) al monedero del arrendatario.";
