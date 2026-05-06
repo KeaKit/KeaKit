@@ -44,7 +44,7 @@
 |----------|-------------|-----------|-----------------|--------|-------------|
 | [#312](https://github.com/KeaKit/KeaKit/issues/312)  | Sprint Backlog | Mid |  2  | Done | Adrián Chabrera Rubio  |
 | [#313](https://github.com/KeaKit/KeaKit/issues/313)  | Continuar Refactorización Valoraciones  | Mid |  4  | Done |   Alejandro González Macías  |
-| [#144](https://github.com/KeaKit/KeaKit/issues/144)  |  HU-ARRENDATARIO-39: Indicar que el objeto no cumple con lo prometido |  Mid  | 3  | In Progress   | Alejandro González Macías 
+| [#144](https://github.com/KeaKit/KeaKit/issues/144)  |  HU-ARRENDATARIO-39: Indicar que el objeto no cumple con lo prometido |  Mid  | 3  | Done   | Alejandro González Macías 
 | [#145](https://github.com/KeaKit/KeaKit/issues/145)  | HU-ARRENDATARIO-41 - Recibir una notificación cuando se procese la devolución de mi depósito | Mid  |  2  | Done |   Adrián Chabrera Rubio  |
 | [#235](https://github.com/KeaKit/KeaKit/issues/235)  | CU-GENERAL-03 - Testing | Mid |  3  | Done | Marta De la Calle González |
 | [#342](https://github.com/KeaKit/KeaKit/issues/101)  | CU-ARRENDATARIO-10 - Ampliación de búsqueda geográfica (Crear mapa de objetos)| Mid |  4  | Done |  Rafael Harana Mancilla, Guillermo Ciria González  |

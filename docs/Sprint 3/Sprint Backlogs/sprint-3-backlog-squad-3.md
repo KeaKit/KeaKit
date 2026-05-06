@@ -33,7 +33,7 @@
 | [#565](https://github.com/KeaKit/KeaKit/issues/565) | Sprint backlog sprint 3 grupo 3 semana 1 | Mid | 1 | Done | Adrián Chabrera Rubio | 
 | [#567](https://github.com/KeaKit/KeaKit/issues/567) | Análisis de rendimiento global presentación 09/04 | Mid | 2 | Done | Adrián Chabrera Rubio | 
 | [#502](https://github.com/KeaKit/KeaKit/issues/502)  | CU-ARRENDADOR-06: Backend | Mid |  4  | Done | Rafael Harana Mancilla |
-| [#503](https://github.com/KeaKit/KeaKit/issues/503)  | CU-ARRENDADOR-06: Frontend | Mid |  4  | In Progress | Marta De la Calle González |
+| [#503](https://github.com/KeaKit/KeaKit/issues/503)  | CU-ARRENDADOR-06: Frontend | Mid |  4  | Done | Marta De la Calle González |
 | [#503](https://github.com/KeaKit/KeaKit/issues/503)  | Integrar locust en proyecto y devcontainer | High |  2  | Done | Adrián Chabrera Rubio |
 | [#454](https://github.com/KeaKit/KeaKit/issues/454)  | Testing pendiente CU-GENERAL-01 | High |  3  | Done | Adrián Chabrera Rubio |
 | [#455](https://github.com/KeaKit/KeaKit/issues/455)  | Testing pendiente CU-GENERAL-02 | High |  3  | Done | Alejandro González Macías |
