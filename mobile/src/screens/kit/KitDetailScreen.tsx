@@ -243,19 +243,19 @@ const KitDetailScreen: React.FC = () => {
               </View>
 
               {kit.status === KitStatus.PAID && (
-<TouchableOpacity
-  style={styles.reportButton}
-  onPress={() => {
-    setSelectedItem({
-      id: item.itemId,
-      title: item.name || `Artículo con ID: ${item.itemId}`,
-    });
-    setReportModalVisible(true);
-  }}
->
-  <Ionicons name="flag-outline" size={14} color="#FF3B30" />
-  <Text style={styles.reportButtonText}>Reportar</Text>
-</TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.reportButton}
+                  onPress={() => {
+                    setSelectedItem({
+                      id: item.itemId,
+                      title: item.name || `Artículo con ID: ${item.itemId}`,
+                    });
+                    setReportModalVisible(true);
+                  }}
+                >
+                  <Ionicons name="flag-outline" size={14} color="#FF3B30" />
+                  <Text style={styles.reportButtonText}>Reportar</Text>
+                </TouchableOpacity>
               )}
 
               <Ionicons name="cube-outline" size={20} color="#DDD" />
