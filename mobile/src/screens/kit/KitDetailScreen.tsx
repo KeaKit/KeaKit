@@ -426,7 +426,9 @@ const KitDetailScreen: React.FC = () => {
 
               <TouchableOpacity
                 style={styles.submitButton}
-                onPress={handleSubmitReport}
+                onPress={() => {
+                  handleSubmitReport();
+                }}
               >
                 <Ionicons name="flag" size={16} color="#FFF" />
                 <Text style={styles.submitText}>Enviar</Text>
