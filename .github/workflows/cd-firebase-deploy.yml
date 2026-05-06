@@ -1,7 +1,10 @@
 name: CD - Deploy Frontend to Firebase
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Frontend CI"]
+    types:
+      - completed
     branches:
       - main
       - 'release/*.*.*'
@@ -9,6 +12,7 @@ on:
 
 jobs:
   deploy-frontend:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     defaults:
