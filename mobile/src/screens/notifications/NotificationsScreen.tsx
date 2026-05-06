@@ -133,13 +133,28 @@ const NotificationsScreen: React.FC = () => {
     }
   };
 
+  const getNotificationTitle = (type: ActivityNotification["type"]) => {
+    switch (type) {
+      case "ITEM_RENTED":
+        return "Objeto alquilado";
+      case "RETURN_REMINDER":
+        return "Fin de alquiler";
+      case "DEMAND_ALERT":
+        return "Interés en tu artículo";
+      case "ARTICLE_AVAILABLE":
+        return "Artículo disponible";
+      default:
+        return "Notificación";
+    }
+  };
+
   const renderItem = ({ item }: { item: ActivityNotification }) => (
     <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
       {!item.read && <View style={styles.unreadIndicator} />}
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-            {item.type === "ITEM_RENTED" ? "Objeto alquilado" : "Fin de alquiler"}
+            {getNotificationTitle(item.type)}
           </Text>
           <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
         </View>
