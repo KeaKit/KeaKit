@@ -84,7 +84,7 @@ public class NotificationService {
             throw new IllegalStateException(buildOwnItemInterestMessage(item));
         }
 
-        String message = requester.getName() + buildDemandAlertMessageSuffix(item);
+        String message = requester.getName() + buildDemandAlertMessageSuffix(item, startDate, endDate);
         Notification notification = new Notification(owner, message, NotificationType.DEMAND_ALERT, null);
         if (item instanceof Article) {
             notification.setRelatedArticleId(itemId);
@@ -94,21 +94,40 @@ public class NotificationService {
 
     private boolean isAvailableForDemandAlert(Item item, LocalDate startDate, LocalDate endDate) {
         if (item instanceof Article article) {
+            // Si el artículo no está disponible en general, crear alerta
             if (article.getStatus() != ArticleStatus.AVAILABLE) {
                 return false;
             }
-            if (startDate != null && endDate != null) {
-                List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
-                        item.getId(), startDate, endDate, List.of(KitStatus.PAID, KitStatus.ACTIVE));
-                if (!overlappingKits.isEmpty()) {
-                    int totalUnits = article.getTotalUnits() != null ? article.getTotalUnits() : 1;
-                    int maxRented = computeMaxRented(item.getId(), overlappingKits, startDate, endDate);
-                    return (totalUnits - maxRented) > 0;
+            // Si no se especifican fechas, considerarlo disponible
+            if (startDate == null || endDate == null) {
+                return true;
+            }
+            
+            // Verificar si las fechas seleccionadas están dentro del rango de disponibilidad
+            LocalDate itemAvailableFrom = article.getAvailableFrom();
+            LocalDate itemAvailableUntil = article.getAvailableUntil();
+            
+            // Si las fechas están fuera del rango de disponibilidad del item, NO está disponible
+            if (itemAvailableFrom != null && itemAvailableUntil != null) {
+                if (startDate.isBefore(itemAvailableFrom) || endDate.isAfter(itemAvailableUntil)) {
+                    return false;  // NO disponible en esas fechas, crear alerta
                 }
             }
-            return true;
+            
+            // Si hay fechas, comprobar disponibilidad en ese rango
+            List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
+                    item.getId(), startDate, endDate, List.of(KitStatus.PAID, KitStatus.ACTIVE));
+            if (overlappingKits.isEmpty()) {
+                // No hay kits en esas fechas, está disponible
+                return true;
+            }
+            int totalUnits = article.getTotalUnits() != null ? article.getTotalUnits() : 1;
+            int maxRented = computeMaxRented(item.getId(), overlappingKits, startDate, endDate);
+            // Si hay unidades disponibles en el rango, está disponible
+            return (totalUnits - maxRented) > 0;
         }
         if (item instanceof ServiceItem serviceItem) {
+            // Si el servicio no está activo o sin unidades, crear alerta
             if (serviceItem.getStatus() != ServiceStatus.ACTIVE) {
                 return false;
             }
@@ -116,15 +135,32 @@ public class NotificationService {
             if (totalUnits <= 0) {
                 return false;
             }
-            if (startDate != null && endDate != null) {
-                List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
-                        item.getId(), startDate, endDate, List.of(KitStatus.PAID, KitStatus.ACTIVE));
-                if (!overlappingKits.isEmpty()) {
-                    int maxRented = computeMaxRented(item.getId(), overlappingKits, startDate, endDate);
-                    return (totalUnits - maxRented) > 0;
+            // Si no se especifican fechas, considerarlo disponible
+            if (startDate == null || endDate == null) {
+                return true;
+            }
+            
+            // Verificar si las fechas seleccionadas están dentro del rango de disponibilidad
+            LocalDate itemAvailableFrom = serviceItem.getAvailableFrom();
+            LocalDate itemAvailableUntil = serviceItem.getAvailableUntil();
+            
+            // Si las fechas están fuera del rango de disponibilidad del item, NO está disponible
+            if (itemAvailableFrom != null && itemAvailableUntil != null) {
+                if (startDate.isBefore(itemAvailableFrom) || endDate.isAfter(itemAvailableUntil)) {
+                    return false;  // NO disponible en esas fechas, crear alerta
                 }
             }
-            return true;
+            
+            // Si hay fechas, comprobar disponibilidad en ese rango
+            List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
+                    item.getId(), startDate, endDate, List.of(KitStatus.PAID, KitStatus.ACTIVE));
+            if (overlappingKits.isEmpty()) {
+                // No hay kits en esas fechas, está disponible
+                return true;
+            }
+            int maxRented = computeMaxRented(item.getId(), overlappingKits, startDate, endDate);
+            // Si hay unidades disponibles en el rango, está disponible
+            return (totalUnits - maxRented) > 0;
         }
         return false;
     }
@@ -169,11 +205,22 @@ public class NotificationService {
         return "El propietario no puede solicitar su propio artículo";
     }
 
-    private String buildDemandAlertMessageSuffix(Item item) {
+    private String buildDemandAlertMessageSuffix(Item item, LocalDate startDate, LocalDate endDate) {
+        String baseMessage;
         if (item instanceof ServiceItem) {
-            return " está interesado en contratar tu servicio \"" + item.getTitle() + "\", que actualmente no está disponible.";
+            baseMessage = " está interesado en contratar tu servicio \"" + item.getTitle() + "\"";
+        } else {
+            baseMessage = " está interesado en alquilar tu artículo \"" + item.getTitle() + "\"";
         }
-        return " está interesado en alquilar tu artículo \"" + item.getTitle() + "\", que actualmente no está disponible.";
+        
+        if (startDate != null && endDate != null) {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new java.util.Locale("es", "ES"));
+            String formattedStart = startDate.format(formatter);
+            String formattedEnd = endDate.format(formatter);
+            return baseMessage + " para el " + formattedStart + " al " + formattedEnd + ".";
+        }
+        
+        return baseMessage + ", que actualmente no está disponible.";
     }
 
     // Lógica de RN-NOT-05: Objeto alquilado

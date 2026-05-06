@@ -115,6 +115,14 @@ public class ArticleAvailabilityRequestService {
         if (item instanceof Article article) {
             if (article.getStatus() != ArticleStatus.AVAILABLE) return false;
             if (startDate != null && endDate != null) {
+                // Si las fechas están fuera del rango de disponibilidad, no está disponible
+                LocalDate availableFrom = article.getAvailableFrom();
+                LocalDate availableUntil = article.getAvailableUntil();
+                if (availableFrom != null && availableUntil != null) {
+                    if (startDate.isBefore(availableFrom) || endDate.isAfter(availableUntil)) {
+                        return false;
+                    }
+                }
                 List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
                         item.getId(), startDate, endDate,
                         List.of(KitStatus.PAID, KitStatus.ACTIVE));
@@ -135,6 +143,14 @@ public class ArticleAvailabilityRequestService {
                 return false;
             }
             if (startDate != null && endDate != null) {
+                // Si las fechas están fuera del rango de disponibilidad, no está disponible
+                LocalDate availableFrom = serviceItem.getAvailableFrom();
+                LocalDate availableUntil = serviceItem.getAvailableUntil();
+                if (availableFrom != null && availableUntil != null) {
+                    if (startDate.isBefore(availableFrom) || endDate.isAfter(availableUntil)) {
+                        return false;
+                    }
+                }
                 List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
                         item.getId(), startDate, endDate,
                         List.of(KitStatus.PAID, KitStatus.ACTIVE));

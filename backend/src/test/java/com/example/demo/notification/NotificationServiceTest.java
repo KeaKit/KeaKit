@@ -203,8 +203,46 @@ class NotificationServiceTest {
         verify(notificationRepository).save(any(Notification.class));
     }
 
-    @Test
-    void createDemandAlert_articleAvailable_throwsIllegalState() {
+    @Test    void createDemandAlert_serviceActiveFullyRentedForDates_createsNotification() {
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(6L);
+        serviceItem.setTitle("Instalación Software");
+        serviceItem.setStatus(ServiceStatus.ACTIVE);
+        serviceItem.setTotalUnits(1);
+        serviceItem.setOwner(owner);
+
+        requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        LocalDate start = LocalDate.of(2026, 5, 7);
+        LocalDate end = LocalDate.of(2026, 5, 20);
+
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(6L);
+        snapshot.setSelectedUnits(1);
+
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStatus(KitStatus.ACTIVE);
+        overlappingKit.setStartDate(start);
+        overlappingKit.setEndDate(end);
+        overlappingKit.setSnapshots(List.of(snapshot));
+
+        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
+        when(kitRepository.findOverlappingKitsForItem(6L, start, end,
+                List.of(KitStatus.PAID, KitStatus.ACTIVE))).thenReturn(List.of(overlappingKit));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(6L, 20L, start, end);
+
+        assertThat(result.getUser()).isEqualTo(owner);
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isNull();
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test    void createDemandAlert_articleAvailable_throwsIllegalState() {
         Article article = new Article();
         article.setId(5L);
         article.setStatus(ArticleStatus.AVAILABLE);
@@ -273,45 +311,7 @@ class NotificationServiceTest {
         verify(notificationRepository).save(any(Notification.class));
     }
 
-    @Test
-    void createDemandAlert_serviceActiveFullyRentedForDates_createsNotification() {
-        ServiceItem serviceItem = new ServiceItem();
-        serviceItem.setId(6L);
-        serviceItem.setTitle("Instalación Software");
-        serviceItem.setStatus(ServiceStatus.ACTIVE);
-        serviceItem.setTotalUnits(1);
-        serviceItem.setOwner(owner);
 
-        requester = new User();
-        requester.setId(20L);
-        requester.setName("Requester");
-
-        LocalDate start = LocalDate.of(2026, 5, 7);
-        LocalDate end = LocalDate.of(2026, 5, 20);
-
-        ItemMemento snapshot = new ItemMemento();
-        snapshot.setOriginalItemId(6L);
-        snapshot.setSelectedUnits(1);
-
-        Kit overlappingKit = new Kit();
-        overlappingKit.setStatus(KitStatus.ACTIVE);
-        overlappingKit.setStartDate(start);
-        overlappingKit.setEndDate(end);
-        overlappingKit.setSnapshots(List.of(snapshot));
-
-        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
-        when(kitRepository.findOverlappingKitsForItem(6L, start, end,
-                List.of(KitStatus.PAID, KitStatus.ACTIVE))).thenReturn(List.of(overlappingKit));
-        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
-        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
-
-        Notification result = notificationService.createDemandAlert(6L, 20L, start, end);
-
-        assertThat(result.getUser()).isEqualTo(owner);
-        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
-        assertThat(result.getRelatedArticleId()).isNull();
-        verify(notificationRepository).save(any(Notification.class));
-    }
 
     @Test
     void createDemandAlert_ownerIsRequester_throwsIllegalState() {
@@ -331,49 +331,7 @@ class NotificationServiceTest {
         verify(notificationRepository, never()).save(any());
     }
 
-    @Test
-    void createDemandAlert_withDates_allUnitsRented_createsNotification() {
-        User owner = new User();
-        owner.setId(10L);
-        owner.setName("Owner");
 
-        User requester = new User();
-        requester.setId(20L);
-        requester.setName("Requester");
-
-        Article article = new Article();
-        article.setId(5L);
-        article.setTitle("Taladro");
-        article.setStatus(ArticleStatus.AVAILABLE);
-        article.setTotalUnits(1);
-        article.setOwner(owner);
-
-        LocalDate start = LocalDate.of(2026, 5, 7);
-        LocalDate end = LocalDate.of(2026, 6, 4);
-
-        ItemMemento snapshot = new ItemMemento();
-        snapshot.setOriginalItemId(5L);
-        snapshot.setSelectedUnits(1);
-
-        Kit overlappingKit = new Kit();
-        overlappingKit.setStatus(KitStatus.ACTIVE);
-        overlappingKit.setStartDate(start);
-        overlappingKit.setEndDate(end);
-        overlappingKit.setSnapshots(List.of(snapshot));
-
-        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
-        when(kitRepository.findOverlappingKitsForItem(5L, start, end,
-                List.of(KitStatus.PAID, KitStatus.ACTIVE))).thenReturn(List.of(overlappingKit));
-        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
-        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
-
-        Notification result = notificationService.createDemandAlert(5L, 20L, start, end);
-
-        assertThat(result.getUser()).isEqualTo(owner);
-        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
-        assertThat(result.getRelatedArticleId()).isEqualTo(5L);
-        verify(notificationRepository).save(any(Notification.class));
-    }
 
     @Test
     void checkUpcomingReturns_createsRemindersForCorrectKits() {
@@ -468,6 +426,79 @@ class NotificationServiceTest {
         assertThat(result.getRelatedArticleId()).isEqualTo(5L);
         assertThat(result.getMessage()).contains("Taladro");
         assertThat(result.getMessage()).contains("Requester");
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    // ── Fechas fuera del rango de disponibilidad ─────────────────────────
+
+    @Test
+    void createDemandAlert_articleAvailableButDatesOutOfRange_createsAlert() {
+        User owner = new User();
+        owner.setId(10L);
+        owner.setName("Owner");
+
+        User requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        Article article = new Article();
+        article.setId(5L);
+        article.setTitle("Taladro");
+        article.setStatus(ArticleStatus.AVAILABLE);
+        article.setAvailableFrom(LocalDate.of(2026, 1, 1));
+        article.setAvailableUntil(LocalDate.of(2026, 12, 31));
+        article.setOwner(owner);
+
+        // Fechas fuera del rango (2030)
+        LocalDate start = LocalDate.of(2030, 3, 1);
+        LocalDate end   = LocalDate.of(2030, 3, 15);
+
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(5L, 20L, start, end);
+
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isEqualTo(5L);
+        assertThat(result.getMessage()).contains("Taladro");
+        assertThat(result.getMessage()).contains("2030");
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void createDemandAlert_serviceActiveButDatesOutOfRange_createsAlert() {
+        User owner = new User();
+        owner.setId(10L);
+        owner.setName("Owner");
+
+        User requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(7L);
+        serviceItem.setTitle("Servicio de fontanería");
+        serviceItem.setStatus(ServiceStatus.ACTIVE);
+        serviceItem.setTotalUnits(2);
+        serviceItem.setAvailableFrom(LocalDate.of(2026, 1, 1));
+        serviceItem.setAvailableUntil(LocalDate.of(2026, 12, 31));
+        serviceItem.setOwner(owner);
+
+        // Fechas fuera del rango (2030)
+        LocalDate start = LocalDate.of(2030, 6, 1);
+        LocalDate end   = LocalDate.of(2030, 6, 10);
+
+        when(itemRepository.findById(7L)).thenReturn(Optional.of(serviceItem));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(7L, 20L, start, end);
+
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isNull();
+        assertThat(result.getMessage()).contains("fontanería");
+        assertThat(result.getMessage()).contains("2030");
         verify(notificationRepository).save(any(Notification.class));
     }
 

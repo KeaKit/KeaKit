@@ -210,6 +210,72 @@ class ArticleAvailabilityRequestServiceTest {
     }
 
     /**
+     * Artículo AVAILABLE con fechas fuera de su rango availableFrom/availableUntil
+     * → debe permitir el aviso (no está disponible para esas fechas).
+     */
+    @Test
+    void requestAvailabilityNotification_withDatesOutsideRange_article_success() {
+        Article article = new Article();
+        article.setId(100L);
+        article.setTitle("MacBook Pro");
+        article.setStatus(ArticleStatus.AVAILABLE);
+        article.setTotalUnits(1);
+        article.setAvailableFrom(LocalDate.of(2026, 1, 1));
+        article.setAvailableUntil(LocalDate.of(2026, 12, 31));
+        User owner = new User();
+        owner.setId(200L);
+        article.setOwner(owner);
+
+        // Fechas fuera del rango configurado (2030)
+        LocalDate start = LocalDate.of(2030, 3, 1);
+        LocalDate end   = LocalDate.of(2030, 3, 15);
+
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+        when(userRepository.findById(300L)).thenReturn(Optional.of(requester));
+        when(requestRepository.findByItemIdAndRequesterId(100L, 300L)).thenReturn(Optional.empty());
+        when(requestRepository.save(any(ArticleAvailabilityRequest.class))).thenAnswer(i -> i.getArgument(0));
+
+        ArticleAvailabilityRequest result =
+                availabilityRequestService.requestAvailabilityNotification(100L, 300L, start, end);
+
+        assertNotNull(result);
+        verify(requestRepository).save(any(ArticleAvailabilityRequest.class));
+    }
+
+    /**
+     * Servicio ACTIVE con fechas fuera de su rango availableFrom/availableUntil
+     * → debe permitir el aviso.
+     */
+    @Test
+    void requestAvailabilityNotification_withDatesOutsideRange_service_success() {
+        ServiceItem service = new ServiceItem();
+        service.setId(101L);
+        service.setTitle("Montaje de muebles");
+        service.setStatus(ServiceStatus.ACTIVE);
+        service.setTotalUnits(2);
+        service.setAvailableFrom(LocalDate.of(2026, 1, 1));
+        service.setAvailableUntil(LocalDate.of(2026, 12, 31));
+        User owner = new User();
+        owner.setId(201L);
+        service.setOwner(owner);
+
+        // Fechas fuera del rango configurado (2030)
+        LocalDate start = LocalDate.of(2030, 6, 1);
+        LocalDate end   = LocalDate.of(2030, 6, 10);
+
+        when(itemRepository.findById(101L)).thenReturn(Optional.of(service));
+        when(userRepository.findById(300L)).thenReturn(Optional.of(requester));
+        when(requestRepository.findByItemIdAndRequesterId(101L, 300L)).thenReturn(Optional.empty());
+        when(requestRepository.save(any(ArticleAvailabilityRequest.class))).thenAnswer(i -> i.getArgument(0));
+
+        ArticleAvailabilityRequest result =
+                availabilityRequestService.requestAvailabilityNotification(101L, 300L, start, end);
+
+        assertNotNull(result);
+        verify(requestRepository).save(any(ArticleAvailabilityRequest.class));
+    }
+
+    /**
      * Artículo AVAILABLE sin kits solapados en las fechas → sigue lanzando excepción.
      */
     @Test
