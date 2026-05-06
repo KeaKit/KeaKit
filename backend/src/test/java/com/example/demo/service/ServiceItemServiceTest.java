@@ -493,6 +493,31 @@ verify(kitRepository).countActiveAndFutureRentedUnits(eq(1L), any(LocalDate.clas
     }
 
     @Test
+    void update_totalUnitsChanged_updatesUnits() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setTotalUnits(7);
+
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+
+        assertThat(result.getTotalUnits()).isEqualTo(7);
+    }
+
+    @Test
+    void update_totalUnitsLessThanOne_throws() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+
+        ServiceItem updateData = new ServiceItem();
+        updateData.setTotalUnits(0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> serviceItemService.update(1L, 1L, updateData));
+        assertThat(ex.getMessage()).contains("unidades disponibles deben ser al menos 1");
+    }
+
+    @Test
     void update_expiredUntil_setsStatusToDraft() {
         // until < today pero from no cambia  ->  checkFromFuture = false
         service.setAvailableFrom(LocalDate.now().minusDays(5)); // from en el pasado (ya guardado)

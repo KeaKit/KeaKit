@@ -39,9 +39,16 @@ const toDisplay = (iso: string): string => {
   return `${d}/${m}/${y}`;
 };
 
+const normalizeIsoDate = (value: string | null | undefined): string => {
+  if (!value) return '';
+  return value.slice(0, 10);
+};
+
 const isoToDate = (iso: string | null | undefined): Date | undefined => {
-  if (!iso) return undefined;
-  const [y, m, d] = iso.split('-').map(Number);
+  const normalized = normalizeIsoDate(iso);
+  if (!normalized) return undefined;
+  const [y, m, d] = normalized.split('-').map(Number);
+  if (!y || !m || !d) return undefined;
   return new Date(y, m - 1, d);
 };
 
@@ -61,8 +68,8 @@ const EditServiceScreen: React.FC = () => {
   const [title, setTitle] = useState(service.title ?? '');
   const [description, setDescription] = useState(service.description ?? '');
   const [pricePerMonth, setPricePerMonth] = useState(String(service.pricePerMonth ?? ''));
-  const [availableFrom, setAvailableFrom] = useState(service.availableFrom ?? '');
-  const [availableUntil, setAvailableUntil] = useState(service.availableUntil ?? '');
+  const [availableFrom, setAvailableFrom] = useState(normalizeIsoDate(service.availableFrom));
+  const [availableUntil, setAvailableUntil] = useState(normalizeIsoDate(service.availableUntil));
   const [category, setCategory] = useState<Category | null>(service.category ?? null);
   const [totalUnits, setTotalUnits] = useState(String(service.totalUnits ?? '1'));
 
@@ -172,8 +179,8 @@ const EditServiceScreen: React.FC = () => {
         description: description.trim(),
         city: selectedCity,
         pricePerMonth: Number(pricePerMonth),
-        availableFrom,
-        availableUntil,
+        availableFrom: normalizeIsoDate(availableFrom),
+        availableUntil: normalizeIsoDate(availableUntil),
         category: { id: category!.id },
         totalUnits: totalUnits ? Number(totalUnits) : 1,
       };
