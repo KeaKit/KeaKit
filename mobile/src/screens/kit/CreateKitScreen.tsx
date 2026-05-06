@@ -458,7 +458,11 @@ const CreateKitScreen: React.FC = () => {
 
     if (user?.token) {
       try {
-        const mapData = await getArticlesForMap(user.token, country.trim() || undefined);
+        const mapData = await getArticlesForMap(
+          user.token,
+          country.trim() || undefined,
+          true,
+        );
         setMapProducts(mapData);
       } catch (error) {
         console.warn('Error al cargar productos del mapa:', error);

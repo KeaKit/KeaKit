@@ -302,6 +302,29 @@ class NearbyArticleServiceTest {
     }
 
     @Test
+    void findAllWithCoords_whenIncludeRentedTrue_returnsAvailableAndRentedArticles() {
+        Article available = createArticle(1L, "Taladro disponible", "Madrid", 30.0);
+        available.setCountry("España");
+
+        Article rentedWithStock = createArticle(2L, "Cámara alquilada parcialmente", "Barcelona", 45.0);
+        rentedWithStock.setCountry("España");
+        rentedWithStock.setStatus(ArticleStatus.RENTED);
+        rentedWithStock.setTotalUnits(2);
+
+        when(articleRepository.findByStatusIn(List.of(ArticleStatus.AVAILABLE, ArticleStatus.RENTED)))
+            .thenReturn(List.of(available, rentedWithStock));
+        when(cityService.getCityCoordinates("Madrid", "España")).thenReturn(MADRID_COORDS);
+        when(cityService.getCityCoordinates("Barcelona", "España")).thenReturn(BARCELONA_COORDS);
+
+        List<ArticleNearbyDTO> result = articleService.findAllWithCoords("España", true);
+
+        assertEquals(2, result.size());
+        assertEquals("AVAILABLE", result.get(0).status());
+        assertEquals("RENTED", result.get(1).status());
+        assertEquals(2, result.get(1).totalUnits());
+    }
+
+    @Test
     void findAllWithCoords_usesArticleCountryWhenAvailable() {
         Article a = createArticle(1L, "Taladro", "Madrid", 30.0);
         a.setCountry("España");

@@ -107,7 +107,7 @@ describe("E2E ligero CU-ARRENDATARIO-01 lista/mapa", () => {
       },
       TOKEN,
     );
-    const mapResponse = await getArticlesForMap(TOKEN, "España");
+    const mapResponse = await getArticlesForMap(TOKEN, "España", true);
 
     const mapArticles = buildSelectableKitMapProducts(
       mapResponse,
@@ -151,6 +151,11 @@ describe("E2E ligero CU-ARRENDATARIO-01 lista/mapa", () => {
     expect(mockFetch).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining("country=Espa"),
+      expect.any(Object),
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("includeRented=true"),
       expect.any(Object),
     );
 
