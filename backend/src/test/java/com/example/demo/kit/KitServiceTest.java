@@ -1377,4 +1377,28 @@ public class KitServiceTest {
                 "Total = subtotal + garantía - descuento");
     }
 
+    @Test
+    void findTrackingUpdateableByTenantId_returnsMappedResponses() {
+        Long tenantId = 1L;
+        Kit kit1 = new Kit();
+        kit1.setId(101L);
+        kit1.setName("Kit Tracking 1");
+        
+        Kit kit2 = new Kit();
+        kit2.setId(102L);
+        kit2.setName("Kit Tracking 2");
+
+        when(kitRepository.findTrackingUpdateableByTenantId(tenantId))
+            .thenReturn(List.of(kit1, kit2));
+
+        List<KitResponse> result = kitService.findTrackingUpdateableByTenantId(tenantId);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Kit Tracking 1", result.get(0).getName());
+        assertEquals(102L, result.get(1).getId());
+        
+        verify(kitRepository, times(1)).findTrackingUpdateableByTenantId(tenantId);
+    }
+
 }
