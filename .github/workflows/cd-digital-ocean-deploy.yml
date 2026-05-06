@@ -18,7 +18,7 @@ jobs:
       - name: Ejecutar despliegue en el Droplet
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ secrets.DROPLET_IP_PPL }}
           username: ${{ secrets.DROPLET_USERNAME }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
