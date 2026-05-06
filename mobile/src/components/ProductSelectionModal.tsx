@@ -19,8 +19,12 @@ import { useNavigation } from "@react-navigation/native";
 import { ArticleMapView } from "./ArticleMapView";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "./NotificationContext";
-import { requestArticleAvailabilityNotification } from "../services/articleService";
+import { requestArticleAvailabilityNotification, createDemandAlert } from "../services/articleService";
 import { SelectPicker } from "./SelectPicker";
+import {
+  getAvailabilityAlertSuccessMessage,
+  shouldRequestAvailabilityNotification,
+} from "../utils/availabilityAlerts";
 
 const sanitizePriceInput = (value: string): string => value.replace(/\D/g, "");
 
@@ -223,7 +227,10 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     }
   };
 
-  const handleRequestAvailability = async (articleId: number) => {
+  const handleRequestAvailability = async (
+    itemId: number,
+    itemType: CatalogProduct["itemType"],
+  ) => {
     if (!user?.id || !user.token) {
       showNotification(
         "Necesitas iniciar sesión para solicitar el aviso.",
@@ -232,17 +239,36 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       return;
     }
 
-    if (requestingIds[articleId]) return;
-    setRequestingIds((prev) => ({ ...prev, [articleId]: true }));
+    if (requestingIds[itemId]) return;
+    setRequestingIds((prev) => ({ ...prev, [itemId]: true }));
+
+    const formatDate = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const startDateStr = startDate ? formatDate(startDate) : undefined;
+    const endDateStr = endDate ? formatDate(endDate) : undefined;
 
     try {
-      await requestArticleAvailabilityNotification(
-        articleId,
+      if (shouldRequestAvailabilityNotification(itemType)) {
+        await requestArticleAvailabilityNotification(
+          itemId,
+          user.id,
+          user.token,
+          startDateStr,
+          endDateStr,
+        );
+      }
+      
+      // Crear alerta de demanda para notificar al propietario del item.
+      await createDemandAlert(
+        itemId,
         user.id,
         user.token,
+        startDateStr,
+        endDateStr,
       );
+      
       showNotification(
-        "Te avisaremos cuando el artículo vuelva a estar disponible.",
+        getAvailabilityAlertSuccessMessage(itemType),
         "success",
       );
     } catch (error) {
@@ -253,7 +279,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
         "error",
       );
     } finally {
-      setRequestingIds((prev) => ({ ...prev, [articleId]: false }));
+      setRequestingIds((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -271,7 +297,7 @@ const productsWithAvailability = React.useMemo(() => {
 
     const mapped = filteredProducts.map((p) => {
       if (!p.availableFrom || !p.availableUntil) {
-        const isAvailable = p.status === "AVAILABLE" || p.status === "ACTIVE";
+        const isAvailable = (p.status === "AVAILABLE" || p.status === "ACTIVE") && p.totalUnits > 0;
         return {
           ...p,
           isAvailable,
@@ -285,13 +311,17 @@ const productsWithAvailability = React.useMemo(() => {
       const productUntil = new Date(p.availableUntil);
       productUntil.setHours(0, 0, 0, 0);
 
-      const isAvailable = requestStart >= productFrom && requestEnd <= productUntil;
+      const datesMatch = requestStart >= productFrom && requestEnd <= productUntil;
+      const hasUnits = p.totalUnits > 0 && p.status !== "RENTED";
+      const isAvailable = datesMatch && hasUnits;
 
       if (!isAvailable) {
         const formatDate = (date: Date) => {
           return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
         };
-        const availabilityMessage = `Disponible: ${formatDate(productFrom)} - ${formatDate(productUntil)}`;
+        const availabilityMessage = !datesMatch
+          ? `Disponible: ${formatDate(productFrom)} - ${formatDate(productUntil)}`
+          : "Sin unidades disponibles para las fechas seleccionadas";
         return { ...p, isAvailable: false, availabilityMessage };
       }
 
@@ -808,7 +838,9 @@ const productsWithAvailability = React.useMemo(() => {
                         }}
                       >
                         <TouchableOpacity
-                          onPress={() => handleRequestAvailability(p.id)}
+                          onPress={() =>
+                            handleRequestAvailability(p.id, p.itemType)
+                          }
                           disabled={requestingIds[p.id]}
                           accessibilityRole="button"
                           accessibilityLabel={`Avisar cuando ${p.title} esté disponible`}

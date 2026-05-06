@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -101,9 +102,11 @@ public class ArticleController {
     @PostMapping("/{id}/notify-when-available")
     public ResponseEntity<?> requestAvailabilityNotification(
             @PathVariable Long id,
-            @RequestParam Long requesterId) {
+            @RequestParam Long requesterId,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate) {
         try {
-            availabilityRequestService.requestAvailabilityNotification(id, requesterId);
+            availabilityRequestService.requestAvailabilityNotification(id, requesterId, startDate, endDate);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Aviso de disponibilidad registrado correctamente.");
         } catch (IllegalStateException e) {
