@@ -267,6 +267,50 @@ class NotificationServiceTest {
     }
 
     @Test
+    void createDemandAlert_withDates_allUnitsRented_createsNotification() {
+        User owner = new User();
+        owner.setId(10L);
+        owner.setName("Owner");
+
+        User requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        Article article = new Article();
+        article.setId(5L);
+        article.setTitle("Taladro");
+        article.setStatus(ArticleStatus.AVAILABLE);
+        article.setTotalUnits(1);
+        article.setOwner(owner);
+
+        LocalDate start = LocalDate.of(2026, 5, 7);
+        LocalDate end = LocalDate.of(2026, 6, 4);
+
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(5L);
+        snapshot.setSelectedUnits(1);
+
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStatus(KitStatus.ACTIVE);
+        overlappingKit.setStartDate(start);
+        overlappingKit.setEndDate(end);
+        overlappingKit.setSnapshots(List.of(snapshot));
+
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(kitRepository.findOverlappingKitsForItem(5L, start, end,
+                List.of(KitStatus.PAID, KitStatus.ACTIVE))).thenReturn(List.of(overlappingKit));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(5L, 20L, start, end);
+
+        assertThat(result.getUser()).isEqualTo(owner);
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isEqualTo(5L);
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
     void checkUpcomingReturns_createsRemindersForCorrectKits() {
         LocalDate targetDate = LocalDate.now().plusDays(2);
         when(kitRepository.findByStatusAndEndDate(KitStatus.ACTIVE, targetDate)).thenReturn(List.of(activeKit));

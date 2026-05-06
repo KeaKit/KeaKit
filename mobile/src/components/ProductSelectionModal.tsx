@@ -255,6 +255,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
         articleId,
         user.id,
         user.token,
+        startDateStr,
+        endDateStr,
       );
       
       showNotification(

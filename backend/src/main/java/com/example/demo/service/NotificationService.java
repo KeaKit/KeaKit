@@ -60,10 +60,15 @@ public class NotificationService {
     // CU-ARRENDADOR-06: Alerta de demanda
     @Transactional
     public Notification createDemandAlert(Long itemId, Long requesterId) {
+        return createDemandAlert(itemId, requesterId, null, null);
+    }
+
+    @Transactional
+    public Notification createDemandAlert(Long itemId, Long requesterId, LocalDate startDate, LocalDate endDate) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Elemento no encontrado con id: " + itemId));
 
-        if (isAvailableForDemandAlert(item)) {
+        if (isAvailableForDemandAlert(item, startDate, endDate)) {
             throw new IllegalStateException(buildAvailableForDemandAlertMessage(item));
         }
 
@@ -87,14 +92,45 @@ public class NotificationService {
         return notificationRepository.save(notification);
     }
 
-    private boolean isAvailableForDemandAlert(Item item) {
+    private boolean isAvailableForDemandAlert(Item item, LocalDate startDate, LocalDate endDate) {
         if (item instanceof Article article) {
-            return article.getStatus() == ArticleStatus.AVAILABLE;
+            if (article.getStatus() != ArticleStatus.AVAILABLE) {
+                return false;
+            }
+            if (startDate != null && endDate != null) {
+                List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
+                        item.getId(), startDate, endDate, List.of(KitStatus.PAID, KitStatus.ACTIVE));
+                if (!overlappingKits.isEmpty()) {
+                    int totalUnits = article.getTotalUnits() != null ? article.getTotalUnits() : 1;
+                    int maxRented = computeMaxRented(item.getId(), overlappingKits, startDate, endDate);
+                    return (totalUnits - maxRented) > 0;
+                }
+            }
+            return true;
         }
         if (item instanceof ServiceItem serviceItem) {
             return serviceItem.getStatus() == ServiceStatus.ACTIVE;
         }
         return false;
+    }
+
+    private int computeMaxRented(Long itemId, List<Kit> overlappingKits, LocalDate startDate, LocalDate endDate) {
+        int maxRented = 0;
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            int rentedToday = 0;
+            for (Kit kit : overlappingKits) {
+                if (!date.isBefore(kit.getStartDate()) && !date.isAfter(kit.getEndDate())) {
+                    rentedToday += kit.getSnapshots().stream()
+                            .filter(snap -> snap.getOriginalItemId().equals(itemId))
+                            .mapToInt(snap -> snap.getSelectedUnits())
+                            .sum();
+                }
+            }
+            if (rentedToday > maxRented) {
+                maxRented = rentedToday;
+            }
+        }
+        return maxRented;
     }
 
     private String buildAvailableForDemandAlertMessage(Item item) {

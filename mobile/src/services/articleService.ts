@@ -126,8 +126,10 @@ export async function createDemandAlert(
   articleId: number,
   requesterId: number,
   token: string,
+  startDate?: string,
+  endDate?: string,
 ): Promise<string> {
-  const res = await fetch(API_ROUTES.CREATE_DEMAND_ALERT(articleId, requesterId), {
+  const res = await fetch(API_ROUTES.CREATE_DEMAND_ALERT(articleId, requesterId, startDate, endDate), {
     method: 'POST',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
