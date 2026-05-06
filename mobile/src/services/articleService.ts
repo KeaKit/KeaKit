@@ -93,8 +93,10 @@ export async function requestArticleAvailabilityNotification(
   articleId: number,
   requesterId: number,
   token: string,
+  startDate?: string,
+  endDate?: string,
 ): Promise<string> {
-  const res = await fetch(API_ROUTES.REQUEST_AVAILABILITY_NOTIFICATION(articleId, requesterId), {
+  const res = await fetch(API_ROUTES.REQUEST_AVAILABILITY_NOTIFICATION(articleId, requesterId, startDate, endDate), {
     method: 'POST',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });

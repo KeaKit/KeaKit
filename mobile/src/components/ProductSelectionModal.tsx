@@ -235,12 +235,19 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     if (requestingIds[articleId]) return;
     setRequestingIds((prev) => ({ ...prev, [articleId]: true }));
 
+    const formatDate = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const startDateStr = startDate ? formatDate(startDate) : undefined;
+    const endDateStr = endDate ? formatDate(endDate) : undefined;
+
     try {
       // Solicitar notificación cuando el artículo esté disponible
       await requestArticleAvailabilityNotification(
         articleId,
         user.id,
         user.token,
+        startDateStr,
+        endDateStr,
       );
       
       // Crear alerta de demanda para notificar al propietario del artículo

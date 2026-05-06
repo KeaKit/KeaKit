@@ -8,14 +8,18 @@ import com.example.demo.model.NotificationType;
 import com.example.demo.model.ServiceItem;
 import com.example.demo.model.ServiceStatus;
 import com.example.demo.model.User;
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 import com.example.demo.repository.ArticleAvailabilityRequestRepository;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.ItemRepository;
+import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -36,12 +40,20 @@ public class ArticleAvailabilityRequestService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private KitRepository kitRepository;
+
     @Transactional
     public ArticleAvailabilityRequest requestAvailabilityNotification(Long itemId, Long requesterId) {
+        return requestAvailabilityNotification(itemId, requesterId, null, null);
+    }
+
+    @Transactional
+    public ArticleAvailabilityRequest requestAvailabilityNotification(Long itemId, Long requesterId, LocalDate startDate, LocalDate endDate) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Elemento con id " + itemId + " no encontrado"));
 
-        if (isCurrentlyAvailable(item)) {
+        if (isCurrentlyAvailable(item, startDate, endDate)) {
             throw new IllegalStateException(buildAlreadyAvailableMessage(item));
         }
 
@@ -96,13 +108,45 @@ public class ArticleAvailabilityRequestService {
     }
 
     private boolean isCurrentlyAvailable(Item item) {
+        return isCurrentlyAvailable(item, null, null);
+    }
+
+    private boolean isCurrentlyAvailable(Item item, LocalDate startDate, LocalDate endDate) {
         if (item instanceof Article article) {
-            return article.getStatus() == ArticleStatus.AVAILABLE;
+            if (article.getStatus() != ArticleStatus.AVAILABLE) return false;
+            if (startDate != null && endDate != null) {
+                List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
+                        item.getId(), startDate, endDate,
+                        List.of(KitStatus.PAID, KitStatus.ACTIVE));
+                if (!overlappingKits.isEmpty()) {
+                    int totalUnits = article.getTotalUnits() != null ? article.getTotalUnits() : 1;
+                    int maxRented = computeMaxRented(item.getId(), overlappingKits, startDate, endDate);
+                    return (totalUnits - maxRented) > 0;
+                }
+            }
+            return true;
         }
         if (item instanceof ServiceItem serviceItem) {
             return serviceItem.getStatus() == ServiceStatus.ACTIVE;
         }
         return false;
+    }
+
+    private int computeMaxRented(Long itemId, List<Kit> overlappingKits, LocalDate startDate, LocalDate endDate) {
+        int maxRented = 0;
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            int rentedToday = 0;
+            for (Kit kit : overlappingKits) {
+                if (!date.isBefore(kit.getStartDate()) && !date.isAfter(kit.getEndDate())) {
+                    rentedToday += kit.getSnapshots().stream()
+                            .filter(snap -> snap.getOriginalItemId().equals(itemId))
+                            .mapToInt(snap -> snap.getSelectedUnits())
+                            .sum();
+                }
+            }
+            if (rentedToday > maxRented) maxRented = rentedToday;
+        }
+        return maxRented;
     }
 
     private String buildAlreadyAvailableMessage(Item item) {
