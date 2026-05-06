@@ -1,4 +1,3 @@
-import React from "react";
 import { API_ROUTES } from "../config/api";
 import { ActivityNotification } from "../types";
 import { fetchWithTimeout, handleResponse, jsonHeaders } from "./utils";
@@ -43,21 +42,4 @@ export async function deleteNotification(
   );
 
   await handleResponse<void>(res);
-}
-
-export function buildMarkSingleReadHandler(
-  token: string | undefined,
-  setNotifications: React.Dispatch<React.SetStateAction<ActivityNotification[]>>,
-) {
-  return async (notificationId: number) => {
-    if (!token) return;
-    try {
-      await markNotificationRead(notificationId, token);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
-      );
-    } catch (err) {
-      console.error("Error al marcar notificación como leída:", err);
-    }
-  };
 }

@@ -30,47 +30,6 @@ const parsePrice = (value?: string): number | undefined => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
-const toMidnight = (d: Date): Date => {
-  const copy = new Date(d);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-};
-
-const formatDay = (d: Date) =>
-  `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-
-type AvailabilityResult = { isAvailable: boolean; availabilityMessage?: string };
-
-const computeProductAvailability = (
-  p: { status: string; totalUnits: number; availableFrom?: string; availableUntil?: string },
-  requestStart: Date,
-  requestEnd: Date,
-): AvailabilityResult => {
-  if (!p.availableFrom || !p.availableUntil) {
-    const isAvailable =
-      (p.status === "AVAILABLE" || p.status === "ACTIVE") && p.totalUnits > 0;
-    return {
-      isAvailable,
-      availabilityMessage: isAvailable ? undefined : "Sin fechas de disponibilidad",
-    };
-  }
-
-  const productFrom = toMidnight(new Date(p.availableFrom));
-  const productUntil = toMidnight(new Date(p.availableUntil));
-  const datesMatch = requestStart >= productFrom && requestEnd <= productUntil;
-  const hasUnits = p.totalUnits > 0 && p.status !== "RENTED";
-  const isAvailable = datesMatch && hasUnits;
-
-  if (!isAvailable) {
-    const availabilityMessage = !datesMatch
-      ? `Disponible: ${formatDay(productFrom)} - ${formatDay(productUntil)}`
-      : "Sin unidades disponibles para las fechas seleccionadas";
-    return { isAvailable: false, availabilityMessage };
-  }
-
-  return { isAvailable: true };
-};
-
 type ProductSelectionNav = NativeStackNavigationProp<
   RootStackParamList,
   "Home"
@@ -322,16 +281,43 @@ const productsWithAvailability = React.useMemo(() => {
       return filteredProducts.map((p) => ({ ...p, isAvailable: true }));
     }
 
-    const requestStart = toMidnight(startDate);
-    const requestEnd = toMidnight(endDate);
+    const requestStart = new Date(startDate);
+    requestStart.setHours(0, 0, 0, 0);
+    
+    const requestEnd = new Date(endDate);
+    requestEnd.setHours(0, 0, 0, 0);
 
     const mapped = filteredProducts.map((p) => {
-      const { isAvailable, availabilityMessage } = computeProductAvailability(
-        p,
-        requestStart,
-        requestEnd,
-      );
-      return { ...p, isAvailable, availabilityMessage };
+      if (!p.availableFrom || !p.availableUntil) {
+        const isAvailable = (p.status === "AVAILABLE" || p.status === "ACTIVE") && p.totalUnits > 0;
+        return {
+          ...p,
+          isAvailable,
+          availabilityMessage: isAvailable ? undefined : "Sin fechas de disponibilidad",
+        };
+      }
+
+      const productFrom = new Date(p.availableFrom);
+      productFrom.setHours(0, 0, 0, 0);
+      
+      const productUntil = new Date(p.availableUntil);
+      productUntil.setHours(0, 0, 0, 0);
+
+      const datesMatch = requestStart >= productFrom && requestEnd <= productUntil;
+      const hasUnits = p.totalUnits > 0 && p.status !== "RENTED";
+      const isAvailable = datesMatch && hasUnits;
+
+      if (!isAvailable) {
+        const formatDate = (date: Date) => {
+          return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+        };
+        const availabilityMessage = !datesMatch
+          ? `Disponible: ${formatDate(productFrom)} - ${formatDate(productUntil)}`
+          : "Sin unidades disponibles para las fechas seleccionadas";
+        return { ...p, isAvailable: false, availabilityMessage };
+      }
+
+      return { ...p, isAvailable: true };
     });
 
     if (showOnlyAvailable) {
@@ -343,7 +329,7 @@ const productsWithAvailability = React.useMemo(() => {
 
   // Productos para el mapa (con marca de disponibilidad, sin filtrar)
   const mapProductsWithAvailability = React.useMemo(() => {
-    const products = (showOnlyMyCity && userCity
+    let products = (showOnlyMyCity && userCity
       ? mapProducts.filter(
           (a) =>
             filteredProductIds.has(a.id) &&
@@ -360,24 +346,32 @@ const productsWithAvailability = React.useMemo(() => {
       return products;
     }
 
-    const requestStart = toMidnight(startDate);
-    const requestEnd = toMidnight(endDate);
+    const requestStart = new Date(startDate);
+    requestStart.setHours(0, 0, 0, 0);
+    
+    const requestEnd = new Date(endDate);
+    requestEnd.setHours(0, 0, 0, 0);
 
     const processedProducts = products.map((product) => {
       if (!product.availableFrom || !product.availableUntil) {
         return { ...product, isAvailableForDates: false };
       }
-      const productFrom = toMidnight(new Date(product.availableFrom));
-      const productUntil = toMidnight(new Date(product.availableUntil));
-      const isAvailableForDates =
-        requestStart >= productFrom && requestEnd <= productUntil;
-      return { ...product, isAvailableForDates };
+
+      const productFrom = new Date(product.availableFrom);
+      productFrom.setHours(0, 0, 0, 0);
+      
+      const productUntil = new Date(product.availableUntil);
+      productUntil.setHours(0, 0, 0, 0);
+
+      const isAvailable = requestStart >= productFrom && requestEnd <= productUntil;
+      
+      return { ...product, isAvailableForDates: isAvailable };
     });
 
     if (showOnlyAvailable) {
-      return processedProducts.filter((p) => p.isAvailableForDates === true);
+      return processedProducts.filter(p => p.isAvailableForDates === true);
     }
-
+    
     return processedProducts;
   }, [mapProducts, filteredProductIds, showOnlyMyCity, userCity, startDate, endDate, showOnlyAvailable]);
   

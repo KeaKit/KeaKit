@@ -1,11 +1,13 @@
 package com.example.demo.notification;
 
 import com.example.demo.model.*;
+import com.example.demo.repository.ArticleAvailabilityRequestRepository;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.ArticleAvailabilityRequestService;
 import com.example.demo.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +24,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -44,6 +48,8 @@ class NotificationServiceTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private ArticleAvailabilityRequestRepository requestRepository;
 
     @InjectMocks
     private NotificationService notificationService;
@@ -52,6 +58,16 @@ class NotificationServiceTest {
     private User landlord2;
     private Kit activeKit;
     private Notification sampleNotification;
+
+    
+ 
+
+    @InjectMocks
+    private ArticleAvailabilityRequestService service;
+
+    private Article article;
+    private User owner;
+    private User requester;
 
     @BeforeEach
     void setUp() {
@@ -209,16 +225,13 @@ class NotificationServiceTest {
 
     @Test
     void createDemandAlert_serviceCreatesNotificationForOwner() {
-        User owner = new User();
-        owner.setId(1L);
-
         ServiceItem serviceItem = new ServiceItem();
         serviceItem.setId(6L);
         serviceItem.setTitle("Servicio de limpieza");
         serviceItem.setStatus(ServiceStatus.UNAVAILABLE);
         serviceItem.setOwner(owner);
 
-        User requester = new User();
+        requester = new User();
         requester.setId(20L);
         requester.setName("Requester");
 
@@ -313,4 +326,55 @@ class NotificationServiceTest {
         assertThat(savedNotifications.get(0).getMessage()).contains("están a punto de ser devueltos");
     }
 
+
+    @BeforeEach
+    void setUp2() {
+        owner = new User();
+        owner.setId(1L);
+
+        requester = new User();
+        requester.setId(2L);
+
+        article = new Article();
+        article.setId(10L);
+        article.setOwner(owner);
+        article.setStatus(ArticleStatus.RENTED);
+    }
+
+    @Test
+    void requestAvailability_Success() {
+        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(requester));
+        when(requestRepository.findByItemIdAndRequesterId(10L, 2L)).thenReturn(Optional.empty());
+
+        service.requestAvailabilityNotification(10L, 2L);
+
+        verify(requestRepository, times(1)).save(any(ArticleAvailabilityRequest.class));
+    }
+
+    @Test
+    void requestAvailability_ThrowsIfArticleAlreadyAvailable() {
+        article.setStatus(ArticleStatus.AVAILABLE);
+        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
+
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            service.requestAvailabilityNotification(10L, 2L);
+        });
+
+        assertEquals("El artículo ya está disponible. No es necesario crear un aviso.", exception.getMessage());
+    }
+
+    @Test
+    void requestAvailability_ThrowsIfRequesterIsOwner() {
+        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            service.requestAvailabilityNotification(10L, 1L);
+        });
+
+        assertTrue(exception.getMessage().contains("propietario no puede solicitar el aviso"));
+    }
+
+    
 }
