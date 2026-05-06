@@ -433,7 +433,6 @@ const CreateKitScreen: React.FC = () => {
       return availableProducts.filter((p) => {
         const notInactive = p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
         
-        // LA SOLUCIÓN: Nos fiamos solo del status, ignorando el totalUnits trampeado a 1
         const isAvailable = p.status === "AVAILABLE" || p.status === "ACTIVE";
         const passesAvailabilityFilter = showOnlyAvailable ? isAvailable : true;
 
