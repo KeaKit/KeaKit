@@ -172,6 +172,8 @@ const KitDetailScreen: React.FC = () => {
     });
   };
 
+  const isDisabled = kit.city === null || kit.country === null;
+
   return (
     <SafeAreaView style={commonStyles.container}>
       <View style={commonStyles.header}>
@@ -273,8 +275,12 @@ const KitDetailScreen: React.FC = () => {
 
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
-            style={styles.confirmButton}
+              style={[
+                styles.confirmButton,
+                isDisabled && styles.confirmButtonDisabled
+              ]}
             onPress={() => navigation.navigate("Checkout", { kitId: kit.id })}
+            disabled={isDisabled}
           >
             <Text style={styles.confirmButtonText}>Realizar pedido</Text>
           </TouchableOpacity>
@@ -400,6 +406,7 @@ const styles = StyleSheet.create({
   totalLabel: { fontSize: 11, color: '#AAA', letterSpacing: 1 },
   totalValue: { fontSize: 32, fontWeight: 'bold', color: Colors.primary, marginTop: 5 },
   confirmButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 30, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#04ac20', backgroundColor: '#FFF' },
+  confirmButtonDisabled: { borderColor: '#ccc', backgroundColor: '#f2f2f2', opacity: 0.6, },
   confirmButtonText: { color: '#04ac20', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
   deleteButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 15, padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#FF3B30', backgroundColor: '#FFF' },
   deleteButtonText: { color: '#FF3B30', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
