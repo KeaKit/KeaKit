@@ -232,6 +232,9 @@ public class DatabaseSeeder {
             myKit.setSnapshots(List.of(snap1, snap2));
             kitRepo.save(myKit);
 
+            laptop.setStatus(ArticleStatus.RENTED);
+            articleRepo.save(laptop);
+
             ItemMemento snap3 = laptop.createSnapshot(1, pendingPaidKit.getDeliveryMethod(), pendingPaidKit.getCourierPrice(), pendingPaidKit.getMeetingPoint());
             snap3.setKit(pendingPaidKit);
             snap3.setPriceAtRental(laptop.getPricePerMonth());
