@@ -25,7 +25,7 @@ import {
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
-import { createKit, filterItemsForKit, getActiveServices } from "../../services/kitService";
+import { createKit, filterItemsForKit } from "../../services/kitService";
 import {
   getNearbyArticles,
   getArticlesForMap,
@@ -1197,7 +1197,13 @@ const checkItemsAvailability = (start: Date, end: Date): string[] => {
 
             <Button
               mode="contained"
-              onPress={() => setConfirmVisible(true)}
+              onPress={() => {
+                const validation = validate();
+                if (!validation.valid) {
+                  return;
+                }
+                setConfirmVisible(true)
+              }}
               disabled={submitting}
               loading={submitting}
               icon="cart-outline"
