@@ -1,4 +1,4 @@
-# Sprint Backlog: Sprint 2 - Squad 4
+# Sprint Backlog: PPL - Squad 4
 
 ## Índice del documento
 1. [Sprint Goal](#1-sprint-goal)
