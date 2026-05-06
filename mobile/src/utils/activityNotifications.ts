@@ -11,6 +11,7 @@ export const formatNotificationDateTime = (value: string): string => {
 
 export const getActivityNotificationTitle = (
   type: ActivityNotificationType,
+  relatedArticleId?: number | null,
 ): string => {
   switch (type) {
     case "ITEM_RENTED":
@@ -18,7 +19,9 @@ export const getActivityNotificationTitle = (
     case "RETURN_REMINDER":
       return "Fin de alquiler";
     case "DEMAND_ALERT":
-      return "Interés en tu artículo";
+      return relatedArticleId === null || relatedArticleId === undefined
+        ? "Interés en tu servicio"
+        : "Interés en tu artículo";
     case "ARTICLE_AVAILABLE":
       return "Artículo disponible";
     default:

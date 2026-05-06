@@ -635,6 +635,7 @@ export interface ActivityNotification {
   read: boolean;
   type: ActivityNotificationType;
   relatedKitId: number | null;
+  relatedArticleId?: number | null;
 }
 
 export interface ArticleNearby {

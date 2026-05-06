@@ -126,7 +126,7 @@ const NotificationsScreen: React.FC = () => {
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-            {getActivityNotificationTitle(item.type)}
+            {getActivityNotificationTitle(item.type, item.relatedArticleId)}
           </Text>
           <Text style={styles.cardDate}>{formatNotificationDateTime(item.createdAt)}</Text>
         </View>

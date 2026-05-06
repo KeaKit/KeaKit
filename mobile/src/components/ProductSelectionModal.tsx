@@ -21,6 +21,10 @@ import { useAuth } from "../context/AuthContext";
 import { useNotification } from "./NotificationContext";
 import { requestArticleAvailabilityNotification, createDemandAlert } from "../services/articleService";
 import { SelectPicker } from "./SelectPicker";
+import {
+  getAvailabilityAlertSuccessMessage,
+  shouldRequestAvailabilityNotification,
+} from "../utils/availabilityAlerts";
 
 const sanitizePriceInput = (value: string): string => value.replace(/\D/g, "");
 
@@ -223,7 +227,10 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     }
   };
 
-  const handleRequestAvailability = async (articleId: number) => {
+  const handleRequestAvailability = async (
+    itemId: number,
+    itemType: CatalogProduct["itemType"],
+  ) => {
     if (!user?.id || !user.token) {
       showNotification(
         "Necesitas iniciar sesión para solicitar el aviso.",
@@ -232,8 +239,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       return;
     }
 
-    if (requestingIds[articleId]) return;
-    setRequestingIds((prev) => ({ ...prev, [articleId]: true }));
+    if (requestingIds[itemId]) return;
+    setRequestingIds((prev) => ({ ...prev, [itemId]: true }));
 
     const formatDate = (d: Date) =>
       `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -241,18 +248,19 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     const endDateStr = endDate ? formatDate(endDate) : undefined;
 
     try {
-      // Solicitar notificación cuando el artículo esté disponible
-      await requestArticleAvailabilityNotification(
-        articleId,
-        user.id,
-        user.token,
-        startDateStr,
-        endDateStr,
-      );
+      if (shouldRequestAvailabilityNotification(itemType)) {
+        await requestArticleAvailabilityNotification(
+          itemId,
+          user.id,
+          user.token,
+          startDateStr,
+          endDateStr,
+        );
+      }
       
-      // Crear alerta de demanda para notificar al propietario del artículo
+      // Crear alerta de demanda para notificar al propietario del item.
       await createDemandAlert(
-        articleId,
+        itemId,
         user.id,
         user.token,
         startDateStr,
@@ -260,7 +268,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       );
       
       showNotification(
-        "Te avisaremos cuando el artículo vuelva a estar disponible, y el propietario ha sido notificado de tu interés.",
+        getAvailabilityAlertSuccessMessage(itemType),
         "success",
       );
     } catch (error) {
@@ -271,7 +279,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
         "error",
       );
     } finally {
-      setRequestingIds((prev) => ({ ...prev, [articleId]: false }));
+      setRequestingIds((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -830,7 +838,9 @@ const productsWithAvailability = React.useMemo(() => {
                         }}
                       >
                         <TouchableOpacity
-                          onPress={() => handleRequestAvailability(p.id)}
+                          onPress={() =>
+                            handleRequestAvailability(p.id, p.itemType)
+                          }
                           disabled={requestingIds[p.id]}
                           accessibilityRole="button"
                           accessibilityLabel={`Avisar cuando ${p.title} esté disponible`}
