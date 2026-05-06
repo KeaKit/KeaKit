@@ -13,6 +13,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import com.example.demo.dto.ServiceWithRentalsDTO;
+import com.example.demo.repository.KitRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +34,8 @@ class ServiceItemServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private CategoryRepository categoryRepository;
     @Mock private PromoCodeService promoCodeService;
+    @Mock private KitRepository kitRepository;
+
 
     @InjectMocks
     private ServiceItemService serviceItemService;
@@ -152,19 +157,21 @@ class ServiceItemServiceTest {
     void findByOwner_returnsServicesByOwner() {
         List<ServiceItem> ownerServices = List.of(service);
         when(serviceRepository.findByOwnerId(1L)).thenReturn(ownerServices);
+        when(kitRepository.countActiveAndFutureRentedUnits(eq(1L), any(LocalDate.class))).thenReturn(1);
 
-        List<ServiceItem> result = serviceItemService.findByOwner(1L);
+        List<ServiceWithRentalsDTO> result = serviceItemService.findByOwner(1L);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getOwner().getId()).isEqualTo(1L);
+        assertThat(result.get(0).id()).isEqualTo(1L);
         verify(serviceRepository).findByOwnerId(1L);
+verify(kitRepository).countActiveAndFutureRentedUnits(eq(1L), any(LocalDate.class));
     }
 
     @Test
     void findByOwner_noServices_returnsEmpty() {
         when(serviceRepository.findByOwnerId(99L)).thenReturn(List.of());
 
-        List<ServiceItem> result = serviceItemService.findByOwner(99L);
+        List<ServiceWithRentalsDTO> result = serviceItemService.findByOwner(99L);
 
         assertThat(result).isEmpty();
     }

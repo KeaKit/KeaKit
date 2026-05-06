@@ -432,21 +432,26 @@ const CreateKitScreen: React.FC = () => {
     [catalogCategories],
   );
 
+    
   const filteredProducts = useMemo(() => {
-    const q = searchText.trim().toLowerCase();
-    return availableProducts.filter((p) => {
-      const notInactive = p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
-      const bySearch =
-        q.length === 0 ||
-        p.title.toLowerCase().includes(q) ||
-        (p.city ?? "").toLowerCase().includes(q) ||
-        (p.category ?? "").toLowerCase().includes(q) ||
-        (p.ownerName ?? "").toLowerCase().includes(q) ||
-        (p.condition ?? "").toLowerCase().includes(q);
+      const q = searchText.trim().toLowerCase();
+      return availableProducts.filter((p) => {
+        const notInactive = p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
+        
+        const isAvailable = p.status === "AVAILABLE" || p.status === "ACTIVE";
+        const passesAvailabilityFilter = showOnlyAvailable ? isAvailable : true;
 
-      return notInactive && bySearch;
-    });
-  }, [availableProducts, searchText]);
+        const bySearch =
+          q.length === 0 ||
+          p.title.toLowerCase().includes(q) ||
+          (p.city ?? "").toLowerCase().includes(q) ||
+          (p.category ?? "").toLowerCase().includes(q) ||
+          (p.ownerName ?? "").toLowerCase().includes(q) ||
+          (p.condition ?? "").toLowerCase().includes(q);
+
+        return notInactive && bySearch && passesAvailabilityFilter;
+      });
+    }, [availableProducts, searchText, showOnlyAvailable]);
 
   const openAddProductModal = async () => {
     const useCityFilter = city.trim().length > 0;

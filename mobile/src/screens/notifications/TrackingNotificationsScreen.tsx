@@ -45,8 +45,10 @@ const TrackingNotificationsScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      markAllRead();
-    }, [markAllRead]),
+      if (notifications.some(n => !n.read)) {
+        markAllRead();
+      }
+    }, [notifications, markAllRead]),
   );
 
   const data: NotificationItem[] = notifications.map((n) => ({
@@ -113,7 +115,7 @@ const TrackingNotificationsScreen: React.FC = () => {
       ) : (
         <FlatList
           data={data}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
         />

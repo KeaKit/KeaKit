@@ -64,9 +64,25 @@ const MyServicesScreen: React.FC = () => {
   );
 
   const applyFilter = (f: FilterType, data: Service[]) => {
-    if (f === 'ACTIVE') return data.filter(s => s.status === 'ACTIVE');
-    if (f === 'UNAVAILABLE') return data.filter(s => s.status === 'UNAVAILABLE');
-    if (f === 'DRAFT') return data.filter(s => s.status === 'DRAFT');
+    
+    const isOccupied = (s: Service) => {
+      const rented = s.rentedUnitsNow || 0;
+      const total = s.totalUnits || 1; // Salvavidas de TypeScript
+      return rented > 0 && rented >= total;
+    };
+
+    if (f === 'ACTIVE') {
+      return data.filter(s => s.status === 'ACTIVE' && !isOccupied(s));
+    }
+
+    if (f === 'UNAVAILABLE') {
+      return data.filter(s => isOccupied(s));
+    }
+
+    if (f === 'DRAFT') {
+      return data.filter(s => s.status === 'DRAFT');
+    }
+
     return data;
   };
 
@@ -136,30 +152,60 @@ const MyServicesScreen: React.FC = () => {
     } catch { return dateString; }
   };
 
-  const getStatusColor = (status: ServiceStatus) => {
-    switch (status) {
-      case 'ACTIVE': return '#28a745';
-      case 'UNAVAILABLE': return '#ffc107';
-      case 'DRAFT': return '#6c757d';
-      default: return '#999';
+  const getStatusColor = (item: Service) => {
+    const rented = item.rentedUnitsNow || 0;
+    const total = item.totalUnits || 1;
+
+    if (rented > 0 && rented >= total) return '#dc3545'; 
+
+    if (rented > 0 && rented < total) return '#ffc107'; 
+    
+    switch (item.status) {
+      case 'ACTIVE': return '#28a745'; // Verde
+      case 'DRAFT': return '#6c757d'; // Gris
+      case 'UNAVAILABLE': return '#dc3545'; // Rojo (Oculto manualmente)
+      default: return '#000000';
     }
   };
 
-  const translateStatus = (status: ServiceStatus) => {
-    switch (status) {
+  const translateStatus = (item: Service) => {
+    const rented = item.rentedUnitsNow || 0;
+    const total = item.totalUnits || 1;
+    
+    if (rented > 0 && rented >= total) {
+      return `Ocupado (${rented}/${item.totalUnits})`;
+    }
+
+    if (rented > 0 && rented < total) {
+      return `Alquilado (${rented}/${item.totalUnits})`;
+    }
+    
+    switch (item.status) {
       case 'ACTIVE': return 'Activo';
-      case 'UNAVAILABLE': return 'Ocupado';
       case 'DRAFT': return 'Borrador';
-      default: return status;
+      case 'UNAVAILABLE': return 'Oculto';
+      default: return `Error: ${item.status}`;
     }
   };
 
   const getFilterLabel = (f: FilterType): string => {
+    
+    const isOccupied = (s: Service) => {
+      const rented = s.rentedUnitsNow || 0;
+      const total = s.totalUnits || 1;
+      return rented > 0 && rented >= total;
+    };
+
+    const all = services.length;
+    const activeCount = services.filter(s => s.status === 'ACTIVE' && !isOccupied(s)).length;
+    const occupiedCount = services.filter(s => isOccupied(s)).length;
+    const draftCount = services.filter(s => s.status === 'DRAFT').length;
+
     switch (f) {
-      case 'ALL': return `Todos (${services.length})`;
-      case 'ACTIVE': return `Activos (${services.filter(s => s.status === 'ACTIVE').length})`;
-      case 'UNAVAILABLE': return `Ocupados (${services.filter(s => s.status === 'UNAVAILABLE').length})`;
-      case 'DRAFT': return `Borradores (${services.filter(s => s.status === 'DRAFT').length})`;
+      case 'ALL': return `Todos (${all})`;
+      case 'ACTIVE': return `Activos (${activeCount})`;
+      case 'UNAVAILABLE': return `Ocupados (${occupiedCount})`;
+      case 'DRAFT': return `Borradores (${draftCount})`;
     }
   };
 
@@ -187,8 +233,8 @@ const MyServicesScreen: React.FC = () => {
               <Text style={styles.servicePrice}>{`€${item.pricePerMonth.toFixed(2)}/mes`}</Text>
             </View>
             <View style={styles.statusRow}>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                <Text style={styles.statusText}>{translateStatus(item.status)}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item) }]}>
+                <Text style={styles.statusText}>{translateStatus(item)}</Text>
               </View>
             </View>
             <View style={styles.dateRow}>

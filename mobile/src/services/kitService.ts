@@ -135,6 +135,14 @@ export async function getMyKits(userId: number, token: string): Promise<KitRespo
   return handleResponse<KitResponse[]>(res);
 }
 
+export async function getUpdatrableTrackingKits(userId: number, token: string): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.TRACKING_UPDATEABLE_KITS(userId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+
 export async function getKitTracking(
   kitId: number,
   token: string,

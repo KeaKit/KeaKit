@@ -343,6 +343,21 @@ class ArticleServiceTest {
         verify(articleRepository).save(article);
     }
 
+    @Test
+    void save_withOwnerCommissionPromoCode_normalizesValidatesAndPersists() {
+        article.setOwnerCommissionPromoCode(" owner10 ");
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+                .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+        when(articleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Article result = articleService.save(article);
+
+        assertThat(result.getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
+        verify(promoCodeService).validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com");
+        verify(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+        verify(articleRepository).save(argThat(saved -> "OWNER10".equals(saved.getOwnerCommissionPromoCode())));
+    }
+
     // ------------ UPDATE /api/article/{id} ------------
 
     @Test

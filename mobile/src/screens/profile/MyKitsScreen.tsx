@@ -97,7 +97,19 @@ const MyKitsScreen: React.FC = () => {
     }
   };
 
+  const getDeliveryNotificationText = (item: KitResponse) => {
+    if (!item.deliveryNotification) return null;
+    if (item.status === KitStatus.FINISHED || item.status === KitStatus.CANCELLED) {
+      return null;
+    }
+    if (item.status === KitStatus.ACTIVE) {
+      return 'En uso';
+    }
+    return item.deliveryNotification;
+  };
+
   const renderKit = ({ item }: { item: KitResponse }) => {
+    const deliveryNoticeText = getDeliveryNotificationText(item);
     const statusInfo = item.status
       ? getStatusInfo(item.status)
       : { label: "Desconocido", color: "#999" };
@@ -128,9 +140,9 @@ const MyKitsScreen: React.FC = () => {
             {item.city}, {item.country}
           </Text>
 
-          {item.deliveryNotification ? (
+          {deliveryNoticeText ? (
             <Text style={styles.deliveryNoticeText}>
-              {item.deliveryNotification}
+              {deliveryNoticeText}
             </Text>
           ) : null}
 

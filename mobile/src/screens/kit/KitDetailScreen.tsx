@@ -172,6 +172,25 @@ const KitDetailScreen: React.FC = () => {
     });
   };
 
+  const getStatusInfo = (status: KitStatus) => {
+      switch (status) {
+        case KitStatus.DRAFT:
+          return { label: "Modo borrador"};
+        case KitStatus.PAID:
+          return { label: "Pagado"};
+        case KitStatus.ACTIVE:
+          return { label: "Activo"};
+        case KitStatus.CANCELLED:
+          return { label: "Cancelado"};
+        case KitStatus.FINISHED:
+          return { label: "Finalizado"};
+        default:
+          return { label: status};
+      }
+    };
+
+  const statusInfo = getStatusInfo(kit.status);
+
   return (
     <SafeAreaView style={commonStyles.container}>
       <View style={commonStyles.header}>
@@ -193,8 +212,8 @@ const KitDetailScreen: React.FC = () => {
             <Ionicons name="briefcase" size={40} color={Colors.primary} />
           </View>
           <Text style={styles.kitNameText}>{kit.name}</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{kit.status}</Text>
+          <View style={styles.statusBadge}> 
+            <Text style={styles.statusText}>{statusInfo.label}</Text>
           </View>
         </View>
 

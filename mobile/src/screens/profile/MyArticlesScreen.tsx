@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, UserArticle, Category } from '../../types';
+import { RootStackParamList, UserArticle, Category, ArticleRecordDTO } from '../../types';
 import { fetchAllCategories } from '../../services/categoryService';
 import { getMyArticles, deleteArticle, getArticleById, getArticleRecord, processArticleReturn } from '../../services/articleService';
 import { Colors, Spacing, commonStyles } from '../../styles';
@@ -14,6 +14,7 @@ import { ConfirmModal } from '../../components/ConfirmModal';
 import { SelectPicker } from '../../components/SelectPicker';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal, es, registerTranslation } from 'react-native-paper-dates';
+import { formatOwnerCommissionPromoBadgeLabel } from '../../utils/ownerCommissionPromo';
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
 type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
@@ -78,6 +79,31 @@ const MyArticlesScreen: React.FC = () => {
   const [articleToReturn, setArticleToReturn] = useState<UserArticle | null>(null);
   const [isProcessingReturn, setIsProcessingReturn] = useState(false);
 
+  const hydrateRentedArticles = useCallback(async (data: UserArticle[]) => {
+    if (!user) return data;
+
+    const rentedArticles = data.filter(article => article.status === 'RENTED');
+    if (rentedArticles.length === 0) return data;
+
+    const rentalEntries: Array<readonly [number, ArticleRecordDTO[]]> = await Promise.all(
+      rentedArticles.map(async (article) => {
+        try {
+          const rentals = await getArticleRecord(article.id, user.token);
+          return [article.id, rentals] as const;
+        } catch {
+          return [article.id, [] as ArticleRecordDTO[]] as const;
+        }
+      })
+    );
+
+    const rentalsByArticleId = new Map(rentalEntries);
+
+    return data.map(article => ({
+      ...article,
+      rentals: rentalsByArticleId.get(article.id) ?? article.rentals,
+    }));
+  }, [user]);
+
   const toggleExpand = async (id: number) => {
     if (expandedId === id) {
       setExpandedId(null);
@@ -137,8 +163,9 @@ const MyArticlesScreen: React.FC = () => {
       };
 
       const data = await getMyArticles(user.id, user.token, queryFilters);
-      setArticles(data);
-      setFilteredArticles(applyFilter(filter, data));
+      const hydratedData = await hydrateRentedArticles(data);
+      setArticles(hydratedData);
+      setFilteredArticles(applyFilter(filter, hydratedData));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar artículos');
       showNotification('Error al cargar los artículos', 'error');
@@ -160,8 +187,9 @@ const MyArticlesScreen: React.FC = () => {
           setLoading(true);
           setError(null);
           const data = await getMyArticles(user.id, user.token);
-          setArticles(data);
-          setFilteredArticles(applyFilter(filter, data));
+          const hydratedData = await hydrateRentedArticles(data);
+          setArticles(hydratedData);
+          setFilteredArticles(applyFilter(filter, hydratedData));
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Error al cargar artículos');
           showNotification('Error al cargar los artículos', 'error');
@@ -170,7 +198,7 @@ const MyArticlesScreen: React.FC = () => {
         }
       };
       loadArticles();
-    }, [user])
+    }, [filter, hydrateRentedArticles, showNotification, user])
   );
 
   const sanitizePriceInput = (text: string): string => {
@@ -431,6 +459,8 @@ const MyArticlesScreen: React.FC = () => {
   const renderArticle = ({ item }: { item: UserArticle }) => {
     const isDeleting = deletingId === item.id;
     const isExpanded = expandedId === item.id;
+    const ownerPromoBadgeLabel = formatOwnerCommissionPromoBadgeLabel(item.ownerCommissionPromoCode);
+    const hasPaidRental = item.rentals?.some(rental => rental.status === 'PAID') ?? false;
 
     return (
       <View style={styles.cardContainer}>
@@ -459,6 +489,18 @@ const MyArticlesScreen: React.FC = () => {
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status), alignSelf: 'flex-start' }]}>
                 <Text style={styles.statusText}>{translateStatus(item.status)}</Text>
               </View>
+              {ownerPromoBadgeLabel ? (
+                <View
+                  style={styles.ownerPromoBadge}
+                  testID={`owner-promo-badge-${item.id}`}
+                  accessibilityLabel={ownerPromoBadgeLabel}
+                >
+                  <Ionicons name="pricetag-outline" size={13} color="#2f7d50" />
+                  <Text style={styles.ownerPromoText} numberOfLines={1}>
+                    {ownerPromoBadgeLabel}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </TouchableOpacity>
 
@@ -485,7 +527,7 @@ const MyArticlesScreen: React.FC = () => {
         </View>
 
         {/* BOTÓN DE DEVOLUCIÓN (SOLO SI ESTÁ ALQUILADO) */}
-        {item.status === 'RENTED' && (
+        {item.status === 'RENTED' && !hasPaidRental && (
           <View style={styles.returnButtonWrapper}>
             <TouchableOpacity 
               style={styles.returnButtonOutlined}
@@ -912,6 +954,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#fff',
+  },
+  ownerPromoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#eaf7ef',
+    borderWidth: 1,
+    borderColor: '#bfe8cf',
+    maxWidth: '100%',
+  },
+  ownerPromoText: {
+    marginLeft: 4,
+    color: '#2f7d50',
+    fontSize: 12,
+    fontWeight: '700',
   },
   dateRow: {
     flexDirection: 'row',
