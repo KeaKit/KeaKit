@@ -14,13 +14,15 @@ import { TextInput as PaperTextInput, Button } from "react-native-paper";
 import { Colors, commonStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types";
+import { RootStackParamList, CatalogProduct } from "../types";
 import { useNavigation } from "@react-navigation/native";
-import { ArticleMapView } from "./ArticleMapView";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "./NotificationContext";
+// Servicios
 import { requestArticleAvailabilityNotification } from "../services/articleService";
+// Componentes
 import { SelectPicker } from "./SelectPicker";
+import { ArticleMapView } from "./ArticleMapView";
 
 const sanitizePriceInput = (value: string): string => value.replace(/\D/g, "");
 
@@ -34,28 +36,6 @@ type ProductSelectionNav = NativeStackNavigationProp<
   RootStackParamList,
   "Home"
 >;
-
-type CatalogProduct = {
-  id: number;
-  itemType: "ARTICLE" | "SERVICE" | string;
-  title: string;
-  pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE" | "ACTIVE" | string;
-  category?: string;
-  city?: string;
-  ownerId: number;
-  ownerName?: string;
-  imageUrl?: string | null;
-  condition?: string | null;
-  totalUnits: number;
-  availableFrom?: string;
-  availableUntil?: string;
-  isAvailable?: boolean;
-  availabilityMessage?: string;
-  distanceKm?: number;
-  cityLat?: number;
-  cityLng?: number;
-};
 
 type ProductSelectionModalProps = {
   visible: boolean;
@@ -72,9 +52,7 @@ type ProductSelectionModalProps = {
   maxPrice?: string;
   onMinPriceChange?: (value: string) => void;
   onMaxPriceChange?: (value: string) => void;
-  onApplyFilters?: () => void;
   onClearFilters?: () => void;
-  filtersLoading?: boolean;
   categoryFilter?: "ALL" | string;
   onCategoryFilterChange?: (category: "ALL" | string) => void;
   categories?: string[];
@@ -90,9 +68,6 @@ type ProductSelectionModalProps = {
   onToggleAvailable: (show: boolean) => void;
   startDate?: Date | null;
   endDate?: Date | null;
-  expandedSearch: boolean;
-  onToggleExpandedSearch: () => void;
-  loadingNearby: boolean;
   targetCityCoords?: { lat: number; lng: number } | null;
   mapProducts?: {
     id: number;
@@ -123,9 +98,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   maxPrice,
   onMinPriceChange,
   onMaxPriceChange,
-  onApplyFilters,
   onClearFilters,
-  filtersLoading = false,
   categoryFilter,
   onCategoryFilterChange,
   categories,
@@ -141,9 +114,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   onToggleAvailable,
   startDate,
   endDate,
-  expandedSearch,
-  onToggleExpandedSearch,
-  loadingNearby,
   targetCityCoords,
   mapProducts = [],
 }) => {
@@ -201,8 +171,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     return "";
   }, [minPriceValue, maxPriceValue]);
 
-  const hasPriceErrors = !!(minPriceError || maxPriceError || rangePriceError);
-
   const handleMinPriceInput = (value: string) => {
     setPriceValidationError("");
     (onMinPriceChange ?? (() => {}))(sanitizePriceInput(value));
@@ -258,14 +226,14 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   };
 
   // Calcular disponibilidad de productos basado en fechas para la LISTA
-const productsWithAvailability = React.useMemo(() => {
+  const productsWithAvailability = React.useMemo(() => {
     if (!startDate || !endDate) {
       return filteredProducts.map((p) => ({ ...p, isAvailable: true }));
     }
 
     const requestStart = new Date(startDate);
     requestStart.setHours(0, 0, 0, 0);
-    
+
     const requestEnd = new Date(endDate);
     requestEnd.setHours(0, 0, 0, 0);
 
@@ -275,17 +243,20 @@ const productsWithAvailability = React.useMemo(() => {
         return {
           ...p,
           isAvailable,
-          availabilityMessage: isAvailable ? undefined : "Sin fechas de disponibilidad",
+          availabilityMessage: isAvailable
+            ? undefined
+            : "Sin fechas de disponibilidad",
         };
       }
 
       const productFrom = new Date(p.availableFrom);
       productFrom.setHours(0, 0, 0, 0);
-      
+
       const productUntil = new Date(p.availableUntil);
       productUntil.setHours(0, 0, 0, 0);
 
-      const isAvailable = requestStart >= productFrom && requestEnd <= productUntil;
+      const isAvailable =
+        requestStart >= productFrom && requestEnd <= productUntil;
 
       if (!isAvailable) {
         const formatDate = (date: Date) => {
@@ -307,13 +278,14 @@ const productsWithAvailability = React.useMemo(() => {
 
   // Productos para el mapa (con marca de disponibilidad, sin filtrar)
   const mapProductsWithAvailability = React.useMemo(() => {
-    let products = (showOnlyMyCity && userCity
-      ? mapProducts.filter(
-          (a) =>
-            filteredProductIds.has(a.id) &&
-            a.city?.toLowerCase() === userCity.toLowerCase(),
-        )
-      : mapProducts.filter((a) => filteredProductIds.has(a.id))
+    let products = (
+      showOnlyMyCity && userCity
+        ? mapProducts.filter(
+            (a) =>
+              filteredProductIds.has(a.id) &&
+              a.city?.toLowerCase() === userCity.toLowerCase(),
+          )
+        : mapProducts.filter((a) => filteredProductIds.has(a.id))
     ).map((a) => ({
       ...a,
       city: a.city ?? undefined,
@@ -326,7 +298,7 @@ const productsWithAvailability = React.useMemo(() => {
 
     const requestStart = new Date(startDate);
     requestStart.setHours(0, 0, 0, 0);
-    
+
     const requestEnd = new Date(endDate);
     requestEnd.setHours(0, 0, 0, 0);
 
@@ -337,22 +309,31 @@ const productsWithAvailability = React.useMemo(() => {
 
       const productFrom = new Date(product.availableFrom);
       productFrom.setHours(0, 0, 0, 0);
-      
+
       const productUntil = new Date(product.availableUntil);
       productUntil.setHours(0, 0, 0, 0);
 
-      const isAvailable = requestStart >= productFrom && requestEnd <= productUntil;
-      
+      const isAvailable =
+        requestStart >= productFrom && requestEnd <= productUntil;
+
       return { ...product, isAvailableForDates: isAvailable };
     });
 
     if (showOnlyAvailable) {
-      return processedProducts.filter(p => p.isAvailableForDates === true);
+      return processedProducts.filter((p) => p.isAvailableForDates === true);
     }
-    
+
     return processedProducts;
-  }, [mapProducts, filteredProductIds, showOnlyMyCity, userCity, startDate, endDate, showOnlyAvailable]);
-  
+  }, [
+    mapProducts,
+    filteredProductIds,
+    showOnlyMyCity,
+    userCity,
+    startDate,
+    endDate,
+    showOnlyAvailable,
+  ]);
+
   const navigateToUserReviews = (ownerId: number, ownerName: string) => {
     onDismiss();
     navigation.navigate("UserRatings", {
@@ -614,7 +595,8 @@ const productsWithAvailability = React.useMemo(() => {
                   p.id,
                 );
                 const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
-                const isRentableStatus = p.status === "AVAILABLE" || p.status === "ACTIVE";
+                const isRentableStatus =
+                  p.status === "AVAILABLE" || p.status === "ACTIVE";
                 const canBeAdded = p.isAvailable && isRentableStatus;
 
                 return (

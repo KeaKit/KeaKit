@@ -114,4 +114,5 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
   );
 };
 
+export { KitItemComponent };
 export default KitItemComponent;
