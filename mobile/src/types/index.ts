@@ -305,6 +305,7 @@ export interface KitResponse {
   guaranteePrice: number;
   platformFee: number;
   totalPrice: number;
+  appliedDiscount?: number;
 }
 
 export interface Category {
