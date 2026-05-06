@@ -289,7 +289,7 @@ const productsWithAvailability = React.useMemo(() => {
 
     const mapped = filteredProducts.map((p) => {
       if (!p.availableFrom || !p.availableUntil) {
-        const isAvailable = p.status === "AVAILABLE" || p.status === "ACTIVE";
+        const isAvailable = (p.status === "AVAILABLE" || p.status === "ACTIVE") && p.totalUnits > 0;
         return {
           ...p,
           isAvailable,
@@ -303,13 +303,17 @@ const productsWithAvailability = React.useMemo(() => {
       const productUntil = new Date(p.availableUntil);
       productUntil.setHours(0, 0, 0, 0);
 
-      const isAvailable = requestStart >= productFrom && requestEnd <= productUntil;
+      const datesMatch = requestStart >= productFrom && requestEnd <= productUntil;
+      const hasUnits = p.totalUnits > 0 && p.status !== "RENTED";
+      const isAvailable = datesMatch && hasUnits;
 
       if (!isAvailable) {
         const formatDate = (date: Date) => {
           return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
         };
-        const availabilityMessage = `Disponible: ${formatDate(productFrom)} - ${formatDate(productUntil)}`;
+        const availabilityMessage = !datesMatch
+          ? `Disponible: ${formatDate(productFrom)} - ${formatDate(productUntil)}`
+          : "Sin unidades disponibles para las fechas seleccionadas";
         return { ...p, isAvailable: false, availabilityMessage };
       }
 
