@@ -311,7 +311,7 @@ const CreateKitScreen: React.FC = () => {
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
         imageUrl: (p as any).imageUrl ?? null,
-        totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
+        totalUnits: Number(p.totalUnits ?? 0),
         availableFrom: (p as any).availableFrom ?? undefined,
         availableUntil: (p as any).availableUntil ?? undefined,
       }));
