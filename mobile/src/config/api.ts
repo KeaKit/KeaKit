@@ -129,7 +129,10 @@ export const API_ROUTES = {
     `${BASE_URL}/api/cities/coordinates?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`,
 
   // Article history
-  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`
+  GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`,
+
+  // Kit item filtering
+  FILTER_ITEMS_FOR_KIT: `${BASE_URL}/api/items/filter-for-kit`,
 
 } as const;
 

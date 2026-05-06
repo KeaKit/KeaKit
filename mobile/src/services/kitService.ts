@@ -45,7 +45,17 @@ export async function filterItemsForKit(
     };
   }
 
-  return handleResponse<ItemFilterResponse>(res);
+  const response = await handleResponse<ItemFilterResponse>(res);
+
+  return {
+    content: Array.isArray(response?.content) ? response.content : [],
+    page: response?.page ?? (filters.page ?? 0),
+    size: response?.size ?? (filters.size ?? 10),
+    totalElements: response?.totalElements ?? 0,
+    totalPages: response?.totalPages ?? 0,
+    hasNext: response?.hasNext ?? false,
+    hasPrevious: response?.hasPrevious ?? false,
+  };
 }
 
 export async function createKit(
