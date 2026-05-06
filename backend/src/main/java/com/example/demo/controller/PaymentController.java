@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.WithdrawRequest;
 import com.example.demo.service.AuthService;
 import com.example.demo.service.PaymentService;
 
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -39,11 +41,14 @@ public class PaymentController {
     }
 
     @PostMapping("/process/stripe/{kitId}")
-    public ResponseEntity<String> processPayment(@PathVariable Long kitId, @RequestBody String paymentIntentStatus) {
+    public ResponseEntity<String> processPayment(@PathVariable Long kitId,
+        @RequestBody String paymentIntentStatus,
+        @RequestParam(required = false) String promoCode,
+        @RequestParam(required = false) String email) {
 
         if (paymentIntentStatus.replace("\"", "").equals("succeeded")) {
             try {
-                paymentService.processPayment(kitId, false); // El pago se hizo a través de Stripe, no con wallet
+                paymentService.processPayment(kitId, false, promoCode, email); // El pago se hizo a través de Stripe, no con wallet
                 return ResponseEntity.ok("Pago procesado correctamente");
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -55,30 +60,28 @@ public class PaymentController {
     }
 
     @PostMapping("/process/wallet/{kitId}")
-    public ResponseEntity<String> processWalletPayment(@PathVariable Long kitId) {
+    public ResponseEntity<String> processWalletPayment(
+            @PathVariable Long kitId,
+            @RequestParam(required = false) String promoCode,
+            @RequestParam(required = false) String email) {
         try {
-            paymentService.processPayment(kitId, true); // El pago se hizo con wallet
+            paymentService.processPayment(kitId, true, promoCode, email); // El pago se hizo con wallet
             return ResponseEntity.ok("Pago con billetera procesado correctamente");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al procesar el pago con billetera: " + e.getMessage());
+                .body("Error al procesar el pago con billetera: " + e.getMessage());
+
         }
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<String> withdraw(@RequestBody Double amount) {
+    public ResponseEntity<String> withdraw(@Valid @RequestBody WithdrawRequest request) throws StripeException {
 
-        try {
-            Long userId = authService.getAuthenticatedUserId();
+        Long userId = authService.getAuthenticatedUserId();
 
-            paymentService.withdrawToBank(userId, amount);
+        paymentService.withdrawToBank(userId, request.getAmount(), request.getBankAccount());
 
-            return ResponseEntity.ok("Retirada realizada correctamente");
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error en retirada: " + e.getMessage());
-        }
+        return ResponseEntity.ok("Retirada realizada correctamente");
     }
 
 }

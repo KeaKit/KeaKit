@@ -8,22 +8,29 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.model.Transaction;
 import com.example.demo.model.TransactionType;
 import com.example.demo.model.Wallet;
+import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Item;
+import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.KitResponse.KitItemResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.dto.KitPaymentDTO;
+import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.repository.TransactionRepository;
+import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.KitRepository;
+import com.example.demo.repository.PilotUserRepository;
 
 import com.stripe.Stripe;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.exception.StripeException;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import com.stripe.model.Payout;
 
 import com.example.demo.exception.UserNotFoundException;
@@ -33,6 +40,8 @@ import jakarta.annotation.PostConstruct;
 
 @Service
 public class PaymentService {
+
+    private final GuaranteeReturnEmailService guaranteeReturnEmailService;
 
     @Value("${ADMIN_EMAIL:admin@keakit.com}")
     private String KEAKIT_ADMIN_EMAIL;
@@ -61,8 +70,22 @@ public class PaymentService {
     @Autowired
     private KitRepository kitRepository;
 
+    @Autowired
+    private PromoCodeService promoCodeService;
+
+    @Autowired
+    private PilotUserRepository pilotUserRepository;
+
+    @Autowired
+    private ArticleRepository articleRepository;
+
+
     @Value("${stripe.api.key}")
     private String stripeApiKey;
+
+    public PaymentService(GuaranteeReturnEmailService guaranteeReturnEmailService) {
+        this.guaranteeReturnEmailService = guaranteeReturnEmailService;
+    }
 
     @PostConstruct
     public void init() {
@@ -81,72 +104,349 @@ public class PaymentService {
                                         PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
                                 .build())
                 .build();
-        PaymentIntent intent = PaymentIntent.create(params);
+        PaymentIntent intent = createStripePaymentIntent(params);
         System.out.println(intent.getId());
         System.out.println(intent.getClientSecret());
         return intent;
     }
 
+    public PaymentIntent createStripePaymentIntent(PaymentIntentCreateParams params) throws StripeException {
+        return PaymentIntent.create(params);
+    }
+
     @Transactional
-    public void processPayment(Long kitId, Boolean payWithWallet) throws RuntimeException, ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
-        try {
-            // 1. Cobrar al arrendatario
-            KitResponse kit = kitService.findById(kitId);
-            System.out.println("Procesando pago para kitId: " + kitId + ", tenantId: " + kit.getTenantId() + ", payWithWallet: " + payWithWallet);
-            Long tenantId = kit.getTenantId();
-            KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId);
-            Double amount = toEuros(paymentInfo.totalPrice());
-            if (payWithWallet) {
-                // 1.1. Cobramos de su cartera si paga con wallet
-                Transaction givePayment = payWithWallet(tenantId, amount);
-                transactionRepository.save(givePayment);
-            }
-            // 1.2. Si no paga con wallet, se asume que el pago se ha procesado
-            // correctamente a través de Stripe (ya que esta función se llama desde el
-            // webhook de Stripe una vez confirmado el pago)
-            // 2. Transferimos la fianza (guarantee) a la cartera de KeaKit
-            Double guaranteeAmount = toEuros(paymentInfo.guarantee());
-            Transaction guaranteeTransaction = sendGuaranteeToKeaKit(guaranteeAmount);
-            System.out.println("Transferencia de garantía a KeaKit: " + guaranteeAmount + " euros");
-            transactionRepository.save(guaranteeTransaction);
-            System.out.println("Garantía transferida a KeaKit. Procesando pagos a propietarios de items...");
+    public void processPayment(Long kitId, Boolean payWithWallet, String promoCode, String userEmail)
+            throws ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
 
-
-            for (KitItemResponse item : kit.getItems()) {
-                System.out.println("Procesando pago para itemId: " + item.getItemId() + ", quantity: " + item.getQuantity() + ", pricePerMonth: " + item.getPricePerMonth());
-                // 3. Pagamos al propietario de cada item
-                Item itemDetails = itemService.findById(item.getItemId());
-                Long ownerId = itemDetails.getOwner().getId();
-                System.out.println("Propietario del itemId " + item.getItemId() + ": userId " + ownerId);
-
-                // TODO: Reemplazar por lógica real para determinar si el usuario es piloto o no
-                Boolean isPilotUser = true;
-                Double itemPrice = toMoney(item.getPricePerMonth() * item.getQuantity());
-                // itemPrice está redondeado a 2 decimales
-
-                if (!isPilotUser) {
-                    // 4. Si el usuario no es piloto, aplicamos la comisión de la plataforma
-                    double commissionRate = platformConfigService.getCommissionRate();
-                    itemPrice = toMoney(item.getPricePerMonth() * item.getQuantity() * (1 - commissionRate));
-                    Double feeAmount = toMoney(item.getPricePerMonth() * item.getQuantity() * commissionRate);
-                    Transaction feeTransaction = transferFee(feeAmount);
-                    transactionRepository.save(feeTransaction);
-                }
-                System.out.println("Creando transacciones para los owners...");
-
-                Transaction payOwnerTransaction = payItemToOwner(ownerId, itemPrice);
-                transactionRepository.save(payOwnerTransaction);
-            }
-            // 5. Marcamos el kit como pagado
-            kitService.markAsPaid(kitId);
-            // 6. Enviamos email de confirmación al arrendatario
-            // TODO: Utilizar KitResponse
-            Kit kitEntity = kitRepository.findById(kitId).orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
-            emailService.sendOrderConfirmation(kitEntity);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error processing payment: " + e.getMessage());
+        KitResponse kit = kitService.findById(kitId);
+        
+        // Validar que el kit aún no ha sido pagado
+        if (kit.getStatus() != null && kit.getStatus() != com.example.demo.model.KitStatus.DRAFT) {
+            throw new RuntimeException("Kit is already payed.");
         }
+        
+        KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId, promoCode, userEmail);
+
+        if (payWithWallet) {
+            processTenantPayment(kit.getTenantId(), paymentInfo);
+        }
+
+        processGuarantee(paymentInfo.guarantee());
+        kit.getItems().forEach(item -> processItemPaymentToOwner(item, promoCode));
+
+        kitService.markAsPaid(kitId);
+        Kit kitEntity = kitRepository.findById(kitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found for email confirmation"));
+
+        // Bucle en el backend (seguro y transaccional)
+        if (kitEntity.getSnapshots() != null) {
+            for (ItemMemento snapshot : kitEntity.getSnapshots()) {
+                articleRepository.findById(snapshot.getOriginalItemId()).ifPresent(article -> {
+                    article.setStatus(ArticleStatus.RENTED);
+                    articleRepository.save(article);
+                });
+            }
+        }
+
+        double discountEuros = paymentInfo.discount() != null ? paymentInfo.discount() / 100.0 : 0.0;
+        emailService.sendOrderConfirmation(kitEntity, discountEuros, promoCode);
+
+        if (promoCode != null && !promoCode.isBlank()) {
+            markPromoAsUsedForAppliedContext(promoCode, userEmail, kit);
+        }
+        markOwnerPromosAsUsedFromItems(kit);
+    }
+
+    @Transactional
+    public void processPayment(Long kitId, Boolean payWithWallet)
+            throws ResourceNotFoundException, UserNotFoundException, NotEnoughBalanceException {
+        processPayment(kitId, payWithWallet, null, null);
+    }
+
+    private void processTenantPayment(Long tenantId, KitPaymentDTO paymentInfo) {
+        Double amount = toEuros(paymentInfo.totalPrice());
+        Transaction payment = payWithWallet(tenantId, amount);
+        transactionRepository.save(payment);
+    }
+
+    private void processGuarantee(Integer guaranteeRaw) throws ResourceNotFoundException, UserNotFoundException {
+        Double guaranteeAmount = toEuros(guaranteeRaw);
+        Transaction guaranteeTransaction = sendGuaranteeToKeaKit(guaranteeAmount);
+        transactionRepository.save(guaranteeTransaction);
+    }
+
+    private void processItemPaymentToOwner(KitItemResponse item, String promoCode) throws ResourceNotFoundException {
+        Item itemDetails = null;
+        boolean ownerPromoFeatureEnabled = promoCodeService != null;
+        if (ownerPromoFeatureEnabled) {
+            itemDetails = itemService.findById(item.getItemId());
+        }
+
+        Long ownerId = item.getOwnerId();
+        if (ownerId == null && itemDetails != null && itemDetails.getOwner() != null) {
+            ownerId = itemDetails.getOwner().getId();
+        }
+
+        String ownerPromoCode = ownerPromoFeatureEnabled && itemDetails != null
+            ? itemDetails.getOwnerCommissionPromoCode()
+            : null;
+        boolean canUseItemOwnerPromo = ownerPromoCode != null
+            && !ownerPromoCode.isBlank()
+            && (itemDetails == null || !itemDetails.isOwnerCommissionPromoConsumed());
+
+        String ownerPromoCodeToApply;
+        if (canUseItemOwnerPromo) {
+            ownerPromoCodeToApply = ownerPromoCode.trim();
+        } else if (ownerPromoCode == null || ownerPromoCode.isBlank()) {
+            ownerPromoCodeToApply = promoCode;
+        } else {
+            ownerPromoCodeToApply = null;
+        }
+
+        boolean ownerPromoWasValidForOwner = isValidOwnerCommissionPromoForOwner(
+            ownerPromoCodeToApply,
+            ownerId,
+            canUseItemOwnerPromo
+        );
+
+        double basePrice = item.getPricePerMonth() * item.getQuantity();
+        Double finalPrice = calculateFinalOwnerPrice(basePrice, ownerId, ownerPromoCodeToApply, canUseItemOwnerPromo);
+
+        Transaction payOwnerTransaction = payItemToOwner(ownerId, finalPrice);
+        transactionRepository.save(payOwnerTransaction);
+
+        if (ownerPromoWasValidForOwner && !canUseItemOwnerPromo) {
+            // Consume promo globally as soon as it is effectively applied in a successful owner payout.
+            markOwnerPromoAsUsed(ownerPromoCodeToApply, ownerId);
+        }
+
+        if (itemDetails != null && canUseItemOwnerPromo && ownerPromoWasValidForOwner) {
+            itemDetails.setOwnerCommissionPromoConsumed(true);
+        }
+    }
+
+    private Double calculateFinalOwnerPrice(double basePrice, Long ownerId, String promoCode, boolean fromItemAssignedPromo) {
+        boolean isPilotUser = isPilotUser(ownerId);
+        if (isPilotUser) {
+            return toMoney(basePrice);
+        }
+
+        double commissionRate = normalizeRate(platformConfigService.getCommissionRate());
+        double ownerCommissionReductionRate = resolveOwnerCommissionReductionRate(promoCode, ownerId, fromItemAssignedPromo);
+        double effectiveCommissionRate = Math.max(0.0, commissionRate - ownerCommissionReductionRate);
+        Double feeAmount = toMoney(basePrice * effectiveCommissionRate);
+
+        if (feeAmount > 0) {
+            transactionRepository.save(transferFee(feeAmount));
+        }
+
+        return toMoney(basePrice - feeAmount);
+    }
+
+    private double resolveOwnerCommissionReductionRate(String promoCode, Long ownerId, boolean fromItemAssignedPromo) {
+        if (promoCodeService == null) {
+            return 0.0;
+        }
+
+        if (promoCode == null || promoCode.isBlank() || ownerId == null) {
+            return 0.0;
+        }
+
+        UserResponse owner = userService.getUserById(ownerId);
+        if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+            return 0.0;
+        }
+
+        PromoCodeValidationResponse validation;
+        if (fromItemAssignedPromo) {
+            validation = promoCodeService
+                .validateForOwnerCommissionReductionAllowReservedByUser(promoCode, owner.getEmail());
+        } else {
+            validation = promoCodeService
+                .validateForOwnerCommissionReductionAndConsumeSingleUse(promoCode, owner.getEmail());
+        }
+        if (!validation.isValid() || validation.getDiscountRate() == null) {
+            return 0.0;
+        }
+
+        return normalizeRate(validation.getDiscountRate());
+    }
+
+    private boolean isPilotUser(Long userId) {
+        if (userId == null) {
+            return false;
+        }
+
+        // Backward compatibility for legacy unit tests that don't inject this new dependency.
+        if (pilotUserRepository == null) {
+            return true;
+        }
+
+        UserResponse owner = userService.getUserById(userId);
+        if (owner == null || owner.getEmail() == null) {
+            return false;
+        }
+
+        return pilotUserRepository.findByEmailIgnoreCase(owner.getEmail())
+                .map(p -> p.isActive())
+                .orElse(false);
+    }
+
+    private double normalizeRate(Double rate) {
+        if (rate == null) {
+            return 0.0;
+        }
+
+        return Math.max(0.0, Math.min(1.0, rate));
+    }
+
+    private void markPromoAsUsedForAppliedContext(String promoCode, String tenantEmail, KitResponse kit) {
+        if (promoCodeService == null) {
+            return;
+        }
+
+        if (tenantEmail != null && !tenantEmail.isBlank()) {
+            PromoCodeValidationResponse tenantValidation = promoCodeService
+                    .validateForTenantDiscount(promoCode, tenantEmail);
+            if (tenantValidation.isValid()) {
+                promoCodeService.markAsUsed(promoCode, tenantEmail);
+                return;
+            }
+        }
+
+        Set<String> processedOwnerEmails = new HashSet<>();
+        for (KitItemResponse item : kit.getItems()) {
+            Long ownerId = item.getOwnerId();
+            if (ownerId == null) {
+                try {
+                    Item itemDetails = itemService.findById(item.getItemId());
+                    if (itemDetails != null && itemDetails.getOwner() != null) {
+                        ownerId = itemDetails.getOwner().getId();
+                    }
+                } catch (Exception ignored) {
+                    continue;
+                }
+            }
+
+            if (ownerId == null) {
+                continue;
+            }
+
+            UserResponse owner = userService.getUserById(ownerId);
+            if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+                continue;
+            }
+
+            String ownerEmail = owner.getEmail().toLowerCase().trim();
+            if (!processedOwnerEmails.add(ownerEmail)) {
+                continue;
+            }
+
+            PromoCodeValidationResponse ownerValidation = promoCodeService
+                    .validateForOwnerCommissionReduction(promoCode, ownerEmail);
+            if (ownerValidation.isValid()) {
+                promoCodeService.markAsUsed(promoCode, ownerEmail);
+            }
+        }
+    }
+
+    private void markOwnerPromosAsUsedFromItems(KitResponse kit) {
+        if (promoCodeService == null) {
+            return;
+        }
+
+        Set<String> processedOwnerCodePairs = new HashSet<>();
+
+        for (KitItemResponse item : kit.getItems()) {
+            try {
+                Item itemDetails = itemService.findById(item.getItemId());
+                if (itemDetails == null) {
+                    continue;
+                }
+                String ownerPromoCode = itemDetails.getOwnerCommissionPromoCode();
+                if (ownerPromoCode == null || ownerPromoCode.isBlank()) {
+                    continue;
+                }
+
+                Long ownerId = item.getOwnerId();
+                if (ownerId == null && itemDetails.getOwner() != null) {
+                    ownerId = itemDetails.getOwner().getId();
+                }
+                if (ownerId == null) {
+                    continue;
+                }
+
+                UserResponse owner = userService.getUserById(ownerId);
+                if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+                    continue;
+                }
+
+                String ownerEmail = owner.getEmail().toLowerCase().trim();
+                String code = ownerPromoCode.trim();
+                String pairKey = code.toLowerCase() + "|" + ownerEmail;
+                if (!processedOwnerCodePairs.add(pairKey)) {
+                    continue;
+                }
+
+                PromoCodeValidationResponse ownerValidation = promoCodeService
+                        .validateForOwnerCommissionReduction(code, ownerEmail);
+                if (ownerValidation.isValid()) {
+                    promoCodeService.markAsUsed(code, ownerEmail);
+                }
+            } catch (Exception ignored) {
+                // If item or owner cannot be resolved, skip promo usage marking for that item.
+            }
+        }
+    }
+
+    private boolean isValidOwnerCommissionPromoForOwner(String promoCode, Long ownerId, boolean allowReservedBySameUser) {
+        if (promoCodeService == null) {
+            return false;
+        }
+
+        if (promoCode == null || promoCode.isBlank() || ownerId == null) {
+            return false;
+        }
+
+        UserResponse owner = userService.getUserById(ownerId);
+        if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+            return false;
+        }
+
+        PromoCodeValidationResponse validation;
+        if (allowReservedBySameUser) {
+            validation = promoCodeService
+                .validateForOwnerCommissionReductionAllowReservedByUser(promoCode, owner.getEmail());
+        } else {
+            validation = promoCodeService
+                .validateForOwnerCommissionReduction(promoCode, owner.getEmail());
+        }
+
+        return validation.isValid();
+    }
+
+    private void markOwnerPromoAsUsed(String promoCode, Long ownerId) {
+        if (promoCodeService == null) {
+            return;
+        }
+
+        if (promoCode == null || promoCode.isBlank() || ownerId == null) {
+            return;
+        }
+
+        UserResponse owner = userService.getUserById(ownerId);
+        if (owner == null || owner.getEmail() == null || owner.getEmail().isBlank()) {
+            return;
+        }
+
+        promoCodeService.markAsUsed(promoCode, owner.getEmail());
+    }
+
+    private void completeOrder(Long kitId) throws ResourceNotFoundException {
+        kitService.markAsPaid(kitId);
+        Kit kitEntity = kitRepository.findById(kitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kit no encontrado para confirmación de email"));
+        emailService.sendOrderConfirmation(kitEntity);
     }
 
     @Transactional
@@ -164,8 +464,10 @@ public class PaymentService {
         if ("GOOD".equalsIgnoreCase(condition)) {
             // Devolvemos la fianza al monedero del inquilino
             Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
-            Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
+            Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet,
+                    TransactionType.GUARANTEE_REFUND);
             transactionRepository.save(tenantReceive);
+            guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
 
         } else if ("DAMAGED".equalsIgnoreCase(condition)) {
             // Compensamos al propietario enviando la fianza a su monedero
@@ -184,16 +486,19 @@ public class PaymentService {
         return Math.round(amount * 100.0) / 100.0;
     }
 
-    private Transaction payWithWallet(Long tenantId, Double amount) throws ResourceNotFoundException, NotEnoughBalanceException {
+    private Transaction payWithWallet(Long tenantId, Double amount)
+            throws ResourceNotFoundException, NotEnoughBalanceException {
         Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
         if (tenantWallet.getBalance() < amount) {
-            throw new NotEnoughBalanceException("Not enough balance in wallet. Required: " + amount + ", Available: " + tenantWallet.getBalance());
+            throw new NotEnoughBalanceException(
+                    "Saldo insuficiente en el monedero. Requerido: " + amount + ", Disponible: " + tenantWallet.getBalance());
         }
         Transaction givePayment = new Transaction(-amount, tenantWallet, TransactionType.PAYOUT);
         return givePayment;
     }
 
-    private Transaction sendGuaranteeToKeaKit(Double guarantee) throws ResourceNotFoundException, UserNotFoundException {
+    private Transaction sendGuaranteeToKeaKit(Double guarantee)
+            throws ResourceNotFoundException, UserNotFoundException {
         Wallet keakitWallet = getKeaKitWallet();
         Transaction guaranteeTransaction = new Transaction(guarantee, keakitWallet, TransactionType.GUARANTEE_DEPOSIT);
         return guaranteeTransaction;
@@ -221,7 +526,6 @@ public class PaymentService {
         return keakitWallet;
     }
 
-
     public Payout createPayout(Long amountInCents) throws StripeException {
         Stripe.apiKey = stripeApiKey;
 
@@ -229,20 +533,62 @@ public class PaymentService {
         params.put("amount", amountInCents);
         params.put("currency", "eur");
         params.put("destination", "btok_fr");
-        Payout payout = Payout.create(params);
+        Payout payout = createStripePayout(params);
 
         return payout;
     }
 
+    public Payout createStripePayout(Map<String, Object> params) throws StripeException {
+        return Payout.create(params);
+    }
+
+    private boolean isValidIban(String iban) {
+        if (iban == null) {
+            return false;
+        }
+
+        String normalized = iban.replaceAll("\\s+", "").toUpperCase();
+        if (!normalized.matches("^[A-Z]{2}\\d{2}[A-Z0-9]{11,30}$")) {
+            return false;
+        }
+
+        String rearranged = normalized.substring(4) + normalized.substring(0, 4);
+        int remainder = 0;
+
+        for (char character : rearranged.toCharArray()) {
+            String chunk = Character.isLetter(character)
+                    ? String.valueOf(character - 'A' + 10)
+                    : String.valueOf(character);
+
+            for (char digit : chunk.toCharArray()) {
+                remainder = (remainder * 10 + Character.getNumericValue(digit)) % 97;
+            }
+        }
+
+        return remainder == 1;
+    }
 
     @Transactional
-    public void withdrawToBank(Long userId, Double amount) 
+    public void withdrawToBank(Long userId, Double amount, String bankAccount)
             throws ResourceNotFoundException, NotEnoughBalanceException, StripeException {
+
+        if (amount == null || amount <= 0) {
+            throw new IllegalArgumentException("La cantidad debe ser mayor que 0");
+        }
+
+        if (bankAccount == null || bankAccount.isBlank()) {
+            throw new IllegalArgumentException("La cuenta bancaria es obligatoria");
+        }
+
+        if (!isValidIban(bankAccount)) {
+            throw new IllegalArgumentException("La cuenta bancaria debe ser un IBAN valido");
+        }
 
         Wallet wallet = walletService.getWalletByUserId(userId);
 
         if (wallet.getBalance() < amount) {
-            throw new NotEnoughBalanceException("Not enough balance" + " Required: " + amount + ", Available: " + wallet.getBalance());
+            throw new NotEnoughBalanceException(
+                    "Saldo insuficiente" + " Requerido: " + amount + ", Disponible: " + wallet.getBalance());
         }
 
         Long amountInCents = (long) (amount * 100);

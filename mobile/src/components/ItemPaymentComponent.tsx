@@ -19,11 +19,22 @@ export const ItemPaymentComponent = ({
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    const months =
-      (end.getFullYear() - start.getFullYear()) * 12 +
-      (end.getMonth() - start.getMonth());
+    // Calculate rental duration in days and prorate monthly price.
+    // Previously we used only months difference which becomes 0 for short
+    // rentals (e.g. < 1 month) and produced a total of 0. Use days-based
+    // proration so short periods (like a few days) produce a proportional
+    // amount.
+    const msPerDay = 24 * 60 * 60 * 1000;
+    // Use Math.ceil so a partial day counts as a full rental day.
+    let days = Math.ceil((end.getTime() - start.getTime() + 1) / msPerDay);
+    if (days <= 0) days = 1;
 
-    return item.pricePerMonth * item.quantity * months;
+    // Business decision: prorrate month price by days/30.0 (consistent with
+    // backend behaviour). Adjust if you prefer days/actualDaysInMonth.
+    const factor = days / 30.0;
+    const perUnit = item.pricePerMonth * factor;
+
+    return perUnit * item.quantity;
   };
 
   return (

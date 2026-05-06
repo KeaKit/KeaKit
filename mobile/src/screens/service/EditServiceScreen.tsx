@@ -9,7 +9,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { updateService } from '../../services/servicesService';
 import { fetchAllCategories } from '../../services/categoryService';
-import { ServicePayload, RootStackParamList, Category, EUROPEAN_COUNTRIES } from '../../types';
+import { ServicePayload, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
@@ -17,6 +17,9 @@ import { es, registerTranslation } from 'react-native-paper-dates';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNotification } from '../../components/NotificationContext';
+
+const MAX_TITLE_LENGTH = 255;
+const MAX_TOTAL_UNITS = 2147483647;
 
 registerTranslation('es', es);
 
@@ -53,6 +56,7 @@ const EditServiceScreen: React.FC = () => {
   const { showNotification } = useNotification();
 
   const originalCity = service.city ?? '';
+  const originalCountry = service.country ?? '';
 
   const [title, setTitle] = useState(service.title ?? '');
   const [description, setDescription] = useState(service.description ?? '');
@@ -67,9 +71,10 @@ const EditServiceScreen: React.FC = () => {
     selectedCity,
     setSelectedCity,
     cities,
+    countries,
     loadingCities,
     onCountryChange,
-  } = useLocationPicker('', originalCity);
+  } = useLocationPicker(originalCountry, originalCity);
 
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(isoToDate(service.availableFrom));
@@ -105,7 +110,11 @@ const EditServiceScreen: React.FC = () => {
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!title.trim()) newErrors.title = 'El título es obligatorio';
+    if (!title.trim()) {
+      newErrors.title = 'El título es obligatorio';
+    } else if (title.trim().length > MAX_TITLE_LENGTH) {
+      newErrors.title = `El título no puede superar los ${MAX_TITLE_LENGTH} caracteres`;
+    }    
     if (!description.trim()) newErrors.description = 'La descripción es obligatoria';
     if (description.length > 1000) newErrors.description = 'La descripción no puede superar los 1000 caracteres';
     if (!selectedCity) newErrors.city = 'La ciudad es obligatoria';
@@ -115,6 +124,8 @@ const EditServiceScreen: React.FC = () => {
       newErrors.pricePerMonth = 'Introduce un precio válido';
     } else if (!hasAtMostTwoDecimals(pricePerMonth)) {
       newErrors.pricePerMonth = 'El precio no puede tener más de 2 decimales';
+    } else if (Number(pricePerMonth) > 999999999) {
+      newErrors.pricePerMonth = 'El precio es demasiado alto';
     } else if (category) {
       const price = Number(pricePerMonth);
       if (price < category.minPrice || price > category.maxPrice) {
@@ -122,8 +133,13 @@ const EditServiceScreen: React.FC = () => {
       }
     }
 
-    if (totalUnits && (isNaN(Number(totalUnits)) || Number(totalUnits) < 1)) {
-      newErrors.totalUnits = 'Las unidades deben ser un número mayor o igual a 1';
+    if (totalUnits) {
+      const unitsNum = Number(totalUnits);
+      if (isNaN(unitsNum) || unitsNum < 1 || unitsNum > MAX_TOTAL_UNITS) {
+        newErrors.totalUnits = `Las unidades deben ser un número entre 1 y ${MAX_TOTAL_UNITS.toLocaleString()}`;
+      } else if (!Number.isInteger(unitsNum)) {
+        newErrors.totalUnits = 'Las unidades deben ser un número entero';
+      }
     }
 
     if (!availableFrom) newErrors.availableFrom = 'Selecciona la fecha de inicio';
@@ -230,7 +246,7 @@ const EditServiceScreen: React.FC = () => {
               <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
                 <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
                 <SelectPicker
-                  options={EUROPEAN_COUNTRIES}
+                  options={countries}
                   selectedValue={selectedCountry}
                   placeholder="Selecciona un país"
                   onValueChange={(value: string) => {
@@ -350,7 +366,13 @@ const EditServiceScreen: React.FC = () => {
             <Field
               label="Unidades disponibles"
               value={totalUnits}
-              onChange={(t) => { setTotalUnits(t); clearError('totalUnits'); }}
+              onChange={(t) => {
+                const cleaned = t.replace(/[^0-9]/g, '');
+                if (cleaned.length <= 10) {
+                  setTotalUnits(cleaned);
+                }
+                clearError('totalUnits');
+              }}
               placeholder="Ej: 1"
               keyboardType="numeric"
               optional
@@ -392,6 +414,7 @@ const EditServiceScreen: React.FC = () => {
               onDismiss={() => setShowDateRangePicker(false)}
               startDate={startDate}
               endDate={endDate}
+              allowEditing={false}
               onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
                 setShowDateRangePicker(false);
                 if (params.startDate && params.endDate) {

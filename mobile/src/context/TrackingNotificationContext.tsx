@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DeliveryStatus, TrackingNotification } from "../types";
+import { useAuth } from "./AuthContext"
 
 type TrackingNotificationsContextType = {
   notifications: TrackingNotification[];
@@ -11,44 +12,70 @@ type TrackingNotificationsContextType = {
   removeNotification: (id: string) => Promise<void>;
 };
 
-const STORAGE_KEY = "@tracking_notifications";
+const BASE_STORAGE_KEY = "@tracking_notifications";
 
 const TrackingNotificationsContext = createContext<TrackingNotificationsContextType | undefined>(undefined);
 
 export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<TrackingNotification[]>([]);
 
+  const { user } = useAuth();
+  const storageKey = user?.id ? `${BASE_STORAGE_KEY}_${user.id}` : null;
+  
   useEffect(() => {
+    if(!storageKey) {
+      setNotifications([]);
+      return;
+    }
     (async () => {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      const stored = await AsyncStorage.getItem(storageKey);
       if (stored) {
         setNotifications(JSON.parse(stored));
+      } else {
+        setNotifications([]);
       }
     })();
-  }, []);
+  }, [storageKey]);
 
   const persist = async (list: TrackingNotification[]) => {
-    setNotifications(list);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    if (!storageKey) return;
+    await AsyncStorage.setItem(storageKey, JSON.stringify(list));
   };
 
   const addNotification = async (n: TrackingNotification) => {
-    const next = [n, ...notifications];
-    await persist(next);
+    setNotifications(prev => {
+      const exists = prev.some(x => x.id === n.id);
+      const next = exists ? prev : [n, ...prev];
+
+      save(next);
+      return next;
+    });
   };
 
   const markAllRead = async () => {
-    const next = notifications.map((n) => ({ ...n, read: true }));
-    await persist(next);
+    setNotifications(prev => {
+      const next = prev.map(n => ({ ...n, read: true }));
+      save(next);
+      return next;
+    });
   };
 
   const removeNotification = async (id: string) => {
-    const next = notifications.filter((n) => n.id !== id);
-    await persist(next);
+    setNotifications(prev => {
+      const next = prev.filter(n => n.id !== id);
+      save(next);
+      return next;
+    });
+  };
+
+  const save = async (list: TrackingNotification[]) => {
+    if (!storageKey) return;
+    await AsyncStorage.setItem(storageKey, JSON.stringify(list));
   };
 
   const clearAll = async () => {
-    await persist([]);
+    setNotifications([]);
+    await save([]);
   };
 
   const unreadCount = useMemo(

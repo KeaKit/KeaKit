@@ -9,7 +9,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { promoteService } from '../../services/servicesService';
 import { fetchAllCategories } from '../../services/categoryService';
-import { ServicePayload, RootStackParamList, Category, EUROPEAN_COUNTRIES } from '../../types';
+import { validatePromoCode } from '../../services/promoCodeService';
+import { ServicePayload, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
@@ -17,6 +18,9 @@ import { es, registerTranslation } from 'react-native-paper-dates';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNotification } from '../../components/NotificationContext';
+
+const MAX_TITLE_LENGTH = 255;
+const MAX_TOTAL_UNITS = 2147483647;
 
 registerTranslation('es', es);
 
@@ -93,12 +97,14 @@ const PromoteServiceScreen: React.FC = () => {
   const [availableFrom, setAvailableFrom] = useState('');
   const [availableUntil, setAvailableUntil] = useState('');
   const [totalUnits, setTotalUnits] = useState('1');
+  const [ownerCommissionPromoCode, setOwnerCommissionPromoCode] = useState('');
 
   const {
     selectedCountry,
     selectedCity,
     setSelectedCity,
     cities,
+    countries,
     loadingCities,
     onCountryChange,
   } = useLocationPicker();
@@ -114,6 +120,9 @@ const PromoteServiceScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [appliedOwnerPromoCode, setAppliedOwnerPromoCode] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoMessage, setPromoMessage] = useState<{ text: string; valid: boolean } | null>(null);
   const { showNotification } = useNotification();
 
   useEffect(() => {
@@ -133,10 +142,49 @@ const PromoteServiceScreen: React.FC = () => {
 
   const clearError = (key: string) => setErrors((prev) => ({ ...prev, [key]: '' }));
 
+  const handleApplyPromo = async () => {
+    const code = ownerCommissionPromoCode.trim().toUpperCase();
+    if (!code || !user?.email || !user?.token) return;
+
+    setPromoLoading(true);
+    try {
+      const result = await validatePromoCode(
+        user.token,
+        code,
+        user.email,
+        'OWNER_COMMISSION_REDUCTION',
+      );
+
+      if (result.valid) {
+        setAppliedOwnerPromoCode(code);
+        setPromoMessage({ text: `Realizado: ${result.message}`, valid: true });
+      } else {
+        setAppliedOwnerPromoCode(null);
+        setPromoMessage({ text: result.message, valid: false });
+      }
+    } catch {
+      setAppliedOwnerPromoCode(null);
+      setPromoMessage({ text: 'Error al validar el código', valid: false });
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setOwnerCommissionPromoCode('');
+    setAppliedOwnerPromoCode(null);
+    setPromoMessage(null);
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!title.trim()) newErrors.title = 'El título es obligatorio';
+    if (!title.trim()) {
+      newErrors.title = 'El título es obligatorio';
+    } else if (title.trim().length > MAX_TITLE_LENGTH) {
+      newErrors.title = `El título no puede superar los ${MAX_TITLE_LENGTH} caracteres`;
+    }
+
     if (!description.trim()) newErrors.description = 'La descripción es obligatoria';
     if (description.length > 1000) newErrors.description = 'La descripción no puede superar los 1000 caracteres';
     if (!selectedCountry) newErrors.country = 'El país es obligatorio';
@@ -147,6 +195,8 @@ const PromoteServiceScreen: React.FC = () => {
       newErrors.pricePerMonth = 'Introduce un precio válido';
     } else if (!hasAtMostTwoDecimals(pricePerMonth)) {
       newErrors.pricePerMonth = 'El precio no puede tener más de 2 decimales';
+    } else if (Number(pricePerMonth) > 999999999) {
+      newErrors.pricePerMonth = 'El precio es demasiado alto';
     } else if (selectedCategory) {
       const price = Number(pricePerMonth);
       if (price < selectedCategory.minPrice || price > selectedCategory.maxPrice) {
@@ -154,8 +204,13 @@ const PromoteServiceScreen: React.FC = () => {
       }
     }
 
-    if (totalUnits && (isNaN(Number(totalUnits)) || Number(totalUnits) < 1)) {
-      newErrors.totalUnits = 'Las unidades deben ser un número mayor o igual a 1';
+    if (totalUnits) {
+      const unitsNum = Number(totalUnits);
+      if (isNaN(unitsNum) || unitsNum < 1 || unitsNum > MAX_TOTAL_UNITS) {
+        newErrors.totalUnits = `Las unidades deben ser un número entre 1 y ${MAX_TOTAL_UNITS.toLocaleString()}`;
+      } else if (!Number.isInteger(unitsNum)) {
+        newErrors.totalUnits = 'Las unidades deben ser un número entero';
+      }
     }
 
     if (!availableFrom) newErrors.availableFrom = 'Selecciona la fecha de inicio';
@@ -183,6 +238,13 @@ const PromoteServiceScreen: React.FC = () => {
 
     setLoading(true);
     try {
+      const trimmedOwnerPromoCode = ownerCommissionPromoCode.trim();
+      if (trimmedOwnerPromoCode && appliedOwnerPromoCode !== trimmedOwnerPromoCode) {
+        showNotification('Debes pulsar Aplicar para validar el código promocional', 'error');
+        setLoading(false);
+        return;
+      }
+
       const payload: ServicePayload = {
         title: title.trim(),
         description: description.trim(),
@@ -193,6 +255,7 @@ const PromoteServiceScreen: React.FC = () => {
         category: { id: selectedCategory!.id },
         status: 'ACTIVE',
         totalUnits: totalUnits ? Number(totalUnits) : 1,
+        ...(appliedOwnerPromoCode && { ownerCommissionPromoCode: appliedOwnerPromoCode }),
       };
 
       await promoteService(user.id, selectedCategory!.id, user.token, payload);
@@ -271,7 +334,7 @@ const PromoteServiceScreen: React.FC = () => {
               <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
                 <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
                 <SelectPicker
-                  options={EUROPEAN_COUNTRIES}
+                  options={countries}
                   selectedValue={selectedCountry}
                   placeholder="Selecciona un país"
                   onValueChange={(value: string) => {
@@ -387,12 +450,76 @@ const PromoteServiceScreen: React.FC = () => {
             <Field
               label="Unidades disponibles"
               value={totalUnits}
-              onChange={(t) => { setTotalUnits(t); clearError('totalUnits'); }}
+              onChange={(t) => {
+                const cleaned = t.replace(/[^0-9]/g, '');
+                if (cleaned.length <= 10) {
+                  setTotalUnits(cleaned);
+                }
+                clearError('totalUnits');
+              }}
               placeholder="Ej: 1"
               keyboardType="numeric"
               optional
               error={errors.totalUnits}
             />
+
+            <View style={styles.fieldContainer}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Código promo de comisión</Text>
+                <Text style={styles.optional}> (opcional)</Text>
+              </View>
+
+              {appliedOwnerPromoCode ? (
+                <View style={styles.promoAppliedRow}>
+                  <View style={styles.promoAppliedBadge}>
+                    <Ionicons name="pricetag" size={14} color="#4caf7d" />
+                    <Text style={styles.promoAppliedCode}>{appliedOwnerPromoCode}</Text>
+                  </View>
+                  <TouchableOpacity onPress={handleRemovePromo} style={styles.promoRemoveBtn} disabled={loading}>
+                    <Ionicons name="close-circle" size={20} color="#e74c3c" />
+                    <Text style={styles.promoRemoveText}>Quitar</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.promoInputRow}>
+                    <TextInput
+                      style={[
+                        styles.promoInput,
+                        promoMessage?.valid === false && styles.promoInputError,
+                      ]}
+                      value={ownerCommissionPromoCode}
+                      onChangeText={(t) => {
+                        setOwnerCommissionPromoCode(t.toUpperCase());
+                        setPromoMessage(null);
+                      }}
+                      placeholder="OWNER10"
+                      placeholderTextColor="#aaa"
+                      autoCapitalize="characters"
+                      editable={!loading}
+                    />
+                    <TouchableOpacity
+                      style={[styles.promoBtn, (!ownerCommissionPromoCode.trim() || promoLoading) && styles.promoBtnDisabled]}
+                      onPress={handleApplyPromo}
+                      disabled={!ownerCommissionPromoCode.trim() || promoLoading || loading}
+                    >
+                      {promoLoading
+                        ? <ActivityIndicator color="#fff" size="small" />
+                        : <Text style={styles.promoBtnText}>Aplicar</Text>
+                      }
+                    </TouchableOpacity>
+                  </View>
+                  {promoMessage && (
+                    <Text style={promoMessage.valid ? styles.promoSuccess : styles.promoError}>
+                      {promoMessage.text}
+                    </Text>
+                  )}
+                  <Text style={styles.helperText}>
+                    Opcional. Solo se aceptan códigos del tipo comisión para arrendadores.
+                  </Text>
+                </>
+              )}
+            </View>
 
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Periodo de disponibilidad</Text>
@@ -429,6 +556,7 @@ const PromoteServiceScreen: React.FC = () => {
               onDismiss={() => setShowDateRangePicker(false)}
               startDate={startDate}
               endDate={endDate}
+              allowEditing={false}
               onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
                 setShowDateRangePicker(false);
                 if (params.startDate && params.endDate) {
@@ -565,6 +693,81 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontStyle: 'italic',
     marginTop: -4,
+  },
+  promoInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  promoInput: {
+    flex: 1,
+    height: 48,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.backgroundWhite,
+    paddingHorizontal: Spacing.md,
+    color: Colors.textPrimaryHome,
+    fontSize: 15,
+  },
+  promoInputError: {
+    borderColor: Colors.error,
+    backgroundColor: '#fff5f5',
+  },
+  promoBtn: {
+    height: 48,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 10,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promoBtnDisabled: {
+    opacity: 0.6,
+  },
+  promoBtnText: {
+    color: Colors.textWhite,
+    fontWeight: '700',
+  },
+  promoSuccess: {
+    color: '#2e8b57',
+    fontSize: 12,
+    marginTop: -4,
+  },
+  promoError: {
+    color: Colors.error,
+    fontSize: 12,
+    marginTop: -4,
+  },
+  promoAppliedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  promoAppliedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 999,
+    backgroundColor: '#eaf8f0',
+  },
+  promoAppliedCode: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2e8b57',
+  },
+  promoRemoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  promoRemoveText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#e74c3c',
   },
   dateSelector: {
     flexDirection: 'row',

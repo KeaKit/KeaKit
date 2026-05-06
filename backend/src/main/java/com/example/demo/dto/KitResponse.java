@@ -6,6 +6,7 @@ import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,25 +16,26 @@ public class KitResponse {
 
     public static class KitItemResponse {
         private Long itemId;
+        private Long ownerId;
         private Integer quantity;
         private Double pricePerMonth;
         private String name;
         private String category;
         private String imageUrl;
-        private Long ownerId;
         private String ownerName;
 
         public KitItemResponse(
             Long itemId,
+            Long ownerId,
             Integer quantity,
             Double pricePerMonth,
             String name,
             String category,
             String imageUrl,
-            Long ownerId,
             String ownerName
         ) {
             this.itemId = itemId;
+            this.ownerId = ownerId;
             this.quantity = quantity;
             this.pricePerMonth = pricePerMonth;
             this.name = name;
@@ -45,6 +47,10 @@ public class KitResponse {
 
         public Long getItemId() {
             return itemId;
+        }
+
+        public Long getOwnerId() {
+            return ownerId;
         }
 
         public Integer getQuantity() {
@@ -67,10 +73,6 @@ public class KitResponse {
             return imageUrl;
         }
 
-        public Long getOwnerId() {
-            return ownerId;
-        }
-
         public String getOwnerName() {
             return ownerName;
         }
@@ -89,7 +91,9 @@ public class KitResponse {
     private DeliveryMethod deliveryMethod;
     private String meetingPoint;
     private Double courierPrice;
-    private Long tenantId; // TODO: Añadir más datos sobre tenant (email)
+    private Long tenantId;
+    private String tenantName;
+    private String tenantEmail;
     private List<Long> itemIds;
     private List<KitItemResponse> items;
     private Integer totalSelectedItems;
@@ -97,6 +101,8 @@ public class KitResponse {
     private Double guaranteePrice;
     private Double platformFee;
     private Double totalPrice;
+    private Double appliedCommissionRate;
+    private Double appliedGuaranteeRate;
 
     public KitResponse(Kit kit) {
         this.id = kit.getId();
@@ -113,19 +119,21 @@ public class KitResponse {
         this.meetingPoint = kit.getMeetingPoint();
         this.courierPrice = kit.getCourierPrice();
         this.tenantId = kit.getTenant() != null ? kit.getTenant().getId() : null;
+        this.tenantName = kit.getTenant() != null ? kit.getTenant().getName() : null;
+        this.tenantEmail = kit.getTenant() != null ? kit.getTenant().getEmail() : null;
 
         List<ItemMemento> snapshots = kit.getSnapshots() != null ? kit.getSnapshots() : List.of();
 
         this.items = snapshots.stream()
             .map(s -> new KitItemResponse(
                 s.getOriginalItemId(),
+                s.getOwnerAtRental() != null ? s.getOwnerAtRental().getId() : null,
                 s.getSelectedUnits(),
                 s.getPriceAtRental(),
                 s.getNameAtRental(),
                 s.getCategoryAtRental() != null ? s.getCategoryAtRental().getName() : null,
                 s.getImageUrlAtRental(),
-                s.getOwnerAtRental().getId(),
-                s.getOwnerAtRental().getName()
+                s.getOwnerAtRental() != null ? s.getOwnerAtRental().getName() : null
             ))
             .collect(Collectors.toList());
 
@@ -138,10 +146,34 @@ public class KitResponse {
             .distinct()
             .collect(Collectors.toCollection(ArrayList::new));
 
-        this.subtotalPrice = kit.calculateSubtotal();
-        this.guaranteePrice = kit.calculateTotalGuarantee();
-        this.platformFee = kit.calculatePlatformFee();
-        this.totalPrice = kit.calculateTotal();
+        double rentalMonths = calculateMonthsBetween(kit.getStartDate(), kit.getEndDate());
+        double subtotal = snapshots.stream()
+            .filter(s -> s.getPriceAtRental() != null && s.getSelectedUnits() != null)
+            .mapToDouble(s -> s.getPriceAtRental() * s.getSelectedUnits() * rentalMonths)
+            .sum();
+        double guaranteeRate = kit.getAppliedGuaranteeRate() != null ? kit.getAppliedGuaranteeRate() : 0.0;
+        double commissionRate = kit.getAppliedCommissionRate() != null ? kit.getAppliedCommissionRate() : 0.0;
+        double courier = kit.getCourierPrice() != null ? kit.getCourierPrice() : 0.0;
+
+        this.subtotalPrice = roundMoney(subtotal);
+        this.guaranteePrice = roundMoney(subtotal * guaranteeRate);
+        this.platformFee = roundMoney(subtotal * commissionRate);
+        this.totalPrice = roundMoney(this.subtotalPrice + this.guaranteePrice + courier);
+        this.appliedCommissionRate = kit.getAppliedCommissionRate();
+        this.appliedGuaranteeRate = kit.getAppliedGuaranteeRate();
+    }
+
+    private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
+        if (start == null || end == null) {
+            return 0.0;
+        }
+
+        long diffDays = ChronoUnit.DAYS.between(start, end) + 1;
+        return diffDays / 30.0;
+    }
+
+    private static double roundMoney(double amount) {
+        return Math.round(amount * 100.0) / 100.0;
     }
 
     public Long getId() {
@@ -212,6 +244,14 @@ public class KitResponse {
         return tenantId;
     }
 
+    public String getTenantName() {
+        return tenantName;
+    }
+
+    public String getTenantEmail() {
+        return tenantEmail;
+    }
+
     public Double getSubtotalPrice() {
         return subtotalPrice;
     }
@@ -226,6 +266,14 @@ public class KitResponse {
 
     public Double getTotalPrice() {
         return totalPrice;
+    }
+
+    public Double getAppliedCommissionRate() {
+        return appliedCommissionRate;
+    }
+
+    public Double getAppliedGuaranteeRate() {
+        return appliedGuaranteeRate;
     }
 
     private LocalDate calculateEstimatedDeliveryDate(LocalDate orderDate, LocalDate startDate) {

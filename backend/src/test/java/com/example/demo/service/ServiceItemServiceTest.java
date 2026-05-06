@@ -1,10 +1,10 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.model.*;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ServiceRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.ServiceItemService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +13,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import com.example.demo.dto.ServiceWithRentalsDTO;
+import com.example.demo.repository.KitRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,6 +33,9 @@ class ServiceItemServiceTest {
     @Mock private ServiceRepository serviceRepository;
     @Mock private UserRepository userRepository;
     @Mock private CategoryRepository categoryRepository;
+    @Mock private PromoCodeService promoCodeService;
+    @Mock private KitRepository kitRepository;
+
 
     @InjectMocks
     private ServiceItemService serviceItemService;
@@ -143,7 +149,7 @@ class ServiceItemServiceTest {
         when(serviceRepository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> serviceItemService.findById(99L));
-        assertThat(ex.getMessage()).contains("Service not found");
+    assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
 
@@ -151,19 +157,21 @@ class ServiceItemServiceTest {
     void findByOwner_returnsServicesByOwner() {
         List<ServiceItem> ownerServices = List.of(service);
         when(serviceRepository.findByOwnerId(1L)).thenReturn(ownerServices);
+        when(kitRepository.countActiveAndFutureRentedUnits(eq(1L), any(LocalDate.class))).thenReturn(1);
 
-        List<ServiceItem> result = serviceItemService.findByOwner(1L);
+        List<ServiceWithRentalsDTO> result = serviceItemService.findByOwner(1L);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getOwner().getId()).isEqualTo(1L);
+        assertThat(result.get(0).id()).isEqualTo(1L);
         verify(serviceRepository).findByOwnerId(1L);
+verify(kitRepository).countActiveAndFutureRentedUnits(eq(1L), any(LocalDate.class));
     }
 
     @Test
     void findByOwner_noServices_returnsEmpty() {
         when(serviceRepository.findByOwnerId(99L)).thenReturn(List.of());
 
-        List<ServiceItem> result = serviceItemService.findByOwner(99L);
+        List<ServiceWithRentalsDTO> result = serviceItemService.findByOwner(99L);
 
         assertThat(result).isEmpty();
     }
@@ -197,7 +205,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 99L, 1L));
-        assertThat(ex.getMessage()).contains("User not found");
+        assertThat(ex.getMessage()).contains("Usuario no encontrado");
     }
 
     @Test
@@ -208,7 +216,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 99L));
-        assertThat(ex.getMessage()).contains("Category not found");
+        assertThat(ex.getMessage()).contains("Categoría no encontrada");
     }
 
     @Test
@@ -218,7 +226,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Title is required");
+        assertThat(ex.getMessage()).contains("Título requerido");
     }
 
     @Test
@@ -228,7 +236,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Title is required");
+        assertThat(ex.getMessage()).contains("Título requerido");
     }
 
     @Test
@@ -238,7 +246,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("City is required");
+        assertThat(ex.getMessage()).contains("Ciudad requerida");
     }
 
     @Test
@@ -248,7 +256,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("City is required");
+        assertThat(ex.getMessage()).contains("Ciudad requerida");
     }
 
     @Test
@@ -258,7 +266,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Monthly price must be positive");
+        assertThat(ex.getMessage()).contains("El precio mensual debe ser positivo");
     }
 
     @Test
@@ -268,7 +276,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Monthly price must be positive");
+        assertThat(ex.getMessage()).contains("El precio mensual debe ser positivo");
     }
 
     @Test
@@ -278,7 +286,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Monthly price must be positive");
+        assertThat(ex.getMessage()).contains("El precio mensual debe ser positivo");
     }
 
     @Test
@@ -289,7 +297,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("You must specify the date range");
+        assertThat(ex.getMessage()).contains("Debes especificar el rango de fechas");
     }
 
     @Test
@@ -299,7 +307,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("Start date cannot be in the past");
+        assertThat(ex.getMessage()).contains("La fecha de inicio no puede ser en el pasado");
     }
 
     @Test
@@ -310,7 +318,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.createAndPromote(newService, 1L, 1L));
-        assertThat(ex.getMessage()).contains("End date must be after the start date");
+        assertThat(ex.getMessage()).contains("La fecha de finalización debe ser después de la fecha de inicio");
     }
 
     @Test
@@ -322,7 +330,7 @@ class ServiceItemServiceTest {
         newService.setAvailableUntil(LocalDate.now().minusDays(1));
         assertThatThrownBy(() -> serviceItemService.createAndPromote(newService, 1L, 1L))
             .isInstanceOf(RuntimeException.class)
-            .hasMessage("End date must be after the start date");
+            .hasMessage("La fecha de finalización debe ser después de la fecha de inicio");
     }
 
 
@@ -367,7 +375,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(99L, 1L, new ServiceItem()));
-        assertThat(ex.getMessage()).contains("Service not found");
+        assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
     @Test
@@ -380,7 +388,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(2L, 1L, new ServiceItem()));
-        assertThat(ex.getMessage()).contains("Only the owner can modify this service");
+        assertThat(ex.getMessage()).contains("Solo el propietario puede modificar este servicio");
     }
 
     @Test
@@ -390,7 +398,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(3L, 1L, new ServiceItem()));
-        assertThat(ex.getMessage()).contains("currently rented and cannot be modified");
+        assertThat(ex.getMessage()).contains("alquilado y no puede ser modificado");
     }
 
     @Test
@@ -428,7 +436,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(1L, 1L, updateData));
-        assertThat(ex.getMessage()).contains("Service status can only be ACTIVE or DRAFT");
+        assertThat(ex.getMessage()).contains("El estado del servicio solo puede ser ACTIVE o DRAFT");
     }
 
     @Test
@@ -454,7 +462,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(1L, 1L, updateData));
-        assertThat(ex.getMessage()).contains("Start date cannot be in the past");
+        assertThat(ex.getMessage()).contains("La fecha de inicio no puede ser en el pasado");
     }
 
     @Test
@@ -467,7 +475,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.update(1L, 1L, updateData));
-        assertThat(ex.getMessage()).contains("End date must be after the start date");
+        assertThat(ex.getMessage()).contains("La fecha de finalización debe ser después de la fecha de inicio");
     }
 
     @Test
@@ -517,7 +525,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.requestService(99L));
-        assertThat(ex.getMessage()).contains("Service not found");
+        assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
     @Test
@@ -527,7 +535,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.requestService(2L));
-        assertThat(ex.getMessage()).contains("The service is not active and cannot be requested");
+        assertThat(ex.getMessage()).contains("El servicio no está activo y no puede ser solicitado");
     }
 
     @Test
@@ -537,7 +545,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.requestService(3L));
-        assertThat(ex.getMessage()).contains("The service is not active and cannot be requested");
+        assertThat(ex.getMessage()).contains("El servicio no está activo y no puede ser solicitado");
     }
 
 
@@ -573,7 +581,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.releaseService(99L));
-        assertThat(ex.getMessage()).contains("Service not found");
+        assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
     @Test
@@ -605,7 +613,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.delete(99L, 1L));
-        assertThat(ex.getMessage()).contains("Service not found");
+        assertThat(ex.getMessage()).contains("Servicio no encontrado");
     }
 
     @Test
@@ -618,7 +626,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.delete(2L, 1L));
-        assertThat(ex.getMessage()).contains("You do not have permission to delete this service");
+        assertThat(ex.getMessage()).contains("No tienes permiso para eliminar este servicio");
     }
 
     @Test
@@ -628,7 +636,7 @@ class ServiceItemServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> serviceItemService.delete(3L, 1L));
-        assertThat(ex.getMessage()).contains("The service is currently rented and cannot be deleted");
+        assertThat(ex.getMessage()).contains("El servicio está actualmente alquilado y no puede ser eliminado");
     }
 
     @Test
@@ -710,5 +718,163 @@ class ServiceItemServiceTest {
 
         assertThat(expiresExactlyToday.getStatus()).isEqualTo(ServiceStatus.ACTIVE);
         verify(serviceRepository, never()).save(any());
+    }
+
+    // ------------ createAndPromote — ownerCommissionPromoCode ------------
+    
+    @Test
+    void createAndPromote_withValidOwnerCommissionPromoCode_succeeds() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode("owner10"); // minúsculas, se normalizará
+    
+        ServiceItem result = serviceItemService.createAndPromote(newService, 1L, 1L);
+    
+        assertThat(result.getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
+        verify(promoCodeService).validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com");
+    }
+    
+    @Test
+    void createAndPromote_withInvalidOwnerCommissionPromoCode_throws() {
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("INVALIDO", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(false, null, "Código promocional no válido"));
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode("INVALIDO");
+    
+        assertThatThrownBy(() -> serviceItemService.createAndPromote(newService, 1L, 1L))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Código promocional no válido");
+        verify(serviceRepository, never()).save(any());
+    }
+    
+    @Test
+    void createAndPromote_withNullOwnerCommissionPromoCode_doesNotCallPromoValidation() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode(null);
+    
+        serviceItemService.createAndPromote(newService, 1L, 1L);
+    
+        verify(promoCodeService, never())
+            .validateForOwnerCommissionReductionAllowReservedByUser(any(), any());
+    }
+    
+    @Test
+    void createAndPromote_withBlankOwnerCommissionPromoCode_normalizesToNull() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode("   ");
+    
+        serviceItemService.createAndPromote(newService, 1L, 1L);
+    
+        verify(promoCodeService, never())
+            .validateForOwnerCommissionReductionAllowReservedByUser(any(), any());
+    }
+    
+    @Test
+    void createAndPromote_withValidOwnerPromoCode_callsReserveOwnerSingleUse() {
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+        doNothing().when(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+    
+        ServiceItem newService = makeService(null, null);
+        newService.setOwnerCommissionPromoCode("OWNER10");
+    
+        serviceItemService.createAndPromote(newService, 1L, 1L);
+    
+        verify(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+    }
+    
+    // ------------ update — ownerCommissionPromoCode ------------
+    
+    @Test
+    void update_withNewOwnerCommissionPromoCode_validatesAndReserves() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+        doNothing().when(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("owner10"); // minúsculas, normalizar
+    
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+    
+        assertThat(result.getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
+        verify(promoCodeService).validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com");
+        verify(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+    }
+    
+    @Test
+    void update_withInvalidOwnerCommissionPromoCode_throws() {
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("MALO", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(false, null, "Código promocional no válido"));
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("MALO");
+    
+        assertThatThrownBy(() -> serviceItemService.update(1L, 1L, updateData))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Código promocional no válido");
+        verify(serviceRepository, never()).save(any());
+    }
+    
+    @Test
+    void update_withSameOwnerCommissionPromoCode_doesNotResetConsumedFlag() {
+        service.setOwnerCommissionPromoCode("OWNER10");
+        service.setOwnerCommissionPromoConsumed(true);
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("OWNER10");
+    
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+    
+        assertThat(result.isOwnerCommissionPromoConsumed()).isTrue();
+    }
+    
+    @Test
+    void update_withDifferentOwnerCommissionPromoCode_resetsConsumedFlag() {
+        service.setOwnerCommissionPromoCode("OWNER10");
+        service.setOwnerCommissionPromoConsumed(true);
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER20", "owner@example.com"))
+            .thenReturn(new PromoCodeValidationResponse(true, 0.20, "Código aplicado correctamente"));
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("OWNER20");
+    
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+    
+        assertThat(result.isOwnerCommissionPromoConsumed()).isFalse();
+    }
+    
+    @Test
+    void update_removingOwnerCommissionPromoCode_normalizesToNullAndClearsConsumed() {
+        service.setOwnerCommissionPromoCode("OWNER10");
+        service.setOwnerCommissionPromoConsumed(true);
+        when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
+        when(serviceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    
+        ServiceItem updateData = new ServiceItem();
+        updateData.setOwnerCommissionPromoCode("  "); // blank = eliminar
+    
+        ServiceItem result = serviceItemService.update(1L, 1L, updateData);
+    
+        assertThat(result.getOwnerCommissionPromoCode()).isNull();
+        assertThat(result.isOwnerCommissionPromoConsumed()).isFalse();
+        verify(promoCodeService, never()).validateForOwnerCommissionReductionAllowReservedByUser(any(), any());
     }
 }

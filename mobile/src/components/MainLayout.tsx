@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Dimensions, Platform } from 'react-native';
+// MainLayout.tsx
+import React from 'react';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import HeaderNavbar from './HeaderNavbar';
 import Navbar from './Navbar';
+import { RgpdModal } from './RgpdModal';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -10,34 +12,27 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { user } = useAuth();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = React.useState(false);
 
-  useEffect(() => {
-    // Función para verificar si es móvil/tablet
+  React.useEffect(() => {
     const checkIsMobile = () => {
       const { width } = Dimensions.get('window');
-      setIsMobile(width < 768);
+      setIsMobile(width < 1116);
     };
 
     checkIsMobile();
-
     const subscription = Dimensions.addEventListener('change', checkIsMobile);
-    
     return () => subscription?.remove();
   }, []);
 
   return (
     <View style={styles.container}>
-      {/* Header siempre visible en todas las plataformas */}
       <HeaderNavbar user={user} />
-      
-      {/* Contenido principal */}
       <View style={styles.content}>
         {children}
       </View>
-      
-      {/* Navbar inferior SOLO en móvil/tablet Y si hay usuario */}
       {user && isMobile && <Navbar userRole={user.role} />}
+      <RgpdModal />
     </View>
   );
 };

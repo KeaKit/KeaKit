@@ -57,7 +57,7 @@ type AdminSection = {
 };
 
 const ADMIN_SECTIONS: AdminSection[] = [
-  {
+{
     id: 'users',
     icon: 'people',
     label: 'Gestión de Usuarios',
@@ -100,7 +100,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: 'Mediar en conflictos entre usuarios',
     color: '#e67e22',
     implemented: true,
-    screen: 'MyIncidents',
+    screen: 'AdminIncidents',
   },
   {
     id: 'default-kits',
@@ -112,20 +112,31 @@ const ADMIN_SECTIONS: AdminSection[] = [
     screen: 'DefaultKits',
   },
   {
-    id: 'object-types',
-    icon: 'cube',
-    label: 'Tipos de Objetos',
-    description: 'Crear, editar y eliminar tipos de artículos',
+    id: 'privacy-policy',
+    icon: 'document-text',
+    label: 'Política de Privacidad',
+    description: 'Editar la política y gestionar versiones',
     color: KC.lavender,
-    implemented: false,
+    implemented: true,
+    screen: 'EditPolicy',
   },
   {
-    id: 'prices',
-    icon: 'pricetags',
-    label: 'Rangos de Precios',
-    description: 'Establecer precios mínimos y máximos por tipo',
+    id: 'pilot-users',
+    icon: 'rocket',
+    label: 'Usuarios Piloto',
+    description: 'Gestionar emails de usuarios piloto',
+    color: KC.lavender,
+    implemented: true,
+    screen: 'PilotUsers',
+  },
+  {
+    id: 'promo-codes',
+    icon: 'pricetag',
+    label: 'Códigos Promocionales',
+    description: 'Gestionar descuentos y usuarios piloto',
     color: KC.mint,
-    implemented: false,
+    implemented: true,
+    screen: 'PromoCodes',
   },
   {
     id: 'stats',

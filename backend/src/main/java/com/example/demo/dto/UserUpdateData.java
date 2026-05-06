@@ -1,10 +1,27 @@
 package com.example.demo.dto;
 
+import jakarta.persistence.Column;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 public class UserUpdateData {
+
+    @Column(nullable = false)
+    @Size(min = 2, max = 100, message = "Name size must be between 2 and 100")
     private String name;
+
+    @Column(nullable = false)
+    @Pattern(regexp = "^(\\+\\d{1,3})?\\d{8,12}$", message = "Phone number must be valid")
     private String phone;
+
+    @Column(nullable = false)
+    @Size(min = 5, max = 255, message = "Address size must be between 5 and 255")
     private String address;
+
+    @Column(nullable = false)
     private String city;
+
+    @Column(nullable = false)
     private String country;
 
     public UserUpdateData() {}
@@ -12,7 +29,7 @@ public class UserUpdateData {
     public String getName() {
         return name;
     }
-
+    
     public void setName(String name) {
         this.name = name;
     }

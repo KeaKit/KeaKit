@@ -1,6 +1,8 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 
 @Entity
 @Table(name = "categories")
@@ -20,9 +22,13 @@ public class Category {
     @Column(nullable = false)
     private CategoryStatus status;
 
+    @DecimalMin(value = "0.0", message = "El precio no puede ser negativo")
+    @DecimalMax(value = "1000000.0", message = "El precio no puede superar el 1.000.000")
     @Column(name = "min_price", nullable = false)
     private Double minPrice;
 
+    @DecimalMin(value = "0.0", message = "El precio no puede ser negativo")
+    @DecimalMax(value = "1000000.0", message = "El precio no puede superar el 1.000.000")
     @Column(name = "max_price", nullable = false)
     private Double maxPrice;
 
@@ -78,6 +84,20 @@ public class Category {
     }
     public void setMaxPrice(Double maxPrice) {
         this.maxPrice = maxPrice;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void validatePrices() {
+        if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
+            throw new IllegalArgumentException("minPrice cannot be greater than maxPrice");
+        }
+        if (minPrice != null) {
+            this.minPrice = Math.round(this.minPrice * 100.0) / 100.0;
+        }
+        if (maxPrice != null) {
+            this.maxPrice = Math.round(this.maxPrice * 100.0) / 100.0;
+        }
     }
 
 }

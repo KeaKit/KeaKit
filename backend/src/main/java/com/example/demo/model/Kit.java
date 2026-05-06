@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -29,6 +32,7 @@ public class Kit {
     @Enumerated(EnumType.STRING)
     private DeliveryMethod deliveryMethod;
 
+    @Column(length = 500)
     private String meetingPoint;
 
     private Double courierPrice;
@@ -39,6 +43,7 @@ public class Kit {
 
     @ManyToOne
     @JoinColumn(name = "tenant_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User tenant;
 
     @OneToMany(mappedBy = "kit", cascade = CascadeType.ALL, orphanRemoval = true)

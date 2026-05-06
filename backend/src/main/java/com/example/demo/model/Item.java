@@ -4,7 +4,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -33,15 +37,19 @@ public abstract class Item {
     @Size(max = 120)
     protected String city;
 
+    @Size(max = 120)
+    protected String country;
+
     @NotNull
-    @Positive
+    @Min(0)
     protected Double pricePerMonth;
 
     protected LocalDate availableFrom;
     protected LocalDate availableUntil;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "category", referencedColumnName = "name", nullable = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Category category;
 
     @NotNull
@@ -60,7 +68,14 @@ public abstract class Item {
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     protected User owner;
+
+    @Column(name = "owner_commission_promo_code", length = 80)
+    protected String ownerCommissionPromoCode;
+
+    @Column(name = "owner_commission_promo_consumed", nullable = false)
+    protected boolean ownerCommissionPromoConsumed = false;
 
     public Item() {}
 
@@ -107,6 +122,14 @@ public abstract class Item {
         this.city = city;
     }
 
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
     public Double getPricePerMonth() {
         return pricePerMonth;
     }
@@ -145,6 +168,22 @@ public abstract class Item {
 
     public void setOwner(User owner) {
         this.owner = owner;
+    }
+
+    public String getOwnerCommissionPromoCode() {
+        return ownerCommissionPromoCode;
+    }
+
+    public void setOwnerCommissionPromoCode(String ownerCommissionPromoCode) {
+        this.ownerCommissionPromoCode = ownerCommissionPromoCode;
+    }
+
+    public boolean isOwnerCommissionPromoConsumed() {
+        return ownerCommissionPromoConsumed;
+    }
+
+    public void setOwnerCommissionPromoConsumed(boolean ownerCommissionPromoConsumed) {
+        this.ownerCommissionPromoConsumed = ownerCommissionPromoConsumed;
     }
 
     public Integer getTotalUnits() {

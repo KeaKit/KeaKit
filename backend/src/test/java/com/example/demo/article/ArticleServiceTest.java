@@ -1,5 +1,6 @@
 package com.example.demo.article;
 
+import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
@@ -8,10 +9,12 @@ import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.ArticleAvailabilityRequestService;
 import com.example.demo.service.ArticleService;
 import com.example.demo.service.CloudinaryService;
 import com.example.demo.service.DefaultKitService;
 import com.example.demo.service.PaymentService;
+import com.example.demo.service.PromoCodeService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +24,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +48,8 @@ class ArticleServiceTest {
     @Mock private CloudinaryService cloudinaryService;
     @Mock private DefaultKitService defaultKitService;
     @Mock private PaymentService paymentService;
+    @Mock private ArticleAvailabilityRequestService availabilityRequestService; 
+    @Mock private PromoCodeService promoCodeService;
 
     @InjectMocks
     private ArticleService articleService;
@@ -50,7 +58,7 @@ class ArticleServiceTest {
     private Category category;
     private Article article;
 
-    private static final LocalDate FROM  = LocalDate.now().plusDays(1);
+    private static final LocalDate FROM = LocalDate.now().plusDays(1);
     private static final LocalDate UNTIL = LocalDate.now().plusDays(30);
 
     @BeforeEach
@@ -82,7 +90,8 @@ class ArticleServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
     }
 
-    // Helper: crea un artículo simple sin categoría (para tests que no usen rango de precio)
+    // Helper: crea un artículo simple sin categoría (para tests que no usen rango
+    // de precio)
     private Article makeArticle(Long id, ArticleStatus status) {
         Article a = new Article();
         a.setId(id);
@@ -110,7 +119,8 @@ class ArticleServiceTest {
 
     @Test
     void findAll_returnsAllArticles() {
-        List<Article> articles = List.of(makeArticle(1L, ArticleStatus.AVAILABLE), makeArticle(2L, ArticleStatus.RENTED));
+        List<Article> articles = List.of(makeArticle(1L, ArticleStatus.AVAILABLE),
+                makeArticle(2L, ArticleStatus.RENTED));
         when(articleRepository.findAll()).thenReturn(articles);
 
         List<Article> result = articleService.findAll();
@@ -133,7 +143,7 @@ class ArticleServiceTest {
     void findById_notFound_throws() {
         when(articleRepository.findById(99L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.findById(99L));
-        assertThat(ex.getMessage()).contains("Article not found");
+        assertThat(ex.getMessage()).contains("Artículo no encontrado");
     }
 
     // ------------ SAVE /api/article/upload ------------
@@ -141,47 +151,47 @@ class ArticleServiceTest {
     @Test
     void save_nullArticle_throws() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> articleService.save(null));
-        assertThat(ex.getMessage()).contains("Article payload is required");
+        assertThat(ex.getMessage()).contains("Payload del artículo requerido");
     }
 
     @Test
     void save_missingTitle_throws() {
         article.setTitle(null);
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Title is required");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Título requerido");
     }
 
     @Test
     void save_emptyTitle_throws() {
         article.setTitle("   ");
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Title is required");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Título requerido");
     }
 
     @Test
     void save_missingDescription_throws() {
         article.setDescription(null);
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Description is required");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Descripción requerida");
     }
 
     @Test
     void save_blankDescription_throws() {
         article.setDescription("  ");
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Description is required");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Descripción requerida");
     }
 
     @Test
     void save_descriptionTooLong_throws() {
         article.setDescription("a".repeat(1001));
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Description cannot exceed 1000 characters");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("La descripción no puede exceder los 1000 caracteres");
     }
 
     @Test
@@ -195,32 +205,32 @@ class ArticleServiceTest {
     void save_missingCity_throws() {
         article.setCity(null);
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("City is required");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Ciudad requerida");
     }
 
     @Test
     void save_blankCity_throws() {
         article.setCity(" ");
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("City is required");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Ciudad requerida");
     }
 
     @Test
     void save_nullPricePerMonth_throws() {
         article.setPricePerMonth(null);
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("pricePerMonth must be >= 0");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("El precio por mes debe ser un valor positivo");
     }
 
     @Test
     void save_negativePrice_throws() {
         article.setPricePerMonth(-1.0);
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("pricePerMonth must be >= 0");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("El precio por mes debe ser un valor positivo");
     }
 
     @Test
@@ -236,16 +246,16 @@ class ArticleServiceTest {
     void save_priceBelowCategoryMin_throws() {
         article.setPricePerMonth(1.0); // < minPrice 5.0
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("pricePerMonth must be between");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("El precio por mes debe estar entre");
     }
 
     @Test
     void save_priceAboveCategoryMax_throws() {
         article.setPricePerMonth(9999.0); // > maxPrice 500.0
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("pricePerMonth must be between");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("El precio por mes debe estar entre");
     }
 
     @Test
@@ -259,8 +269,8 @@ class ArticleServiceTest {
     void save_availableFromInPast_throws() {
         article.setAvailableFrom(LocalDate.now().minusDays(1));
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("availableFrom cannot be in the past");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("La fecha de inicio de disponibilidad no puede ser pasada a la actual");
     }
 
     @Test
@@ -268,8 +278,8 @@ class ArticleServiceTest {
         article.setAvailableFrom(LocalDate.now().plusDays(10));
         article.setAvailableUntil(LocalDate.now().plusDays(5));
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("availableFrom must be before or equal to availableUntil");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
     }
 
     @Test
@@ -286,8 +296,8 @@ class ArticleServiceTest {
     void save_nullOwner_throws() {
         article.setOwner(null);
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Owner (with valid id) is required");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Propietario con id válido es requerido");
     }
 
     @Test
@@ -296,16 +306,16 @@ class ArticleServiceTest {
         noIdOwner.setId(null);
         article.setOwner(noIdOwner);
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Owner (with valid id) is required");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Propietario con id válido es requerido");
     }
 
     @Test
     void save_ownerNotFound_throws() {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> articleService.save(article))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Owner not found");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Propietario no encontrado");
     }
 
     @Test
@@ -331,6 +341,21 @@ class ArticleServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getTitle()).isEqualTo("Taladro");
         verify(articleRepository).save(article);
+    }
+
+    @Test
+    void save_withOwnerCommissionPromoCode_normalizesValidatesAndPersists() {
+        article.setOwnerCommissionPromoCode(" owner10 ");
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+                .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+        when(articleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Article result = articleService.save(article);
+
+        assertThat(result.getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
+        verify(promoCodeService).validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com");
+        verify(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+        verify(articleRepository).save(argThat(saved -> "OWNER10".equals(saved.getOwnerCommissionPromoCode())));
     }
 
     // ------------ UPDATE /api/article/{id} ------------
@@ -376,8 +401,8 @@ class ArticleServiceTest {
     void update_notFound_throws() {
         when(articleRepository.findById(99L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class,
-            () -> articleService.update(99L, owner.getId(), new Article()));
-        assertThat(ex.getMessage()).contains("Article not found");
+                () -> articleService.update(99L, owner.getId(), new Article()));
+    assertThat(ex.getMessage()).contains("Artículo no encontrado");
     }
 
     @Test
@@ -386,8 +411,8 @@ class ArticleServiceTest {
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, new Article()))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Article is currently rented and cannot be edited");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("El artículo está actualmente alquilado y no puede ser editado");
     }
 
     @Test
@@ -399,8 +424,8 @@ class ArticleServiceTest {
         when(articleRepository.findById(4L)).thenReturn(Optional.of(a));
 
         assertThatThrownBy(() -> articleService.update(4L, 1L, new Article()))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Only the owner can modify this article");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessage("Solo el propietario puede modificar este artículo");
     }
 
     @Test
@@ -411,8 +436,8 @@ class ArticleServiceTest {
         updateData.setStatus(ArticleStatus.RENTED);
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Cannot change status via update; use toggleRent endpoint");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessage("No se puede cambiar el estado a través de la actualización; use el endpoint toggleRent");
     }
 
     @Test
@@ -423,8 +448,8 @@ class ArticleServiceTest {
         updateData.setDescription("a".repeat(1001));
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Description cannot exceed 1000 characters");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessage("La descripción no puede exceder 1000 caracteres");
     }
 
     @Test
@@ -435,8 +460,8 @@ class ArticleServiceTest {
         updateData.setPricePerMonth(9999.0);
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("pricePerMonth must be between");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("El precio por mes debe estar entre");
     }
 
     @Test
@@ -447,8 +472,8 @@ class ArticleServiceTest {
         updateData.setAvailableFrom(LocalDate.now().minusDays(1));
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("availableFrom cannot be in the past");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessage("La fecha de inicio de disponibilidad no puede ser pasada a la actual");
     }
 
     @Test
@@ -460,8 +485,8 @@ class ArticleServiceTest {
         updateData.setAvailableUntil(LocalDate.now().plusDays(5));
 
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("availableFrom must be before or equal to availableUntil");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessage("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
     }
 
     @Test
@@ -481,7 +506,7 @@ class ArticleServiceTest {
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
         when(articleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        LocalDate newFrom  = LocalDate.now().plusDays(5);
+        LocalDate newFrom = LocalDate.now().plusDays(5);
         LocalDate newUntil = LocalDate.now().plusDays(60);
 
         Article updateData = new Article();
@@ -522,8 +547,8 @@ class ArticleServiceTest {
         when(articleRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> articleService.deleteById(99L, 1L))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Article not found");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Artículo no encontrado");
     }
 
     @Test
@@ -532,8 +557,8 @@ class ArticleServiceTest {
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
 
         assertThatThrownBy(() -> articleService.deleteById(1L, 1L))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Article is currently rented and cannot be deleted");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessage("El artículo está actualmente alquilado y no puede ser eliminado");
     }
 
     @Test
@@ -545,8 +570,8 @@ class ArticleServiceTest {
         when(articleRepository.findById(10L)).thenReturn(Optional.of(a));
 
         assertThatThrownBy(() -> articleService.deleteById(10L, 1L))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Only the owner can delete this article");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessage("Solo el propietario puede eliminar este artículo");
     }
 
     // ------------ toggleRent ------------
@@ -576,8 +601,8 @@ class ArticleServiceTest {
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
 
         assertThatThrownBy(() -> articleService.toggleRent(1L, 1L))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Inactive articles cannot be rented");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessage("Los artículos inactivos no pueden ser alquilados");
     }
 
     @Test
@@ -589,8 +614,8 @@ class ArticleServiceTest {
         when(articleRepository.findById(14L)).thenReturn(Optional.of(a));
 
         assertThatThrownBy(() -> articleService.toggleRent(14L, 1L))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Only the owner can change rental status");
+                .isInstanceOf(RuntimeException.class)
+        .hasMessage("Solo el propietario puede cambiar el estado de alquiler");
     }
 
     @Test
@@ -598,12 +623,13 @@ class ArticleServiceTest {
         when(articleRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> articleService.toggleRent(99L, 1L))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Article not found");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Artículo no encontrado");
     }
 
     // ------------ findArticlesByUserId ------------
 
+    @SuppressWarnings("unchecked")
     @Test
     void findArticlesByUserId_returnsUserArticleDtos() {
         Article rented = new Article();
@@ -614,9 +640,10 @@ class ArticleServiceTest {
         rented.setStatus(ArticleStatus.RENTED);
         rented.setAvailableUntil(UNTIL);
 
-        when(articleRepository.findByOwnerId(1L)).thenReturn(List.of(article, rented));
+        when(articleRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of(article, rented));
 
-        var result = articleService.findArticlesByUserId(1L);
+        var result = articleService.findArticlesByUserId(1L, null, null, null, null);
 
         assertThat(result).hasSize(2);
 
@@ -627,6 +654,7 @@ class ArticleServiceTest {
         assertThat(availableDto.rentedUntil()).isNull();
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void findArticlesByUserId_detailedDtoMapping() {
         Article articleAvailable = makeArticle(10L, ArticleStatus.AVAILABLE);
@@ -638,10 +666,10 @@ class ArticleServiceTest {
         LocalDate rentalEndDate = LocalDate.now().plusDays(10);
         articleRented.setAvailableUntil(rentalEndDate);
 
-        when(articleRepository.findByOwnerId(owner.getId()))
-            .thenReturn(List.of(articleAvailable, articleRented));
+        when(articleRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of(articleAvailable, articleRented));
 
-        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null, null);
 
         assertThat(result).hasSize(2);
 
@@ -656,25 +684,28 @@ class ArticleServiceTest {
         assertThat(dtoRented.rentedUntil()).isEqualTo(rentalEndDate);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void findArticlesByUserId_emptyList_returnsEmpty() {
-        when(articleRepository.findByOwnerId(99L)).thenReturn(List.of());
+        when(articleRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        var result = articleService.findArticlesByUserId(99L);
+        var result = articleService.findArticlesByUserId(99L, null, null, null, null);
         assertThat(result).isEmpty();
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void findArticlesByUserId_whenUserHasNoArticles_returnsEmptyAndNotNull() {
-        when(articleRepository.findByOwnerId(owner.getId())).thenReturn(List.of());
+        when(articleRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId());
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null, null);
 
         assertThat(result).isNotNull();
         assertThat(result).isEmpty();
     }
 
-    // ------------ countArticlesByCategory / findLatestArticlesByCategory ------------
+    // ------------ countArticlesByCategory / findLatestArticlesByCategory
+    // ------------
 
     @Test
     void countArticlesByCategory_returnsCount() {
@@ -714,8 +745,9 @@ class ArticleServiceTest {
         when(articleRepository.findById(20L)).thenReturn(Optional.of(a));
         when(kitRepository.findActiveKitByItemId(20L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
         when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
-        
-        // Simulamos que el PaymentService procesa todo bien y nos devuelve que la fianza eran 20.0€
+
+        // Simulamos que el PaymentService procesa todo bien y nos devuelve que la
+        // fianza eran 20.0€
         when(paymentService.processGuaranteeReturn(1L, owner.getId(), 2L, "GOOD")).thenReturn(20.0);
 
         ReturnRequest request = new ReturnRequest("GOOD", "Todo perfecto");
@@ -739,11 +771,15 @@ class ArticleServiceTest {
         tenant.setEmail("damaged@example.com");
         Kit activeKit = makeActiveKit(tenant);
 
+        // NUEVO: Añadimos el snapshot al kit simulado
+        ItemMemento memento = new ItemMemento();
+        memento.setOriginalItemId(21L);
+        activeKit.setSnapshots(List.of(memento));
+
         when(articleRepository.findById(21L)).thenReturn(Optional.of(a));
         when(kitRepository.findActiveKitByItemId(21L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
         when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
-        
-        // Simulamos la fianza retenida
+
         when(paymentService.processGuaranteeReturn(1L, owner.getId(), 3L, "DAMAGED")).thenReturn(40.0);
 
         ReturnRequest request = new ReturnRequest("DAMAGED", "Tiene arañazos");
@@ -755,30 +791,21 @@ class ArticleServiceTest {
         assertThat(response.tenantEmail()).isEqualTo("damaged@example.com");
         assertThat(response.message()).contains("daños");
         verify(articleRepository).save(a);
-        assertThat(a.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
+        
+        // CORRECCIÓN: El estado correcto ahora es DAMAGED, no AVAILABLE
+        assertThat(a.getStatus()).isEqualTo(ArticleStatus.DAMAGED);
     }
 
     @Test
     void processReturn_invalidCondition_throws() throws Exception {
-        Article a = makeArticle(22L, ArticleStatus.RENTED);
-        User tenant = new User();
-        tenant.setId(4L);
-        tenant.setEmail("t@example.com");
-        Kit activeKit = makeActiveKit(tenant);
-
-        when(articleRepository.findById(22L)).thenReturn(Optional.of(a));
-        when(kitRepository.findActiveKitByItemId(22L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
-        
-        // Simulamos que el PaymentService lanza la excepción por condición inválida
-        when(paymentService.processGuaranteeReturn(1L, owner.getId(), 4L, "UNKNOWN"))
-                .thenThrow(new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED."));
-
+        // Al igual que en el test 4, la validación falla en la línea 1
         ReturnRequest request = new ReturnRequest("UNKNOWN", "");
 
-        // Ahora ArticleService envuelve el error en un RuntimeException
-        RuntimeException ex = assertThrows(RuntimeException.class,
-            () -> articleService.processReturn(22L, owner.getId(), request));
-        assertThat(ex.getMessage()).contains("Error procesando la devolución de la garantía");
+        // CORRECCIÓN: Comprobamos el IllegalArgumentException exacto
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> articleService.processReturn(22L, owner.getId(), request));
+                
+        assertThat(ex.getMessage()).isEqualTo("Condición no válida. Usa GOOD o DAMAGED.");
     }
 
     @Test
@@ -794,8 +821,9 @@ class ArticleServiceTest {
         when(articleRepository.findById(26L)).thenReturn(Optional.of(a));
         when(kitRepository.findActiveKitByItemId(26L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
         when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
-        
-        // Mock necesario para que no lance un NullPointerException al llegar a esa línea
+
+        // Mock necesario para que no lance un NullPointerException al llegar a esa
+        // línea
         when(paymentService.processGuaranteeReturn(1L, owner.getId(), 5L, "GOOD")).thenReturn(10.0);
 
         ReturnRequest request = new ReturnRequest("GOOD", "");
@@ -804,5 +832,104 @@ class ArticleServiceTest {
         assertThat(a.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
         assertThat(a.getAvailableUntil()).isNull();
         verify(articleRepository).save(a);
+    }
+
+    // Test Filtros MyArticles
+    @SuppressWarnings("unchecked")
+    @Test
+    void findArticlesByUserId_withFilters_returnsFilteredDtoMapping() {
+
+        Article filteredArticle = new Article();
+        filteredArticle.setId(12L);
+        filteredArticle.setTitle("Martillo");
+        filteredArticle.setStatus(ArticleStatus.AVAILABLE);
+        filteredArticle.setCondition(ArticleCondition.NEW);
+        filteredArticle.setPricePerMonth(15.0);
+
+        when(articleRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of(filteredArticle));
+
+        List<UserArticle> result = articleService.findArticlesByUserId(1L, 2L, "NEW", 10.0, 20.0);
+
+        assertThat(result).hasSize(1);
+        UserArticle dto = result.get(0);
+        assertThat(dto.title()).isEqualTo("Martillo");
+
+        assertThat(dto.status()).isEqualTo("AVAILABLE");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void findArticlesByUserId_withFiltersNoMatches_returnsEmpty() {
+
+        when(articleRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of());
+
+        List<UserArticle> result = articleService.findArticlesByUserId(1L, 99L, "BROKEN", 100.0, 500.0);
+
+        assertThat(result).isNotNull();
+    }
+
+    // ------------ findArticleRecord ------------
+
+    @Test
+    void findArticleRecord_returnsMappedAndFilteredDtos() {
+        User tenant = new User();
+        tenant.setId(2L);
+        tenant.setName("Inquilino Test");
+
+        Kit activeKit = new Kit();
+        activeKit.setId(10L);
+        activeKit.setStatus(KitStatus.ACTIVE);
+        activeKit.setTenant(tenant);
+        activeKit.setStartDate(LocalDate.now().minusDays(5));
+        activeKit.setEndDate(LocalDate.now().plusDays(5));
+        activeKit.setCity("Barcelona");
+        activeKit.setCountry("España");
+
+        Kit draftKit = new Kit();
+        draftKit.setStatus(KitStatus.DRAFT);
+
+        Kit cancelledKit = new Kit();
+        cancelledKit.setStatus(KitStatus.CANCELLED);
+
+        when(articleRepository.findAllKitsWhereArticleHasBeen(1L))
+                .thenReturn(List.of(activeKit, draftKit, cancelledKit));
+
+        List<com.example.demo.dto.ArticleRecordDTO> result = articleService.findArticleRecord(1L);
+
+        assertThat(result).hasSize(1);
+        var dto = result.get(0);
+        assertThat(dto.getTenantId()).isEqualTo(2L);
+        assertThat(dto.getTenantName()).isEqualTo("Inquilino Test");
+        assertThat(dto.getCity()).isEqualTo("Barcelona");
+        assertThat(dto.getStatus()).isEqualTo(KitStatus.ACTIVE);
+        assertThat(dto.getStartDate()).isEqualTo(activeKit.getStartDate());
+
+        verify(articleRepository).findAllKitsWhereArticleHasBeen(1L);
+    }
+
+    @Test
+    void findArticleRecord_whenNoKitsFound_returnsEmptyList() {
+        when(articleRepository.findAllKitsWhereArticleHasBeen(99L)).thenReturn(List.of());
+
+        List<com.example.demo.dto.ArticleRecordDTO> result = articleService.findArticleRecord(99L);
+
+        assertThat(result).isEmpty();
+        assertThat(result).isNotNull();
+    }
+
+    @Test
+    void findArticleRecord_filtersAllKitsIfAllAreDraftOrCancelled() {
+        Kit draft = new Kit();
+        draft.setStatus(KitStatus.DRAFT);
+        Kit cancelled = new Kit();
+        cancelled.setStatus(KitStatus.CANCELLED);
+
+        when(articleRepository.findAllKitsWhereArticleHasBeen(1L)).thenReturn(List.of(draft, cancelled));
+
+        List<com.example.demo.dto.ArticleRecordDTO> result = articleService.findArticleRecord(1L);
+
+        assertThat(result).isEmpty();
     }
 }

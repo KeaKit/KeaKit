@@ -4,7 +4,9 @@ import com.example.demo.model.*;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +23,7 @@ import java.time.LocalDate;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
@@ -32,6 +36,9 @@ class ArticleIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private EntityManager entityManager;
+
+    @MockitoBean private AuthService authService;
 
     private User savedOwner;
     private Article savedArticle;
@@ -110,7 +117,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Owner not found"));
+            .andExpect(content().string("Propietario no encontrado"));
     }
 
     @Test
@@ -126,7 +133,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Title is required"));
+            .andExpect(content().string("Título requerido"));
     }
 
     @Test
@@ -143,7 +150,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("pricePerMonth must be >= 0"));
+            .andExpect(content().string("El precio por mes debe ser un valor positivo"));
     }
 
     // RN-ART-06: precio fuera del rango de la categoría (5–500)
@@ -161,7 +168,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("pricePerMonth must be between")));
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("El precio por mes debe estar entre")));
     }
 
     // RN-ART-03: descripción > 1000 caracteres
@@ -179,7 +186,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Description cannot exceed 1000 characters"));
+            .andExpect(content().string("La descripción no puede exceder los 1000 caracteres"));
     }
 
     // RN-ART-11: availableFrom posterior a availableUntil
@@ -199,7 +206,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("availableFrom must be before or equal to availableUntil"));
+            .andExpect(content().string("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización"));
     }
 
     @Test
@@ -218,7 +225,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newArticle)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("availableFrom cannot be in the past"));
+            .andExpect(content().string("La fecha de inicio de disponibilidad no puede ser pasada a la actual"));
     }
 
 
@@ -276,7 +283,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Description cannot exceed 1000 characters"));
+            .andExpect(content().string("La descripción no puede exceder 1000 caracteres"));
     }
 
     @Test
@@ -289,7 +296,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("pricePerMonth must be between")));
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("El precio por mes debe estar entre")));
     }
 
     @Test
@@ -302,7 +309,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article not found"));
+            .andExpect(content().string("Artículo no encontrado"));
     }
 
     @Test
@@ -318,7 +325,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article is currently rented and cannot be edited"));
+            .andExpect(content().string("El artículo está actualmente alquilado y no puede ser editado"));
     }
 
     @Test
@@ -331,7 +338,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Only the owner can modify this article"));
+            .andExpect(content().string("Solo el propietario puede modificar este artículo"));
     }
 
     @Test
@@ -344,7 +351,7 @@ class ArticleIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateData)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Cannot change status via update; use toggleRent endpoint"));
+            .andExpect(content().string("No se puede cambiar el estado a través de la actualización; use el endpoint toggleRent"));
     }
 
     // ------------ DELETE /api/article/{id} ------------
@@ -363,7 +370,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(delete("/api/article/" + savedArticle.getId())
                 .param("ownerId", "999"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Only the owner can delete this article"));
+            .andExpect(content().string("Solo el propietario puede eliminar este artículo"));
 
         assertThat(articleRepository.existsById(savedArticle.getId())).isTrue();
     }
@@ -373,7 +380,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(delete("/api/article/999999")
                 .param("ownerId", savedOwner.getId().toString()))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article not found"));
+            .andExpect(content().string("Artículo no encontrado"));
     }
 
     @Test
@@ -384,7 +391,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(delete("/api/article/" + savedArticle.getId())
                 .param("ownerId", savedOwner.getId().toString()))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article is currently rented and cannot be deleted"));
+            .andExpect(content().string("El artículo está actualmente alquilado y no puede ser eliminado"));
 
         assertThat(articleRepository.existsById(savedArticle.getId())).isTrue();
     }
@@ -423,7 +430,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(post("/api/article/" + savedArticle.getId() + "/toggle-rent")
                 .param("ownerId", savedOwner.getId().toString()))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Inactive articles cannot be rented"));
+            .andExpect(content().string("Los artículos inactivos no pueden ser alquilados"));
     }
 
     @Test
@@ -431,7 +438,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(post("/api/article/" + savedArticle.getId() + "/toggle-rent")
                 .param("ownerId", "999"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Only the owner can change rental status"));
+            .andExpect(content().string("Solo el propietario puede cambiar el estado de alquiler"));
     }
 
     @Test
@@ -439,7 +446,7 @@ class ArticleIntegrationTest {
         mockMvc.perform(post("/api/article/999999/toggle-rent")
                 .param("ownerId", savedOwner.getId().toString()))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Article not found"));
+        .andExpect(content().string("Artículo no encontrado"));
     }
 
 
@@ -457,5 +464,123 @@ class ArticleIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].title").value("Taladro"));
+    }
+
+    @Test
+    void testGetMyArticles_Integration_ReturnsPersistedOwnerCommissionPromoCode() throws Exception {
+        savedArticle.setOwnerCommissionPromoCode("OWNER10");
+        articleRepository.saveAndFlush(savedArticle);
+        entityManager.clear();
+
+        Article persisted = articleRepository.findById(savedArticle.getId()).orElseThrow();
+        assertThat(persisted.getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
+
+        mockMvc.perform(get("/api/article/" + savedArticle.getId()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.ownerCommissionPromoCode").value("OWNER10"));
+
+        mockMvc.perform(get("/api/article/my-articles/" + savedOwner.getId()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(savedArticle.getId()))
+            .andExpect(jsonPath("$[0].ownerCommissionPromoCode").value("OWNER10"));
+    }
+
+    // Test Filtros My Articles 
+@Test
+    void testGetMyArticles_Integration_WithFilters_Success() throws Exception {
+        
+        Article article1 = new Article();
+        article1.setTitle("Taladro Nuevo");
+        article1.setDescription("Taladro en perfectas condiciones");
+        article1.setCity("Madrid"); 
+        article1.setOwner(savedOwner);
+        article1.setCategory(savedCategory);
+        article1.setCondition(ArticleCondition.NEW); 
+        article1.setPricePerMonth(20.0);
+        articleRepository.save(article1); 
+
+        Article article2 = new Article();
+        article2.setTitle("Taladro Usado");
+        article2.setDescription("Taladro con algunas marcas de uso"); 
+        article2.setCity("Barcelona"); 
+        article2.setOwner(savedOwner);
+        article2.setCategory(savedCategory);
+        article2.setCondition(ArticleCondition.USED); 
+        article2.setPricePerMonth(10.0);
+        articleRepository.save(article2); 
+
+        Article article3 = new Article();
+        article3.setTitle("Bicicleta Cara");
+        article3.setDescription("Bicicleta de montaña profesional");
+        article3.setCity("Valencia"); 
+        article3.setOwner(savedOwner);
+        article3.setCategory(savedCategory);
+        article3.setCondition(ArticleCondition.NEW);
+        article3.setPricePerMonth(100.0);
+        articleRepository.save(article3); 
+
+   
+        mockMvc.perform(get("/api/article/my-articles/" + savedOwner.getId())
+                .param("categoryId", savedCategory.getId().toString())
+                .param("condition", "NEW")
+                .param("maxPrice", "50.0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Taladro Nuevo"));
+    }
+
+   @Test
+    void testGetMyArticles_Integration_FilterByPriceRange_Success() throws Exception {
+
+        Article cheap = new Article();
+        cheap.setTitle("Barato");
+        cheap.setDescription("Descripción del artículo barato"); 
+        cheap.setCity("Sevilla");                               
+        cheap.setCondition(ArticleCondition.USED);              
+        cheap.setCategory(savedCategory);                        
+        cheap.setOwner(savedOwner);
+        cheap.setPricePerMonth(5.0);
+        articleRepository.save(cheap);
+
+  
+        Article medium = new Article();
+        medium.setTitle("Medio");
+        medium.setDescription("Descripción del artículo medio");  
+        medium.setCity("Madrid");                                 
+        medium.setCondition(ArticleCondition.NEW);                
+        medium.setCategory(savedCategory);                        
+        medium.setOwner(savedOwner);
+        medium.setPricePerMonth(15.0);
+        articleRepository.save(medium);
+
+  
+        mockMvc.perform(get("/api/article/my-articles/" + savedOwner.getId())
+                .param("minPrice", "10.0")
+                .param("maxPrice", "20.0"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].title").value("Medio"));} 
+
+    @Test
+    void testGetArticleRecord_Integration_Success() throws Exception {
+        // Simulamos que el usuario autenticado es el dueño del artículo
+        when(authService.getAuthenticatedUserId()).thenReturn(savedOwner.getId());
+
+        // El servicio findArticleRecord ya fue testeado en los unitarios, 
+        // aquí comprobamos que el flujo completo del endpoint funcione.
+        mockMvc.perform(get("/api/article/record/" + savedArticle.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray());
+                
+    }
+
+    @Test
+    void testGetArticleRecord_Integration_Failure_Forbidden() throws Exception {
+        when(authService.getAuthenticatedUserId()).thenReturn(999L);
+
+        mockMvc.perform(get("/api/article/record/" + savedArticle.getId()))
+                .andExpect(status().isForbidden());
     }
 }

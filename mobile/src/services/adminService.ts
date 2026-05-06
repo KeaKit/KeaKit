@@ -1,6 +1,25 @@
 import { API_ROUTES } from '../config/api';
 import { UserResponse } from '../types';
 
+type AdminUserPayload = {
+  name: string;
+  email: string;
+  password?: string;
+  role?: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+};
+
+// Nueva interfaz para la respuesta de delete
+export interface DeleteUserResponse {
+  success: boolean;
+  message: string;
+  code?: string;
+  resolution?: string;
+}
+
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
 // Normaliza errores del backend
@@ -8,6 +27,8 @@ const normalizeErrorMessage = (raw: string): string => {
   const lower = raw.toLowerCase();
   if (lower.includes('email already')) return 'El correo ya está registrado.';
   if (lower.includes('not found')) return 'Usuario no encontrado.';
+  if (lower.includes('alquileres activos')) return raw;
+  if (lower.includes('está en un alquiler')) return raw;
   return raw;
 };
 
@@ -20,6 +41,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
       const contentType = res.headers.get('content-type');
       if (contentType?.includes('application/json')) {
         const errorData = await res.json();
+        // Para errores, el backend ahora devuelve { success: false, message, ... }
         errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
       } else {
         errorMessage = await res.text();
@@ -57,31 +79,40 @@ export async function getAllUsers(token: string): Promise<UserResponse[]> {
   return handleResponse<UserResponse[]>(res);
 }
 
-// Eliminar usuario
-export async function deleteUser(id: number, token: string): Promise<void> {
+export async function getAdminUsers(token: string): Promise<UserResponse[]> {
+  const res = await fetch(API_ROUTES.GET_ADMIN_ALL_USERS, {
+    method: 'GET',
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<UserResponse[]>(res);
+}
+
+// Eliminar usuario - MODIFICADO: ahora devuelve DeleteUserResponse
+export async function deleteUser(id: number, token: string): Promise<DeleteUserResponse> {
   const res = await fetch(API_ROUTES.DELETE_USER(id), {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
-  await handleResponse<void>(res); // manejar 204
+  
+  // Para DELETE, la respuesta ahora es siempre JSON con { success, message, ... }
+  return handleResponse<DeleteUserResponse>(res);
 }
 
 export async function createUser(
-  data: { name: string; email: string; password: string; role?: string },
+  data: AdminUserPayload,
   token: string
 ): Promise<UserResponse> {
-  const payload = { ...data, role: data.role || 'USER' }; // role obligatorio
   const res = await fetch(API_ROUTES.CREATE_USER, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(data),
   });
   return handleResponse<UserResponse>(res);
 }
 
 export async function updateUser(
   id: number,
-  data: { name?: string; email?: string; password?: string; role?: string },
+  data: Partial<AdminUserPayload>,
   token: string
 ): Promise<UserResponse> {
   const res = await fetch(API_ROUTES.UPDATE_USER(id), {
@@ -91,3 +122,11 @@ export async function updateUser(
   });
   return handleResponse<UserResponse>(res);
 }
+
+export const toggleFounderBadge = async (userId: number, token: string): Promise<UserResponse> => {
+  const res = await fetch(API_ROUTES.TOGGLE_FOUNDER_BADGE(userId), {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<UserResponse>(res);
+};

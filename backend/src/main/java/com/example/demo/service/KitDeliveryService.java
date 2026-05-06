@@ -54,10 +54,10 @@ public class KitDeliveryService {
 
     public KitDeliveryResponse getTracking(Long kitId) {
         Kit kit = kitRepository.findById(kitId)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+            .orElseThrow(() -> new RuntimeException("Kit no encontrado"));
 
         KitDelivery delivery = kitDeliveryRepository.findByKitId(kitId)
-            .orElseThrow(() -> new RuntimeException("Delivery not found"));
+            .orElseThrow(() -> new RuntimeException("Delivery no encontrado"));
 
         validateViewAccess(kit, delivery);
 
@@ -66,7 +66,7 @@ public class KitDeliveryService {
 
     public KitDeliveryResponse updateTracking(Long kitId, UpdateDeliveryRequest request) {
         KitDelivery delivery = kitDeliveryRepository.findByKitId(kitId)
-            .orElseThrow(() -> new RuntimeException("Delivery not found"));
+            .orElseThrow(() -> new RuntimeException("Delivery no encontrado"));
 
         validateUpdateAccess(delivery);
 
@@ -90,17 +90,17 @@ public class KitDeliveryService {
 
     public KitDeliveryResponse assignCourier(Long kitId, Long courierId) {
         if (!authService.isAdmin()) {
-            throw new RuntimeException("Only ADMIN can assign courier");
+            throw new RuntimeException("Solo un ADMIN puede asignar un repartidor");
         }
 
         Kit kit = kitRepository.findById(kitId)
-            .orElseThrow(() -> new RuntimeException("Kit not found"));
+            .orElseThrow(() -> new RuntimeException("Kit no encontrado"));
 
         User courier = userRepository.findById(courierId)
-            .orElseThrow(() -> new RuntimeException("Courier not found"));
+            .orElseThrow(() -> new RuntimeException("Repartidor no encontrado"));
 
         if (courier.getRole() != UserRole.COURIER) {
-            throw new RuntimeException("User is not COURIER");
+            throw new RuntimeException("El usuario no es un COURIER");
         }
 
         KitDelivery delivery = kitDeliveryRepository.findByKitId(kitId)
@@ -125,11 +125,11 @@ public class KitDeliveryService {
             if (courier != null && courier.getId().equals(authService.getAuthenticatedUserId())) {
                 return;
             }
-            throw new RuntimeException("Courier not assigned to this kit");
+            throw new RuntimeException("Repartidor no asignado a este kit");
         }
 
         if (kit.getTenant() == null || !kit.getTenant().getId().equals(authService.getAuthenticatedUserId())) {
-            throw new RuntimeException("You don't have access to this kit");
+            throw new RuntimeException("No tienes acceso a este kit");
         }
     }
 
@@ -147,7 +147,7 @@ public class KitDeliveryService {
             }
         }
 
-        throw new RuntimeException("Only assigned courier or admin can update tracking");
+        throw new RuntimeException("Solo el repartidor asignado o un administrador puede actualizar el seguimiento");
     }
 
     private LocalDateTime buildInitialEstimate(Kit kit) {
@@ -162,7 +162,7 @@ public class KitDeliveryService {
         UserRole role = authService.getAuthenticatedUserRole();
 
         if (role != UserRole.COURIER && role != UserRole.ADMIN) {
-            throw new RuntimeException("Only COURIER or ADMIN can access assigned kits");
+            throw new RuntimeException("Solo el COURIER o un ADMIN puede acceder a los kits asignados");
         }
 
         Long courierId = authService.getAuthenticatedUserId();
@@ -185,7 +185,7 @@ public class KitDeliveryService {
 
     public List<Long> getBusyCourierIds(String country, String city) {
     if (!authService.isAdmin()) {
-        throw new RuntimeException("Only ADMIN can view busy couriers");
+        throw new RuntimeException("Solo un ADMIN puede ver los repartidores ocupados");
     }
 
     return kitDeliveryRepository.findAll().stream()
@@ -206,7 +206,7 @@ public class KitDeliveryService {
 
     public List<KitResponse> getUnassignedPaidKits(String country, String city) {
         if (!authService.isAdmin()) {
-            throw new RuntimeException("Only ADMIN can view unassigned kits");
+            throw new RuntimeException("Solo un ADMIN puede ver los kits no asignados");
         }
 
         return kitRepository.findAll().stream()

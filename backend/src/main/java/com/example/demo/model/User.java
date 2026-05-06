@@ -22,6 +22,7 @@ public class User {
     private String password;
 
     @Column(nullable = false)
+    @Size(min = 2, max = 100, message = "Name size must be between 2 and 100")
     private String name;
 
     @Column(nullable = false)
@@ -29,10 +30,11 @@ public class User {
     private UserRole role;
 
     @Column(nullable = false)
-    @Pattern(regexp = "^[0-9\\-\\+]{9,15}$", message = "Phone number must be valid")
+    @Pattern(regexp = "^(\\+\\d{1,3})?\\d{8,12}$", message = "Phone number must be valid")
     private String phone;
 
     @Column(nullable = false)
+    @Size(min = 5, max = 255, message = "Address size must be between 5 and 255")
     private String address;
 
     @Column(nullable = false)
@@ -44,6 +46,14 @@ public class User {
     @Column(nullable = false)
     private boolean isPilotUser = false;
 
+    @Column(nullable = false)
+    private boolean founderBadge = false;
+
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
+    @Column(nullable = false)
+    private int tokenVersion = 0;
 
     public User() {}
 
@@ -129,4 +139,33 @@ public class User {
     public void setCountry(String country) {
         this.country = country;
     }
+
+    public boolean isFounderBadge() { 
+        return founderBadge; 
+    }
+
+    public void setFounderBadge(boolean founderBadge) { 
+        this.founderBadge = founderBadge; 
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public Integer getTokenVersion() {
+        return tokenVersion;
+    }
+
+    public void setTokenVersion(Integer tokenVersion) {
+        this.tokenVersion = tokenVersion;
+    }
+
+    public void incrementTokenVersion() {
+        this.tokenVersion++;
+    }
+
 }

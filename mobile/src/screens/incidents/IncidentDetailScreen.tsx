@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Alert,
+  Modal,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -34,7 +34,7 @@ import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } f
 type DetailNav = NativeStackNavigationProp<RootStackParamList, 'IncidentDetail'>;
 type DetailRoute = RouteProp<RootStackParamList, 'IncidentDetail'>;
 
-const STATUS_CONFIG: Record<IncidentStatus, { label: string; color: string; icon: string }> = {
+const STATUS_CONFIG: Record<IncidentStatus, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
   OPEN: { label: 'Abierta', color: Colors.warning, icon: 'alert-circle' },
   IN_PROGRESS: { label: 'En progreso', color: Colors.info, icon: 'time' },
   RESOLVED: { label: 'Resuelta', color: Colors.success, icon: 'checkmark-circle' },
@@ -59,6 +59,8 @@ const IncidentDetailScreen: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [error, setError] = useState('');
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const commentInputRef = useRef<TextInput>(null);
 
@@ -98,7 +100,7 @@ const IncidentDetailScreen: React.FC = () => {
       setComments((prev) => [...prev, newComment]);
       setCommentText('');
     } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo añadir el comentario');
+      setError(err instanceof Error ? err.message : 'No se pudo añadir el comentario');
     } finally {
       setSubmitting(false);
     }
@@ -109,7 +111,11 @@ const IncidentDetailScreen: React.FC = () => {
     setResolving(true);
     try {
       await resolveIncident(incidentId, user.token);
-      navigation.navigate('MyIncidents');
+      if (user.role === 'ADMIN') {
+        navigation.navigate('AdminIncidents');
+      } else {
+        navigation.navigate('MyIncidents');
+      }
     } catch (err) {
       console.error('Error al resolver la incidencia:', err);
     } finally {
@@ -122,7 +128,11 @@ const IncidentDetailScreen: React.FC = () => {
     setDeleting(true);
     try {
       await deleteIncident(incidentId, user.token);
-      navigation.navigate('MyIncidents');
+      if (user.role === 'ADMIN') {
+        navigation.navigate('AdminIncidents');
+      } else {
+        navigation.navigate('MyIncidents');
+      }
     } catch (err) {
       console.error('Error al eliminar la incidencia:', err);
       setDeleting(false);
@@ -152,7 +162,7 @@ const IncidentDetailScreen: React.FC = () => {
       <View style={styles.detailContainer}>
         {/* Insignia de estado */}
         <View style={[styles.statusBadge, { backgroundColor: statusCfg.color + '20' }]}>
-          <Ionicons name={statusCfg.icon as any} size={16} color={statusCfg.color} />
+          <Ionicons name={statusCfg.icon} size={16} color={statusCfg.color} />
           <Text style={[styles.statusText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
         </View>
 
@@ -198,7 +208,7 @@ const IncidentDetailScreen: React.FC = () => {
 
         {/* Encabezado de comentarios */}
         <View style={styles.commentsHeader}>
-          <Ionicons name="chatbubbles-outline" size={20} color={Colors.textPrimary} />
+          <Ionicons name="chatbubbles" size={20} color={Colors.textPrimary} />
           <Text style={styles.commentsTitle}>
             Comentarios ({comments.length})
           </Text>
@@ -226,7 +236,7 @@ const IncidentDetailScreen: React.FC = () => {
     if (incident?.status === 'RESOLVED') return null;
     return (
       <View style={styles.emptyComments}>
-        <Ionicons name="chatbubble-ellipses-outline" size={48} color={Colors.textLight} />
+        <Ionicons name="chatbubble" size={48} color={Colors.textLight} />
         <Text style={styles.emptyCommentsText}>No hay comentarios todavía</Text>
         <Text style={styles.emptyCommentsSubtext}>Sé el primero en comentar</Text>
       </View>
@@ -238,7 +248,7 @@ const IncidentDetailScreen: React.FC = () => {
       <SafeAreaView style={commonStyles.container}>
         <View style={commonStyles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+            <Ionicons name="chevron-back" size={24} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={commonStyles.headerTitle}>Detalle</Text>
           <View style={{ width: 24 }} />
@@ -255,7 +265,7 @@ const IncidentDetailScreen: React.FC = () => {
       <SafeAreaView style={commonStyles.container}>
         <View style={commonStyles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+            <Ionicons name="chevron-back" size={24} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={commonStyles.headerTitle}>Detalle</Text>
           <View style={{ width: 24 }} />
@@ -281,7 +291,7 @@ const IncidentDetailScreen: React.FC = () => {
       {/* Cabecera */}
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <Ionicons name="chevron-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle} numberOfLines={1}>
           {isReceived ? 'Incidencia recibida' : 'Mi incidencia'}
@@ -339,7 +349,7 @@ const IncidentDetailScreen: React.FC = () => {
           <View style={styles.actionButtonsRow}>
             <TouchableOpacity
               style={[styles.resolveButton, resolving && styles.buttonDisabled]}
-              onPress={handleResolve}
+              onPress={() => { setShowResolveModal(true); }}
               disabled={resolving}
               activeOpacity={0.7}
             >
@@ -347,14 +357,14 @@ const IncidentDetailScreen: React.FC = () => {
                 <ActivityIndicator size="small" color={Colors.success} />
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle-outline" size={18} color={Colors.success} />
+                  <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
                   <Text style={styles.resolveButtonText}>Marcar resuelta</Text>
                 </>
               )}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.deleteButton, deleting && styles.buttonDisabled, styles.deleteButtonHalf]}
-              onPress={handleDelete}
+              onPress={() => { setShowDeleteModal(true); }}
               disabled={deleting}
               activeOpacity={0.7}
             >
@@ -362,13 +372,79 @@ const IncidentDetailScreen: React.FC = () => {
                 <ActivityIndicator size="small" color={Colors.error} />
               ) : (
                 <>
-                  <Ionicons name="trash-outline" size={18} color={Colors.error} />
+                  <Ionicons name="trash" size={18} color={Colors.error} />
                   <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </>
               )}
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Modal confirmar resolver */}
+        <Modal
+          visible={showResolveModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowResolveModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Ionicons name="checkmark-circle" size={48} color={Colors.success} style={styles.modalIcon} />
+              <Text style={styles.modalTitle}>¿Marcar como resuelta?</Text>
+              <Text style={styles.modalMessage}>Esta acción cerrará la incidencia y no se podrán añadir más comentarios.</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setShowResolveModal(false)}
+                >
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalConfirmButton, { backgroundColor: Colors.success }]}
+                  onPress={() => {
+                    setShowResolveModal(false);
+                    void handleResolve();
+                  }}
+                >
+                  <Text style={styles.modalConfirmText}>Confirmar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal confirmar eliminar */}
+        <Modal
+          visible={showDeleteModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowDeleteModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Ionicons name="trash" size={48} color={Colors.error} style={styles.modalIcon} />
+              <Text style={styles.modalTitle}>¿Eliminar incidencia?</Text>
+              <Text style={styles.modalMessage}>Esta acción es irreversible. Se eliminarán también todos los comentarios asociados.</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setShowDeleteModal(false)}
+                >
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalConfirmButton, { backgroundColor: Colors.error }]}
+                  onPress={() => {
+                    setShowDeleteModal(false);
+                    void handleDelete();
+                  }}
+                >
+                  <Text style={styles.modalConfirmText}>Eliminar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -577,6 +653,67 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     opacity: 0.5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  modalCard: {
+    backgroundColor: Colors.backgroundWhite,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+  },
+  modalIcon: {
+    marginBottom: Spacing.base,
+  },
+  modalTitle: {
+    fontSize: FontSizes.lg,
+    fontWeight: FontWeights.bold as '700',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: FontSizes.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: Spacing.lg,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: Spacing.base,
+    width: '100%',
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: Spacing.base,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.semibold as '600',
+    color: Colors.textSecondary,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: Spacing.base,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  modalConfirmText: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.semibold as '600',
+    color: Colors.textWhite,
   },
 });
 

@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
   ScrollView,
   RefreshControl,
   Animated,
@@ -16,14 +17,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, RentedItemResponse, Article, DeliveryStatus, KitResponse } from '../../types';
+import { RootStackParamList, RentedItemResponse, UserArticle, DeliveryStatus, KitResponse, DemandAnalysisItem } from '../../types';
 import { Colors } from '../../styles';
-import { getLoggedUserWallet, getRentedItems, getMyArticles } from '../../services';
+import { getLoggedUserWallet, getRentedItems, getMyArticles, getTopDemandedItems } from '../../services';
 import { SkeletonPulse, FadeInItem } from '../../components';
 import ProfileMenuModal from './ProfileMenuModal';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
-import { getMyKits, getKitTracking } from "../../services/kitService";
+import { getMyKits, getKitTracking, getUpdatrableTrackingKits } from "../../services/kitService";
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -52,8 +53,11 @@ const HomeScreen: React.FC = () => {
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [rentedItems, setRentedItems] = useState<RentedItemResponse[]>([]);
   const [loadingRentals, setLoadingRentals] = useState(false);
-  const [myArticles, setMyArticles] = useState<Article[]>([]);
+  const [myArticles, setMyArticles] = useState<UserArticle[]>([]);
   const [loadingArticles, setLoadingArticles] = useState(false);
+  const [topDemandedItems, setTopDemandedItems] = useState<DemandAnalysisItem[]>([]);
+  const [loadingTopDemanded, setLoadingTopDemanded] = useState(false);
+  const [topDemandedError, setTopDemandedError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const { unreadCount, addNotification } = useTrackingNotifications();
@@ -86,10 +90,12 @@ const HomeScreen: React.FC = () => {
     if (!user?.id || !user?.token) return;
     if (user.role !== "USER") return;
 
-    const stored = await AsyncStorage.getItem(LAST_UPDATES_KEY);
+    const userUpdatesKey = `${LAST_UPDATES_KEY}_${user.id}`;
+
+    const stored = await AsyncStorage.getItem(userUpdatesKey);
     const lastUpdates: Record<string, string> = stored ? JSON.parse(stored) : {};
 
-    const kits = await getMyKits(user.id, user.token);
+    const kits = await getUpdatrableTrackingKits(user.id, user.token);
 
     for (const kit of kits) {
       try {
@@ -109,13 +115,13 @@ const HomeScreen: React.FC = () => {
           });
           lastUpdates[String(kit.id)] = lastUpdate;
         }
-      } catch {
+      } catch (error) {
+        console.log("Error al obtener tracking:", error);
       }
     }
 
-    await AsyncStorage.setItem(LAST_UPDATES_KEY, JSON.stringify(lastUpdates));
+    await AsyncStorage.setItem(userUpdatesKey, JSON.stringify(lastUpdates));
   };
-
 
   const fetchData = async () => {
     if (!user?.id || !user?.token) return;
@@ -144,6 +150,19 @@ const HomeScreen: React.FC = () => {
     } finally {
       setLoadingArticles(false);
     }
+
+    setLoadingTopDemanded(true);
+    try {
+      const topItems = await getTopDemandedItems(user.token, 5);
+      setTopDemandedItems(topItems);
+      setTopDemandedError(null);
+    } catch (error) {
+      setTopDemandedItems([]);
+      setTopDemandedError(error instanceof Error ? error.message : 'No se pudo cargar el análisis de demanda.');
+    } finally {
+      setLoadingTopDemanded(false);
+    }
+
     await checkTrackingUpdates();
   };
 
@@ -186,6 +205,11 @@ const HomeScreen: React.FC = () => {
   };
 
   const gridColumns = getGridColumns();
+  const gridCardWidth = gridColumns === 1
+    ? '100%'
+    : gridColumns === 2
+    ? '48%'
+    : '32%';
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
@@ -248,7 +272,7 @@ const HomeScreen: React.FC = () => {
                   styles.cardSubtitleLight,
                   { fontSize: getResponsiveFontSize(12, 14, 14) }
                 ]}>
-                  balance disponible
+                  Balance disponible
                 </Text>
               </View>
               <Ionicons 
@@ -308,7 +332,7 @@ const HomeScreen: React.FC = () => {
                   styles.cardSubtitleDark,
                   { fontSize: getResponsiveFontSize(12, 14, 14) }
                 ]}>
-                  artículos en uso
+                  Artículos en uso
                 </Text>
               </View>
               <Ionicons 
@@ -327,14 +351,69 @@ const HomeScreen: React.FC = () => {
             { 
               flexDirection: gridColumns === 1 ? 'column' : 'row',
               flexWrap: gridColumns > 1 ? 'wrap' : 'nowrap',
+              justifyContent: gridColumns === 1 ? 'center' : 'flex-start', // Cambiado a flex-start por si hay 4 tarjetas
+              alignItems: 'stretch',
               marginBottom: isMobile ? 16 : 20,
-              gap: isMobile ? 12 : 16,
+              gap: isMobile ? 12 : 16, // Usamos gap genérico para simplificar el espaciado
             }
           ]}>
-            {/* Create kit card */}
+            
+            {/* NUEVO: Catálogo de Kits Predeterminados */}
             <View style={[
               styles.gridCardWrapper,
-              { width: gridColumns === 1 ? '100%' : `${100 / gridColumns - 2}%` }
+              { width: gridCardWidth, maxWidth: gridCardWidth }
+            ]}>
+              <View style={[styles.card, styles.gridCard, { backgroundColor: '#E0F2FE' }]}>
+                <View style={[
+                  styles.circleGraphic, 
+                  { 
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                    width: isMobile ? 50 : 60,
+                    height: isMobile ? 50 : 60,
+                    borderRadius: isMobile ? 25 : 30,
+                  }
+                ]}>
+                  <Ionicons 
+                    name="flash" 
+                    size={isMobile ? 24 : 28} 
+                    color={Colors.primaryHome} 
+                  />
+                </View>
+                <View style={styles.gridCardContent}>
+                  <Text style={[
+                    styles.gridCardValueDark,
+                    { fontSize: getResponsiveFontSize(18, 20, 22) }
+                  ]}>
+                    Kits Express
+                  </Text>
+                  <Text style={[
+                    styles.gridCardLabelDark,
+                    { fontSize: getResponsiveFontSize(11, 12, 12) }
+                  ]}>
+                    Listos para usar
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={[
+                    styles.pillButtonPrimary,
+                    { paddingVertical: isMobile ? 8 : 10 }
+                  ]} 
+                  onPress={() => navigation.navigate('DefaultKits')}
+                >
+                  <Text style={[
+                    styles.pillButtonTextLight,
+                    { fontSize: getResponsiveFontSize(12, 14, 14) }
+                  ]}>
+                    Ver catálogo
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Create kit card (Personalizado) */}
+            <View style={[
+              styles.gridCardWrapper,
+              { width: gridCardWidth, maxWidth: gridCardWidth }
             ]}>
               <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryBlue }]}>
                 <View style={[
@@ -357,13 +436,13 @@ const HomeScreen: React.FC = () => {
                     styles.gridCardValueDark,
                     { fontSize: getResponsiveFontSize(18, 20, 22) }
                   ]}>
-                    Kit
+                    Kit a medida
                   </Text>
                   <Text style={[
                     styles.gridCardLabelDark,
                     { fontSize: getResponsiveFontSize(11, 12, 12) }
                   ]}>
-                    Alquila tu propio kit
+                    Crea el tuyo propio
                   </Text>
                 </View>
                 <TouchableOpacity 
@@ -377,7 +456,7 @@ const HomeScreen: React.FC = () => {
                     styles.pillButtonTextLight,
                     { fontSize: getResponsiveFontSize(12, 14, 14) }
                   ]}>
-                    Crear kit
+                    Crear desde cero
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -386,7 +465,7 @@ const HomeScreen: React.FC = () => {
             {/* Upload Article card */}
             <View style={[
               styles.gridCardWrapper,
-              { width: gridColumns === 1 ? '100%' : `${100 / gridColumns - 2}%` }
+              { width: gridCardWidth, maxWidth: gridCardWidth }
             ]}>
               <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryMint }]}>
                 <View style={[
@@ -439,7 +518,7 @@ const HomeScreen: React.FC = () => {
             {user?.role === 'USER' && (
               <View style={[
                 styles.gridCardWrapper,
-                { width: gridColumns === 1 ? '100%' : `${100 / gridColumns - 2}%` }
+                { width: gridCardWidth, maxWidth: gridCardWidth }
               ]}>
                 <View style={[styles.card, styles.gridCard, { backgroundColor: Colors.secondaryCoral }]}>
                   <View style={[
@@ -492,6 +571,59 @@ const HomeScreen: React.FC = () => {
         </FadeInItem>
 
         {/* Article list */}
+        {user?.role === 'USER' && (
+          <FadeInItem delay={320}>
+            <View style={[
+              styles.card,
+              styles.cardWhite,
+              Shadows.medium,
+              { marginBottom: isMobile ? 16 : 20 }
+            ]}>
+              <View style={styles.topDemandedHeader}>
+                <Text style={[
+                  styles.cardTitleDark,
+                  { fontSize: getResponsiveFontSize(16, 18, 18) }
+                ]}>
+                  Top productos demandados
+                </Text>
+                {!loadingTopDemanded && topDemandedItems.length > 0 && (
+                  <Text style={styles.topDemandedHint}>últimos alquileres</Text>
+                )}
+              </View>
+
+              <View style={styles.listContainer}>
+                {loadingTopDemanded ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <CompactSkeletonRow key={`demand-skeleton-${i}`} isMobile={isMobile} />
+                  ))
+                ) : topDemandedError ? (
+                  <View style={styles.topDemandedErrorBox}>
+                    <Ionicons name="alert-circle-outline" size={20} color={Colors.error} />
+                    <Text style={styles.topDemandedErrorText} numberOfLines={2}>
+                      {topDemandedError}
+                    </Text>
+                    <TouchableOpacity onPress={fetchData} style={styles.topDemandedRetryBtn}>
+                      <Text style={styles.topDemandedRetryText}>Reintentar</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : topDemandedItems.length === 0 ? (
+                  <EmptyTrayMessage icon="stats-chart-outline" message="Aún no hay datos de demanda disponibles" />
+                ) : (
+                  topDemandedItems.map((item, idx) => (
+                    <TopDemandedRow
+                      key={item.itemId}
+                      item={item}
+                      rank={idx + 1}
+                      isLast={idx === topDemandedItems.length - 1}
+                      isMobile={isMobile}
+                    />
+                  ))
+                )}
+              </View>
+            </View>
+          </FadeInItem>
+        )}
+
         {user && (
           <FadeInItem delay={350}>
             <View style={[
@@ -617,6 +749,58 @@ const CompactSkeletonRow: React.FC<{ isMobile: boolean }> = ({ isMobile }) => (
       <SkeletonPulse width="50%" height={isMobile ? 10 : 12} radius={4} />
     </View>
     <SkeletonPulse width={isMobile ? 35 : 40} height={isMobile ? 14 : 16} radius={6} />
+  </View>
+);
+
+const TopDemandedRow: React.FC<{
+  item: DemandAnalysisItem;
+  rank: number;
+  isLast?: boolean;
+  isMobile: boolean;
+}> = ({ item, rank, isLast, isMobile }) => (
+  <View style={[styles.topDemandedRow, isLast && styles.topDemandedRowLast]}>
+    <View style={styles.topDemandedRankBadge}>
+      <Text style={styles.topDemandedRankText}>#{rank}</Text>
+    </View>
+
+    <View style={styles.topDemandedImageWrap}>
+      {item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.topDemandedImage} resizeMode="cover" />
+      ) : (
+        <Ionicons name="image-outline" size={18} color="#9CA3AF" />
+      )}
+    </View>
+
+    <View style={styles.topDemandedInfo}>
+      <Text
+        style={[
+          styles.topDemandedTitle,
+          { fontSize: isMobile ? 13 : 14 }
+        ]}
+        numberOfLines={1}
+      >
+        {item.title}
+      </Text>
+      <Text
+        style={[
+          styles.topDemandedCategory,
+          { fontSize: isMobile ? 11 : 12 }
+        ]}
+        numberOfLines={1}
+      >
+        {item.categoryName}
+      </Text>
+    </View>
+
+    <View style={styles.topDemandedMetrics}>
+      <Text style={[styles.topDemandedMetricValue, { fontSize: isMobile ? 13 : 14 }]}>
+        {item.totalTimesRented}
+      </Text>
+      <Text style={[styles.topDemandedMetricLabel, { fontSize: isMobile ? 10 : 11 }]}>alquileres</Text>
+      <Text style={[styles.topDemandedMetricSubLabel, { fontSize: isMobile ? 10 : 11 }]}>
+        {item.totalUnitsRented} uds.
+      </Text>
+    </View>
   </View>
 );
 
@@ -774,6 +958,107 @@ const styles = StyleSheet.create({
   },
   cardHorizontalText: {
     flex: 1,
+  },
+  topDemandedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  topDemandedHint: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  topDemandedErrorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
+  topDemandedErrorText: {
+    flex: 1,
+    color: Colors.error,
+    fontSize: 13,
+  },
+  topDemandedRetryBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: Colors.primaryHomeOpacity,
+  },
+  topDemandedRetryText: {
+    color: Colors.primaryHome,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  topDemandedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  topDemandedRowLast: {
+    borderBottomWidth: 0,
+  },
+  topDemandedRankBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.primaryHomeOpacity,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topDemandedRankText: {
+    color: Colors.primaryHome,
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  topDemandedImageWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  topDemandedImage: {
+    width: '100%',
+    height: '100%',
+  },
+  topDemandedInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  topDemandedTitle: {
+    color: Colors.primaryHome,
+    fontWeight: '700',
+  },
+  topDemandedCategory: {
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  topDemandedMetrics: {
+    alignItems: 'flex-end',
+    minWidth: 68,
+  },
+  topDemandedMetricValue: {
+    color: Colors.primaryHome,
+    fontWeight: '800',
+    lineHeight: 18,
+  },
+  topDemandedMetricLabel: {
+    color: Colors.textSecondary,
+    fontWeight: '600',
+    lineHeight: 14,
+  },
+  topDemandedMetricSubLabel: {
+    color: '#9CA3AF',
+    fontWeight: '500',
+    lineHeight: 14,
   },
   gridContainer: {
     flexDirection: 'row',

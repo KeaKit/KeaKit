@@ -34,25 +34,25 @@ public class RatingService {
 
     public RatingResponse create(RatingCreateRequest request, String reviewerEmail) {
         User reviewer = userRepository.findByEmail(reviewerEmail)
-                .orElseThrow(() -> new UserNotFoundException("Reviewer not found"));
+                .orElseThrow(() -> new UserNotFoundException("Reseñador no encontrado"));
 
         User reviewee = userRepository.findById(request.getRevieweeId())
-                .orElseThrow(() -> new UserNotFoundException("Reviewee not found with id: " + request.getRevieweeId()));
+                .orElseThrow(() -> new UserNotFoundException("Reseñador no encontrado con id: " + request.getRevieweeId()));
 
         Kit kit = kitRepository.findById(request.getKitId())
-                .orElseThrow(() -> new RuntimeException("Kit not found with id: " + request.getKitId()));
+                .orElseThrow(() -> new RuntimeException("Kit no encontrado con id: " + request.getKitId()));
 
         if (reviewer.getId().equals(reviewee.getId())) {
-            throw new InvalidRatingException("You cannot rate yourself");
+            throw new InvalidRatingException("No puedes puntuarte a ti mismo");
         }
 
         if (!kit.getStatus().equals(KitStatus.FINISHED)) {
-            throw new InvalidRatingException("You cannot rate a not finished kit rent");
+            throw new InvalidRatingException("No puedes puntuar un alquiler de kit que no está terminado");
         }
 
         if (ratingRepository.existsByReviewerIdAndRevieweeIdAndKitId(
                 reviewer.getId(), reviewee.getId(), kit.getId())) {
-            throw new DuplicateRatingException("You have already rated this user for this kit");
+            throw new DuplicateRatingException("Ya has puntuado a este usuario para este kit");
         }
 
         RatingType type = determineRatingType(reviewer, reviewee, kit);
@@ -84,19 +84,18 @@ public class RatingService {
 
     public RatingResponse findById(Long id) {
         Rating rating = ratingRepository.findById(id)
-                .orElseThrow(() -> new RatingNotFoundException("Rating not found with id: " + id));
+                .orElseThrow(() -> new RatingNotFoundException("Reseña no encontrada con id: " + id));
         return new RatingResponse(rating);
     }
 
     public void deleteById(Long id, String email) {
         Rating rating = ratingRepository.findById(id)
-                .orElseThrow(() -> new RatingNotFoundException("Rating not found with id: " + id));
+                .orElseThrow(() -> new RatingNotFoundException("Reseña no encontrada con id: " + id));
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
         if (!rating.getReviewer().getId().equals(user.getId()) && user.getRole() != UserRole.ADMIN) {
-            throw new InvalidRatingException("You are not authorized to delete this rating");
+            throw new InvalidRatingException("No estás autorizado para eliminar esta reseña");
         }
 
         ratingRepository.deleteById(id);
@@ -114,12 +113,12 @@ public class RatingService {
             return RatingType.OWNER_TO_RENTER;
         }
 
-        throw new InvalidRatingException("Reviewer is not a party to this kit");
+        throw new InvalidRatingException("Reseñador no pertenece a este kit");
     }
 
     public Map<Long, Boolean> hasReviewedItems(Long reviewerId, Long kitId, List<Long> itemIds) {
         Kit kit = kitRepository.findById(kitId)
-                .orElseThrow(() -> new RuntimeException("Kit not found with id: " + kitId));
+                .orElseThrow(() -> new RuntimeException("Kit no encontrado con id: " + kitId));
 
         Map<Long, Long> itemToOwnerMap = kit.getSnapshots().stream()
                 .filter(snapshot -> itemIds.contains(snapshot.getOriginalItemId()))
@@ -143,4 +142,31 @@ public class RatingService {
 
         return result;
     }
+
+    public Map<Long, Boolean> hasReviewedItemInKits(Long reviewerId, Long itemId, List<Long> kitIds) {
+    Map<Long, Boolean> result = new HashMap<>();
+
+    for (Long kitId : kitIds) {
+        Kit kit = kitRepository.findById(kitId)
+                .orElse(null);
+
+        if (kit == null) {
+            result.put(kitId, false);
+            continue;
+        }
+
+        Long revieweeId = kit.getTenant().getId();
+
+        if (revieweeId == null) {
+            result.put(kitId, false);
+        } else {
+            boolean alreadyRated = ratingRepository.existsByReviewerIdAndRevieweeIdAndKitId(
+                    reviewerId, revieweeId, kitId
+            );
+            result.put(kitId, alreadyRated);
+        }
+    }
+
+    return result;
+}
 }

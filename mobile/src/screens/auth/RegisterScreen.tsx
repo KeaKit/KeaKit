@@ -9,15 +9,36 @@ import {
   View,
   Image
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
-import { EUROPEAN_COUNTRIES } from '../../types';
 import { SelectPicker } from '../../components/SelectPicker';
+
+// COMPONENTE CHECKBOX PERSONALIZADO (sin expo-checkbox)
+const CustomCheckbox = ({ 
+  value, 
+  onValueChange, 
+  color 
+}: { 
+  value: boolean; 
+  onValueChange: (val: boolean) => void; 
+  color?: string;
+}) => (
+  <TouchableOpacity
+    onPress={() => onValueChange(!value)}
+    style={[
+      styles.checkbox,
+      value && styles.checkboxChecked,
+      color && { borderColor: color, backgroundColor: value ? color : 'transparent' }
+    ]}
+    activeOpacity={0.7}
+  >
+    {value && <Ionicons name="checkmark" size={16} color="#fff" />}
+  </TouchableOpacity>
+);
 
 type RegisterNav = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -30,6 +51,7 @@ type FieldErrors = {
   country?: string;
   password?: string;
   confirm?: string;
+  policies?: string;
   general?: string;
 };
 
@@ -44,7 +66,7 @@ const parseBackendError = (err: unknown): FieldErrors => {
 };
 
 type FieldConfig = {
-  key: keyof Omit<FieldErrors, 'general' | 'country' | 'city'>;
+  key: keyof Omit<FieldErrors, 'general' | 'country' | 'city' | 'policies'>;
   placeholder: string;
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences';
@@ -70,9 +92,11 @@ const RegisterScreen: React.FC = () => {
     name: '', email: '', phone: '', address: '',
     password: '', confirm: '',
   });
-  const [loading, setLoading]           = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors]             = useState<FieldErrors>({});
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
+  const [acceptedMarketing, setAcceptedMarketing] = useState(false);
 
   const {
     selectedCountry,
@@ -80,6 +104,7 @@ const RegisterScreen: React.FC = () => {
     setSelectedCity,
     cities,
     loadingCities,
+    countries,
     onCountryChange,
   } = useLocationPicker();
 
@@ -103,6 +128,7 @@ const RegisterScreen: React.FC = () => {
     if (!form.confirm.trim())     localErrors.confirm  = 'Debes repetir la contraseña.';
     else if (form.password !== form.confirm)
                                   localErrors.confirm  = 'Las contraseñas no coinciden.';
+    if (!acceptedPolicies)        localErrors.policies = 'Debes aceptar la política de privacidad.';
 
     if (Object.keys(localErrors).length > 0) {
       setErrors(localErrors);
@@ -119,7 +145,12 @@ const RegisterScreen: React.FC = () => {
         address:  form.address.trim(),
         city:     selectedCity,
         country:  selectedCountry,
+        acceptedPolicies: acceptedPolicies,
+        acceptedMarketing: acceptedMarketing,
       });
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       navigation.navigate('Home');
     } catch (err: unknown) {
       setErrors(parseBackendError(err));
@@ -172,7 +203,7 @@ const RegisterScreen: React.FC = () => {
           <View style={[styles.inputContainer, errors.country && styles.inputError]}>
             <Ionicons name="earth-outline" size={20} color="#999" style={styles.fieldIcon} />
             <SelectPicker
-              options={EUROPEAN_COUNTRIES}
+              options={countries}
               selectedValue={selectedCountry}
               placeholder="País"
               onValueChange={(value: string) => {
@@ -213,6 +244,43 @@ const RegisterScreen: React.FC = () => {
             </View>
           )}
         </View>
+      </View>
+
+      {/* CHECKBOX RGPD */}
+      <View style={styles.checkboxContainer}>
+        <CustomCheckbox
+          value={acceptedPolicies}
+          onValueChange={setAcceptedPolicies}
+          color="#103a57"
+        />
+        <Text style={styles.checkboxLabel}>
+          He leído y acepto la{' '}
+          <Text 
+            style={styles.linkText}
+            onPress={() => navigation.navigate('RgpdPolicy')}
+          >
+            Política de Privacidad
+          </Text>
+          {' '}y el tratamiento de mis datos personales.
+        </Text>
+      </View>
+      {errors.policies && (
+        <View style={styles.errorRow}>
+          <Ionicons name="alert-circle-outline" size={13} color="#d9534f" />
+          <Text style={styles.errorText}>{errors.policies}</Text>
+        </View>
+      )}
+
+      {/* CHECKBOX MARKETING OPCIONAL */}
+      <View style={styles.checkboxContainer}>
+        <CustomCheckbox
+          value={acceptedMarketing}
+          onValueChange={setAcceptedMarketing}
+          color="#103a57"
+        />
+        <Text style={styles.checkboxLabel}>
+          Acepto recibir comunicaciones comerciales y novedades de KeaKit (opcional).
+        </Text>
       </View>
 
       {errors.general && (
@@ -279,15 +347,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 50,
   },
-  picker: {
-    flex: 1,
-    color: '#333',
-    height: 50,
-    borderTopColor: '#ddd',
-    borderBottomColor: '#ddd',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-  },
   fieldIcon: {
     marginRight: 8,
   },
@@ -351,5 +410,35 @@ const styles = StyleSheet.create({
   backButton: {
     alignSelf: 'flex-start',
     marginBottom: 8,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 10,
+    width: '100%',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#103a57',
+    borderColor: '#103a57',
+  },
+  checkboxLabel: {
+    fontSize: 13,
+    color: '#555',
+    flex: 1,
+  },
+  linkText: {
+    color: '#103a57',
+    textDecorationLine: 'underline',
+    fontWeight: '600',
   },
 });

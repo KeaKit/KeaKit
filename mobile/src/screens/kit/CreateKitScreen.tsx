@@ -8,13 +8,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SelectPicker } from '../../components/SelectPicker';
-import { useNavigation } from "@react-navigation/native";
+import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { DatePickerModal } from "react-native-paper-dates";
 import { es, registerTranslation } from "react-native-paper-dates";
-import { useLocationPicker } from '../../hooks/useLocationPicker';
+import { useLocationPicker } from "../../hooks/useLocationPicker";
 import {
   Provider as PaperProvider,
   MD3LightTheme,
@@ -23,25 +22,43 @@ import {
   SegmentedButtons,
 } from "react-native-paper";
 
-import { EUROPEAN_COUNTRIES } from '../../types';
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
-import { createKit } from "../../services/kitService";
+import { createKit, filterItemsForKit, getActiveServices } from "../../services/kitService";
+import {
+  getNearbyArticles,
+  getArticlesForMap,
+} from "../../services/articleService";
+import { getCityCoordinates } from "../../services/cityService";
+import { fetchAllCategories } from "../../services/categoryService";
 import { API_ROUTES } from "../../config/api";
-import { RootStackParamList, KitPaymentDTO, KitCreateRequest, KitStatus } from "../../types";
+import {
+  RootStackParamList,
+  KitCreateRequest,
+  KitStatus,
+  ArticleNearby,
+  KitPaymentDTO,
+  Category,
+  ArticleCondition,
+} from "../../types";
 import { Colors, commonStyles, componentStyles } from "../../styles";
 import { createKitStyles } from "../../styles/createKitStyles";
+
+// Componentes
+import { SelectPicker } from "../../components/SelectPicker";
 import KitItemComponent from "../../components/KitItemComponent";
+import { KitPaymentResumeComponent } from "../../components/KitPaymentResumeComponent";
 import { ProductSelectionModal } from "../../components/ProductSelectionModal";
 import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
 } from "./createKitSelection";
 import { styles } from "../../styles/uploadArticleScreenStyles";
+import { formatRentalDuration, calculateMonthsBetween } from "../../utils/duration";
 
-const COMISION = 0.2; // 20% de comisión sobre el precio total del kit
-const GUARANTEE_PERCENTAGE = 0.2; // 20% de garantía sobre el precio total del kit
+const COMISION = 0;
+const GUARANTEE_PERCENTAGE = 0.2;
 const PLATFORM_COURIER_PRICE = 9.99;
 
 type CreateKitNav = NativeStackNavigationProp<RootStackParamList, "CreateKit">;
@@ -65,8 +82,9 @@ type CatalogProduct = {
   itemType: "ARTICLE" | "SERVICE" | string;
   title: string;
   pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE" | string;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | "ACTIVE" | string;
   category?: string;
+  condition?: ArticleCondition | null;
   city?: string;
   ownerId: number;
   ownerName?: string;
@@ -76,83 +94,79 @@ type CatalogProduct = {
   availableUntil?: string;
   isAvailable?: boolean;
   availabilityMessage?: string;
+  distanceKm?: number;
+  cityLat?: number;
+  cityLng?: number;
 };
 
-const toIsoDate = (raw: string): string | null => {
-  const value = raw.trim();
-
-  const dmyFormat = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-  const match = value.match(dmyFormat);
-  if (!match) return null;
-
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
-
-  const parsed = new Date(Date.UTC(year, month - 1, day));
-  const valid =
-    parsed.getUTCFullYear() === year &&
-    parsed.getUTCMonth() === month - 1 &&
-    parsed.getUTCDate() === day;
-
-  if (!valid) return null;
-
-  const mm = String(month).padStart(2, "0");
-  const dd = String(day).padStart(2, "0");
-  return `${year}-${mm}-${dd}`;
+type CatalogFilterOverrides = {
+  showOnlyMyCity?: boolean;
+  selectedCategoryId?: string;
+  selectedCondition?: string;
+  minPrice?: string;
+  maxPrice?: string;
 };
 
-function calculateMonthsBetween(start: Date, end: Date): number {
-  const years = end.getUTCFullYear() - start.getUTCFullYear();
-  const months = end.getUTCMonth() - start.getUTCMonth();
-  const days = end.getUTCDate() - start.getUTCDate();
+const CONDITION_OPTIONS = [
+  { label: "Cualquier estado", value: "" },
+  { label: "Nuevo", value: "NEW" },
+  { label: "Poco usado", value: "LIGHTLY_USED" },
+  { label: "Usado", value: "USED" },
+  { label: "Desgastado", value: "WORN" },
+];
 
-  let totalMonths = years * 12 + months;
-
-  const daysInMonth = 30;
-  const monthFraction = days / daysInMonth;
-
-  return totalMonths + monthFraction;
-}
-
-const toUtcDateOnly = (isoDate: string): Date =>
-  new Date(`${isoDate}T00:00:00.000Z`);
+// Constantes de validación (movidas fuera del componente para garantizar su existencia)
+const MAX_KIT_NAME_LENGTH = 255;
+const MAX_MEETING_POINT_LENGTH = 500;
+const MAX_COURIER_ADDRESS_LENGTH = 500;
 
 const CreateKitScreen: React.FC = () => {
   const navigation = useNavigation<CreateKitNav>();
+  const route = useRoute<any>();
   const { user } = useAuth();
 
-    const {
-      selectedCountry,
-      selectedCity,
-      setSelectedCity,
-      cities,
-      loadingCities,
-      onCountryChange,
-    } = useLocationPicker();
+  const resetToMyKits = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: "Home" }, { name: "MyKits" }],
+      }),
+    );
+  };
+
+  const kitToCreate: Partial<KitCreateRequest> | null = route.params?.kitToCreate;
+  const isEditable: boolean = route.params?.isEditable ?? true;
+
+  const {
+    selectedCountry,
+    selectedCity,
+    setSelectedCity,
+    cities,
+    countries,
+    loadingCities,
+    onCountryChange,
+  } = useLocationPicker();
+
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [deliveryMethod, setDeliveryMethod] =
-    useState<DeliveryMethod>("COURIER");
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("COURIER");
   const [meetingPoint, setMeetingPoint] = useState("");
   const [courierAddress, setCourierAddress] = useState("");
 
-  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>(
-    [],
-  );
-  const [selectedQuantities, setSelectedQuantities] = useState<
-    Record<number, number>
-  >({});
-  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<
-    Record<number, number>
-  >({});
+  const [availableProducts, setAvailableProducts] = useState<CatalogProduct[]>([]);
+  const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
+  const [tempSelectedQuantities, setTempSelectedQuantities] = useState<Record<number, number>>({});
 
   const [searchText, setSearchText] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | string>("ALL");
+  const [catalogCategories, setCatalogCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedCondition, setSelectedCondition] = useState("");
+  const [minPriceFilter, setMinPriceFilter] = useState("");
+  const [maxPriceFilter, setMaxPriceFilter] = useState("");
   const [showOnlyMyCity, setShowOnlyMyCity] = useState(false);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -160,30 +174,99 @@ const CreateKitScreen: React.FC = () => {
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [payment, setPayment] = useState<KitPaymentDTO | null>(null);
+
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [expandedSearch, setExpandedSearch] = useState(false);
+  const [nearbyProducts, setNearbyProducts] = useState<ArticleNearby[]>([]);
+  const [loadingNearby, setLoadingNearby] = useState(false);
+  const [targetCityCoords, setTargetCityCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
+
+  useEffect(() => {
+    if (kitToCreate) {
+      if (kitToCreate.name) setName(kitToCreate.name);
+      if (kitToCreate.itemSelections) {
+        const initialQuantities: Record<number, number> = {};
+        kitToCreate.itemSelections.forEach((selection: any) => {
+          initialQuantities[selection.itemId] = selection.quantity;
+        });
+        setSelectedQuantities(initialQuantities);
+      }
+    }
+  }, [kitToCreate]);
+
+  useEffect(() => {
+    if (user?.country) {
+      setCountry(user.country);
+      void onCountryChange(user.country);
+    }
+    if (user?.city) {
+      setCity(user.city);
+      setSelectedCity(user.city);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!expandedSearch || !city.trim() || !country.trim() || !user?.token) {
+      setNearbyProducts([]);
+      setTargetCityCoords(null);
+      return;
+    }
+    let cancelled = false;
+    setLoadingNearby(true);
+    Promise.all([
+      getNearbyArticles(city.trim(), country.trim(), user.token),
+      getCityCoordinates(city.trim(), country.trim()),
+    ])
+      .then(([results, coords]) => {
+        if (!cancelled) {
+          setNearbyProducts(results);
+          setTargetCityCoords(coords);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setNearbyProducts([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingNearby(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [expandedSearch, city, country, user?.token]);
 
   const monthsBetween = useMemo(() => {
     if (!startDate || !endDate) return null;
-
-    const start = new Date(
-      Date.UTC(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        startDate.getDate(),
-      ),
-    );
-    const end = new Date(
-      Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()),
-    );
-
-    return calculateMonthsBetween(start, end);
+    return calculateMonthsBetween(startDate, endDate);
   }, [startDate, endDate]);
 
   const clearFieldError = (field: keyof FormErrors) => {
     setErrors((prev) => ({ ...prev, [field]: undefined, general: undefined }));
   };
 
-  const loadCatalog = useCallback(async () => {
+  useEffect(() => {
+    if (!user?.token) return;
+
+    let cancelled = false;
+    const loadCategories = async () => {
+      try {
+        const data = await fetchAllCategories(user.token);
+        if (!cancelled) {
+          setCatalogCategories(data.filter((category) => category.status === "ACTIVE"));
+        }
+      } catch (error) {
+        console.warn("No se pudieron cargar las categorías del catálogo:", error);
+      }
+    };
+
+    void loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.token]);
+
+  const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
     if (!user?.token) {
       setAvailableProducts([]);
       setLoadingCatalog(false);
@@ -191,139 +274,217 @@ const CreateKitScreen: React.FC = () => {
       return;
     }
 
+    const nextShowOnlyMyCity = overrides?.showOnlyMyCity ?? showOnlyMyCity;
+    const nextSelectedCategoryId = overrides?.selectedCategoryId ?? selectedCategoryId;
+    const nextSelectedCondition = overrides?.selectedCondition ?? selectedCondition;
+    const nextMinPrice = overrides?.minPrice ?? minPriceFilter;
+    const nextMaxPrice = overrides?.maxPrice ?? maxPriceFilter;
+
     try {
       setLoadingCatalog(true);
 
-      const res = await fetch(API_ROUTES.ITEMS_FOR_RENT(user.id), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
+      const response = await filterItemsForKit(
+        {
+          country: undefined,
+          city: nextShowOnlyMyCity && city.trim() ? city.trim() : undefined,
+          categoryId: nextSelectedCategoryId ? Number(nextSelectedCategoryId) : undefined,
+          condition: nextSelectedCondition ? (nextSelectedCondition as ArticleCondition) : undefined,
+          minPrice: nextMinPrice ? parseFloat(nextMinPrice) : undefined,
+          maxPrice: nextMaxPrice ? parseFloat(nextMaxPrice) : undefined,
+          page: 0,
+          size: 100,
+          startDate: startDate ? `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}` : undefined,
+          endDate: endDate ? `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}` : undefined,
         },
-      });
+        user.token,
+      );
 
-      const contentType = res.headers.get("content-type") || "";
-      const text = await res.text();
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-
-      if (!contentType.includes("application/json")) {
-        throw new Error(`Respuesta no JSON: ${text}`);
-      }
-
-      const raw = JSON.parse(text);
-
-      const mapped: CatalogProduct[] = (raw ?? []).map((p: any) => ({
+      const mapped: CatalogProduct[] = response.content.map((p) => ({
         id: Number(p.id),
         itemType: String(p.itemType ?? "ARTICLE"),
         title: p.title ?? "Sin título",
         pricePerMonth: Number(p.pricePerMonth ?? 0),
-        status: String(p.status ?? "AVAILABLE"), // para SERVICE llega null, lo normalizamos
-        category:
-          typeof p.category === "string"
-            ? p.category
-            : (p.category?.name ?? ""),
+        status: String(p.status ?? "AVAILABLE"),
+        category: typeof p.category === "string" ? p.category : "",
+        condition: (p as any).condition ?? null,
         city: p.city ?? "",
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
-        imageUrl: p.imageUrl ?? null,
+        imageUrl: (p as any).imageUrl ?? null,
         totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
-        availableFrom: p.availableFrom ?? null,
-        availableUntil: p.availableUntil ?? null,
+        availableFrom: (p as any).availableFrom ?? undefined,
+        availableUntil: (p as any).availableUntil ?? undefined,
       }));
 
-      setAvailableProducts(mapped);
+      const filteredByOwner = mapped.filter(p => p.ownerId !== user?.id);
 
+      setAvailableProducts(filteredByOwner);
       setErrors((prev) => ({ ...prev, general: undefined }));
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "No se pudo cargar el catálogo.";
-      setErrors((prev) => ({ ...prev, general: message }));
+      const message = error instanceof Error ? error.message : "No se pudo cargar el catálogo.";
+      if (message.toLowerCase().includes("no items found")) {
+        setErrors((prev) => ({ ...prev, general: undefined }));
+      } else {
+        setErrors((prev) => ({ ...prev, general: message }));
+      }
       setAvailableProducts([]);
     } finally {
       setLoadingCatalog(false);
     }
-  }, [user?.token]);
+  }, [
+    city,
+    maxPriceFilter,
+    minPriceFilter,
+    selectedCategoryId,
+    selectedCondition,
+    showOnlyMyCity,
+    user?.token,
+    user?.id,
+    startDate, 
+    endDate,
+  ]);
 
   useEffect(() => {
     loadCatalog();
-  }, [loadCatalog]);
+    const fetchWalletBalance = async () => {
+      if (user?.token && user?.id) {
+        try {
+          const res = await fetch(API_ROUTES.GET_WALLET_BY_USER_ID(user.id), {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${user.token}`,
+            },
+          });
+          const data = await res.json();
+          setWalletBalance(data.balance);
+        } catch (error) {
+          console.error("Error al obtener el saldo de la cartera:", error);
+        }
+      }
+    };
+    fetchWalletBalance();
+  }, [loadCatalog, user?.token, user?.id]);
 
   const selectedIds = useMemo(
     () => Object.keys(selectedQuantities).map((id) => Number(id)),
     [selectedQuantities],
   );
 
-  const selectedItemsCount = useMemo(
-    () =>
-      Object.values(selectedQuantities).reduce(
-        (sum, quantity) => sum + quantity,
-        0,
-      ),
-    [selectedQuantities],
+  const selectedProducts = useMemo(
+    () => {
+      return availableProducts.filter((p) => selectedIds.includes(p.id));
+    },
+    [availableProducts, selectedIds],
   );
 
-  const selectedProducts = useMemo(
-    () => availableProducts.filter((p) => selectedIds.includes(p.id)),
-    [availableProducts, selectedIds],
+  const selectedItemsCount = useMemo(
+    () => Object.values(selectedQuantities).reduce((sum, quantity) => sum + quantity, 0),
+    [selectedQuantities],
   );
 
   const totalPrice = useMemo(() => {
     if (monthsBetween === null) return 0;
     return selectedProducts.reduce(
-      (sum, p) =>
-        sum + p.pricePerMonth * (selectedQuantities[p.id] ?? 1) * monthsBetween,
+      (sum, p) => sum + p.pricePerMonth * (selectedQuantities[p.id] ?? 1) * monthsBetween,
       0,
     );
   }, [selectedProducts, monthsBetween, selectedQuantities]);
 
-  const courierPrice =
-    deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
+  const courierPrice = deliveryMethod === "COURIER" ? PLATFORM_COURIER_PRICE : 0;
 
-  const categories = useMemo(() => {
-    const set = new Set(
-      availableProducts
-        .map((p) => p.category?.trim())
-        .filter((c): c is string => Boolean(c)),
-    );
-    return ["ALL", ...Array.from(set)];
-  }, [availableProducts]);
+  const kitPayment: KitPaymentDTO = useMemo(() => {
+    const subtotal = Math.round(totalPrice * 100);
+    const guarantee = Math.round(subtotal * GUARANTEE_PERCENTAGE);
+    const platformfee = Math.round(subtotal * COMISION);
+    const courier = deliveryMethod === "COURIER" ? Math.round(PLATFORM_COURIER_PRICE * 100) : 0;
+    const total = subtotal + guarantee + platformfee + courier;
 
+    return {
+      subtotalPrice: subtotal,
+      guarantee: guarantee,
+      platformfee: platformfee,
+      courierPrice: courier,
+      totalPrice: total,
+      discount: 0,
+    };
+  }, [totalPrice, deliveryMethod]);
+
+  const finalPrice = useMemo(() => {
+    const guarantee = totalPrice * GUARANTEE_PERCENTAGE;
+    const commission = totalPrice * COMISION;
+    return totalPrice + guarantee + commission + courierPrice;
+  }, [totalPrice, courierPrice]);
+
+  const categoryOptions = useMemo(
+    () => [
+      { label: "Todas las categorías", value: "" },
+      ...catalogCategories.map((category) => ({
+        label: category.name,
+        value: String(category.id),
+      })),
+    ],
+    [catalogCategories],
+  );
+
+    
   const filteredProducts = useMemo(() => {
-    const q = searchText.trim().toLowerCase();
+      const q = searchText.trim().toLowerCase();
+      return availableProducts.filter((p) => {
+        const notInactive = p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
+        
+        const isAvailable = p.status === "AVAILABLE" || p.status === "ACTIVE";
+        const passesAvailabilityFilter = showOnlyAvailable ? isAvailable : true;
 
-    return availableProducts.filter((p) => {
-      const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
-      const byCategory =
-        categoryFilter === "ALL" || p.category === categoryFilter;
-      const byCity =
-        !showOnlyMyCity ||
-        !city.trim() ||
-        (p.city ?? "").toLowerCase() === city.trim().toLowerCase();
-      const bySearch =
-        q.length === 0 ||
-        p.title.toLowerCase().includes(q) ||
-        (p.city ?? "").toLowerCase().includes(q) ||
-        (p.category ?? "").toLowerCase().includes(q);
+        const bySearch =
+          q.length === 0 ||
+          p.title.toLowerCase().includes(q) ||
+          (p.city ?? "").toLowerCase().includes(q) ||
+          (p.category ?? "").toLowerCase().includes(q) ||
+          (p.ownerName ?? "").toLowerCase().includes(q) ||
+          (p.condition ?? "").toLowerCase().includes(q);
 
-      return notInactive && byCategory && byCity && bySearch;
-    });
-  }, [availableProducts, searchText, categoryFilter, showOnlyMyCity, city]);
+        return notInactive && bySearch && passesAvailabilityFilter;
+      });
+    }, [availableProducts, searchText, showOnlyAvailable]);
 
   const openAddProductModal = async () => {
-    await loadCatalog();
+    const useCityFilter = city.trim().length > 0;
+    setShowOnlyMyCity(useCityFilter);
+    await loadCatalog({ showOnlyMyCity: useCityFilter });
     setTempSelectedQuantities(selectedQuantities);
-
     setSearchText("");
-    setCategoryFilter("ALL");
-    setShowOnlyMyCity(city.trim().length > 0);
     setShowOnlyAvailable(true);
 
+    if (user?.token) {
+      try {
+        const mapData = await getArticlesForMap(user.token, country.trim() || undefined);
+        setMapProducts(mapData);
+      } catch (error) {
+        console.warn('Error al cargar productos del mapa:', error);
+        setMapProducts([]);
+      }
+    } else {
+      setMapProducts([]);
+    }
+
     setCatalogModalVisible(true);
+  };
+
+  const handleClearCatalogFilters = async () => {
+    const resetCityFilter = city.trim().length > 0;
+    setSelectedCategoryId("");
+    setSelectedCondition("");
+    setMinPriceFilter("");
+    setMaxPriceFilter("");
+    setShowOnlyMyCity(resetCityFilter);
+    await loadCatalog({
+      selectedCategoryId: "",
+      selectedCondition: "",
+      minPrice: "",
+      maxPrice: "",
+      showOnlyMyCity: resetCityFilter,
+    });
   };
 
   const toggleTempSelection = (id: number) => {
@@ -336,15 +497,9 @@ const CreateKitScreen: React.FC = () => {
     });
   };
 
-  const changeTempQuantity = (
-    id: number,
-    nextQuantity: number,
-    maxQuantity: number,
-  ) => {
+  const changeTempQuantity = (id: number, nextQuantity: number, maxQuantity: number) => {
     const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
-    setTempSelectedQuantities((prev) =>
-      upsertSelectedQuantity(prev, id, safeQuantity),
-    );
+    setTempSelectedQuantities((prev) => upsertSelectedQuantity(prev, id, safeQuantity));
   };
 
   const confirmSelection = () => {
@@ -355,17 +510,12 @@ const CreateKitScreen: React.FC = () => {
 
   const removeSelectedItem = (id: number) => {
     setSelectedQuantities((prev) => removeSelectedQuantity(prev, id));
+    setErrors((prev) => ({ ...prev, items: undefined, general: undefined }));
   };
 
-  const changeSelectedQuantity = (
-    id: number,
-    nextQuantity: number,
-    maxQuantity: number,
-  ) => {
+  const changeSelectedQuantity = (id: number, nextQuantity: number, maxQuantity: number) => {
     const safeQuantity = Math.min(Math.max(nextQuantity, 1), maxQuantity);
-    setSelectedQuantities((prev) =>
-      upsertSelectedQuantity(prev, id, safeQuantity),
-    );
+    setSelectedQuantities((prev) => upsertSelectedQuantity(prev, id, safeQuantity));
   };
 
   const incrementSelectedQuantity = (id: number) => {
@@ -382,33 +532,111 @@ const CreateKitScreen: React.FC = () => {
     changeSelectedQuantity(id, current - 1, product.totalUnits);
   };
 
-  const validate = (): {
+const checkItemsAvailability = (start: Date, end: Date): string[] => {
+    const invalidTitles: string[] = [];
+
+    const kitStart = new Date(start);
+    kitStart.setHours(0, 0, 0, 0);
+    
+    const kitEnd = new Date(end);
+    kitEnd.setHours(0, 0, 0, 0);
+
+    selectedProducts.forEach((product) => {
+      if (!product.availableFrom || !product.availableUntil) {
+        const isAvailable = product.status === "AVAILABLE" || product.status === "ACTIVE";
+        if (!isAvailable) invalidTitles.push(product.title);
+        return;
+      }
+
+      const productFrom = new Date(product.availableFrom);
+      productFrom.setHours(0, 0, 0, 0);
+      
+      const productUntil = new Date(product.availableUntil);
+      productUntil.setHours(0, 0, 0, 0);
+
+      const isAvailable = kitStart >= productFrom && kitEnd <= productUntil;
+      if (!isAvailable) invalidTitles.push(product.title);
+    });
+
+    return invalidTitles;
+};
+
+  const validate = (isDraft: boolean = false): {
     valid: boolean;
     payloadDates?: { startIso: string; endIso: string };
   } => {
     const nextErrors: FormErrors = {};
 
-    if (!name.trim()) nextErrors.name = "El nombre del kit es obligatorio.";
-    else if (name.trim().length < 3)
-      nextErrors.name = "El nombre debe tener al menos 3 caracteres.";
-
-    if (!country.trim()) nextErrors.country = "El país es obligatorio.";
-    if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
-    if (deliveryMethod === "MEETING_POINT" && !meetingPoint.trim()) {
-      nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
+    // Validación de nombre
+    if (!name.trim()) {
+      nextErrors.name = "El nombre del kit es obligatorio.";
+    } else if (name.trim().length > MAX_KIT_NAME_LENGTH) {
+      nextErrors.name = `El nombre no puede superar los ${MAX_KIT_NAME_LENGTH} caracteres.`;
     }
-    if (deliveryMethod === "COURIER" && !courierAddress.trim()) {
-      nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
-    }
-
-    if (!startDate)
-      nextErrors.startDate = "Debes seleccionar una fecha inicial.";
+    
+    // Validación de fechas
+    if (!startDate) nextErrors.startDate = "Debes seleccionar una fecha inicial.";
     if (!endDate) nextErrors.endDate = "Debes seleccionar una fecha final.";
 
-    if (selectedItemsCount === 0)
-      nextErrors.items = "Debes añadir al menos un producto.";
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    setErrors(nextErrors);
+    if (startDate && startDate < today) {
+      nextErrors.startDate = "La fecha de inicio no puede ser pasada.";
+    }
+
+    if (endDate && endDate < today) {
+      nextErrors.endDate = "La fecha de fin no puede ser pasada.";
+    }
+
+    if (startDate && endDate && endDate < startDate) {
+      nextErrors.endDate = "La fecha de fin debe ser posterior a la de inicio.";
+    }
+
+    // Validaciones para no borrador
+    if (!isDraft) {
+      if (!country.trim()) nextErrors.country = "El país es obligatorio.";
+      if (!city.trim()) nextErrors.city = "La ciudad es obligatoria.";
+
+      // Validación de punto de encuentro
+      if (deliveryMethod === "MEETING_POINT") {
+        if (!meetingPoint.trim()) {
+          nextErrors.meetingPoint = "Debes indicar un punto de encuentro.";
+        } else if (meetingPoint.trim().length > MAX_MEETING_POINT_LENGTH) {
+          nextErrors.meetingPoint = `El punto de encuentro no puede superar los ${MAX_MEETING_POINT_LENGTH} caracteres.`;
+        }
+      }
+      
+      // Validación de dirección de mensajería
+      if (deliveryMethod === "COURIER") {
+        if (!courierAddress.trim()) {
+          nextErrors.courierAddress = "Debes indicar una dirección de entrega.";
+        } else if (courierAddress.trim().length > MAX_COURIER_ADDRESS_LENGTH) {
+          nextErrors.courierAddress = `La dirección no puede superar los ${MAX_COURIER_ADDRESS_LENGTH} caracteres.`;
+        }
+      }
+
+      // Validación de productos seleccionados
+      if (selectedItemsCount === 0) {
+        nextErrors.items = "Debes añadir al menos un producto.";
+      } else if (startDate && endDate) {
+        const invalidItems = checkItemsAvailability(startDate, endDate);
+        if (invalidItems.length > 0) {
+          nextErrors.items = "No puedes realizar el pedido: hay productos no disponibles en estas fechas.";
+        }
+      }
+    } else {
+      // Para borrador, solo advertir sobre fechas
+      if (startDate && endDate) {
+        const invalidItems = checkItemsAvailability(startDate, endDate);
+        if (invalidItems.length > 0) {
+          setErrors(prev => ({ ...prev, items: `Aviso: Algunos artículos no están disponibles en estas fechas.` }));
+        }
+      }
+    }
+    
+    setErrors(prev => ({ ...prev, ...nextErrors }));
+
     if (Object.keys(nextErrors).length > 0 || !startDate || !endDate)
       return { valid: false };
 
@@ -424,6 +652,17 @@ const CreateKitScreen: React.FC = () => {
       return;
     }
 
+    // Validación explícita de nombre antes de cualquier otra cosa
+    if (name.trim().length === 0) {
+      setErrors({ name: "El nombre del kit es obligatorio." });
+      return;
+    }
+    
+    if (name.trim().length > MAX_KIT_NAME_LENGTH) {
+      setErrors({ name: `El nombre no puede superar los ${MAX_KIT_NAME_LENGTH} caracteres.` });
+      return;
+    }
+
     const validation = validate();
     if (!validation.valid || !validation.payloadDates) return;
 
@@ -434,13 +673,9 @@ const CreateKitScreen: React.FC = () => {
       startDate: validation.payloadDates.startIso,
       endDate: validation.payloadDates.endIso,
       deliveryMethod,
-      meetingPoint:
-        deliveryMethod === "MEETING_POINT"
-          ? meetingPoint.trim()
-          : deliveryMethod === "COURIER"
-            ? courierAddress.trim()
-            : undefined,
+      meetingPoint: deliveryMethod === "MEETING_POINT" ? meetingPoint.trim() : courierAddress.trim(),
       tenantId: user.id,
+      status: KitStatus.DRAFT,
       itemSelections: selectedProducts.map((p) => ({
         itemId: p.id,
         quantity: selectedQuantities[p.id] ?? 1,
@@ -448,28 +683,123 @@ const CreateKitScreen: React.FC = () => {
       })),
     };
 
-    const handleCreateKit = async () => {
-      try {
-        setSubmitting(true);
-        const response = await createKit(payload, user.token);
-        return response;
-      } catch (error) {
-        console.error("🔥 ERROR al crear kit:", error);
-        return null;
-      } finally {
-        setSubmitting(false);
+    try {
+      setSubmitting(true);
+
+      const createdKit = await createKit(payload, user.token);
+      if (!createdKit) {
+        throw new Error("No se pudo crear el kit.");
       }
-    };
-    const createdKit = await handleCreateKit();
-    if (!createdKit) {
-      console.error("🔥 ERROR: No se pudo crear el kit.");
-      return;
+
+      navigation.navigate("Checkout", { kitId: createdKit.id });
+
+    } catch (err) {
+      console.error("ERROR al procesar la creación/pago del kit:", err);
+      
+      let errorMsg = "";
+      
+      // Intentar extraer el mensaje de error de diferentes formas
+      if (err instanceof Error) {
+        errorMsg = err.message;
+      }
+      
+      if ((err as any)?.response?.data) {
+        const responseData = (err as any).response.data;
+        
+        // Para errores de validación de Spring Boot (MethodArgumentNotValidException)
+        if (responseData.errors && Array.isArray(responseData.errors)) {
+          // Formato de error de Spring Boot con lista de errores por campo
+          const firstError = responseData.errors[0];
+          const field = firstError.field;
+          const message = firstError.defaultMessage || firstError.message;
+          
+          if (field === "name") {
+            setErrors({ name: message });
+          } else if (field === "country") {
+            setErrors({ country: message });
+          } else if (field === "city") {
+            setErrors({ city: message });
+          } else if (field === "meetingPoint") {
+            setErrors({ meetingPoint: message });
+          } else {
+            setErrors({ general: message });
+          }
+          return;
+        }
+        
+        // Para errores con mensaje simple en string
+        if (typeof responseData === 'string') {
+          errorMsg = responseData;
+        } 
+        // Para errores con mensaje en objeto
+        else if (responseData.message) {
+          errorMsg = responseData.message;
+        }
+        // Para errores que vienen como texto plano
+        else {
+          errorMsg = JSON.stringify(responseData);
+        }
+      }
+      
+      console.log("Mensaje de error completo:", errorMsg);
+      
+      // Si el error es el de validación de Spring Boot (formato alternativo)
+      if (errorMsg.includes("Validation failed") && errorMsg.includes("name")) {
+        setErrors({ name: "El nombre del kit no puede superar los 255 caracteres" });
+        return;
+      }
+      
+      // DETECCIÓN MEJORADA - Buscar errores de longitud de campo
+      const lowerMsg = errorMsg.toLowerCase();
+      
+      // Error de nombre demasiado largo (cualquier variante)
+      if (lowerMsg.includes("name") && (lowerMsg.includes("255") || lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max") || lowerMsg.includes("caracteres"))) {
+        setErrors({ name: "El nombre del kit es demasiado largo (máximo 255 caracteres)." });
+        return;
+      }
+      
+      // Error de país demasiado largo
+      if (lowerMsg.includes("country") && (lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max"))) {
+        setErrors({ country: "El país es demasiado largo (máximo 120 caracteres)." });
+        return;
+      }
+      
+      // Error de ciudad demasiado larga
+      if (lowerMsg.includes("city") && (lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max"))) {
+        setErrors({ city: "La ciudad es demasiado larga (máximo 120 caracteres)." });
+        return;
+      }
+      
+      // Error de punto de encuentro demasiado largo
+      if (lowerMsg.includes("meeting") && (lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max"))) {
+        setErrors({ meetingPoint: "El punto de encuentro es demasiado largo (máximo 500 caracteres)." });
+        return;
+      }
+      
+      // Error de dirección demasiado larga
+      if (lowerMsg.includes("courier") && (lowerMsg.includes("long") || lowerMsg.includes("length") || lowerMsg.includes("max"))) {
+        setErrors({ courierAddress: "La dirección de entrega es demasiado larga (máximo 500 caracteres)." });
+        return;
+      }
+      
+      // Error de valor demasiado largo para cualquier campo (PostgreSQL genérico)
+      if (lowerMsg.includes("value too long") && lowerMsg.includes("varying")) {
+        setErrors({ general: "Uno de los campos supera la longitud máxima permitida. Por favor, revisa el nombre, país, ciudad o dirección." });
+        return;
+      }
+      
+      // Errores de disponibilidad de productos
+      if (errorMsg.includes("ya no está disponible") || errorMsg.includes("unidades")) {
+        setErrors({ items: errorMsg });
+        return;
+      }
+      
+      // Si llegamos aquí, mostrar el mensaje original o uno genérico
+      setErrors({ general: errorMsg || "Ha ocurrido un error al procesar el kit o el pago." });
+    } finally {
+      setSubmitting(false);
     }
-    console.log("Created kit:", createdKit);
-
-    navigation.navigate("Checkout", { kitId: createdKit.id });
   };
-
 
   const customTheme = {
     ...MD3LightTheme,
@@ -496,21 +826,12 @@ const CreateKitScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={createKitStyles.headerRow}>
-            {/* Botón de volver */}
-            <TouchableOpacity
-              style={componentStyles.iconButton}
-              onPress={() => navigation.goBack()}
-            >
+            <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={24} color={Colors.primary} />
             </TouchableOpacity>
-
-            <Text
-              style={[commonStyles.headerTitle, createKitStyles.headerTitle]}
-            >
-              Crea un Kit
+            <Text style={[commonStyles.headerTitle, createKitStyles.headerTitle]}>
+              {kitToCreate ? "Personaliza tu kit" : "Crea un kit"}
             </Text>
-
-            {/* Mantener espacio a la derecha para centrar el título */}
             <View style={componentStyles.iconButton} />
           </View>
 
@@ -518,107 +839,113 @@ const CreateKitScreen: React.FC = () => {
             mode="outlined"
             label="Nombre del Kit"
             value={name}
+            maxLength={MAX_KIT_NAME_LENGTH}
             onChangeText={(value) => {
               setName(value);
-              clearFieldError("name");
+              if (value.length > MAX_KIT_NAME_LENGTH) {
+                setErrors(prev => ({ ...prev, name: `El nombre no puede superar los ${MAX_KIT_NAME_LENGTH} caracteres.` }));
+              } else if (value.length > 0) {
+                clearFieldError("name");
+              } else {
+                clearFieldError("name");
+              }
+            }}
+            onBlur={() => {
+              if (name.trim().length === 0) {
+                setErrors(prev => ({ ...prev, name: "El nombre del kit es obligatorio." }));
+              } else if (name.trim().length > MAX_KIT_NAME_LENGTH) {
+                setErrors(prev => ({ ...prev, name: `El nombre no puede superar los ${MAX_KIT_NAME_LENGTH} caracteres.` }));
+              } else {
+                clearFieldError("name");
+              }
             }}
             error={!!errors.name}
             style={{ backgroundColor: Colors.backgroundWhite }}
             outlineColor={Colors.border}
             activeOutlineColor={Colors.primary}
+            right={
+              <PaperTextInput.Affix 
+                text={`${name.length}/${MAX_KIT_NAME_LENGTH}`}
+                textStyle={{ 
+                  fontSize: 12,
+                  color: name.length === MAX_KIT_NAME_LENGTH ? Colors.error : Colors.textSecondary 
+                }}
+              />
+            }
           />
-          {errors.name ? (
-            <Text style={commonStyles.errorText}>{errors.name}</Text>
-          ) : null}
+          {errors.name ? <Text style={commonStyles.errorText}>{errors.name}</Text> : null}
 
-            {/* País */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>País</Text>
-              <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
-                <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+          {/* País */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>País</Text>
+            <View style={[styles.pickerWrapper, errors.country ? styles.pickerWrapperError : null]}>
+              <Ionicons name="earth-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+              <SelectPicker
+                options={countries}
+                selectedValue={selectedCountry}
+                placeholder="Selecciona un país"
+                onValueChange={(value: string) => {
+                  onCountryChange(value);
+                  clearFieldError("country");
+                  clearFieldError("city");
+                  setCountry(value);
+                }}
+              />
+            </View>
+            {!!errors.country && (
+              <View style={commonStyles.errorContainer}>
+                <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                <Text style={commonStyles.errorText}>{errors.country}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Ciudad */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Ciudad</Text>
+            <View style={[styles.pickerWrapper, errors.city ? styles.pickerWrapperError : null]}>
+              <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
+              {loadingCities ? (
+                <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
+              ) : (
                 <SelectPicker
-                  options={EUROPEAN_COUNTRIES}
-                  selectedValue={selectedCountry}
-                  placeholder="Selecciona un país"
+                  options={cities.map((c) => ({ label: c, value: c }))}
+                  selectedValue={selectedCity}
+                  placeholder={selectedCountry ? "Selecciona una ciudad" : "Primero elige un país"}
+                  disabled={cities.length === 0}
                   onValueChange={(value: string) => {
-                    onCountryChange(value);
-                    clearFieldError('country');
-                    clearFieldError('city');
-                    setCountry(value);
+                    setSelectedCity(value);
+                    setCity(value);
+                    clearFieldError("city");
                   }}
                 />
-              </View>
-              {!!errors.country && (
-                <View style={commonStyles.errorContainer}>
-                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
-                  <Text style={commonStyles.errorText}>{errors.country}</Text>
-                </View>
               )}
             </View>
-
-            {/* Ciudad */}
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Ciudad</Text>
-              <View style={[styles.pickerWrapper, errors.city ? styles.pickerWrapperError : null]}>
-                <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={styles.pickerIcon} />
-                {loadingCities ? (
-                  <ActivityIndicator size="small" color={Colors.primary} style={{ flex: 1 }} />
-                ) : (
-                  <SelectPicker
-                    options={cities.map(c => ({ label: c, value: c }))}
-                    selectedValue={selectedCity}
-                    placeholder={selectedCountry ? 'Selecciona una ciudad' : 'Primero elige un país'}
-                    disabled={cities.length === 0}
-                    onValueChange={(value: string) => {
-                      setSelectedCity(value);
-                      setCity(value);
-                      clearFieldError('city');
-                    }}
-                  />
-                )}
+            {!!errors.city && (
+              <View style={commonStyles.errorContainer}>
+                <Ionicons name="alert-circle" size={14} color={Colors.error} />
+                <Text style={commonStyles.errorText}>{errors.city}</Text>
               </View>
-              {!!errors.city && (
-                <View style={commonStyles.errorContainer}>
-                  <Ionicons name="alert-circle" size={14} color={Colors.error} />
-                  <Text style={commonStyles.errorText}>{errors.city}</Text>
-                </View>
-              )}
-            </View>
-
+            )}
+          </View>
 
           <TouchableOpacity
             style={[
               commonStyles.input,
               createKitStyles.dateInput,
               (errors.startDate || errors.endDate) && commonStyles.inputError,
-              {
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              },
+              { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
             ]}
             onPress={() => setShowDateRangePicker(true)}
           >
-            <Text
-              style={[
-                {
-                  color:
-                    startDate && endDate
-                      ? Colors.textPrimary
-                      : Colors.textSecondary,
-                },
-              ]}
-            >
+            <Text style={{ color: startDate && endDate ? Colors.textPrimary : Colors.textSecondary }}>
               {startDate && endDate
                 ? `${String(startDate.getDate()).padStart(2, "0")}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${startDate.getFullYear()} - ${String(endDate.getDate()).padStart(2, "0")}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${endDate.getFullYear()}`
                 : "Selecciona rango de fechas del alquiler"}
             </Text>
-            <Ionicons
-              name="calendar-outline"
-              size={20}
-              color={Colors.primary}
-            />
+            <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
           </TouchableOpacity>
+
           <DatePickerModal
             locale="es"
             mode="range"
@@ -626,40 +953,41 @@ const CreateKitScreen: React.FC = () => {
             onDismiss={() => setShowDateRangePicker(false)}
             startDate={startDate || undefined}
             endDate={endDate || undefined}
+            allowEditing={false}
+            validRange={{ startDate: new Date() }}
             onConfirm={(params: { startDate?: Date; endDate?: Date }) => {
               setShowDateRangePicker(false);
               if (params.startDate && params.endDate) {
+                const invalidItems = checkItemsAvailability(params.startDate, params.endDate);
+                if (invalidItems.length > 0) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    items: `Atención: Algunos productos no están disponibles en estas fechas: ${invalidItems.join(", ")}`,
+                  }));
+                } else {
+                  clearFieldError("items");
+                }
                 setStartDate(params.startDate);
                 setEndDate(params.endDate);
                 clearFieldError("startDate");
                 clearFieldError("endDate");
               }
             }}
-            validRange={{ startDate: new Date() }}
           />
-          {errors.startDate ? (
-            <Text style={commonStyles.errorText}>{errors.startDate}</Text>
-          ) : null}
-          {errors.endDate ? (
-            <Text style={commonStyles.errorText}>{errors.endDate}</Text>
-          ) : null}
 
-          {/* Duración del alquiler */}
+          {errors.startDate && <Text style={commonStyles.errorText}>{errors.startDate}</Text>}
+          {errors.endDate && <Text style={commonStyles.errorText}>{errors.endDate}</Text>}
+
           {monthsBetween !== null && monthsBetween > 0 && (
             <View style={{ marginTop: 8, marginBottom: 16 }}>
               <Text style={commonStyles.bodySecondary}>
-                Duración: {monthsBetween.toFixed(2)} meses
+                Duración: {startDate && endDate ? formatRentalDuration(startDate, endDate) : ""}
               </Text>
             </View>
           )}
 
           <View style={createKitStyles.deliverySection}>
-            <Text
-              style={[commonStyles.subtitle, createKitStyles.productsTitle]}
-            >
-              Método de entrega
-            </Text>
-
+            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>Método de entrega</Text>
             <SegmentedButtons
               value={deliveryMethod}
               onValueChange={(value) => {
@@ -668,16 +996,8 @@ const CreateKitScreen: React.FC = () => {
                 clearFieldError("courierAddress");
               }}
               buttons={[
-                {
-                  value: "COURIER",
-                  label: "Mensajería",
-                  icon: "truck-delivery",
-                },
-                {
-                  value: "MEETING_POINT",
-                  label: "Punto de encuentro",
-                  icon: "map-marker",
-                },
+                { value: "COURIER", label: "Mensajería", icon: "truck-delivery" },
+                { value: "MEETING_POINT", label: "Punto de encuentro", icon: "map-marker" },
               ]}
               style={{ marginVertical: 12 }}
             />
@@ -689,86 +1009,91 @@ const CreateKitScreen: React.FC = () => {
                   label="Punto de encuentro"
                   placeholder="Ej: Plaza Mayor, Madrid (entrada principal)"
                   value={meetingPoint}
+                  maxLength={MAX_MEETING_POINT_LENGTH}
                   onChangeText={(value) => {
                     setMeetingPoint(value);
                     clearFieldError("meetingPoint");
                   }}
-                  error={!!errors.meetingPoint}
-                  style={{
-                    backgroundColor: Colors.backgroundWhite,
-                    marginTop: 12,
+                  onBlur={() => {
+                    if (deliveryMethod === "MEETING_POINT" && meetingPoint.trim().length > 0 && meetingPoint.trim().length <= MAX_MEETING_POINT_LENGTH) {
+                      clearFieldError("meetingPoint");
+                    }
                   }}
+                  error={!!errors.meetingPoint}
+                  style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
                   outlineColor={Colors.border}
                   activeOutlineColor={Colors.primary}
                   multiline
+                  right={
+                    <PaperTextInput.Affix 
+                      text={`${meetingPoint.length}/${MAX_MEETING_POINT_LENGTH}`}
+                      textStyle={{ 
+                        fontSize: 12,
+                        color: meetingPoint.length === MAX_MEETING_POINT_LENGTH ? Colors.error : Colors.textSecondary 
+                      }}
+                    />
+                  }
                 />
-                {errors.meetingPoint ? (
-                  <Text style={commonStyles.errorText}>
-                    {errors.meetingPoint}
-                  </Text>
-                ) : null}
+                {errors.meetingPoint && <Text style={commonStyles.errorText}>{errors.meetingPoint}</Text>}
               </>
-            ) : null}
-
-            {deliveryMethod === "COURIER" ? (
+            ) : (
               <>
                 <PaperTextInput
                   mode="outlined"
                   label="Dirección de entrega"
                   value={courierAddress}
+                  maxLength={MAX_COURIER_ADDRESS_LENGTH}
                   onChangeText={(value) => {
                     setCourierAddress(value);
                     clearFieldError("courierAddress");
                   }}
-                  error={!!errors.courierAddress}
-                  style={{
-                    backgroundColor: Colors.backgroundWhite,
-                    marginTop: 12,
+                  onBlur={() => {
+                    if (deliveryMethod === "COURIER" && courierAddress.trim().length > 0 && courierAddress.trim().length <= MAX_COURIER_ADDRESS_LENGTH) {
+                      clearFieldError("courierAddress");
+                    }
                   }}
+                  error={!!errors.courierAddress}
+                  style={{ backgroundColor: Colors.backgroundWhite, marginTop: 12 }}
                   outlineColor={Colors.border}
                   activeOutlineColor={Colors.primary}
                   multiline
+                  right={
+                    <PaperTextInput.Affix 
+                      text={`${courierAddress.length}/${MAX_COURIER_ADDRESS_LENGTH}`}
+                      textStyle={{ 
+                        fontSize: 12,
+                        color: courierAddress.length === MAX_COURIER_ADDRESS_LENGTH ? Colors.error : Colors.textSecondary 
+                      }}
+                    />
+                  }
                 />
-                {errors.courierAddress ? (
-                  <Text style={commonStyles.errorText}>
-                    {errors.courierAddress}
-                  </Text>
-                ) : null}
+                {errors.courierAddress && <Text style={commonStyles.errorText}>{errors.courierAddress}</Text>}
+                <Text style={commonStyles.bodySecondary}>
+                  Se aplicará una tarifa fija de mensajería de {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
+                </Text>
               </>
-            ) : null}
-
-            {deliveryMethod === "COURIER" ? (
-              <Text style={commonStyles.bodySecondary}>
-                Se aplicará una tarifa fija de mensajería de{" "}
-                {PLATFORM_COURIER_PRICE.toFixed(2)}€ al total del kit.
-              </Text>
-            ) : null}
+            )}
           </View>
 
           <View style={createKitStyles.productsHeader}>
-            <Text
-              style={[commonStyles.subtitle, createKitStyles.productsTitle]}
-            >
-              Tus Productos
-            </Text>
-            <Button
-              mode="contained"
-              onPress={openAddProductModal}
-              icon="plus"
-              compact
-              style={{ borderRadius: 8 }}
-            >
-              Añadir Producto
-            </Button>
+            <Text style={[commonStyles.subtitle, createKitStyles.productsTitle]}>Tus Productos</Text>
+            {isEditable && (
+              <Button
+                mode="contained"
+                onPress={openAddProductModal}
+                icon="plus"
+                compact
+                style={{ borderRadius: 8 }}
+              >
+                {selectedItemsCount > 0 ? "Añadir más productos" : "Añadir producto"}
+              </Button>
+            )}
           </View>
 
           <View style={createKitStyles.counterBadge}>
-            <Text style={createKitStyles.counterBadgeText}>
-              Seleccionados: {selectedItemsCount}
-            </Text>
+            <Text style={createKitStyles.counterBadgeText}>Seleccionados: {selectedItemsCount}</Text>
           </View>
 
-          {/* Lista de items añadidos al kit */}
           {loadingCatalog ? (
             <View style={createKitStyles.loaderArea}>
               <ActivityIndicator color={Colors.primary} />
@@ -788,104 +1113,35 @@ const CreateKitScreen: React.FC = () => {
                 onIncrease={incrementSelectedQuantity}
                 onDecrease={decrementSelectedQuantity}
                 onRemove={removeSelectedItem}
+                isEditable={isEditable}
               />
             ))
           )}
 
-          {errors.items ? (
-            <Text style={commonStyles.errorText}>{errors.items}</Text>
-          ) : null}
-          {errors.general ? (
-            <Text style={commonStyles.errorText}>{errors.general}</Text>
-          ) : null}
+          {errors.items && <Text style={commonStyles.errorText}>{errors.items}</Text>}
+          {errors.general && <Text style={commonStyles.errorText}>{errors.general}</Text>}
         </ScrollView>
 
         <View style={createKitStyles.footerRow}>
-          {/* Resumen de precios */}
           <View style={{ flex: 1 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 8,
-              }}
-            >
-              <Text style={commonStyles.caption}>Subtotal productos</Text>
-              <Text style={commonStyles.caption}>{totalPrice.toFixed(2)}€</Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Garantía (20%)</Text>
-              <Text style={commonStyles.caption}>
-                {(totalPrice * GUARANTEE_PERCENTAGE).toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Comisión (20%)</Text>
-              <Text style={commonStyles.caption}>
-                {(totalPrice * COMISION).toFixed(2)}€
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={commonStyles.caption}>Tarifa de mensajería</Text>
-              <Text style={commonStyles.caption}>
-                {courierPrice.toFixed(2)}€
-              </Text>
-            </View>
+            <KitPaymentResumeComponent kitPrices={kitPayment} />
 
             <View
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                borderTopWidth: 1,
-                borderTopColor: Colors.border,
-                paddingTop: 12,
+                backgroundColor: Colors.backgroundCard,
+                padding: 12,
+                borderRadius: 8,
                 marginBottom: 16,
               }}
             >
-              <Text
-                style={[
-                  commonStyles.caption,
-                  { color: Colors.primary, fontWeight: "600", fontSize: 16 },
-                ]}
-              >
-                Total a pagar
-              </Text>
-              <Text
-                style={[
-                  createKitStyles.productTitle,
-                  { fontSize: 20, color: Colors.primary },
-                ]}
-              >
-                {(
-                  totalPrice +
-                  totalPrice * GUARANTEE_PERCENTAGE +
-                  +totalPrice * COMISION +
-                  courierPrice
-                ).toFixed(2)}
-                €
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Ionicons name="wallet-outline" size={20} color={Colors.primary} />
+                <Text style={commonStyles.body}>Saldo en cartera</Text>
+              </View>
+              <Text style={[commonStyles.body, { fontWeight: "bold" }]}>{walletBalance.toFixed(2)}€</Text>
             </View>
 
             <Button
@@ -896,7 +1152,7 @@ const CreateKitScreen: React.FC = () => {
                   return;
                 }
 
-                const validation = validate();
+                const validation = validate(true);
                 if (!validation.valid || !validation.payloadDates) return;
 
                 const payload: KitCreateRequest = {
@@ -906,12 +1162,7 @@ const CreateKitScreen: React.FC = () => {
                   startDate: validation.payloadDates.startIso,
                   endDate: validation.payloadDates.endIso,
                   deliveryMethod,
-                  meetingPoint:
-                    deliveryMethod === "MEETING_POINT"
-                      ? meetingPoint.trim()
-                      : deliveryMethod === "COURIER"
-                        ? courierAddress.trim()
-                        : undefined,
+                  meetingPoint: deliveryMethod === "MEETING_POINT" ? meetingPoint.trim() : courierAddress.trim(),
                   tenantId: user.id,
                   itemSelections: selectedProducts.map((p) => ({
                     itemId: p.id,
@@ -927,8 +1178,14 @@ const CreateKitScreen: React.FC = () => {
                   if (created) {
                     navigation.navigate("MyKits");
                   }
-                } catch (e) {
-                  console.error("Error guardando borrador:", e);
+                } catch (error: any) {
+                  console.error("Error guardando borrador:", error);
+                  const errorMsg = error.response?.data?.message || error.message || "";
+                  if (errorMsg.includes("ya no está disponible")) {
+                    setErrors({ items: errorMsg });
+                  } else {
+                    setErrors({ general: "No se pudo guardar el borrador." });
+                  }
                 } finally {
                   setSubmitting(false);
                 }
@@ -937,7 +1194,6 @@ const CreateKitScreen: React.FC = () => {
             >
               Guardar para pagar más tarde
             </Button>
-
 
             <Button
               mode="contained"
@@ -958,9 +1214,18 @@ const CreateKitScreen: React.FC = () => {
           onDismiss={() => setCatalogModalVisible(false)}
           searchText={searchText}
           onSearchChange={setSearchText}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
-          categories={categories}
+          categoryOptions={categoryOptions}
+          selectedCategoryId={selectedCategoryId}
+          onCategoryChange={setSelectedCategoryId}
+          conditionOptions={CONDITION_OPTIONS}
+          selectedCondition={selectedCondition}
+          onConditionChange={setSelectedCondition}
+          minPrice={minPriceFilter}
+          maxPrice={maxPriceFilter}
+          onMinPriceChange={setMinPriceFilter}
+          onMaxPriceChange={setMaxPriceFilter}
+          onClearFilters={handleClearCatalogFilters}
+          filtersLoading={loadingCatalog}
           filteredProducts={filteredProducts}
           tempSelectedQuantities={tempSelectedQuantities}
           onToggleSelection={toggleTempSelection}
@@ -973,70 +1238,23 @@ const CreateKitScreen: React.FC = () => {
           onToggleAvailable={setShowOnlyAvailable}
           startDate={startDate}
           endDate={endDate}
+          expandedSearch={expandedSearch}
+          onToggleExpandedSearch={() => setExpandedSearch((v) => !v)}
+          loadingNearby={loadingNearby}
+          targetCityCoords={targetCityCoords}
+          mapProducts={mapProducts}
         />
 
-        <Modal
-          visible={confirmVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setConfirmVisible(false)}
-        >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              justifyContent: "center",
-              alignItems: "center",
-              padding: 20,
-            }}
-          >
-            <View
-              style={{
-                width: "100%",
-                backgroundColor: "white",
-                borderRadius: 16,
-                padding: 20,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  marginBottom: 10,
-                  color: "#111",
-                }}
-              >
-                Depósito de garantía
-              </Text>
-
+        <Modal visible={confirmVisible} transparent animationType="fade" onRequestClose={() => setConfirmVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+            <View style={{ width: "100%", backgroundColor: "white", borderRadius: 16, padding: 20 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#111" }}>Depósito de garantía</Text>
               <Text style={{ fontSize: 15, color: "#444", marginBottom: 20 }}>
-                Recuerda que el 20% se retendrá como garantía y se te devolverá
-                cuando el kit sea devuelto en buen estado.
+                Recuerda que el 20% se retendrá como garantía y se te devolverá cuando el kit sea devuelto en buen estado.
               </Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "flex-end",
-                  gap: 10,
-                }}
-              >
-                <Button
-                  mode="outlined"
-                  onPress={() => setConfirmVisible(false)}
-                >
-                  Cancelar
-                </Button>
-
-                <Button
-                  mode="contained"
-                  onPress={() => {
-                    setConfirmVisible(false);
-                    handleSubmit();
-                  }}
-                >
-                  Aceptar
-                </Button>
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
+                <Button mode="outlined" onPress={() => setConfirmVisible(false)}>Cancelar</Button>
+                <Button mode="contained" onPress={() => { setConfirmVisible(false); handleSubmit(); }}>Aceptar</Button>
               </View>
             </View>
           </View>

@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../styles/theme';
-import { RootStackParamList, NavbarScreen } from '../types';
+import { RootStackParamList, NavbarScreen, UserRole } from '../types';
 
 type NavItem = {
   name: string;
@@ -13,10 +13,10 @@ type NavItem = {
 };
 
 interface NavbarProps {
-  userRole: 'ADMIN' | 'USER';
+  userRole: UserRole;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ userRole }) => {
+const Navbar: React.FC<NavbarProps> = ({ userRole }: NavbarProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // Para usuarios normales
@@ -33,7 +33,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole }) => {
     { name: 'Usuarios', icon: 'people-outline', screen: 'AdminUsers' },
     { name: 'Categorías', icon: 'folder-open-outline', screen: 'Categories' },
     { name: 'Inicio', icon: 'home-outline', screen: 'Home' },
-    { name: 'Incidencias', icon: 'warning-outline', screen: 'MyIncidents' },
+    { name: 'Incidencias', icon: 'warning-outline', screen: 'AdminIncidents' },
     { name: 'Perfil', icon: 'person-outline', screen: 'Profile' },
   ];
 

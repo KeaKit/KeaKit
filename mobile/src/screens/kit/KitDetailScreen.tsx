@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Alert,
   Modal,
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, KitResponse, KitStatus } from '../../types';
 import { Colors, commonStyles } from '../../styles';
@@ -50,118 +51,102 @@ const KitDetailScreen: React.FC = () => {
   const [onActionConfirm, setOnActionConfirm] = useState<() => void>(() => () => {});
   const [ratedItems, setRatedItems] = useState<{ [key: number]: boolean }>({});
 
-
-  useEffect(() => {
-    const fetchKitDetail = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(API_ROUTES.GET_KIT(kitId), {
-          headers: user?.token
-            ? {
-                Authorization: `Bearer ${user.token}`,
-                "Content-Type": "application/json",
-              }
-            : undefined,
-        });
-        if (!response.ok) throw new Error('Error al obtener kit');
-        const data = await response.json();
-        setKit(data);
-
-        if (data && data.items?.length > 0 && user?.id) {
-          const itemIds = data.items.map((item: any) => item.itemId);
-          fetch(`${API_ROUTES.HAS_REVIEWED_ITEMS}?reviewerId=${user.id}&kitId=${kitId}&itemIds=${itemIds.join(',')}`, {
-            headers: user?.token
-              ? { Authorization: `Bearer ${user.token}` }
-              : undefined,
-          })
-            .then(res => res.json())
-            .then((res: { [key: number]: boolean }) => {
-              setRatedItems(res);
-            })
-            .catch(err => console.error("Error al obtener items valorados", err));
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (kitId) fetchKitDetail();
+  const fetchKitDetail = useCallback(async () => {
+    if (!kitId) return;
     
-  }, [kitId, user?.token]);
+    try {
+      setLoading(true);
+      const response = await fetch(API_ROUTES.GET_KIT(kitId), {
+        headers: user?.token
+          ? {
+              Authorization: `Bearer ${user.token}`,
+              "Content-Type": "application/json",
+            }
+          : undefined,
+      });
+      
+      if (!response.ok) throw new Error('Error al obtener kit');
+      const data = await response.json();
+      setKit(data);
 
-const handleConfirmKit = async () => {
-  try {
-    setConfirming(true);
-
-    const response = await fetch(API_ROUTES.CONFIRM_KIT(kitId), {
-      method: 'PATCH',
-      headers: user?.token
-        ? {
-            Authorization: `Bearer ${user.token}`,
-            "Content-Type": "application/json",
-          }
-        : undefined,
-    });
-
-    if (response.ok) {
-      navigation.goBack();
-    } else {
-      console.error("Error en el servidor al confirmar el kit");
+      if (data && data.items?.length > 0 && user?.id) {
+        const itemIds = data.items.map((item: any) => item.itemId);
+        
+        fetch(`${API_ROUTES.HAS_REVIEWED_ITEMS}?reviewerId=${user.id}&kitId=${kitId}&itemIds=${itemIds.join(',')}`, {
+          headers: user?.token ? { Authorization: `Bearer ${user.token}` } : undefined,
+        })
+          .then(res => res.json())
+          .then((res: { [key: number]: boolean }) => {
+            setRatedItems(res);
+          })
+          .catch(err => console.error("Error al obtener items valorados", err));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("No se pudo procesar la confirmación:", error);
-  } finally {
-    setConfirming(false);
-  }
-};
+  }, [kitId, user?.token, user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchKitDetail();
+    }, [fetchKitDetail])
+  );
+
+  const handleConfirmKit = async () => {
+    try {
+      setConfirming(true);
+      const response = await fetch(API_ROUTES.CONFIRM_KIT(kitId), {
+        method: 'PATCH',
+        headers: user?.token
+          ? {
+              Authorization: `Bearer ${user.token}`,
+              "Content-Type": "application/json",
+            }
+          : undefined,
+      });
+      if (response.ok) {
+        navigation.goBack();
+      } else {
+        console.error("Error en el servidor al confirmar el kit");
+      }
+    } catch (error) {
+      console.error("No se pudo procesar la confirmación:", error);
+    } finally {
+      setConfirming(false);
+    }
+  };
 
   const openActionModal = (title: string, message: string, onConfirm: () => void) => {
-  setActionModalTitle(title);
-  setActionModalMessage(message);
-  setOnActionConfirm(() => onConfirm);
-  setActionModalVisible(true);
-};  
+    setActionModalTitle(title);
+    setActionModalMessage(message);
+    setOnActionConfirm(() => onConfirm);
+    setActionModalVisible(true);
+  };  
 
-const handleSubmitReport = async () => {
-  if (!selectedArticle || !user) return;
+  const handleReportProblem = () => {
+    setReportModalVisible(true);
+  };
 
-  if (!reportText.trim()) {
-    setError("La descripción del reporte es obligatoria");
-    return;
-  }
-
-  try {
-    setLoading(true);
-    setError(null);
-
-    await createIncident(
-      {
-        title: `El artículo ${selectedArticle.name} no cumple con lo prometido`,
-        description: reportText.trim(),
-        type: "DAMAGED_ITEM",
-        user: { id: user.id },
-        relatedItem: selectedArticle.id
-          ? { id: selectedArticle.id }
-          : null,
-      },
-      user.token,
+  const toggleItemSelection = (itemId: number) => {
+    setSelectedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId]
     );
+  };
 
+  const handleSubmitReport = () => {
+    if (selectedItems.length === 0) {
+      console.log("Selecciona al menos un producto");
+      return;
+    }
+    console.log("Productos reportados:", selectedItems);
+    console.log("Reporte enviado correctamente");
     setReportModalVisible(false);
-    setReportText("");
-    setError(null);
-
-    navigation.navigate('MyIncidents');
-
-  } catch (err) {
-    setError(
-      err instanceof Error ? err.message : "Error al crear la incidencia"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+    setSelectedItems([]);
+  };
 
   if (loading || confirming) {
     return (
@@ -172,11 +157,11 @@ const handleSubmitReport = async () => {
     );
   }
 
-  if (loading || deleting) {
+  if (deleting) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        {deleting && <Text style={styles.deletingText}>Eliminando kit...</Text>}
+        <Text style={styles.deletingText}>Eliminando kit...</Text>
       </View>
     );
   }
@@ -190,29 +175,22 @@ const handleSubmitReport = async () => {
     });
   };
 
-  const createReview = (kitId: number, revieweeId: number, revieweeName: string) => {
-    navigation.navigate('CreateRating', {
-      kitId: kitId,
-      revieweeId: revieweeId,
-      revieweeName: revieweeName
-    });
-  };
-
   return (
     <SafeAreaView style={commonStyles.container}>
-
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle del Kit</Text>
-        {kit.status !== KitStatus.PAID && (
-          <View style={{ width: 40 }} />
+        {false && (
+          <TouchableOpacity onPress={handleReportProblem} style={styles.reportButton}>
+            <Ionicons name="flag-outline" size={22} color="#FF3B30" />
+          </TouchableOpacity>
         )}
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
         <View style={styles.mainCard}>
           <View style={styles.iconCircle}>
             <Ionicons name="briefcase" size={40} color={Colors.primary} />
@@ -234,18 +212,12 @@ const handleSubmitReport = async () => {
           </View>
         </View>
 
-
         <Text style={styles.sectionTitle}>Productos Incluidos</Text>
         <View style={styles.itemsContainer}>
-          {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => {
-            const alreadyRated = ratedItems[item.itemId];
-
-            return (
+          {kit.items?.slice(0, expanded ? kit.items.length : 3).map((item) => (
             <View key={item.itemId} style={styles.itemCard}>
-              
               <View style={styles.itemInfo}>
                 <Text style={styles.itemName}>{item.name}</Text>
-
                 <Text style={styles.itemMeta}>
                   {item.ownerName ? (
                     <Text
@@ -258,7 +230,7 @@ const handleSubmitReport = async () => {
                 </Text>
               </View>
 
-              {kit.status === KitStatus.FINISHED && (
+              {kit.status === "FINISHED" && (
                 <TouchableOpacity
                   style={[styles.itemButton, alreadyRated && { opacity: 0.5 }]}
                   onPress={() => !alreadyRated && createReview(kitId, item.ownerId, item.ownerName)}
@@ -271,33 +243,11 @@ const handleSubmitReport = async () => {
                 </TouchableOpacity>
               )}
 
-              {kit.status === KitStatus.ACTIVE && (
-                <TouchableOpacity
-                  style={styles.itemButton}
-                  onPress={() => {
-                    setSelectedArticle({
-                      id: item.itemId,
-                      name: item.name || `Artículo con ID: ${item.itemId}`,
-                    });
-                    setReportModalVisible(true);
-                  }}
-                >
-                  <Ionicons name="flag-outline" size={18} color="#FF3B30" />
-                  <Text style={[styles.itemButtonText, { color: "#FF3B30" }]}>
-                    Reportar
-                  </Text>
-                </TouchableOpacity>
-              )}
               <Ionicons name="cube-outline" size={20} color="#DDD" />
             </View>
-            );
-          })}
-
+          ))}
           {kit.items && kit.items.length > 3 && (
-            <TouchableOpacity 
-              style={styles.verMasBtn} 
-              onPress={() => setExpanded(!expanded)}
-            >
+            <TouchableOpacity style={styles.verMasBtn} onPress={() => setExpanded(!expanded)}>
               <Text style={styles.verMasText}>
                 {expanded ? "Ver menos" : `Ver ${kit.items.length - 3} más...`}
               </Text>
@@ -311,6 +261,7 @@ const handleSubmitReport = async () => {
           <Text style={styles.totalValue}>{kit.totalPrice?.toLocaleString('es-ES')} €</Text>
         </View>
 
+        {/* Botón de seguimiento solo (sin agrupar) */}
         <TouchableOpacity
           style={styles.trackingButton}
           onPress={() => navigation.navigate("Tracking", { kitId: kit.id })}
@@ -319,6 +270,23 @@ const handleSubmitReport = async () => {
           <Text style={styles.trackingButtonText}>Ver seguimiento</Text>
         </TouchableOpacity>
 
+        {/* Botón único de valoración del kit (debajo del seguimiento) */}
+        {kit.status === "FINISHED" && !isKitFullyRated() && (
+          <TouchableOpacity
+            style={[styles.trackingButton, { borderColor: Colors.warning, marginTop: 12 }]}
+            onPress={() => navigation.navigate("CreateRating", { kitId: kit.id } as any)}
+          >
+            <Ionicons name="star-outline" size={18} color={Colors.warning} />
+            <Text style={[styles.trackingButtonText, { color: Colors.warning }]}>Valorar kit</Text>
+          </TouchableOpacity>
+        )}
+
+        {kit.status === "FINISHED" && isKitFullyRated() && (
+          <View style={[styles.trackingButton, styles.disabledButton, { marginTop: 12 }]}>
+            <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+            <Text style={[styles.trackingButtonText, { color: Colors.success }]}>Ya valorado</Text>
+          </View>
+        )}
 
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
@@ -352,8 +320,7 @@ const handleSubmitReport = async () => {
           </TouchableOpacity>
         )}
 
-
-        {kit.status === KitStatus.ACTIVE && user?.role === "USER" &&(
+        {kit.status === KitStatus.PAID && user?.role === "USER" && (
           <TouchableOpacity
             style={styles.confirmButton}
             onPress={() => openActionModal(
@@ -366,111 +333,56 @@ const handleSubmitReport = async () => {
             <Text style={styles.confirmButtonText}>Confirmar recepción</Text>
           </TouchableOpacity>
         )}
-
       </ScrollView>
 
-      <Modal
-        visible={actionModalVisible}
-        transparent
-        animationType="fade"
-      >
+      <Modal visible={actionModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.reportModalContainer}>
-
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{actionModalTitle}</Text>
-              <TouchableOpacity
-                onPress={() => setActionModalVisible(false)}
-              >
-                <Ionicons name="close" size={22} color="#666" />
-              </TouchableOpacity>
-            </View>
-
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>{actionModalTitle}</Text>
             <Text style={styles.modalSubtitle}>{actionModalMessage}</Text>
-
-            <View style={styles.modalButtonsRow}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setActionModalVisible(false)}
-              >
-                <Text style={styles.cancelText}>Cancelar</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setActionModalVisible(false)}>
+                <Text style={styles.modalCancelText}>Cancelar</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={onActionConfirm}
-              >
-                <Ionicons name="checkmark" size={16} color="#FFF" />
-                <Text style={styles.submitText}>Aceptar</Text>
+              <TouchableOpacity style={styles.modalSubmitButton} onPress={onActionConfirm}>
+                <Text style={styles.modalSubmitText}>Aceptar</Text>
               </TouchableOpacity>
             </View>
-
           </View>
         </View>
       </Modal>
-      
-      <Modal
-        visible={reportModalVisible}
-        transparent
-        animationType="fade"
-      >
+
+      <Modal visible={reportModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={styles.reportModalContainer}>
-
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Reportar problema</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setReportModalVisible(false);
-                  setReportText("");
-                }}
-              >
-                <Ionicons name="close" size={22} color="#666" />
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Reportar Problema</Text>
+            <Text style={styles.modalSubtitle}>¿Qué productos no cumplen con la descripción?</Text>
+            <ScrollView style={{ maxHeight: 300 }}>
+              {kit.items?.map((item) => {
+                const isSelected = selectedItems.includes(item.itemId);
+                return (
+                  <TouchableOpacity
+                    key={item.itemId}
+                    style={[styles.modalItem, isSelected && styles.modalItemSelected]}
+                    onPress={() => toggleItemSelection(item.itemId)}
+                  >
+                    <Text style={styles.modalItemText}>{item.name}</Text>
+                    {isSelected && <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={() => {
+                setReportModalVisible(false);
+                setSelectedItems([]);
+              }}>
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalSubmitButton} onPress={handleSubmitReport}>
+                <Text style={styles.modalSubmitText}>Enviar reporte</Text>
               </TouchableOpacity>
             </View>
-
-            <Text style={styles.modalSubtitle}>
-              ¿Por qué el artículo no cumple con lo prometido?
-            </Text>
-
-            <TextInput
-              style={styles.textArea}
-              placeholder="Detalla más el problema..."
-              placeholderTextColor="#999"
-              multiline
-              value={reportText}
-              onChangeText={(text) => {
-                setReportText(text);
-                if (error) setError(null);
-              }}
-            />
-
-            {error && (
-              <Text style={styles.errorText}>
-                {error}
-              </Text>
-            )}
-
-            <View style={styles.modalButtonsRow}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => {
-                  setReportModalVisible(false);
-                  setReportText("");
-                }}
-              >
-                <Text style={styles.cancelText}>Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleSubmitReport}
-              >
-                <Ionicons name="flag" size={16} color="#FFF" />
-                <Text style={styles.submitText}>Enviar</Text>
-              </TouchableOpacity>
-            </View>
-
           </View>
         </View>
       </Modal>
@@ -512,19 +424,36 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 20 },
   modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
   modalSubtitle: { fontSize: 18, marginBottom: 15, textAlign: 'center' },
-  trackingButton: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 16, padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.primary, backgroundColor: "#FFF", gap: 8, },
-  trackingButtonText: { color: Colors.primary, fontWeight: "700", fontSize: 15, },
-  itemButton: { marginLeft: 20, flexDirection: "column", alignItems: "center", padding: 6 },
-  itemButtonText: { fontSize: 12, color: "#666", fontWeight: "600" },
-  textArea: { borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 10, marginTop: 15, marginBottom: 20, minHeight: 100, textAlignVertical: "top", color: "#000", },
-  reportModalContainer: { backgroundColor: "#FFF", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, },
-  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10, },
-  modalButtonsRow: { flexDirection: "row", gap: 10, marginTop: 10, },
-  cancelButton: { flex: 1, padding: 14, borderRadius: 10, borderWidth: 1, borderColor: "#DDD", alignItems: "center", },
-  cancelText: { color: "#666", fontWeight: "600", },
-  submitButton: { flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6, padding: 14, borderRadius: 10, backgroundColor: "#FF3B30", },
-  submitText: { color: "#FFF", fontWeight: "bold", },
-  errorText: { color: "#FF3B30", marginTop: 8, textAlign: "center", },
+  modalItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 10, marginBottom: 8, backgroundColor: '#F7F7F7' },
+  modalItemSelected: { backgroundColor: '#E8F0FE' },
+  modalItemText: { fontSize: 14, fontWeight: '500' },
+  modalButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
+  modalCancelButton: { flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#CCC', marginRight: 10, alignItems: 'center' },
+  modalCancelText: { color: '#666', fontWeight: '600' },
+  modalSubmitButton: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: Colors.primary, alignItems: 'center' },
+  modalSubmitText: { color: '#FFF', fontWeight: 'bold' },
+  trackingButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    backgroundColor: "#FFF",
+    gap: 8,
+  },
+  trackingButtonText: {
+    color: Colors.primary,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  disabledButton: {
+    backgroundColor: "#f0f0f0",
+    borderColor: Colors.success,
+    opacity: 0.8,
+  },
 });
 
 export default KitDetailScreen;

@@ -1,9 +1,8 @@
 package com.example.demo.defaultkit;
 
 import com.example.demo.dto.DefaultKitCreateRequest;
+import com.example.demo.dto.DefaultKitResponse;
 import com.example.demo.exception.AccessForbiddenException;
-import com.example.demo.exception.ResourceNotFoundException;
-import com.example.demo.exception.UnauthorizedException;
 import com.example.demo.model.*;
 import com.example.demo.repository.DefaultKitItemRepository;
 import com.example.demo.repository.DefaultKitRepository;
@@ -28,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -142,8 +142,9 @@ class DefaultKitServiceTest {
         DefaultKitCreateRequest updateRequest = new DefaultKitCreateRequest();
         updateRequest.setName("Nombre Nuevo"); // Solo mandamos el nombre
 
-        DefaultKit result = defaultKitService.updateDefaultKit(1L, updateRequest);
+        DefaultKitResponse result = defaultKitService.updateDefaultKit(1L, updateRequest);
 
+        assertEquals(updateRequest.getName(), result.getName());
         assertThat(result.getName()).isEqualTo("Nombre Nuevo");
         verify(defaultKitRepository).save(existingKit);
     }

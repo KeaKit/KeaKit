@@ -8,6 +8,7 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.service.AuthService;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -74,7 +76,7 @@ class KitIntegrationTest {
         tenant.setPhone("223456789");
         tenant = userRepository.save(tenant);
 
-        authToken = jwtUtil.generateToken(tenant.getEmail(), tenant.getId(), tenant.getRole());
+        authToken = jwtUtil.generateToken(tenant.getEmail(), tenant.getId(), tenant.getRole(), tenant.getTokenVersion());
 
         when(authService.getAuthenticatedUserId()).thenReturn(tenant.getId());
 
@@ -171,7 +173,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("End date cannot be before start date"));
+        .andExpect(content().string("La fecha de finalización no puede ser anterior a la fecha de inicio"));
     }
 
     @Test
@@ -195,7 +197,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Meeting point is required when delivery method is MEETING_POINT"));
+            .andExpect(content().string("Se requiere punto de encuentro cuando el método de entrega es MEETING_POINT"));
     }
 
     @Test
@@ -222,7 +224,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Tenant cannot select their own items"));
+            .andExpect(content().string("El arrendatario no puede seleccionar sus propios items"));
     }
 
     @Test
@@ -247,7 +249,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Item not found: 999999"));
+            .andExpect(content().string("Item no encontrado: 999999"));
     }
 
     @Test
@@ -287,7 +289,7 @@ class KitIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Selected quantity exceeds available units"));
+            .andExpect(content().string("El artículo 'Item Unidades 1' solo tiene 1 unidades en total."));
     }
 
     @Test
@@ -591,7 +593,7 @@ class KitIntegrationTest {
         emptyUser.setPhone("999999999");
         emptyUser = userRepository.save(emptyUser);
         
-        String emptyUserToken = jwtUtil.generateToken(emptyUser.getEmail(), emptyUser.getId(), emptyUser.getRole());
+        String emptyUserToken = jwtUtil.generateToken(emptyUser.getEmail(), emptyUser.getId(), emptyUser.getRole(), emptyUser.getTokenVersion());
         
         when(authService.getAuthenticatedUserId()).thenReturn(emptyUser.getId());
 
@@ -618,7 +620,7 @@ class KitIntegrationTest {
         testUser.setPhone("888888888");
         testUser = userRepository.save(testUser);
         
-        String testUserToken = jwtUtil.generateToken(testUser.getEmail(), testUser.getId(), testUser.getRole());
+        String testUserToken = jwtUtil.generateToken(testUser.getEmail(), testUser.getId(), testUser.getRole(), testUser.getTokenVersion());
         
         when(authService.getAuthenticatedUserId()).thenReturn(testUser.getId());
         
@@ -730,7 +732,7 @@ class KitIntegrationTest {
         mockMvc.perform(post("/api/kits/" + savedKit.getId() + "/items/" + article.getId())
                 .param("userId", tenant.getId().toString()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("This item is already in the kit"));
+        .andExpect(content().string("Este artículo ya está en el kit"));
     }
 
     @Test
@@ -738,7 +740,7 @@ class KitIntegrationTest {
         mockMvc.perform(post("/api/kits/" + savedKit.getId() + "/items/999999")
                 .param("userId", tenant.getId().toString()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Item not found"));
+        .andExpect(content().string("Artículo no encontrado"));
     }
 
     @Test
@@ -793,7 +795,7 @@ class KitIntegrationTest {
         mockMvc.perform(delete("/api/kits/" + savedKit.getId() + "/items/" + article.getId())
                 .param("userId", tenant.getId().toString()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("A kit cannot be empty. It must contain at least one item."));
+        .andExpect(content().string("Un kit no puede quedar vacío. Debe contener al menos un artículo."));
     }
 
     @Test
@@ -819,7 +821,7 @@ class KitIntegrationTest {
         mockMvc.perform(delete("/api/kits/" + savedKit.getId() + "/items/" + notInKit.getId())
                 .param("userId", tenant.getId().toString()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Item is not part of this kit"));
+        .andExpect(content().string("Este artículo no es parte de este kit"));
     }
 
     @Test
@@ -856,5 +858,129 @@ class KitIntegrationTest {
         mockMvc.perform(get("/api/kits/" + savedKit.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(1));
+    }
+
+    // ==========================================
+    // TESTS INTEGRACIÓN: CONFIRMACIÓN DE STATUS (PATCH)
+    // ==========================================
+
+    @Test
+    void testConfirmKitStatus_success() throws Exception {
+        savedKit.setStatus(KitStatus.PAID);
+        kitRepository.save(savedKit);
+
+        mockMvc.perform(patch("/api/kits/confirm/" + savedKit.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Kit status confirmed succesfully"));
+
+        Kit updatedKit = kitRepository.findById(savedKit.getId()).orElseThrow();
+        assertThat(updatedKit.getStatus()).isEqualTo(KitStatus.ACTIVE);
+    }
+
+    @Test
+    void testConfirmKitStatus_wrongInitialStatus_returnsNotFound() throws Exception {
+        savedKit.setStatus(KitStatus.ACTIVE);
+        kitRepository.save(savedKit);
+
+        mockMvc.perform(patch("/api/kits/confirm/" + savedKit.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+        .andExpect(content().string("El kit solo puede ser confirmado si su estado es PAGADO"));
+    }
+
+    @Test
+    void testConfirmKitStatus_kitNotFound_returnsNotFound() throws Exception {
+        mockMvc.perform(patch("/api/kits/confirm/999999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+        .andExpect(content().string("Kit no encontrado"));
+    }
+
+    @Test
+    void testConfirmKitStatus_wrongTenant_returnsNotFound() throws Exception {
+        User intruder = new User();
+        intruder.setName("Intruso");
+        intruder.setEmail("intruder@example.com");
+        intruder.setPassword("123456");
+        intruder.setRole(UserRole.USER);
+        intruder.setCountry("España");
+        intruder.setCity("Madrid");
+        intruder.setAddress("Calle Falsa 123");
+        intruder.setPhone("111222333");
+        intruder = userRepository.save(intruder);
+
+        Kit intruderKit = new Kit();
+        intruderKit.setName("Kit Ajeno");
+        intruderKit.setCountry("España");
+        intruderKit.setCity("Madrid");
+        intruderKit.setStartDate(LocalDate.now());
+        intruderKit.setEndDate(LocalDate.now().plusDays(5));
+        intruderKit.setStatus(KitStatus.PAID);
+        intruderKit.setTenant(intruder);
+        intruderKit = kitRepository.save(intruderKit);
+
+        mockMvc.perform(patch("/api/kits/confirm/" + intruderKit.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Kit does not belong to the specified tenant"));
+    }
+
+    @Test
+    void testGetTrackingUpdateableKits_success() throws Exception {
+        Article article = createTestArticle("Laptop Pro", tenant); 
+
+        Kit updateableKit = new Kit();
+        updateableKit.setName("Kit tracking real");
+        updateableKit.setTenant(tenant);
+        updateableKit.setStatus(KitStatus.PAID);
+        updateableKit.setDeliveryMethod(DeliveryMethod.COURIER);
+        updateableKit.setCountry("España");
+        updateableKit.setCity("Sevilla");
+        updateableKit.setStartDate(LocalDate.now());
+        updateableKit.setEndDate(LocalDate.now().plusDays(5));
+        updateableKit.setCourierPrice(9.99); 
+        
+        updateableKit = kitRepository.save(updateableKit);
+
+        ItemMemento snap = new ItemMemento();
+        snap.setKit(updateableKit);
+        snap.setOriginalItemId(article.getId());
+        snap.setNameAtRental(article.getTitle());
+        snap.setPriceAtRental(article.getPricePerMonth());
+        snap.setSelectedUnits(1);
+        snap.setSelectedMethod(DeliveryMethod.COURIER);
+        snap.setShippingFeeAtRental(9.99);
+
+        updateableKit.setSnapshots(List.of(snap));
+        kitRepository.saveAndFlush(updateableKit); 
+
+        mockMvc.perform(get("/api/kits/tracking-updateable-kits/" + tenant.getId())
+                .header("Authorization", withAuth()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$[?(@.name == 'Kit tracking real')]").exists());
+    }
+
+    @Test
+    void testGetTrackingUpdateableKits_emptyListForNewUser() throws Exception {
+        User newUser = new User();
+        newUser.setName("Solo");
+        newUser.setEmail("solo@test.com");
+        newUser.setPassword("123456");
+        newUser.setRole(UserRole.USER);
+        
+        newUser.setAddress("Calle Falsa 123");
+        newUser.setCity("Sevilla");
+        newUser.setCountry("España");
+        newUser.setPhone("666555444");
+        
+        newUser = userRepository.save(newUser);
+
+        mockMvc.perform(get("/api/kits/tracking-updateable-kits/" + newUser.getId())
+                .header("Authorization", withAuth()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }

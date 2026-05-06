@@ -19,8 +19,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -56,8 +54,6 @@ class ServiceItemControllerTest {
     private static final LocalDate FROM  = LocalDate.now().plusDays(1);
     private static final LocalDate UNTIL = LocalDate.now().plusDays(30);
 
-    private CustomUserDetails ownerDetails;
-
     @BeforeEach
     void setUp() {
         owner = new User();
@@ -70,8 +66,6 @@ class ServiceItemControllerTest {
         owner.setAddress("Calle 1");
         owner.setCity("Madrid");
         owner.setCountry("España");
-
-        ownerDetails = new CustomUserDetails(owner);
 
         sample = new ServiceItem();
         sample.setId(1L);

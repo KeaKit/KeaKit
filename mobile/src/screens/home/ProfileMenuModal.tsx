@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { Colors, componentStyles } from '../../styles';
 import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
+import { getUserNotifications } from '../../services/notificationService';
 
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -20,6 +21,25 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
   const { user, signOut } = useAuth();
   const navigation = useNavigation<NavigationProp>();
   const { unreadCount } = useTrackingNotifications();
+  const [activityUnreadCount, setActivityUnreadCount] = useState(0);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadActivityNotifications = async () => {
+        if (user?.id && user?.token) {
+          try {
+            const notifications = await getUserNotifications(user.id, user.token);
+            const unreadCount = notifications.filter(n => !n.read).length;
+            setActivityUnreadCount(unreadCount);
+          } catch (err) {
+            console.error('Error loading activity notifications:', err);
+          }
+        }
+      };
+
+      loadActivityNotifications();
+    }, [user])
+  );
 
   const handleLogout = async () => {
     onClose();
@@ -74,17 +94,37 @@ const ProfileMenuModal: React.FC<ProfileMenuModalProps> = ({ visible, onClose })
 
               <TouchableOpacity
                 style={componentStyles.menuItem}
-                onPress={() => navigateTo('TrackingNotifications')}
+                onPress={() => navigateTo('RgpdPolicy')}
+              >
+                <Ionicons name="document-text" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Política de Privacidad</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
+                onPress={() => navigateTo('ActivityNotifications')}
               >
                 <Ionicons name="notifications" size={24} color={Colors.primary} />
-                <Text style={componentStyles.menuItemText}>Notificaciones</Text>
+                <Text style={componentStyles.menuItemText}>Notificaciones de actividad</Text>
+                {activityUnreadCount > 0 ? (
+                  <View style={componentStyles.menuBadge}>
+                    <Text style={componentStyles.menuBadgeText}>{activityUnreadCount}</Text>
+                  </View>
+                ) : null}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={componentStyles.menuItem}
+                onPress={() => navigateTo('TrackingNotifications')}
+              >
+                <Ionicons name="navigate" size={24} color={Colors.primary} />
+                <Text style={componentStyles.menuItemText}>Notificaciones de seguimiento</Text>
                 {unreadCount > 0 ? (
                   <View style={componentStyles.menuBadge}>
                     <Text style={componentStyles.menuBadgeText}>{unreadCount}</Text>
                   </View>
                 ) : null}
               </TouchableOpacity>
-
 
               <TouchableOpacity
                 style={componentStyles.menuItem}
