@@ -39,8 +39,10 @@ export const API_ROUTES = {
     return url;
   },
   UPDATE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
+  UPDATE_ARTICLE_WITH_IMAGE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/with-image?ownerId=${ownerId}`,
   DELETE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
   TOGGLE_RENT:    (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/toggle-rent?ownerId=${ownerId}`,
+  ARTICLE_RETURN: (articleId: number, ownerId: number) => `${BASE_URL}/api/article/${articleId}/return?ownerId=${ownerId}`,
   CATEGORIES: `${BASE_URL}/api/category`,
   CATEGORY_BY_ID: (id: number) => `${BASE_URL}/api/category/${id}`,
   GET_LATEST_ARTICLES_BY_CATEGORY: (categoryId: number) => `${BASE_URL}/api/article/category/${categoryId}/latest`,
@@ -97,6 +99,8 @@ export const API_ROUTES = {
   PROCESS_PAYMENT_WALLET:    (kitId: number) => `${BASE_URL}/api/payments/process/wallet/${kitId}`,
   WITHDRAW_TO_BANK:          `${BASE_URL}/api/payments/withdraw`,
   GET_KIT_PAYMENT_BY_ID:     (kitId: number) => `${BASE_URL}/api/kits/payment/${kitId}`,
+  GET_KIT_PAYMENT_BY_ID_PROMO: (kitId: number, promoCode: string, email: string) =>
+    `${BASE_URL}/api/kits/payment/${kitId}?promoCode=${encodeURIComponent(promoCode)}&email=${encodeURIComponent(email)}`,
   SIMULATE_PAYMENT:           `${BASE_URL}/api/payments/pay-kit`,
 
   // Wallet
