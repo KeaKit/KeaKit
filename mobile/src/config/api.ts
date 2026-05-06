@@ -90,6 +90,7 @@ export const API_ROUTES = {
   // Notifications (arrendador)
   USER_NOTIFICATIONS: (userId: number) => `${BASE_URL}/api/notifications/user/${userId}`,
   MARK_NOTIFICATION_READ: (notificationId: number) => `${BASE_URL}/api/notifications/${notificationId}/read`,
+  DELETE_NOTIFICATION: (notificationId: number) => `${BASE_URL}/api/notifications/${notificationId}`,
   CREATE_DEMAND_ALERT: (articleId: number, requesterId: number, startDate?: string, endDate?: string) => {
     let url = `${BASE_URL}/api/notifications/demand-alert?articleId=${articleId}&requesterId=${requesterId}`;
     if (startDate) url += `&startDate=${startDate}`;

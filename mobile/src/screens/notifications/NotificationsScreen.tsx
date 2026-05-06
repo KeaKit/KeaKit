@@ -26,18 +26,17 @@ import {
 import {
   getUserNotifications,
   markNotificationRead,
+  deleteNotification,
 } from "../../services/notificationService";
+import {
+  formatNotificationDateTime,
+  getActivityNotificationTitle,
+} from "../../utils/activityNotifications";
 
 type NotificationsNav = NativeStackNavigationProp<
   RootStackParamList,
   "Notifications"
 >;
-
-const formatDateTime = (value: string): string => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
-};
 
 const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NotificationsNav>();
@@ -78,27 +77,15 @@ const NotificationsScreen: React.FC = () => {
   };
 
   const handleCheckNotification = async (notificationId: number) => {
-  if (!user?.token) return;
+    if (!user?.token) return;
 
-  try {
- 
-    const response = await fetch(`http://localhost:8080/api/notifications/${notificationId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${user.token}`,
-      },
-    });
-
-    if (response.ok) {
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      console.log("Notificación eliminada de la BD y la lista");
-    } else {
-      console.error("Error al eliminar: ", response.status);
+    try {
+      await deleteNotification(notificationId, user.token);
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    } catch (err) {
+      console.error("Error al quitar la notificación:", err);
     }
-  } catch (error) {
-    console.error("Error al quitar la notificación:", error);
-  }
-};
+  };
 
 
   const markAllRead = async () => {
@@ -133,30 +120,15 @@ const NotificationsScreen: React.FC = () => {
     }
   };
 
-  const getNotificationTitle = (type: ActivityNotification["type"]) => {
-    switch (type) {
-      case "ITEM_RENTED":
-        return "Objeto alquilado";
-      case "RETURN_REMINDER":
-        return "Fin de alquiler";
-      case "DEMAND_ALERT":
-        return "Interés en tu artículo";
-      case "ARTICLE_AVAILABLE":
-        return "Artículo disponible";
-      default:
-        return "Notificación";
-    }
-  };
-
   const renderItem = ({ item }: { item: ActivityNotification }) => (
     <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
       {!item.read && <View style={styles.unreadIndicator} />}
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-            {getNotificationTitle(item.type)}
+            {getActivityNotificationTitle(item.type)}
           </Text>
-          <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
+          <Text style={styles.cardDate}>{formatNotificationDateTime(item.createdAt)}</Text>
         </View>
         {!item.read && (
           <TouchableOpacity

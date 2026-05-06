@@ -27,18 +27,16 @@ import {
   getUserNotifications,
   markNotificationRead,
 } from "../../services/notificationService";
+import {
+  formatNotificationDateTime,
+  getActivityNotificationTitle,
+} from "../../utils/activityNotifications";
 
 
 type NotificationsNav = NativeStackNavigationProp<
   RootStackParamList,
   "ActivityNotifications"
 >;
-
-const formatDateTime = (value: string): string => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
-};
 
 const ActivityNotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NotificationsNav>();
@@ -115,30 +113,15 @@ const ActivityNotificationsScreen: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: ActivityNotification }) => {
-    const getNotificationTitle = (type: string) => {
-      switch (type) {
-        case "ITEM_RENTED":
-          return "Objeto alquilado";
-        case "RETURN_REMINDER":
-          return "Fin de alquiler";
-        case "DEMAND_ALERT":
-          return "Interés en tu artículo";
-        case "ARTICLE_AVAILABLE":
-          return "Artículo disponible";
-        default:
-          return "Notificación";
-      }
-    };
-
     return (
       <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
         {!item.read && <View style={styles.unreadIndicator} />}
         <View style={styles.cardHeader}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-              {getNotificationTitle(item.type)}
+              {getActivityNotificationTitle(item.type)}
             </Text>
-            <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
+            <Text style={styles.cardDate}>{formatNotificationDateTime(item.createdAt)}</Text>
           </View>
           {!item.read && (
             <TouchableOpacity

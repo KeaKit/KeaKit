@@ -96,30 +96,15 @@ export async function requestArticleAvailabilityNotification(
   startDate?: string,
   endDate?: string,
 ): Promise<string> {
-  const res = await fetch(API_ROUTES.REQUEST_AVAILABILITY_NOTIFICATION(articleId, requesterId, startDate, endDate), {
-    method: 'POST',
-    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
-  });
-
-  if (!res.ok) {
-    let errorMessage = `HTTP ${res.status}`;
-    try {
-      const contentType = res.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const data = await res.json();
-        errorMessage = data.message || data.error || JSON.stringify(data);
-      } else {
-        errorMessage = await res.text();
-      }
-    } catch {}
-    throw new Error(normalizeErrorMessage(errorMessage));
-  }
-
-  const contentType = res.headers.get('content-type') ?? '';
-  if (contentType.includes('application/json')) {
-    return res.json();
-  }
-  return res.text();
+  return postTextResult(
+    API_ROUTES.REQUEST_AVAILABILITY_NOTIFICATION(
+      articleId,
+      requesterId,
+      startDate,
+      endDate,
+    ),
+    token,
+  );
 }
 
 export async function createDemandAlert(
@@ -129,7 +114,14 @@ export async function createDemandAlert(
   startDate?: string,
   endDate?: string,
 ): Promise<string> {
-  const res = await fetch(API_ROUTES.CREATE_DEMAND_ALERT(articleId, requesterId, startDate, endDate), {
+  return postTextResult(
+    API_ROUTES.CREATE_DEMAND_ALERT(articleId, requesterId, startDate, endDate),
+    token,
+  );
+}
+
+async function postTextResult(url: string, token: string): Promise<string> {
+  const res = await fetch(url, {
     method: 'POST',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
