@@ -109,7 +109,7 @@ class ArticleReturnExtendedTest {
     assertThat(ex.getMessage()).contains("Solo el propietario puede confirmar la devolución");
     }
 
-    // ═══════════════ RN-DEV-02: Only RENTED articles can be returned ═══════════════
+// ═══════════════ RN-DEV-02: Only RENTED articles can be returned ═══════════════
 
     @Test
     void processReturn_articleNotRented_throwsException() {
@@ -124,7 +124,8 @@ class ArticleReturnExtendedTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-    assertThat(ex.getMessage()).contains("No se encontró un Kit activo para este artículo");
+        // FIX: Cambiamos el mensaje esperado por el nuevo de nuestra validación
+        assertThat(ex.getMessage()).contains("El artículo ya ha sido devuelto o no está alquilado.");
     }
 
     @Test
@@ -140,7 +141,8 @@ class ArticleReturnExtendedTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-    assertThat(ex.getMessage()).contains("No se encontró un Kit activo para este artículo");
+        // FIX: Cambiamos el mensaje esperado por el nuevo de nuestra validación
+        assertThat(ex.getMessage()).contains("El artículo ya ha sido devuelto o no está alquilado.");
     }
 
     // ═══════════════ Article not found ═══════════════
