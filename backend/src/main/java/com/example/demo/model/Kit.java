@@ -196,10 +196,20 @@ public class Kit {
         if (this.snapshots == null || this.snapshots.isEmpty()) {
             return 0.0;
         }
+        double months = calculateMonthsFactor();
         return this.snapshots.stream()
                 .filter(s -> s.getPriceAtRental() != null && s.getSelectedUnits() != null)
-                .mapToDouble(s -> s.getPriceAtRental() * s.getSelectedUnits())
+                .mapToDouble(s -> s.getPriceAtRental() * s.getSelectedUnits() * months)
                 .sum();
+    }
+
+    @Transient
+    private double calculateMonthsFactor() {
+        if (this.startDate == null || this.endDate == null) {
+            return 1.0;
+        }
+        long diffDays = java.time.temporal.ChronoUnit.DAYS.between(this.startDate, this.endDate) + 1;
+        return diffDays / 30.0;
     }
 
     @Transient
