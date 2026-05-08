@@ -41,6 +41,8 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ArticleServiceTest {
 
+    private static final String FUTURE_PURCHASE_DATE_MESSAGE = "La fecha de compra no puede ser posterior a hoy";
+
     @Mock private ArticleRepository articleRepository;
     @Mock private UserRepository userRepository;
     @Mock private CategoryRepository categoryRepository;
@@ -283,6 +285,26 @@ class ArticleServiceTest {
     }
 
     @Test
+    void save_purchaseDateInFuture_throws() {
+        article.setPurchaseDate(LocalDate.now().plusDays(1));
+        assertThatThrownBy(() -> articleService.save(article))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(FUTURE_PURCHASE_DATE_MESSAGE);
+        verify(articleRepository, never()).save(any());
+    }
+
+    @Test
+    void save_purchaseDateToday_succeeds() {
+        LocalDate today = LocalDate.now();
+        article.setPurchaseDate(today);
+        when(articleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Article result = articleService.save(article);
+
+        assertThat(result.getPurchaseDate()).isEqualTo(today);
+    }
+
+    @Test
     void save_availableFromEqualsUntil_succeeds() {
         LocalDate today = LocalDate.now();
         article.setAvailableFrom(today);
@@ -487,6 +509,19 @@ class ArticleServiceTest {
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
                 .isInstanceOf(RuntimeException.class)
         .hasMessage("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
+    }
+
+    @Test
+    void update_purchaseDateInFuture_throws() {
+        when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
+
+        Article updateData = new Article();
+        updateData.setPurchaseDate(LocalDate.now().plusDays(1));
+
+        assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(FUTURE_PURCHASE_DATE_MESSAGE);
+        verify(articleRepository, never()).save(any());
     }
 
     @Test
