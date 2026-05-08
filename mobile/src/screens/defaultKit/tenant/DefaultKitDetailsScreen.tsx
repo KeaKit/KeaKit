@@ -10,11 +10,7 @@ import { ActivityIndicator } from "react-native-paper";
 import {
   commonStyles,
   Colors,
-  BorderRadius,
   Spacing,
-  FontSizes,
-  FontWeights,
-  Shadows,
 } from "../../../styles";
 
 const DefaultKitDetailsScreen = () => {
