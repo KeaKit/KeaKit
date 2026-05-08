@@ -135,6 +135,16 @@ public class PaymentService {
         processGuarantee(paymentInfo.guarantee());
         kit.getItems().forEach(item -> processItemPaymentToOwner(item, promoCode));
 
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validateForTenantDiscount(promoCode, userEmail);
+            if (validation.isValid() && validation.getDiscountRate() != null) {
+                Kit kitToUpdate = kitRepository.findById(kitId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
+                kitToUpdate.setAppliedDiscount(validation.getDiscountRate());
+                kitRepository.save(kitToUpdate);
+            }
+        }
+
         kitService.markAsPaid(kitId);
         Kit kitEntity = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit not found for email confirmation"));

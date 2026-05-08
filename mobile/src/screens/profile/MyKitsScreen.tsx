@@ -114,6 +114,11 @@ const MyKitsScreen: React.FC = () => {
       ? getStatusInfo(item.status)
       : { label: "Desconocido", color: "#999" };
 
+    const originalTotal =
+      item.appliedDiscount && item.appliedDiscount > 0
+        ? item.totalPrice + item.subtotalPrice * item.appliedDiscount
+        : null;
+
     return (
       <TouchableOpacity
         style={styles.kitCard}
@@ -126,14 +131,9 @@ const MyKitsScreen: React.FC = () => {
         </View>
 
         <View style={styles.kitInfo}>
-          <View style={styles.titleRow}>
-            <Text style={styles.kitName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Text style={styles.priceTag}>
-              {item.totalPrice?.toLocaleString("es-ES")}€
-            </Text>
-          </View>
+          <Text style={styles.kitName} numberOfLines={1}>
+            {item.name}
+          </Text>
 
           <Text style={styles.locationText}>
             <Ionicons name="location-outline" size={13} color="#888" />{" "}
@@ -146,20 +146,42 @@ const MyKitsScreen: React.FC = () => {
             </Text>
           ) : null}
 
-          <View style={styles.detailsRow}>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: statusInfo.color },
-              ]}
-            >
-              <Text style={styles.statusText}>{statusInfo.label}</Text>
-            </View>
+          <View style={[styles.statusBadge, { backgroundColor: statusInfo.color, alignSelf: "flex-start", marginTop: 8 }]}>
+            <Text style={styles.statusText}>{statusInfo.label}</Text>
+          </View>
+        </View>
 
-            <View style={styles.dateContainer}>
-              <Text style={styles.dateLabel}>Fin alquiler:</Text>
-              <Text style={styles.dateValue}>{formatDate(item.endDate)}</Text>
-            </View>
+        <View style={styles.kitRightColumn}>
+          <View style={styles.priceContainer}>
+            {originalTotal != null ? (
+              <>
+                <Text style={styles.priceTagStrikethrough}>
+                  {originalTotal.toLocaleString("es-ES", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}€
+                </Text>
+                <Text style={styles.promoAppliedText}>Descuento aplicado</Text>
+                <Text style={styles.priceTagDiscounted}>
+                  {item.totalPrice?.toLocaleString("es-ES", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}€
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.priceTag}>
+                {item.totalPrice?.toLocaleString("es-ES", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}€
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.dateContainer}>
+            <Text style={styles.dateLabel}>Fin alquiler:</Text>
+            <Text style={styles.dateValue}>{formatDate(item.endDate)}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -231,27 +253,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: Spacing.lg,
   },
-  loadingText: { 
-    marginTop: Spacing.md, 
-    fontSize: 16, 
-    color: "#666" 
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: 16,
+    color: "#666",
   },
-  backButton: { 
-    padding: Spacing.sm 
+  backButton: {
+    padding: Spacing.sm,
   },
-  historyButton: { 
-    padding: Spacing.sm 
+  historyButton: {
+    padding: Spacing.sm,
   },
-  headerTitle: { 
-    fontSize: 20, 
-    fontWeight: "700", 
-    color: Colors.textPrimary 
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
   },
-  headerRight: { 
-    width: 40 
+  headerRight: {
+    width: 40,
   },
-  listContent: { 
-    padding: Spacing.md 
+  listContent: {
+    padding: Spacing.md,
   },
   kitCard: {
     flexDirection: "row",
@@ -277,32 +299,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  kitInfo: { 
-    flex: 1, 
-    marginLeft: Spacing.md, 
-    justifyContent: "center" 
-  },
-  titleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+  kitInfo: {
+    flex: 1,
+    marginLeft: Spacing.md,
+    justifyContent: "center",
   },
   kitName: {
     fontSize: 16,
     fontWeight: "700",
     color: Colors.textPrimary,
-    flex: 1,
-    marginRight: 4,
   },
-  priceTag: { 
-    fontSize: 14, 
-    fontWeight: "bold", 
-    color: Colors.primary 
-  },
-  locationText: { 
-    fontSize: 12, 
-    color: "#888", 
-    marginVertical: 4 
+  locationText: {
+    fontSize: 12,
+    color: "#888",
+    marginVertical: 4,
   },
   deliveryNoticeText: {
     fontSize: 12,
@@ -311,16 +321,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontWeight: "600",
   },
-  detailsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  statusBadge: { 
-    paddingHorizontal: 8, 
-    paddingVertical: 3, 
-    borderRadius: 6 
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   statusText: {
     fontSize: 10,
@@ -328,17 +332,51 @@ const styles = StyleSheet.create({
     color: "#fff",
     textTransform: "uppercase",
   },
-  dateContainer: { 
-    alignItems: "flex-end" 
+  kitRightColumn: {
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    paddingLeft: Spacing.sm,
+    minWidth: 100,
   },
-  dateLabel: { 
-    fontSize: 10, 
-    color: "#999" 
+  priceContainer: {
+    alignItems: "flex-end",
   },
-  dateValue: { 
-    fontSize: 12, 
-    fontWeight: "600", 
-    color: Colors.textPrimary 
+  priceTag: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: Colors.primary,
+    textAlign: "right",
+  },
+  priceTagStrikethrough: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#aaa",
+    textDecorationLine: "line-through",
+    textAlign: "right",
+  },
+  priceTagDiscounted: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#e05252",
+    textAlign: "right",
+  },
+  promoAppliedText: {
+    fontSize: 10,
+    color: "#e05252",
+    fontWeight: "600",
+    textAlign: "right",
+  },
+  dateContainer: {
+    alignItems: "flex-end",
+  },
+  dateLabel: {
+    fontSize: 10,
+    color: "#999",
+  },
+  dateValue: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.textPrimary,
   },
   emptyContainer: {
     flex: 1,
