@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Objects;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,8 +105,16 @@ public class DefaultKitService {
     public List<DefaultKitResponse> getAllDefaultKits() {
         User currentUser = getCurrentUserSafe();
         List<DefaultKit> kits = defaultKitRepository.findAll();
+        
         return kits.stream()
-            .map(kit -> mapToDefaultKitResponse(kit, currentUser)) 
+            .map(kit -> {
+                DefaultKitResponse response = mapToDefaultKitResponse(kit, currentUser);
+                if (kit.getItems() != null && !kit.getItems().isEmpty() && response.getItems().isEmpty()) {
+                    return null;
+                }
+                return response;
+            })
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
     }
 
@@ -116,7 +125,11 @@ public class DefaultKitService {
 
     public DefaultKitResponse findDefaultKitById(Long id) {
         DefaultKit kit = getDefaultKitById(id);
-        return mapToDefaultKitResponse(kit, getCurrentUserSafe());
+        DefaultKitResponse response = mapToDefaultKitResponse(kit, getCurrentUserSafe());
+        if (kit.getItems() != null && !kit.getItems().isEmpty() && response.getItems().isEmpty()) {
+            throw new RuntimeException("No puedes alquilar este kit porque eres el dueño de todos sus artículos.");
+        }
+        return response;
     }
 
     private void calculateAndSetBasePrice(DefaultKit defaultKit) {
@@ -218,11 +231,20 @@ public class DefaultKitService {
     }
 
     public List<DefaultKitResponse> getDefaultKitsCatalog() {
-        User currentUser = getCurrentUserSafe();
-        List<DefaultKit> kits = defaultKitRepository.findAll();
-        return kits.stream()
-                .map(kit -> mapToDefaultKitResponse(kit, currentUser))
-                .collect(Collectors.toList());
+    User currentUser = getCurrentUserSafe();
+    List<DefaultKit> kits = defaultKitRepository.findAll();
+    
+    return kits.stream()
+        .map(kit -> {
+            DefaultKitResponse response = mapToDefaultKitResponse(kit, currentUser);
+            
+            if (kit.getItems() != null && !kit.getItems().isEmpty() && response.getItems().isEmpty()) {
+                return null; 
+            }
+            return response;
+        })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
     }
 
     private DefaultKitResponse mapToDefaultKitResponse(DefaultKit kit, User currentUser) {
@@ -232,16 +254,15 @@ public class DefaultKitService {
         response.setDescription(kit.getDescription());
 
         List<DefaultKitItemResponse> itemResponses = new ArrayList<>();
-        double dynamicBasePrice = 0.0; // Precio recalculado dinámicamente
+        double dynamicBasePrice = 0.0;
 
         if (kit.getItems() != null) {
             for (DefaultKitItem kitItem : kit.getItems()) {
                 Item dbItem = kitItem.getItem();
                 
-                // --- LÓGICA DE AUTO-EXCLUSIÓN (OPCIÓN B) ---
                 if (currentUser != null && dbItem != null && dbItem.getOwner() != null &&
                     dbItem.getOwner().getId().equals(currentUser.getId())) {
-                    continue; // Si el usuario es el dueño, saltamos este artículo y no lo enviamos al Front
+                    continue;
                 }
 
                 DefaultKitItemResponse itemResp = new DefaultKitItemResponse();
@@ -255,7 +276,6 @@ public class DefaultKitService {
                     catalogResp.setAvailableFrom(dbItem.getAvailableFrom());
                     catalogResp.setAvailableUntil(dbItem.getAvailableUntil());
                     
-                    // Sumamos al precio dinámico solo los artículos que SÍ se van a enviar
                     if (dbItem.getPricePerMonth() != null) {
                         dynamicBasePrice += dbItem.getPricePerMonth();
                     }
@@ -266,7 +286,6 @@ public class DefaultKitService {
         }
         
         response.setItems(itemResponses);
-        // Sobrescribimos el precio estático de la BD con el precio filtrado para este usuario
         response.setBasePrice(dynamicBasePrice); 
         
         return response;
