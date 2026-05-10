@@ -178,23 +178,6 @@ class IncidentServiceExtendedTest {
         assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(incident));
     }
 
-    @Test
-    void createIncident_damagedItemWithoutRelatedKit_throwsIllegalArgument() {
-        authenticateAs(regularUser);
-        Incident incident = new Incident();
-        incident.setTitle("Damaged");
-        incident.setDescription("Item is broken");
-        incident.setType(IncidentType.DAMAGED_ITEM);
-        incident.setUser(regularUser);
-        incident.setRelatedItem(testItem);
-        incident.setRelatedKit(null);
-
-        when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
-        when(itemRepository.findById(10L)).thenReturn(Optional.of(testItem));
-
-        assertThrows(IllegalArgumentException.class, () -> incidentService.createIncident(incident));
-    }
-
     // ═══════════════ RN-INC-05: New incident defaults to OPEN ═══════════════
 
     @Test

@@ -31,6 +31,8 @@ public interface ArticleRepository extends JpaRepository<Article, Long>, JpaSpec
 
     List<Article> findByStatus(ArticleStatus status);
 
+    List<Article> findByStatusIn(List<ArticleStatus> statuses);
+
     @Query("SELECT k FROM Kit k JOIN k.snapshots s WHERE s.originalItemId = :articleId")
     List<Kit> findAllKitsWhereArticleHasBeen(@Param("articleId") Long articleId);
 

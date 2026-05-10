@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.ArticleNearbyDTO;
 import com.example.demo.dto.ArticleRecordDTO;
+import com.example.demo.dto.ReturnRequest;
+import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
 import com.example.demo.model.Article;
 import com.example.demo.model.User;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -98,9 +102,11 @@ public class ArticleController {
     @PostMapping("/{id}/notify-when-available")
     public ResponseEntity<?> requestAvailabilityNotification(
             @PathVariable Long id,
-            @RequestParam Long requesterId) {
+            @RequestParam Long requesterId,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate) {
         try {
-            availabilityRequestService.requestAvailabilityNotification(id, requesterId);
+            availabilityRequestService.requestAvailabilityNotification(id, requesterId, startDate, endDate);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Aviso de disponibilidad registrado correctamente.");
         } catch (IllegalStateException e) {
@@ -215,13 +221,30 @@ public class ArticleController {
             if (article == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             } 
-            if (ownerId == null || !ownerId.equals(article.getOwner().getId())) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            if (!ownerId.equals(article.getOwner().getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
             }
             List<ArticleRecordDTO> articleRecord = articleService.findArticleRecord(articleId);
             return ResponseEntity.ok(articleRecord);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @PostMapping("/{articleId}/return")
+    public ResponseEntity<?> processReturn(
+            @PathVariable Long articleId,
+            @RequestParam Long ownerId,
+            @RequestBody ReturnRequest request) {
+        try {
+            ReturnResponse response = articleService.processReturn(articleId, ownerId, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", 409);
+            error.put("error", "Conflict");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         }
     }
     
@@ -240,9 +263,12 @@ public class ArticleController {
 
     @GetMapping("/map")
     public ResponseEntity<List<ArticleNearbyDTO>> getArticlesForMap(
-            @RequestParam(required = false) String country) {
+            @RequestParam(required = false) String country,
+            @RequestParam(defaultValue = "false") boolean includeRented) {
         try {
-            List<ArticleNearbyDTO> articles = articleService.findAllWithCoords(country);
+            List<ArticleNearbyDTO> articles = includeRented
+                ? articleService.findAllWithCoords(country, true)
+                : articleService.findAllWithCoords(country);
             return ResponseEntity.ok(articles);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

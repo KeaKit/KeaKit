@@ -3,7 +3,6 @@ package com.example.demo.promocode;
 import com.example.demo.BaseControllerTest;
 import com.example.demo.controller.PromoCodeController;
 import com.example.demo.dto.PromoCodeValidationResponse;
-import com.example.demo.model.PromoCodeType;
 import com.example.demo.service.PromoCodeService;
 
 import org.junit.jupiter.api.Test;

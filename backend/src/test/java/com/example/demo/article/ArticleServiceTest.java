@@ -41,6 +41,8 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ArticleServiceTest {
 
+    private static final String FUTURE_PURCHASE_DATE_MESSAGE = "La fecha de compra no puede ser posterior a hoy";
+
     @Mock private ArticleRepository articleRepository;
     @Mock private UserRepository userRepository;
     @Mock private CategoryRepository categoryRepository;
@@ -283,6 +285,26 @@ class ArticleServiceTest {
     }
 
     @Test
+    void save_purchaseDateInFuture_throws() {
+        article.setPurchaseDate(LocalDate.now().plusDays(1));
+        assertThatThrownBy(() -> articleService.save(article))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(FUTURE_PURCHASE_DATE_MESSAGE);
+        verify(articleRepository, never()).save(any());
+    }
+
+    @Test
+    void save_purchaseDateToday_succeeds() {
+        LocalDate today = LocalDate.now();
+        article.setPurchaseDate(today);
+        when(articleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Article result = articleService.save(article);
+
+        assertThat(result.getPurchaseDate()).isEqualTo(today);
+    }
+
+    @Test
     void save_availableFromEqualsUntil_succeeds() {
         LocalDate today = LocalDate.now();
         article.setAvailableFrom(today);
@@ -341,6 +363,21 @@ class ArticleServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getTitle()).isEqualTo("Taladro");
         verify(articleRepository).save(article);
+    }
+
+    @Test
+    void save_withOwnerCommissionPromoCode_normalizesValidatesAndPersists() {
+        article.setOwnerCommissionPromoCode(" owner10 ");
+        when(promoCodeService.validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com"))
+                .thenReturn(new PromoCodeValidationResponse(true, 0.10, "Código aplicado correctamente"));
+        when(articleRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Article result = articleService.save(article);
+
+        assertThat(result.getOwnerCommissionPromoCode()).isEqualTo("OWNER10");
+        verify(promoCodeService).validateForOwnerCommissionReductionAllowReservedByUser("OWNER10", "owner@example.com");
+        verify(promoCodeService).reserveOwnerSingleUseIfNeeded("OWNER10", "owner@example.com");
+        verify(articleRepository).save(argThat(saved -> "OWNER10".equals(saved.getOwnerCommissionPromoCode())));
     }
 
     // ------------ UPDATE /api/article/{id} ------------
@@ -472,6 +509,19 @@ class ArticleServiceTest {
         assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
                 .isInstanceOf(RuntimeException.class)
         .hasMessage("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
+    }
+
+    @Test
+    void update_purchaseDateInFuture_throws() {
+        when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
+
+        Article updateData = new Article();
+        updateData.setPurchaseDate(LocalDate.now().plusDays(1));
+
+        assertThatThrownBy(() -> articleService.update(1L, 1L, updateData))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(FUTURE_PURCHASE_DATE_MESSAGE);
+        verify(articleRepository, never()).save(any());
     }
 
     @Test
@@ -756,11 +806,15 @@ class ArticleServiceTest {
         tenant.setEmail("damaged@example.com");
         Kit activeKit = makeActiveKit(tenant);
 
+        // NUEVO: Añadimos el snapshot al kit simulado
+        ItemMemento memento = new ItemMemento();
+        memento.setOriginalItemId(21L);
+        activeKit.setSnapshots(List.of(memento));
+
         when(articleRepository.findById(21L)).thenReturn(Optional.of(a));
         when(kitRepository.findActiveKitByItemId(21L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
         when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Simulamos la fianza retenida
         when(paymentService.processGuaranteeReturn(1L, owner.getId(), 3L, "DAMAGED")).thenReturn(40.0);
 
         ReturnRequest request = new ReturnRequest("DAMAGED", "Tiene arañazos");
@@ -772,30 +826,21 @@ class ArticleServiceTest {
         assertThat(response.tenantEmail()).isEqualTo("damaged@example.com");
         assertThat(response.message()).contains("daños");
         verify(articleRepository).save(a);
-        assertThat(a.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
+        
+        // CORRECCIÓN: El estado correcto ahora es DAMAGED, no AVAILABLE
+        assertThat(a.getStatus()).isEqualTo(ArticleStatus.DAMAGED);
     }
 
     @Test
     void processReturn_invalidCondition_throws() throws Exception {
-        Article a = makeArticle(22L, ArticleStatus.RENTED);
-        User tenant = new User();
-        tenant.setId(4L);
-        tenant.setEmail("t@example.com");
-        Kit activeKit = makeActiveKit(tenant);
-
-        when(articleRepository.findById(22L)).thenReturn(Optional.of(a));
-        when(kitRepository.findActiveKitByItemId(22L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
-
-        // Simulamos que el PaymentService lanza la excepción por condición inválida
-        when(paymentService.processGuaranteeReturn(1L, owner.getId(), 4L, "UNKNOWN"))
-                .thenThrow(new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED."));
-
+        // Al igual que en el test 4, la validación falla en la línea 1
         ReturnRequest request = new ReturnRequest("UNKNOWN", "");
 
-        // Ahora ArticleService envuelve el error en un RuntimeException
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        // CORRECCIÓN: Comprobamos el IllegalArgumentException exacto
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> articleService.processReturn(22L, owner.getId(), request));
-        assertThat(ex.getMessage()).contains("Error procesando la devolución de la garantía");
+                
+        assertThat(ex.getMessage()).isEqualTo("Condición no válida. Usa GOOD o DAMAGED.");
     }
 
     @Test

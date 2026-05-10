@@ -17,8 +17,10 @@ import {
   createPaymentIntent,
   confirmStripePayment,
   processPaymentWithStripe,
+  getServiceById,
 } from "../../services";
 import { getKitPaymentWithPromo } from "../../services/kitService";
+import { toggleRent } from "../../services/articleService";
 import {
   processPaymentWithWalletPromo,
   processPaymentWithStripePromo,
@@ -42,6 +44,17 @@ import {
   FadeInItem,
 } from "../../components";
 import { Ionicons } from "@expo/vector-icons";
+
+type Item = {
+  itemId: number;
+  ownerId: number;
+  quantity: number;
+  pricePerMonth: number;
+  name: string;
+  category: string;
+  imageUrl: string;
+  ownerName: string;
+};
 
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
@@ -229,6 +242,12 @@ export default function CheckoutScreen({ route }: Props) {
         } else if (errorMessage.includes("payment_intent")) {
           errorMessage += "\n\n¿Eres desarrollador? Este error es conocido.\nRevisa el foro de incidencias de Teams.";
         }
+      
+      if (errorMessage.includes("no encontrado")) {
+        resetToMyKits();
+        return;
+      }
+
       showErrorModal(errorMessage);
     } finally {
       setLoading(false);

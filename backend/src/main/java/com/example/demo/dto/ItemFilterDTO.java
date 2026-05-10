@@ -1,5 +1,7 @@
 package com.example.demo.dto;
 
+import java.time.LocalDate;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -28,6 +30,9 @@ public class ItemFilterDTO {
 
     @Positive(message = "size must be greater than 0")
     private Integer size = 10;
+
+    private LocalDate startDate;
+    private LocalDate endDate;
 
     public Double getMinPrice() {
         return minPrice;
@@ -92,4 +97,8 @@ public class ItemFilterDTO {
     public void setSize(Integer size) {
         this.size = size;
     }
+    public LocalDate getStartDate() { return startDate; }
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    public LocalDate getEndDate() { return endDate; }
+    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
 }

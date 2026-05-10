@@ -19,7 +19,7 @@ import {
   commonStyles,
   Spacing,
 } from "../../../styles";
-import { RootStackParamList, DefaultKitCreateRequest } from "../../../types";
+import { RootStackParamList, DefaultKitCreateRequest, ArticleNearby } from "../../../types";
 import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
@@ -36,6 +36,7 @@ import {
   updateDefaultKit,
 } from "../../../services/defaultKitService";
 import { fetchItemsForRent } from "../../../services/itemService";
+import { getArticlesForMap } from "../../../services/articleService";
 
 type CreateDefaultKitNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -88,11 +89,16 @@ const DefaultKitFormScreen: React.FC = () => {
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [showOnlyMyCity, setShowOnlyMyCity] = useState(false);
 
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
 
   const loadCatalog = useCallback(async () => {
     if (!user?.id || !token) {
@@ -183,6 +189,8 @@ const DefaultKitFormScreen: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     const q = searchText.trim().toLowerCase();
+    const minP = minPrice ? parseFloat(minPrice) : 0;
+    const maxP = maxPrice ? parseFloat(maxPrice) : 2000;
     return availableProducts.filter((p) => {
       const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
       const byCategory =
@@ -191,14 +199,28 @@ const DefaultKitFormScreen: React.FC = () => {
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
         (p.category ?? "").toLowerCase().includes(q);
-      return notInactive && byCategory && bySearch;
+      const byPrice = p.pricePerMonth >= minP && p.pricePerMonth <= maxP;
+      return notInactive && byCategory && bySearch && byPrice;
     });
-  }, [availableProducts, searchText, categoryFilter]);
+  }, [availableProducts, searchText, categoryFilter, minPrice, maxPrice]);
 
-  const openAddProductModal = () => {
+  const openAddProductModal = async () => {
     setTempSelectedQuantities(selectedQuantities);
     setSearchText("");
-    setCategoryFilter("ALL");
+    setShowOnlyAvailable(true);
+
+    if (user?.token) {
+      try {
+        const mapData = await getArticlesForMap(user.token, undefined);
+        setMapProducts(mapData);
+      } catch (error) {
+        console.warn('Error al cargar productos del mapa:', error);
+        setMapProducts([]);
+      }
+    } else {
+      setMapProducts([]);
+    }
+
     setCatalogModalVisible(true);
   };
 
@@ -453,6 +475,16 @@ const DefaultKitFormScreen: React.FC = () => {
           onSearchChange={setSearchText}
           categoryFilter={categoryFilter}
           onCategoryFilterChange={setCategoryFilter}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onMinPriceChange={setMinPrice}
+          onMaxPriceChange={setMaxPrice}
+          onClearFilters={() => {
+            setSearchText("");
+            setCategoryFilter("ALL");
+            setMinPrice("");
+            setMaxPrice("");
+          }}
           categories={categories}
           filteredProducts={filteredProducts}
           tempSelectedQuantities={tempSelectedQuantities}
@@ -466,6 +498,7 @@ const DefaultKitFormScreen: React.FC = () => {
           expandedSearch={false}
           onToggleExpandedSearch={() => {}}
           loadingNearby={false}
+          mapProducts={mapProducts}
         />
       </SafeAreaView>
     </PaperProvider>

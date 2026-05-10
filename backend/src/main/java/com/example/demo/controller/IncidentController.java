@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.IncidentRequestDTO;
 import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentComment;
 import com.example.demo.service.IncidentService;
@@ -28,7 +29,7 @@ public class IncidentController {
     private IncidentService incidentService;
 
     @PostMapping
-    public ResponseEntity<?> createIncident(@RequestBody Incident incident) {
+    public ResponseEntity<?> createIncident(@RequestBody IncidentRequestDTO incident) {
         try {
             Incident savedIncident = incidentService.createIncident(incident);
             return new ResponseEntity<>(savedIncident, HttpStatus.CREATED);

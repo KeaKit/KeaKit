@@ -26,16 +26,17 @@ import {
 import {
   getUserNotifications,
   markNotificationRead,
+  deleteNotification,
 } from "../../services/notificationService";
+import {
+  formatNotificationDateTime,
+  getActivityNotificationTitle,
+} from "../../utils/activityNotifications";
 
-// Cambiamos el tipo para poder navegar a cualquier pantalla de las notificaciones
-type NotificationsNav = NativeStackNavigationProp<RootStackParamList>;
-
-const formatDateTime = (value: string): string => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
-};
+type NotificationsNav = NativeStackNavigationProp<
+  RootStackParamList,
+  "Notifications"
+>;
 
 const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NotificationsNav>();
@@ -79,23 +80,13 @@ const NotificationsScreen: React.FC = () => {
     if (!user?.token) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/notifications/${notificationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-        },
-      });
-
-      if (response.ok) {
-        setNotifications(prev => prev.filter(n => n.id !== notificationId));
-        console.log("Notificación eliminada de la BD y la lista");
-      } else {
-        console.error("Error al eliminar: ", response.status);
-      }
-    } catch (error) {
-      console.error("Error al quitar la notificación:", error);
+      await deleteNotification(notificationId, user.token);
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    } catch (err) {
+      console.error("Error al quitar la notificación:", err);
     }
   };
+
 
   const markAllRead = async () => {
     if (!user?.token || unreadIds.length === 0) return;
@@ -135,9 +126,9 @@ const NotificationsScreen: React.FC = () => {
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-            {item.type === "ITEM_RENTED" ? "Objeto alquilado" : "Fin de alquiler"}
+            {getActivityNotificationTitle(item.type, item.relatedArticleId)}
           </Text>
-          <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
+          <Text style={styles.cardDate}>{formatNotificationDateTime(item.createdAt)}</Text>
         </View>
         {!item.read && (
           <TouchableOpacity
@@ -160,27 +151,19 @@ const NotificationsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
-
-      {/* NUEVO: APARTADOS PARA REDIRIGIR (Pestañas/Botones) */}
-      <View style={styles.navigationRow}>
-        <TouchableOpacity 
-          style={styles.navButton} 
-          onPress={() => navigation.navigate("ActivityNotifications")}
+      <View style={commonStyles.header}>
+        <TouchableOpacity
+          style={componentStyles.iconButton}
+          onPress={() => navigation.goBack()}
         >
-          <Ionicons name="notifications-outline" size={20} color={Colors.primary} />
-          <Text style={styles.navButtonText}>Actividad</Text>
+          <Ionicons name="arrow-back" size={22} color={Colors.primary} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.navButton} 
-          onPress={() => navigation.navigate("TrackingNotifications")}
-        >
-          <Ionicons name="cube-outline" size={20} color={Colors.primary} />
-          <Text style={styles.navButtonText}>Seguimiento</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Notificaciones</Text>
+
+        <View style={componentStyles.iconButton} />
       </View>
 
-      {/* CONTENIDO DE LA LISTA */}
       {loading ? (
         <View style={styles.centerContent}>
           <ActivityIndicator color={Colors.primary} />
@@ -218,36 +201,6 @@ const styles = StyleSheet.create({
     fontWeight: FontWeights.bold,
     color: Colors.textPrimary,
   },
-  
-  // --- NUEVOS ESTILOS PARA LOS APARTADOS ---
-  navigationRow: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: '#fff',
-  },
-  navButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.backgroundWhite,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    gap: 8,
-  },
-  navButtonText: {
-    color: Colors.primary,
-    fontWeight: FontWeights.semibold,
-    fontSize: FontSizes.sm,
-  },
-  // ------------------------------------------
-
   centerContent: {
     flex: 1,
     justifyContent: "center",

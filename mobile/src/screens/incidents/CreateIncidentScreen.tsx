@@ -249,6 +249,9 @@ const CreateIncidentScreen: React.FC = () => {
                   ]}
                   onPress={() => {
                     setType(t.value);
+                    setSelectedItem(null);
+                    setSearchText('');
+                    setDropdownOpen(false);
                     clearErrors();
                   }}
                   activeOpacity={0.7}

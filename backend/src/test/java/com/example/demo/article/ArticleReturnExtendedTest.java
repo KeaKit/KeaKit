@@ -19,9 +19,11 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -107,7 +109,7 @@ class ArticleReturnExtendedTest {
     assertThat(ex.getMessage()).contains("Solo el propietario puede confirmar la devolución");
     }
 
-    // ═══════════════ RN-DEV-02: Only RENTED articles can be returned ═══════════════
+// ═══════════════ RN-DEV-02: Only RENTED articles can be returned ═══════════════
 
     @Test
     void processReturn_articleNotRented_throwsException() {
@@ -116,12 +118,14 @@ class ArticleReturnExtendedTest {
         article.setStatus(ArticleStatus.AVAILABLE);
         article.setOwner(owner);
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
+        when(kitRepository.findActiveKitByItemId(1L, KitStatus.ACTIVE)).thenReturn(Optional.empty());
 
         ReturnRequest request = new ReturnRequest("GOOD", "");
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-    assertThat(ex.getMessage()).contains("Este artículo no está actualmente alquilado");
+        // FIX: Cambiamos el mensaje esperado por el nuevo de nuestra validación
+        assertThat(ex.getMessage()).contains("El artículo ya ha sido devuelto o no está alquilado.");
     }
 
     @Test
@@ -131,12 +135,14 @@ class ArticleReturnExtendedTest {
         article.setStatus(ArticleStatus.INACTIVE);
         article.setOwner(owner);
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
+        when(kitRepository.findActiveKitByItemId(1L, KitStatus.ACTIVE)).thenReturn(Optional.empty());
 
         ReturnRequest request = new ReturnRequest("GOOD", "");
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-    assertThat(ex.getMessage()).contains("Este artículo no está actualmente alquilado");
+        // FIX: Cambiamos el mensaje esperado por el nuevo de nuestra validación
+        assertThat(ex.getMessage()).contains("El artículo ya ha sido devuelto o no está alquilado.");
     }
 
     // ═══════════════ Article not found ═══════════════
@@ -195,6 +201,11 @@ class ArticleReturnExtendedTest {
         Article article = makeRentedArticle(2L, 200.0);
         Kit activeKit = makeActiveKit();
 
+        // NUEVO: Añadimos el snapshot al kit simulado
+        ItemMemento memento = new ItemMemento();
+        memento.setOriginalItemId(2L);
+        activeKit.setSnapshots(List.of(memento));
+
         when(articleRepository.findById(2L)).thenReturn(Optional.of(article));
         when(kitRepository.findActiveKitByItemId(2L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
         when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
@@ -228,9 +239,14 @@ class ArticleReturnExtendedTest {
     }
 
     @Test
-    void processReturn_damagedCondition_alsoSetsArticleToAvailable() throws Exception {
+    void processReturn_damagedCondition_setsArticleToDamaged() throws Exception {
         Article article = makeRentedArticle(1L, 100.0);
         Kit activeKit = makeActiveKit();
+
+        // NUEVO: Añadimos el snapshot al kit simulado
+        ItemMemento memento = new ItemMemento();
+        memento.setOriginalItemId(1L);
+        activeKit.setSnapshots(List.of(memento));
 
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
         when(kitRepository.findActiveKitByItemId(1L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
@@ -239,7 +255,8 @@ class ArticleReturnExtendedTest {
 
         articleService.processReturn(1L, owner.getId(), new ReturnRequest("DAMAGED", "Broken"));
 
-        assertThat(article.getStatus()).isEqualTo(ArticleStatus.AVAILABLE);
+        // CORRECCIÓN: Ahora el estado esperado es DAMAGED
+        assertEquals(ArticleStatus.DAMAGED, article.getStatus());
     }
 
     // ═══════════════ RN-DEV-08: availableUntil is cleared ═══════════════
@@ -264,19 +281,14 @@ class ArticleReturnExtendedTest {
 
     @Test
     void processReturn_invalidCondition_throwsViaPaymentService() throws Exception {
-        Article article = makeRentedArticle(1L, 100.0);
-        Kit activeKit = makeActiveKit();
-
-        when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
-        when(kitRepository.findActiveKitByItemId(1L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
-        when(paymentService.processGuaranteeReturn(1L, owner.getId(), tenant.getId(), "UNKNOWN"))
-                .thenThrow(new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED."));
-
+        // Al tener el "Fail-Fast" en la línea 1, ya no hace falta preparar los mocks
         ReturnRequest request = new ReturnRequest("UNKNOWN", "");
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        // CORRECCIÓN: Capturamos directamente el IllegalArgumentException de nuestra validación
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-        assertThat(ex.getMessage()).contains("Error procesando la devolución de la garantía");
+                
+        assertThat(ex.getMessage()).isEqualTo("Condición no válida. Usa GOOD o DAMAGED.");
     }
 
     // ═══════════════ PaymentService failure is wrapped ═══════════════
@@ -323,6 +335,11 @@ class ArticleReturnExtendedTest {
         Article article = makeRentedArticle(5L, 300.0);
         Kit activeKit = makeActiveKit();
 
+        // NUEVO: Añadimos el snapshot al kit simulado
+        ItemMemento memento = new ItemMemento();
+        memento.setOriginalItemId(5L);
+        activeKit.setSnapshots(List.of(memento));
+
         when(articleRepository.findById(5L)).thenReturn(Optional.of(article));
         when(kitRepository.findActiveKitByItemId(5L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
         when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
@@ -332,6 +349,35 @@ class ArticleReturnExtendedTest {
 
         assertThat(response.message()).contains("60.0");
         assertThat(response.message()).contains("propietario");
+    }
+
+    @Test
+    void processReturn_partialDamage_messageMentionsPartialRefund() throws Exception {
+        Article damagedArticle = makeRentedArticle(6L, 50.0);
+        Article returnedGoodArticle = makeRentedArticle(7L, 100.0);
+        returnedGoodArticle.setStatus(ArticleStatus.AVAILABLE);
+
+        Kit activeKit = makeActiveKit();
+
+        ItemMemento damagedSnapshot = new ItemMemento();
+        damagedSnapshot.setOriginalItemId(6L);
+
+        ItemMemento goodSnapshot = new ItemMemento();
+        goodSnapshot.setOriginalItemId(7L);
+
+        activeKit.setSnapshots(List.of(damagedSnapshot, goodSnapshot));
+
+        when(articleRepository.findById(6L)).thenReturn(Optional.of(damagedArticle));
+        when(articleRepository.findById(7L)).thenReturn(Optional.of(returnedGoodArticle));
+        when(kitRepository.findActiveKitByItemId(6L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+        when(paymentService.processGuaranteeReturn(1L, owner.getId(), tenant.getId(), "DAMAGED")).thenReturn(20.0);
+
+        ReturnResponse response = articleService.processReturn(6L, owner.getId(), new ReturnRequest("DAMAGED", "Only one item broken"));
+
+        assertThat(response.resolution()).isEqualTo("DEPOSIT_RETAINED");
+        assertThat(response.amountProcessed()).isEqualTo(20.0);
+        assertThat(response.message()).contains("resto se ha devuelto al arrendatario");
     }
 
     // ═══════════════ Case-insensitive condition ═══════════════
@@ -355,10 +401,17 @@ class ArticleReturnExtendedTest {
         Article article = makeRentedArticle(1L, 100.0);
         Kit activeKit = makeActiveKit();
 
+        // NUEVO: Añadimos el snapshot al kit simulado
+        ItemMemento memento = new ItemMemento();
+        memento.setOriginalItemId(1L);
+        activeKit.setSnapshots(List.of(memento));
+
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
         when(kitRepository.findActiveKitByItemId(1L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
         when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
-        when(paymentService.processGuaranteeReturn(1L, owner.getId(), tenant.getId(), "damaged")).thenReturn(20.0);
+        
+        // CORRECCIÓN: Nuestra nueva lógica siempre envía "DAMAGED" en mayúsculas al paymentService
+        when(paymentService.processGuaranteeReturn(1L, owner.getId(), tenant.getId(), "DAMAGED")).thenReturn(20.0);
 
         ReturnResponse response = articleService.processReturn(1L, owner.getId(), new ReturnRequest("damaged", "Scratches"));
         assertThat(response.resolution()).isEqualTo("DEPOSIT_RETAINED");

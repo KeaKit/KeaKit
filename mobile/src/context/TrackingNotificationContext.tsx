@@ -39,27 +39,43 @@ export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode
 
   const persist = async (list: TrackingNotification[]) => {
     if (!storageKey) return;
-    setNotifications(list);
     await AsyncStorage.setItem(storageKey, JSON.stringify(list));
   };
 
   const addNotification = async (n: TrackingNotification) => {
-    const next = [n, ...notifications];
-    await persist(next);
+    setNotifications(prev => {
+      const exists = prev.some(x => x.id === n.id);
+      const next = exists ? prev : [n, ...prev];
+
+      save(next);
+      return next;
+    });
   };
 
   const markAllRead = async () => {
-    const next = notifications.map((n) => ({ ...n, read: true }));
-    await persist(next);
+    setNotifications(prev => {
+      const next = prev.map(n => ({ ...n, read: true }));
+      save(next);
+      return next;
+    });
   };
 
   const removeNotification = async (id: string) => {
-    const next = notifications.filter((n) => n.id !== id);
-    await persist(next);
+    setNotifications(prev => {
+      const next = prev.filter(n => n.id !== id);
+      save(next);
+      return next;
+    });
+  };
+
+  const save = async (list: TrackingNotification[]) => {
+    if (!storageKey) return;
+    await AsyncStorage.setItem(storageKey, JSON.stringify(list));
   };
 
   const clearAll = async () => {
-    await persist([]);
+    setNotifications([]);
+    await save([]);
   };
 
   const unreadCount = useMemo(

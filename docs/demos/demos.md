@@ -19,4 +19,7 @@
 * **Entrega Sprint 3:** [Ver video](https://youtu.be/v1b5bybfyv0)
 * **Semana 3 Presentación:** [Ver video](https://youtu.be/76NuQMeXwQ8)
 
+### 🔹 PPL
+* **Semana 1:** [Ver video](https://drive.google.com/file/d/1zxTXUDu6a6-Qnp6AP6jTV6b3TMtbgxoi/view?usp=sharing)
+
 ---

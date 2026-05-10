@@ -32,6 +32,7 @@ public class Kit {
     @Enumerated(EnumType.STRING)
     private DeliveryMethod deliveryMethod;
 
+    @Column(length = 500)
     private String meetingPoint;
 
     private Double courierPrice;
@@ -39,6 +40,8 @@ public class Kit {
     private Double appliedCommissionRate;
 
     private Double appliedGuaranteeRate;
+
+    private Double appliedDiscount = 0.0;
 
     @ManyToOne
     @JoinColumn(name = "tenant_id")
@@ -190,15 +193,33 @@ public class Kit {
         }
     }
 
+    public Double getAppliedDiscount() { 
+        return appliedDiscount; 
+    }
+
+    public void setAppliedDiscount(Double appliedDiscount) { 
+        this.appliedDiscount = appliedDiscount != null ? appliedDiscount : 0.0; 
+    }
+
     @Transient
     public Double calculateSubtotal() {
         if (this.snapshots == null || this.snapshots.isEmpty()) {
             return 0.0;
         }
+        double months = calculateMonthsFactor();
         return this.snapshots.stream()
                 .filter(s -> s.getPriceAtRental() != null && s.getSelectedUnits() != null)
-                .mapToDouble(s -> s.getPriceAtRental() * s.getSelectedUnits())
+                .mapToDouble(s -> s.getPriceAtRental() * s.getSelectedUnits() * months)
                 .sum();
+    }
+
+    @Transient
+    private double calculateMonthsFactor() {
+        if (this.startDate == null || this.endDate == null) {
+            return 1.0;
+        }
+        long diffDays = java.time.temporal.ChronoUnit.DAYS.between(this.startDate, this.endDate) + 1;
+        return diffDays / 30.0;
     }
 
     @Transient
@@ -216,7 +237,9 @@ public class Kit {
     @Transient
     public Double calculateTotal() {
         double courier = this.courierPrice != null ? this.courierPrice : 0.0;
-        return calculateSubtotal() + calculateTotalGuarantee() + courier;
+        double rate = this.appliedDiscount != null ? this.appliedDiscount : 0.0;
+        double discount = calculateSubtotal() * rate;        
+        return calculateSubtotal() + calculateTotalGuarantee() + courier - discount;
     }
 
     @Transient

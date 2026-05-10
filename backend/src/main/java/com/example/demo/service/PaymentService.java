@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.model.Transaction;
 import com.example.demo.model.TransactionType;
 import com.example.demo.model.Wallet;
+import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Item;
+import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.KitResponse.KitItemResponse;
@@ -17,6 +19,7 @@ import com.example.demo.dto.KitPaymentDTO;
 import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.repository.TransactionRepository;
+import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.PilotUserRepository;
 
@@ -26,6 +29,7 @@ import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.exception.StripeException;
 import java.util.HashSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import com.stripe.model.Payout;
@@ -72,6 +76,9 @@ public class PaymentService {
 
     @Autowired
     private PilotUserRepository pilotUserRepository;
+
+    @Autowired
+    private ArticleRepository articleRepository;
 
 
     @Value("${stripe.api.key}")
@@ -128,9 +135,29 @@ public class PaymentService {
         processGuarantee(paymentInfo.guarantee());
         kit.getItems().forEach(item -> processItemPaymentToOwner(item, promoCode));
 
+        if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
+            var validation = promoCodeService.validateForTenantDiscount(promoCode, userEmail);
+            if (validation.isValid() && validation.getDiscountRate() != null) {
+                Kit kitToUpdate = kitRepository.findById(kitId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
+                kitToUpdate.setAppliedDiscount(validation.getDiscountRate());
+                kitRepository.save(kitToUpdate);
+            }
+        }
+
         kitService.markAsPaid(kitId);
         Kit kitEntity = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit not found for email confirmation"));
+
+        // Bucle en el backend (seguro y transaccional)
+        if (kitEntity.getSnapshots() != null) {
+            for (ItemMemento snapshot : kitEntity.getSnapshots()) {
+                articleRepository.findById(snapshot.getOriginalItemId()).ifPresent(article -> {
+                    article.setStatus(ArticleStatus.RENTED);
+                    articleRepository.save(article);
+                });
+            }
+        }
 
         double discountEuros = paymentInfo.discount() != null ? paymentInfo.discount() / 100.0 : 0.0;
         emailService.sendOrderConfirmation(kitEntity, discountEuros, promoCode);
@@ -426,48 +453,102 @@ public class PaymentService {
         promoCodeService.markAsUsed(promoCode, owner.getEmail());
     }
 
-    private void completeOrder(Long kitId) throws ResourceNotFoundException {
-        kitService.markAsPaid(kitId);
-        Kit kitEntity = kitRepository.findById(kitId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kit no encontrado para confirmación de email"));
-        emailService.sendOrderConfirmation(kitEntity);
-    }
-
     @Transactional
     public Double processGuaranteeReturn(Long kitId, Long ownerId, Long tenantId, String condition) throws Exception {
-        // 1. Obtenemos la cantidad exacta de la fianza para este Kit
-        KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId);
-        Double guaranteeAmount = toEuros(paymentInfo.guarantee());
+        if (!"GOOD".equalsIgnoreCase(condition) && !"DAMAGED".equalsIgnoreCase(condition)) {
+            throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
+        }
 
-        // 2. Extraemos el dinero del monedero de KeaKit (que lo estaba custodiando)
+        KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId);
+        Kit kit = kitRepository.findById(kitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kit no encontrado"));
+
+        int guaranteeCents = paymentInfo.guarantee() != null ? paymentInfo.guarantee() : 0;
+        Double guaranteeAmount = toEuros(guaranteeCents);
+
         Wallet keakitWallet = getKeaKitWallet();
         Transaction keakitDeduct = new Transaction(-guaranteeAmount, keakitWallet, TransactionType.GUARANTEE_REFUND);
         transactionRepository.save(keakitDeduct);
 
-        // 3. Destinamos el dinero al monedero correspondiente
-        if ("GOOD".equalsIgnoreCase(condition)) {
-            // Devolvemos la fianza al monedero del inquilino
+        if (guaranteeCents <= 0 || kit.getSnapshots() == null || kit.getSnapshots().isEmpty()) {
             Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
-            Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet,
+            Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
+            transactionRepository.save(tenantReceive);
+            guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
+            return guaranteeAmount;
+        }
+
+        Map<Long, Integer> damagedSubtotalByOwner = new LinkedHashMap<>();
+        int totalSnapshotWeightCents = 0;
+
+        for (ItemMemento snapshot : kit.getSnapshots()) {
+            int snapshotSubtotalCents = toCents(snapshot.getPriceAtRental() * snapshot.getSelectedUnits());
+            totalSnapshotWeightCents += snapshotSubtotalCents;
+
+            Item currentItem = articleRepository.findById(snapshot.getOriginalItemId()).orElse(null);
+            if (!(currentItem instanceof com.example.demo.model.Article currentArticle)
+                    || currentArticle.getStatus() != ArticleStatus.DAMAGED) {
+                continue;
+            }
+
+            Long payoutOwnerId = resolvePayoutOwnerId(snapshot, currentItem, ownerId);
+            if (payoutOwnerId == null) {
+                continue;
+            }
+
+            damagedSubtotalByOwner.merge(payoutOwnerId, snapshotSubtotalCents, Integer::sum);
+        }
+
+        if (totalSnapshotWeightCents <= 0 || damagedSubtotalByOwner.isEmpty()) {
+            Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
+            Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
+            transactionRepository.save(tenantReceive);
+            guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
+            return guaranteeAmount;
+        }
+
+        int retainedGuaranteeCents = 0;
+        for (Map.Entry<Long, Integer> entry : damagedSubtotalByOwner.entrySet()) {
+            int ownerGuaranteeCents = (int) (((long) entry.getValue() * guaranteeCents) / totalSnapshotWeightCents);
+            retainedGuaranteeCents += ownerGuaranteeCents;
+
+            if (ownerGuaranteeCents <= 0) {
+                continue;
+            }
+
+            Wallet ownerWallet = walletService.getWalletByUserId(entry.getKey());
+            Transaction ownerReceive = new Transaction(toEuros(ownerGuaranteeCents), ownerWallet, TransactionType.PAYOUT);
+            transactionRepository.save(ownerReceive);
+        }
+
+        int tenantRefundCents = guaranteeCents - retainedGuaranteeCents;
+        if (tenantRefundCents > 0) {
+            Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
+            Transaction tenantReceive = new Transaction(toEuros(tenantRefundCents), tenantWallet,
                     TransactionType.GUARANTEE_REFUND);
             transactionRepository.save(tenantReceive);
             guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
-
-        } else if ("DAMAGED".equalsIgnoreCase(condition)) {
-            // Compensamos al propietario enviando la fianza a su monedero
-            Wallet ownerWallet = walletService.getWalletByUserId(ownerId);
-            Transaction ownerReceive = new Transaction(guaranteeAmount, ownerWallet, TransactionType.PAYOUT);
-            transactionRepository.save(ownerReceive);
-
-        } else {
-            throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
         }
 
-        return guaranteeAmount;
+        return toEuros(retainedGuaranteeCents);
+    }
+
+    private Long resolvePayoutOwnerId(ItemMemento snapshot, Item currentItem, Long fallbackOwnerId) {
+        if (snapshot.getOwnerAtRental() != null && snapshot.getOwnerAtRental().getId() != null) {
+            return snapshot.getOwnerAtRental().getId();
+        }
+        if (currentItem != null && currentItem.getOwner() != null && currentItem.getOwner().getId() != null) {
+            return currentItem.getOwner().getId();
+        }
+        return fallbackOwnerId;
     }
 
     private Double toMoney(Double amount) {
         return Math.round(amount * 100.0) / 100.0;
+    }
+
+    private Integer toCents(Double amount) {
+        return (amount != null) ? (int) Math.round(amount * 100.0) : 0;
     }
 
     private Transaction payWithWallet(Long tenantId, Double amount)

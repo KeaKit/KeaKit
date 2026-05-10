@@ -40,6 +40,7 @@ public class ItemMemento {
 
     private Double shippingFeeAtRental;
 
+    @Column(length = 500)
     private String pickupAddressSnapshot;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1066,9 +1066,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(request);
 
-        assertEquals(15878, result.totalPrice());
-        assertEquals(12399, result.subtotalPrice());
-        assertEquals(2480, result.guarantee());
+        assertEquals(16358, result.totalPrice());
+        assertEquals(12799, result.subtotalPrice());
+        assertEquals(2560, result.guarantee());
         assertEquals(999, result.courierPrice());
     }
 
@@ -1085,9 +1085,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(request);
 
-        assertEquals(3720, result.totalPrice());
-        assertEquals(3100, result.subtotalPrice());
-        assertEquals(620, result.guarantee());
+        assertEquals(3840, result.totalPrice());
+        assertEquals(3200, result.subtotalPrice());
+        assertEquals(640, result.guarantee());
         assertEquals(0, result.courierPrice());
     }
 
@@ -1113,9 +1113,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(77L);
 
-        assertEquals(12841, result.totalPrice());
-        assertEquals(9868, result.subtotalPrice());
-        assertEquals(1974, result.guarantee());
+        assertEquals(13223, result.totalPrice());
+        assertEquals(10187, result.subtotalPrice());
+        assertEquals(2037, result.guarantee());
         assertEquals(999, result.courierPrice());
     }
 
@@ -1159,9 +1159,9 @@ public class KitServiceTest {
 
         KitPaymentDTO result = kitService.getKitPayment(88L);
 
-        assertEquals(18600, result.totalPrice());
-        assertEquals(15500, result.subtotalPrice());
-        assertEquals(3100, result.guarantee());
+        assertEquals(19200, result.totalPrice());
+        assertEquals(16000, result.subtotalPrice());
+        assertEquals(3200, result.guarantee());
         assertEquals(0, result.courierPrice());
     }
 
@@ -1375,6 +1375,30 @@ public class KitServiceTest {
         assertEquals(result.subtotalPrice() + result.guarantee() - result.discount(),
                 result.totalPrice(),
                 "Total = subtotal + garantía - descuento");
+    }
+
+    @Test
+    void findTrackingUpdateableByTenantId_returnsMappedResponses() {
+        Long tenantId = 1L;
+        Kit kit1 = new Kit();
+        kit1.setId(101L);
+        kit1.setName("Kit Tracking 1");
+        
+        Kit kit2 = new Kit();
+        kit2.setId(102L);
+        kit2.setName("Kit Tracking 2");
+
+        when(kitRepository.findTrackingUpdateableByTenantId(tenantId))
+            .thenReturn(List.of(kit1, kit2));
+
+        List<KitResponse> result = kitService.findTrackingUpdateableByTenantId(tenantId);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Kit Tracking 1", result.get(0).getName());
+        assertEquals(102L, result.get(1).getId());
+        
+        verify(kitRepository, times(1)).findTrackingUpdateableByTenantId(tenantId);
     }
 
 }

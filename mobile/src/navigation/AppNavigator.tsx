@@ -84,6 +84,7 @@ import EditServiceScreen from "../screens/service/EditServiceScreen";
 import DefaultKitsScreen from "../screens/defaultKit/tenant/DefaultKitsScreen";
 import DefaultKitFormScreen from "../screens/defaultKit/admin/DefaultKitFormScreen";
 import DefaultKitDetailScreen from "../screens/defaultKit/tenant/DefaultKitDetailsScreen";
+import CourierHomeScreen from "../screens/courier/CourierHomeScreen";
 
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -108,15 +109,22 @@ const AppNavigator: React.FC = () => {
   };
 
   const withLayoutAndRole = (
-    AdminComponent: React.ComponentType<any>,
-    UserComponent: React.ComponentType<any>,
-    userRole: string,
-  ) => {
-    return () => (
-      <MainLayout>
-        {userRole === "ADMIN" ? <AdminComponent /> : <UserComponent />}
-      </MainLayout>
-    );
+      AdminComponent: React.ComponentType<any>,
+      CourierComponent: React.ComponentType<any>,
+      UserComponent: React.ComponentType<any>,
+      userRole: string,
+    ) => {
+      return () => (
+        <MainLayout>
+          {userRole === "ADMIN" ? (
+            <AdminComponent />
+          ) : userRole === "COURIER" ? (
+            <CourierComponent />
+          ) : (
+            <UserComponent />
+          )}
+        </MainLayout>
+      );
   };
 
   return (
@@ -130,6 +138,7 @@ const AppNavigator: React.FC = () => {
                   name="Home"
                   component={withLayoutAndRole(
                     AdminHomeScreen,
+                    CourierHomeScreen,
                     HomeScreen,
                     user.role,
                   )}
@@ -184,11 +193,6 @@ const AppNavigator: React.FC = () => {
                 <Stack.Screen
                   name="UserRatings"
                   component={withLayout(UserRatingsScreen)}
-                />
-
-                <Stack.Screen
-                  name="Wallet"
-                  component={withLayout(WalletScreen)}
                 />
 
                 {/* Pantallas de administración */}
@@ -274,6 +278,12 @@ const AppNavigator: React.FC = () => {
                   component={CreateRatingScreen}
                 />
 
+                { /* Wallet */ }
+                <Stack.Screen
+                  name="Wallet"
+                  component={WalletScreen}
+                />
+
                 {/* Incidencias */}
                 <Stack.Screen
                   name="CreateIncident"
@@ -313,11 +323,11 @@ const AppNavigator: React.FC = () => {
 
                 <Stack.Screen
                   name="TrackingNotifications"
-                  component={TrackingNotificationsScreen}
+                  component={withLayout(TrackingNotificationsScreen)}
                 />
                 <Stack.Screen
                   name="ActivityNotifications"
-                  component={ActivityNotificationsScreen}
+                  component={withLayout(ActivityNotificationsScreen)}
                 />
                 <Stack.Screen name="Notifications">
                   {() => (

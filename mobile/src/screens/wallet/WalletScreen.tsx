@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Text, FlatList } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets, SafeAreaView } from "react-native-safe-area-context";
 import {
   Header,
   KeakitModal,
@@ -31,7 +31,7 @@ const transactionTypeLabels: Record<string, string> = {
 
 const getTransactionLabel = (transaction: Transaction) => {
   if (transaction.type === "PAYOUT") {
-    return transaction.amount < 0 ? "Payout" : "Ingreso";
+    return transaction.amount < 0 ? "Pago" : "Ingreso";
   }
 
   return transactionTypeLabels[transaction.type] ?? transaction.type.replaceAll("_", " ");
@@ -78,6 +78,7 @@ const TransactionItem = ({
 
 export default function WalletScreen() {
   const navigation = useNavigation<WalletNav>();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -127,7 +128,7 @@ export default function WalletScreen() {
   );
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.container, { paddingBottom: insets.bottom }]}>
       <Header title="Mi Wallet" showBack={true} onBack={navigation.goBack} />
         <View style={styles.content} >
       {/* Tarjeta de Balance */}
@@ -168,9 +169,9 @@ export default function WalletScreen() {
             data={transactions}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item, index }) => (
-              <TransactionItem item={item} index={index} /> // <--- Pasamos el index
+              <TransactionItem item={item} index={index} />
             )}
-            contentContainerStyle={{ paddingBottom: 20 }}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 85 }}
             showsVerticalScrollIndicator={false}
           />
         )}
@@ -179,7 +180,7 @@ export default function WalletScreen() {
 
       </View>
       
-        <View style={commonStyles.footerContainer} >
+        <View style={[commonStyles.footerContainer, { paddingBottom: insets.bottom + 35}]} >
             <FadeInItem delay={50}>
             <KeakitButton
             title="Retirar dinero"

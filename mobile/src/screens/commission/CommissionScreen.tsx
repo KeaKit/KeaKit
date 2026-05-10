@@ -50,8 +50,10 @@ const FadeIn: React.FC<{ delay?: number; children: React.ReactNode }> = ({ delay
 const toPercent = (decimal: number): string =>
   (decimal * 100).toFixed(2).replace(/\.?0+$/, '');
 
+const normalize = (value: string) => value.replace(',', '.');
+
 const toDecimal = (percent: string): number =>
-  parseFloat(percent) / 100;
+  parseFloat(normalize(percent)) / 100;
 
 const CommissionScreen: React.FC = () => {
   const navigation = useNavigation<CommissionNav>();
@@ -178,7 +180,7 @@ const CommissionScreen: React.FC = () => {
               <TextInput
                 style={[styles.input, !!inputError && styles.inputError]}
                 value={inputValue}
-                onChangeText={(t) => { setInputValue(t); setInputError(''); }}
+                onChangeText={(t) => { setInputValue(t.replace(',', '.')); setInputError(''); }}
                 keyboardType="decimal-pad"
                 placeholder="Ej: 20"
                 placeholderTextColor="#aaa"
