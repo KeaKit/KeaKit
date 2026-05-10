@@ -1,6 +1,8 @@
 package com.example.demo.article;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -203,6 +205,21 @@ class NearbyArticleControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].city").value("Madrid"));
+    }
+
+    @Test
+    void getArticlesForMap_whenIncludeRentedTrue_usesExpandedMapQuery() throws Exception {
+        when(articleService.findAllWithCoords("España", true))
+            .thenReturn(List.of(sampleDTO(1L, "Madrid", 0.0)));
+
+        mockMvc.perform(get("/api/article/map")
+                .param("country", "España")
+                .param("includeRented", "true"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1));
+
+        verify(articleService).findAllWithCoords("España", true);
+        verify(articleService, never()).findAllWithCoords("España");
     }
 
     @Test

@@ -321,6 +321,13 @@ public class KitService {
                 .collect(java.util.stream.Collectors.toList());
     }
 
+    public List<KitResponse> findTrackingUpdateableByTenantId(Long tenantId) {
+        List<Kit> kits = kitRepository.findTrackingUpdateableByTenantId(tenantId);
+        return kits.stream()
+                .map(KitResponse::new)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     public Page<KitResponse> findHistoryForAuthenticatedTenant(int page, int size) {
         Long tenantId = authService.getAuthenticatedUserId();
 

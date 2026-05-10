@@ -45,7 +45,17 @@ export async function filterItemsForKit(
     };
   }
 
-  return handleResponse<ItemFilterResponse>(res);
+  const response = await handleResponse<ItemFilterResponse>(res);
+
+  return {
+    content: Array.isArray(response?.content) ? response.content : [],
+    page: response?.page ?? (filters.page ?? 0),
+    size: response?.size ?? (filters.size ?? 10),
+    totalElements: response?.totalElements ?? 0,
+    totalPages: response?.totalPages ?? 0,
+    hasNext: response?.hasNext ?? false,
+    hasPrevious: response?.hasPrevious ?? false,
+  };
 }
 
 export async function createKit(
@@ -129,6 +139,14 @@ export async function deleteKit(kitId: number, token: string): Promise<void> {
 
 export async function getMyKits(userId: number, token: string): Promise<KitResponse[]> {
   const res = await fetchWithTimeout(API_ROUTES.MY_KITS(userId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+
+export async function getUpdatrableTrackingKits(userId: number, token: string): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.TRACKING_UPDATEABLE_KITS(userId), {
     method: "GET",
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });

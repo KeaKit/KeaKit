@@ -33,6 +33,11 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Crear archivo .env de Expo
+        env:
+          MOBILE_ENV: ${{ secrets.MOBILE_ENV_FILE }}
+        run: echo "$MOBILE_ENV" > .env
+
       - name: Construir la web con Expo
         run: npx expo export --platform web
 

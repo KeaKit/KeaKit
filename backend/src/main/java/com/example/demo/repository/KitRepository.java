@@ -65,5 +65,12 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
            "AND k.status IN (com.example.demo.model.KitStatus.PAID, com.example.demo.model.KitStatus.ACTIVE) " +
            "AND k.endDate >= :currentDate") 
     int countActiveAndFutureRentedUnits(@Param("serviceId") Long serviceId, @Param("currentDate") LocalDate currentDate);
+
+    @Query("SELECT DISTINCT k FROM Kit k JOIN k.snapshots s " +
+            "WHERE (k.status = PAID " +
+            "OR k.status = ACTIVE) " +
+            "AND k.deliveryMethod = COURIER " +
+            "AND k.tenant.id = :tenantId")
+    List<Kit> findTrackingUpdateableByTenantId(@Param("tenantId") Long tenantId);
 }
 

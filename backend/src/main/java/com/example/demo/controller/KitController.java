@@ -131,6 +131,16 @@ public class KitController {
         }
     }
 
+    @GetMapping("/tracking-updateable-kits/{tenantId}")
+    public ResponseEntity<?> getTrackingUpdateableKits(@PathVariable Long tenantId) {
+        try {
+            List<KitResponse> response = kitService.findTrackingUpdateableByTenantId(tenantId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/my-kits/{tenantId}/{kitId}")
     public ResponseEntity<?> getMyKitTracking(@PathVariable Long tenantId, @PathVariable Long kitId) {
         try {

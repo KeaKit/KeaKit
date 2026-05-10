@@ -27,6 +27,7 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
+            KitDeliveryRepository kitDeliveryRepo,
             DefaultKitRepository defaultKitRepo, // <-- AÑADIDO: Repositorio para los kits predeterminados
             RatingRepository ratingRepo,
             CountryRepository countryRepo,
@@ -204,7 +205,7 @@ public class DatabaseSeeder {
             pendingPaidKit.setTenant(tenant);
             pendingPaidKit.setStatus(KitStatus.DRAFT);
             pendingPaidKit.setDeliveryMethod(DeliveryMethod.COURIER);
-            pendingPaidKit.setStartDate(LocalDate.now());
+            pendingPaidKit.setStartDate(LocalDate.now().plusWeeks(2));
             pendingPaidKit.setEndDate(LocalDate.now().plusMonths(1));
             kitRepo.save(pendingPaidKit);
 
@@ -230,6 +231,9 @@ public class DatabaseSeeder {
 
             myKit.setSnapshots(List.of(snap1, snap2));
             kitRepo.save(myKit);
+
+            laptop.setStatus(ArticleStatus.RENTED);
+            articleRepo.save(laptop);
 
             ItemMemento snap3 = laptop.createSnapshot(1, pendingPaidKit.getDeliveryMethod(), pendingPaidKit.getCourierPrice(), pendingPaidKit.getMeetingPoint());
             snap3.setKit(pendingPaidKit);
@@ -428,7 +432,48 @@ public class DatabaseSeeder {
             ratingRepo.save(feedback);
 
             // 9. Países Y ciudades       
-            CityLoader.loadFromJson(countryRepo, cityRepo);          
+            CityLoader.loadFromJson(countryRepo, cityRepo);     
+            
+            // 10. Kit Delivery
+            KitDelivery delivery1 = new KitDelivery();
+            delivery1.setKit(myKit);
+            delivery1.setStatus(DeliveryStatus.DELIVERED);
+            delivery1.setEstimatedArrival(LocalDateTime.now());
+            delivery1.setLastLocation("Sevilla");
+            delivery1.setLastUpdate(LocalDateTime.now());
+            kitDeliveryRepo.save(delivery1);
+
+            KitDelivery delivery2 = new KitDelivery();
+            delivery2.setKit(audiovisualKit);
+            delivery2.setStatus(DeliveryStatus.DELIVERED);
+            delivery2.setEstimatedArrival(LocalDateTime.now().minusMonths(2));
+            delivery2.setLastLocation("Sevilla");
+            delivery2.setLastUpdate(LocalDateTime.now().minusMonths(2));
+            kitDeliveryRepo.save(delivery2);
+
+            KitDelivery delivery3 = new KitDelivery();
+            delivery3.setKit(finishedPhotoKit);
+            delivery3.setStatus(DeliveryStatus.DELIVERED);
+            delivery3.setEstimatedArrival(LocalDateTime.now().minusWeeks(1));
+            delivery3.setLastLocation("Sevilla");
+            delivery3.setLastUpdate(LocalDateTime.now().minusWeeks(1));
+            kitDeliveryRepo.save(delivery3);
+
+            KitDelivery delivery4 = new KitDelivery();
+            delivery4.setKit(streamingKit);
+            delivery4.setStatus(DeliveryStatus.DELIVERED);
+            delivery4.setEstimatedArrival(LocalDateTime.now().minusMonths(3));
+            delivery4.setLastLocation("Sevilla");
+            delivery4.setLastUpdate(LocalDateTime.now().minusMonths(3));
+            kitDeliveryRepo.save(delivery4);
+
+            KitDelivery delivery5 = new KitDelivery();
+            delivery5.setKit(droneKit);
+            delivery5.setStatus(DeliveryStatus.DELIVERED);
+            delivery5.setEstimatedArrival(LocalDateTime.now().minusDays(2));
+            delivery5.setLastLocation("Sevilla");
+            delivery5.setLastUpdate(LocalDateTime.now().minusDays(2));
+            kitDeliveryRepo.save(delivery5);
 
             System.out.println("✅ Seeder finalizado: Datos cargados en los repositorios.");
 

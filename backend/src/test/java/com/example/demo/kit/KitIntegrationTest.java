@@ -8,6 +8,7 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.service.AuthService;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -923,5 +925,62 @@ class KitIntegrationTest {
                 
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Kit does not belong to the specified tenant"));
+    }
+
+    @Test
+    void testGetTrackingUpdateableKits_success() throws Exception {
+        Article article = createTestArticle("Laptop Pro", tenant); 
+
+        Kit updateableKit = new Kit();
+        updateableKit.setName("Kit tracking real");
+        updateableKit.setTenant(tenant);
+        updateableKit.setStatus(KitStatus.PAID);
+        updateableKit.setDeliveryMethod(DeliveryMethod.COURIER);
+        updateableKit.setCountry("España");
+        updateableKit.setCity("Sevilla");
+        updateableKit.setStartDate(LocalDate.now());
+        updateableKit.setEndDate(LocalDate.now().plusDays(5));
+        updateableKit.setCourierPrice(9.99); 
+        
+        updateableKit = kitRepository.save(updateableKit);
+
+        ItemMemento snap = new ItemMemento();
+        snap.setKit(updateableKit);
+        snap.setOriginalItemId(article.getId());
+        snap.setNameAtRental(article.getTitle());
+        snap.setPriceAtRental(article.getPricePerMonth());
+        snap.setSelectedUnits(1);
+        snap.setSelectedMethod(DeliveryMethod.COURIER);
+        snap.setShippingFeeAtRental(9.99);
+
+        updateableKit.setSnapshots(List.of(snap));
+        kitRepository.saveAndFlush(updateableKit); 
+
+        mockMvc.perform(get("/api/kits/tracking-updateable-kits/" + tenant.getId())
+                .header("Authorization", withAuth()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$[?(@.name == 'Kit tracking real')]").exists());
+    }
+
+    @Test
+    void testGetTrackingUpdateableKits_emptyListForNewUser() throws Exception {
+        User newUser = new User();
+        newUser.setName("Solo");
+        newUser.setEmail("solo@test.com");
+        newUser.setPassword("123456");
+        newUser.setRole(UserRole.USER);
+        
+        newUser.setAddress("Calle Falsa 123");
+        newUser.setCity("Sevilla");
+        newUser.setCountry("España");
+        newUser.setPhone("666555444");
+        
+        newUser = userRepository.save(newUser);
+
+        mockMvc.perform(get("/api/kits/tracking-updateable-kits/" + newUser.getId())
+                .header("Authorization", withAuth()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }
