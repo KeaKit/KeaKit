@@ -20,10 +20,9 @@ jobs:
         env:
           APP_ENV_FILE: ${{ secrets.ENV_FILE }}
         with:
-          host: ${{ secrets.DROPLET_IP2 }}
-          username: ${{ secrets.DROPLET_USERNAME2 }}
-          key: ${{ secrets.DROPLET_SSH_KEY2 }}
-          envs: APP_ENV_FILE
+          host: ${{ secrets.DROPLET_IP_PPL }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
             cd ~/app/
             

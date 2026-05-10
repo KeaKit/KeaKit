@@ -1,4 +1,4 @@
-const BASE_URL = 'https://keakitv3api.duckdns.org'
+const BASE_URL = 'https://keakitpplapi.duckdns.org'
 
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
