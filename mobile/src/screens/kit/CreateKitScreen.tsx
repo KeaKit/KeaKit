@@ -115,6 +115,11 @@ const CONDITION_OPTIONS = [
   { label: "Desgastado", value: "WORN" },
 ];
 
+const normalizeTotalUnits = (value: unknown): number => {
+  const units = Number(value ?? 1);
+  return Number.isFinite(units) ? Math.max(0, units) : 1;
+};
+
 // Constantes de validación (movidas fuera del componente para garantizar su existencia)
 const MAX_KIT_NAME_LENGTH = 255;
 const MAX_MEETING_POINT_LENGTH = 500;
@@ -311,7 +316,7 @@ const CreateKitScreen: React.FC = () => {
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
         imageUrl: (p as any).imageUrl ?? null,
-        totalUnits: Number(p.totalUnits ?? 0),
+        totalUnits: normalizeTotalUnits(p.totalUnits),
         availableFrom: (p as any).availableFrom ?? undefined,
         availableUntil: (p as any).availableUntil ?? undefined,
       }));
@@ -458,7 +463,11 @@ const CreateKitScreen: React.FC = () => {
 
     if (user?.token) {
       try {
-        const mapData = await getArticlesForMap(user.token, country.trim() || undefined);
+        const mapData = await getArticlesForMap(
+          user.token,
+          country.trim() || undefined,
+          true,
+        );
         setMapProducts(mapData);
       } catch (error) {
         console.warn('Error al cargar productos del mapa:', error);

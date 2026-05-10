@@ -263,9 +263,12 @@ public class ArticleController {
 
     @GetMapping("/map")
     public ResponseEntity<List<ArticleNearbyDTO>> getArticlesForMap(
-            @RequestParam(required = false) String country) {
+            @RequestParam(required = false) String country,
+            @RequestParam(defaultValue = "false") boolean includeRented) {
         try {
-            List<ArticleNearbyDTO> articles = articleService.findAllWithCoords(country);
+            List<ArticleNearbyDTO> articles = includeRented
+                ? articleService.findAllWithCoords(country, true)
+                : articleService.findAllWithCoords(country);
             return ResponseEntity.ok(articles);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

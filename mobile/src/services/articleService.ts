@@ -292,8 +292,9 @@ export async function getNearbyArticles(
 export async function getArticlesForMap(
   token: string,
   country?: string,
+  includeRented: boolean = false,
 ): Promise<ArticleNearby[]> {
-  const res = await fetch(API_ROUTES.ARTICLE_MAP(country), {
+  const res = await fetch(API_ROUTES.ARTICLE_MAP(country, includeRented), {
     method: 'GET',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });

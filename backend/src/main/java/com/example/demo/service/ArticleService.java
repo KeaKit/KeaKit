@@ -535,7 +535,13 @@ public class ArticleService {
     }
 
     public List<ArticleNearbyDTO> findAllWithCoords(String country) {
-        List<Article> articles = articleRepository.findByStatus(ArticleStatus.AVAILABLE);
+        return findAllWithCoords(country, false);
+    }
+
+    public List<ArticleNearbyDTO> findAllWithCoords(String country, boolean includeRented) {
+        List<Article> articles = includeRented
+            ? articleRepository.findByStatusIn(List.of(ArticleStatus.AVAILABLE, ArticleStatus.RENTED))
+            : articleRepository.findByStatus(ArticleStatus.AVAILABLE);
         return articles.stream().map(article -> {
             String resolvedCountry = article.getCountry() != null ? article.getCountry() : country;
             CityCoordinatesDTO coords = resolvedCountry != null

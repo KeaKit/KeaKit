@@ -151,10 +151,13 @@ export const API_ROUTES = {
   ARTICLE_NEARBY: (city: string, country: string, radiusKm = 150) =>
     `${BASE_URL}/api/article/nearby?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&radiusKm=${radiusKm}`,
 
-  ARTICLE_MAP: (country?: string) =>
-    country
-      ? `${BASE_URL}/api/article/map?country=${encodeURIComponent(country)}`
-      : `${BASE_URL}/api/article/map`,
+  ARTICLE_MAP: (country?: string, includeRented: boolean = false) => {
+    const params = new URLSearchParams();
+    if (country) params.append("country", country);
+    if (includeRented) params.append("includeRented", "true");
+    const query = params.toString();
+    return `${BASE_URL}/api/article/map${query ? `?${query}` : ""}`;
+  },
 
   // Ciudades
   GET_CITIES: `${BASE_URL}/api/cities`,
