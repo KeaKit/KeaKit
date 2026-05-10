@@ -82,6 +82,12 @@ public class ServiceItemService {
         if (updateData.getDescription() != null) service.setDescription(updateData.getDescription());
         if (updateData.getPricePerMonth() != null) service.setPricePerMonth(updateData.getPricePerMonth());
         if (updateData.getCity() != null) service.setCity(updateData.getCity());
+        if (updateData.getTotalUnits() != null) {
+            if (updateData.getTotalUnits() < 1) {
+                throw new RuntimeException("Las unidades disponibles deben ser al menos 1");
+            }
+            service.setTotalUnits(updateData.getTotalUnits());
+        }
 
         boolean startMonthChanged = false;
         if (updateData.getAvailableFrom() != null && !updateData.getAvailableFrom().equals(service.getAvailableFrom())) {

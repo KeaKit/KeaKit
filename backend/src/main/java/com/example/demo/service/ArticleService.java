@@ -33,6 +33,8 @@ import com.example.demo.repository.UserRepository;
 @Service
 public class ArticleService {
 
+    private static final String FUTURE_PURCHASE_DATE_MESSAGE = "La fecha de compra no puede ser posterior a hoy";
+
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
@@ -130,6 +132,8 @@ public class ArticleService {
         LocalDate until = article.getAvailableUntil();
         if (from != null && until != null && from.isAfter(until))
             throw new RuntimeException("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
+
+        validatePurchaseDate(article.getPurchaseDate());
 
         User owner = article.getOwner();
         if (owner == null || owner.getId() == null)
@@ -235,6 +239,12 @@ public class ArticleService {
             return false;
         }
         return l.equals(r);
+    }
+
+    private void validatePurchaseDate(LocalDate purchaseDate) {
+        if (purchaseDate != null && purchaseDate.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException(FUTURE_PURCHASE_DATE_MESSAGE);
+        }
     }
 
     public void deleteById(Long id, Long ownerId) {
@@ -690,10 +700,12 @@ public class ArticleService {
         if (from != null && until != null && from.isAfter(until))
             throw new RuntimeException("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
 
-        if (updateData.getPurchaseDate() != null) 
+        if (updateData.getPurchaseDate() != null) {
+            validatePurchaseDate(updateData.getPurchaseDate());
             article.setPurchaseDate(updateData.getPurchaseDate());
+        }
 
-        if (updateData.getCondition() != null) 
+        if (updateData.getCondition() != null)
             article.setCondition(updateData.getCondition());
             
         if (updateData.getImageUrl() != null) 

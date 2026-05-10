@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -39,9 +40,11 @@ public class NotificationController {
     @PostMapping("/demand-alert")
     public ResponseEntity<?> createDemandAlert(
             @RequestParam Long articleId,
-            @RequestParam Long requesterId) {
+            @RequestParam Long requesterId,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate) {
         try {
-            Notification notification = notificationService.createDemandAlert(articleId, requesterId);
+            Notification notification = notificationService.createDemandAlert(articleId, requesterId, startDate, endDate);
             return ResponseEntity.status(HttpStatus.CREATED).body(notification);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

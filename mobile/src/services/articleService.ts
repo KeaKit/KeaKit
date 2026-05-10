@@ -93,8 +93,35 @@ export async function requestArticleAvailabilityNotification(
   articleId: number,
   requesterId: number,
   token: string,
+  startDate?: string,
+  endDate?: string,
 ): Promise<string> {
-  const res = await fetch(API_ROUTES.REQUEST_AVAILABILITY_NOTIFICATION(articleId, requesterId), {
+  return postTextResult(
+    API_ROUTES.REQUEST_AVAILABILITY_NOTIFICATION(
+      articleId,
+      requesterId,
+      startDate,
+      endDate,
+    ),
+    token,
+  );
+}
+
+export async function createDemandAlert(
+  articleId: number,
+  requesterId: number,
+  token: string,
+  startDate?: string,
+  endDate?: string,
+): Promise<string> {
+  return postTextResult(
+    API_ROUTES.CREATE_DEMAND_ALERT(articleId, requesterId, startDate, endDate),
+    token,
+  );
+}
+
+async function postTextResult(url: string, token: string): Promise<string> {
+  const res = await fetch(url, {
     method: 'POST',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });

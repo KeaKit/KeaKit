@@ -174,21 +174,21 @@ export interface Item {
 
 export interface ItemCatalog {
   id: number;
-  itemType: "ARTICLE" | "SERVICE" | string;
+  itemType: string;
   title: string;
   description: string;
   city: string;
-  country?: string | null;
+  country: string;
   pricePerMonth: number;
-  availableFrom?: string | null;
-  availableUntil?: string | null;
-  category?: string | null;
+  availableFrom: string; // ISO date (yyyy-mm-dd)
+  availableUntil: string; // ISO date
+  category: string;
   totalUnits: number;
   ownerId: number;
-  ownerName?: string | null;
-  status?: "AVAILABLE" | "RENTED" | "INACTIVE" | string | null;
-  condition?: ArticleCondition | null;
-  imageUrl?: string | null;
+  ownerName: string;
+  status?: string;     // solo para ARTICLE
+  condition?: string;  // solo para ARTICLE
+  imageUrl?: string;   // solo para ARTICLE
 }
 
 export interface ItemFilterRequest {
@@ -305,6 +305,7 @@ export interface KitResponse {
   guaranteePrice: number;
   platformFee: number;
   totalPrice: number;
+  appliedDiscount?: number;
 }
 
 export interface Category {
@@ -622,7 +623,11 @@ export interface TrackingNotification {
   read: boolean;
 }
 
-export type ActivityNotificationType = "ITEM_RENTED" | "RETURN_REMINDER";
+export type ActivityNotificationType =
+  | "ITEM_RENTED"
+  | "RETURN_REMINDER"
+  | "DEMAND_ALERT"
+  | "ARTICLE_AVAILABLE";
 
 export interface ActivityNotification {
   id: number;
@@ -631,6 +636,7 @@ export interface ActivityNotification {
   read: boolean;
   type: ActivityNotificationType;
   relatedKitId: number | null;
+  relatedArticleId?: number | null;
 }
 
 export interface ArticleNearby {
