@@ -90,10 +90,10 @@ public class PaymentServiceTest {
     @Mock
     private KitRepository kitRepository;
 
-    @Mock 
+    @Mock
     private PromoCodeService promoCodeService;
 
-    @Mock 
+    @Mock
     private PilotUserRepository pilotUserRepository;
 
     @Mock
@@ -171,11 +171,9 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
 
-        // 2. Act
         assertDoesNotThrow(() -> paymentService.processPayment(KIT_ID, true));
 
-        // 3. Assert: Verificamos interacciones clave
-        verify(transactionRepository, atLeast(3)).save(any(Transaction.class)); // Pago, Fianza, Pago Owner
+        verify(transactionRepository, atLeast(3)).save(any(Transaction.class)); // Pago (wallet), Fianza, Pago Owner
         verify(kitService).markAsPaid(KIT_ID);
         verify(emailService).sendOrderConfirmation(eq(KIT), anyDouble(), isNull());
     }
@@ -188,8 +186,8 @@ public class PaymentServiceTest {
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
-
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+        // No se necesita mock para TENANT_WALLET porque no se descuenta dinero
 
         assertDoesNotThrow(() -> paymentService.processPayment(KIT_ID, false));
 
@@ -217,8 +215,8 @@ public class PaymentServiceTest {
     void processPayment_ShouldThrowException_WhenUserNotFound() {
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
         when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
-        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
         when(userService.getUserByEmail(anyString()))
                 .thenThrow(new ResourceNotFoundException("User not found with email: " + ADMIN_EMAIL));
 
@@ -236,15 +234,13 @@ public class PaymentServiceTest {
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
         when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(notEnoughBalanceWallet);
-
-        assertEquals(walletService.getWalletByUserId(TENANT.getId()).getBalance(), 10.0);
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
 
         NotEnoughBalanceException exception = assertThrows(NotEnoughBalanceException.class,
                 () -> paymentService.processPayment(KIT_ID, true));
 
-    assertThat(exception.getMessage()).contains("Saldo insuficiente");
+        assertThat(exception.getMessage()).contains("Saldo insuficiente");
     }
-
 
     @Test
     void processPayment_ShouldProcessMultipleItems_WhenKitHasThreeItems() throws Exception {
@@ -259,14 +255,16 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
-        // Con promoCodeService inyectado, itemService.findById se llama → mockear el item
+        // Con promoCodeService inyectado, itemService.findById se llama → mockear el
+        // item
         when(userService.getUserById(OWNER.getId())).thenReturn(TestDataFactory.createMockUserResponse(OWNER));
         when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com")).thenReturn(Optional.of(activePilot));
         when(itemService.findById(anyLong())).thenReturn(TestDataFactory.createDefaultItem());
 
         paymentService.processPayment(KIT_ID, false, null, null);
 
-        // Con promoCodeService inyectado, itemService SÍ se llama (para markOwnerPromosAsUsedFromItems)
+        // Con promoCodeService inyectado, itemService SÍ se llama (para
+        // markOwnerPromosAsUsedFromItems)
         verify(itemService, atLeast(3)).findById(anyLong());
         verify(transactionRepository, atLeast(3)).save(any(Transaction.class));
         verify(emailService).sendOrderConfirmation(any(), anyDouble(), isNull());
@@ -284,7 +282,8 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
-        // Mock para isPilotUser: getUserById devuelve el owner, pilotUserRepository lo encuentra activo
+        // Mock para isPilotUser: getUserById devuelve el owner, pilotUserRepository lo
+        // encuentra activo
         when(userService.getUserById(OWNER.getId())).thenReturn(TestDataFactory.createMockUserResponse(OWNER));
         when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com")).thenReturn(Optional.of(activePilot));
 
@@ -381,7 +380,7 @@ public class PaymentServiceTest {
         NotEnoughBalanceException ex = assertThrows(NotEnoughBalanceException.class,
                 () -> paymentService.withdrawToBank(TENANT.getId(), amount, bankAccount));
 
-    assertThat(ex.getMessage()).contains("Saldo insuficiente");
+        assertThat(ex.getMessage()).contains("Saldo insuficiente");
         verify(paymentService, never()).createStripePayout(any());
         verify(walletService, never()).updateWalletBalance(anyLong(), any());
     }
@@ -397,7 +396,7 @@ public class PaymentServiceTest {
         assertThat(ex.getMessage()).contains("IBAN valido");
         verify(walletService, never()).getWalletByUserId(anyLong());
     }
-    
+
     @Test
     void processPayment_WithNullPromoCode_SendsEmailWithZeroDiscount() throws Exception {
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
@@ -406,12 +405,12 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
-    
+
         paymentService.processPayment(KIT_ID, false, null, null);
-    
+
         verify(emailService).sendOrderConfirmation(eq(KIT), eq(0.0), isNull());
     }
-    
+
     @Test
     void processPayment_WithBlankPromoCode_TreatedAsNoPromo() throws Exception {
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
@@ -420,32 +419,32 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
-    
+
         assertDoesNotThrow(() -> paymentService.processPayment(KIT_ID, false, "", null));
     }
-    
+
     @Test
     void processPayment_OwnerIsPilotUser_NoCommissionApplied() throws Exception {
         com.example.demo.model.PilotUser activePilot = new com.example.demo.model.PilotUser("owner@test.com");
         activePilot.setActive(true);
-    
+
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
         when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
-    
+
         UserResponse ownerResponse = TestDataFactory.createMockUserResponse(OWNER);
         when(userService.getUserById(OWNER.getId())).thenReturn(ownerResponse);
         when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com"))
                 .thenReturn(Optional.of(activePilot));
-    
+
         paymentService.processPayment(KIT_ID, false);
-    
+
         verify(platformConfigService, never()).getCommissionRate();
     }
-    
+
     @Test
     void processPayment_OwnerIsNotPilotUser_CommissionApplied() throws Exception {
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
@@ -454,15 +453,15 @@ public class PaymentServiceTest {
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
-    
+
         UserResponse ownerResponse = TestDataFactory.createMockUserResponse(OWNER);
         when(userService.getUserById(OWNER.getId())).thenReturn(ownerResponse);
         when(pilotUserRepository.findByEmailIgnoreCase("owner@test.com"))
-                .thenReturn(Optional.empty());  // no es piloto
+                .thenReturn(Optional.empty()); // no es piloto
         when(platformConfigService.getCommissionRate()).thenReturn(0.20);
-    
+
         paymentService.processPayment(KIT_ID, false);
-    
+
         verify(platformConfigService, atLeast(1)).getCommissionRate();
     }
 
@@ -484,17 +483,17 @@ public class PaymentServiceTest {
         when(articleRepository.findById(100L)).thenReturn(Optional.of(article));
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
-    
+
         Wallet tenantWallet = TestDataFactory.createMockWallet(10L, TENANT, 100.0);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(tenantWallet);
-    
+
         Double result = paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "GOOD");
-    
+
         assertThat(result).isEqualTo(20.0); // 2000 céntimos = 20€
         // Fianza se devuelve al tenant: keakit -20, tenant +20
         verify(transactionRepository, times(2)).save(any(Transaction.class));
     }
-    
+
     @Test
     void processGuaranteeReturn_DamagedCondition_CompensatesOwner() throws Exception {
         KitPaymentDTO paymentInfo = new KitPaymentDTO(12000, 8000, 2000, 999, 0);
@@ -515,12 +514,12 @@ public class PaymentServiceTest {
         when(articleRepository.findById(200L)).thenReturn(Optional.of(article));
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
-    
+
         Wallet ownerWallet = TestDataFactory.createMockWallet(20L, OWNER, 100.0);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(ownerWallet);
-    
+
         Double result = paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "DAMAGED");
-    
+
         assertThat(result).isEqualTo(20.0);
         verify(transactionRepository, times(2)).save(any(Transaction.class));
     }
@@ -579,7 +578,8 @@ public class PaymentServiceTest {
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
-        when(walletService.getWalletByUserId(secondOwner.getId())).thenReturn(TestDataFactory.createMockWallet(30L, secondOwner, 0.0));
+        when(walletService.getWalletByUserId(secondOwner.getId()))
+                .thenReturn(TestDataFactory.createMockWallet(30L, secondOwner, 0.0));
 
         Double result = paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "DAMAGED");
 
@@ -596,11 +596,11 @@ public class PaymentServiceTest {
         assertThat(savedTransactions.get(2).getAmount()).isEqualTo(60.0);
         assertThat(savedTransactions.get(2).getType()).isEqualTo(TransactionType.GUARANTEE_REFUND);
     }
-    
+
     @Test
     void processGuaranteeReturn_InvalidCondition_ThrowsIllegalArgumentException() {
         assertThrows(Exception.class,
                 () -> paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "INVALID"));
     }
 
-    }
+}
