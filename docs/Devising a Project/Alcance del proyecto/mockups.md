@@ -227,7 +227,7 @@ Estas notificaciones, además, quedarán guardadas en un buzón de notificacione
        alt="Buzón notificaciones: Arrendador">
 </div>
 
-### Consulta alta demanda - No Core ([CU-ARRENDADOR12](./casos-de-uso-core.md#cu-arrendador12--análisis-de-demanda))
+### Consulta alta demanda - No Core (CU-ARRENDADOR12)
 
 En esta pantalla, como arrendadores podrán mirar los artículos más demandados de cada tipo producto/categoría existente en la aplicación.
 

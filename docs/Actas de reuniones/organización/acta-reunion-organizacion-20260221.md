@@ -52,7 +52,7 @@ Coordinadores por squad:
 - **Squad 3:** Alejandro González Macías
 - **Squad 4:** Cristina Fernández Chica
 
-Para el control de cambios en el archivo [participantes.md](../../fase%20DP/participantes.md) se reflejará el histórico de cambios en dicho archivo y se actualizará el versionado del documento.
+Para el control de cambios en el archivo [participantes.md](../../Devising%20a%20Project/Directrices/participantes.md) se reflejará el histórico de cambios en dicho archivo y se actualizará el versionado del documento.
 
 ### 3. Reorganización y asignación de casos de uso a equipos
 
@@ -81,7 +81,7 @@ La asignación resultó de la siguiente manera:
 - **Actualizar documentos:** Squad 1
 - **Análisis de riesgos:** Squad 2
 - **Documentos obligatorios para entrega (6-S1-deliverable.pdf, 6-S1-dedication.xlsx, etc.):** Squad 3
-- **Revisión de [casos-de-uso-core.md](../../fase%20DP/casos-de-uso-core.md):** Cristina
+- **Revisión de [casos-de-uso-core.md](../../Devising%20a%20Project/Alcance%20del%20proyecto/casos-de-uso.md):** Cristina
 - **Documentación sobre el feedback:** Marta Aguilar y Paula
 
 El **análisis de riesgos** se identificó como una prioridad crítica (representa gran parte de la evaluación). Debe separarse del documento de stack tecnológico y ser actualizado con un plan de actuación.
@@ -104,7 +104,7 @@ Orden aproximado del contenido de la presentación:
 - Stack tecnológico (haciendo énfasis en el devcontainer)
 - Riesgos analizados y ocurridos
 - Soluciones aplicadas y métricas sobre la efectividad de las mismas
-- Cumplimiento del [Commitment Agreement](../../plantillas/ISPP2526-commitment-agreement.pdf)
+- Cumplimiento del [Commitment Agreement](../../Plantillas/ISPP2526-commitment-agreement.pdf)
 
 Se comentó que resultó útil que los responsables de cada sección dejaran notas claras en las diapositivas para facilitar la presentación.
 
@@ -144,10 +144,10 @@ Se planteó la necesidad de crear plantillas de issues específicas para cuando 
 | 2 | Realizar reuniones de coordinación internas para cada subgrupo lo antes posible. | Coordinadores de squad | 25/02/2026 |
 | 3 | Elaboración de instrucciones de instalación para el devcontainer | Guillermo Ciria | 23/02/2026 |
 | 4 | Desglose de casos de uso asignados en tareas individuales | Squads | 23/02/2026 |
-| 5 | Actualizar documentos ([Stack tecnológico](../../fase%20DP/analisis-de-tecnologias.md), [participantes](../../fase%20DP/participantes.md), etc.)| Squad 1 | 26/02/2026 |
+| 5 | Actualizar documentos ([Análisis de tecnologías](../../Devising%20a%20Project/Informes%20y%20análisis/analisis-de-tecnologias.md), [participantes](../../Devising%20a%20Project/Directrices/participantes.md), etc.)| Squad 1 | 26/02/2026 |
 | 6 | Análisis de riesgos | Squad 2 | 25/02/2026 |
 | 7 | Crear documentos obligatorios de la entrega | Squad 3 | 04/03/2026 |
-| 8 | Revisión de [casos-de-uso-core.md](../../fase%20DP/casos-de-uso-core.md) | Cristina Fernández | 23/02/2026 |
+| 8 | Revisión de [casos-de-uso-core.md](../../Devising%20a%20Project/Alcance%20del%20proyecto/casos-de-uso.md) | Cristina Fernández | 23/02/2026 |
 | 9 | Documentación sobre el feedback y aportaciones a la [Base de Conocimiento Común](https://uses0-my.sharepoint.com/:x:/g/personal/alereyper_alum_us_es/IQCT5FMXpD2HTYXddK6Er3KwATUqaO9z2soT8Vu6Uwl-nxs?e=20UbB6) | Marta Aguilar y Paula Rosa González | 26/02/2026 |
 
 ## Próxima reunión
@@ -157,6 +157,7 @@ Se planteó la necesidad de crear plantillas de issues específicas para cuando 
 **Lugar:** Teams  
 
 **Temas a tratar:**
+
 - Resolución de dudas
 - Seguimiento de tareas pendientes
 

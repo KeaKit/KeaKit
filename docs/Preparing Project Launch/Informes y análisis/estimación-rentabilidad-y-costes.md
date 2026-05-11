@@ -441,13 +441,13 @@ Partiendo de los **33 usuarios piloto reales** y el OPEX recurrente de **1.169 �
 
 #### Evolución de ingresos netos acumulados (€)
 
-![Evolución de ingresos netos acumulados](escenarios-ingresos-netos.png)
+![Evolución de ingresos netos acumulados](./img/escenarios-ingresos-netos.png)
 
 > **Línea inferior:** pesimista --- **Línea media:** realista --- **Línea superior:** optimista.
 
 #### Comparativa de alquileres mensuales
 
-![Comparativa de alquileres mensuales](alquileres-mensuales-por-escenario.png)
+![Comparativa de alquileres mensuales](./img/alquileres-mensuales-por-escenario.png)
 
 
 #### Resumen comparativo
