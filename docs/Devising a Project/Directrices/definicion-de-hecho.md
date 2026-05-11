@@ -1,72 +1,111 @@
-# Documento: Definición de Hecho (Definition of Done - DoD)
-**Proyecto:** Plataforma de Alquiler de Kits 
-**Versión:** 1.1 (Priorización Core vs Extras)
+# Definición de Hecho (Definition of Done - DoD)
+
+## Índice del documento
+
+1. [Introducción](#1-introducción)
+2. [Funcionalidad implementada](#2-funcionalidad-implementada)
+3. [Funcionalidad probada](#3-funcionalidad-probada)
+4. [Código revisado](#4-código-revisado)
+5. [Documentación completada y revisada](#5-documentación-completada-y-revisada)
+6. [Funcionalidad integrada](#6-funcionalidad-integrada)
+7. [Funcionalidad desplegada](#7-funcionalidad-desplegada)
+8. [Funcionalidad aceptada](#8-funcionalidad-aceptada)
+9. [Código refactorizado](#9-código-refactorizado)
+
+## 1. Introducción
+
+El presente documento define la Definición de Hecho (Definition of Done, DoD) del proyecto, estableciendo los criterios que debe cumplir una funcionalidad para considerarse finalizada y evitando ambigüedades sobre cuándo una tarea está completa.
+
+Para ello, recoge los estándares mínimos de desarrollo, pruebas, revisión, documentación, integración, despliegue y aceptación.
+
+Su aplicación permite mejorar la mantenibilidad del sistema, facilitar el trabajo en equipo y asegurar el cumplimiento de los requisitos establecidos.
+
+## 2. Funcionalidad implementada
+
+Una funcionalidad se considera implementada si...
+
+- El código compila correctamente y no presenta fallos críticos que impidan su uso.
+- El código satisface los criterios de aceptación de la HU.
+- Los formularios validan los datos introducidos (obligatoriedad, tamaño, formato, etc.) y muestra mensajes claros en caso de error.
+- La ortografía y gramática de la interfaz es correcta.
+- El código es comprensible por los demás miembros del equipo.
+- El código está correctamente formateado y no contiene comentarios innecesarios.
+- El usuario no puede acceder a datos ajenos (excepto si es administrador).
+
+## 3. Funcionalidad probada
+
+Una funcionalidad se considera probada si...
+
+- El código asociado tiene un 70% o más de cobertura mediante pruebas unitarias.
+- Presenta el comportamiento esperado por su desarrollador.
+- Cumple los criterios de aceptación tras su ejecución.
+
+## 4. Código revisado
+
+El código se considera revisado si...
+
+- Pasa correctamente todas las pruebas.
+- Ha sido revisado por al menos otro miembro del equipo.
+- Se han aplicado las mejoras o correcciones propuestas durante la revisión.
+- La funcionalidad cumple los requisitos definidos.
+- La usabilidad es intuitiva para sus revisores.
+- Pasa todos los workflows de integración continua.
+
+## 5. Documentación completada y revisada
+
+La documentación se considera completada y revisada si...
+
+- Incluye todo el contenido esperado.
+- Sigue la plantilla establecida (si procede) y está bien formateado.
+- No tiene enlaces ni imágenes mal enlazados.
+- No tiene faltas de ortografía ni errores gramaticales.
+- Es clara y comprensible para los revisores.
+
+## 6. Funcionalidad integrada
+
+Una funcionalidad se considera integrada si...
+
+- Se encuentra en la rama *develop*.
+- No provoca fallos en otras funcionalidades.
+- El sistema compila y se ejecuta correctamente tras la integración.
+- La rama *develop* pasa todos los workflows de integración continua tras el merge.
+
+## 7. Funcionalidad desplegada
+
+Una funcionalidad se considera desplegada si...
+
+- El código se encuentra desplegado en el entorno correspondiente.
+- La funcionalidad es accesible públicamente desde internet.
+- La funcionalidad está lista para ser probada por los usuarios piloto.
+
+## 8. Funcionalidad aceptada
+
+Una funcionalidad se considera aceptada si...
+
+- Los usuarios piloto y el profesorado no detectan errores críticos ni comportamientos inesperados.
+- Los usuarios piloto y el profesorado la consideran intuitiva y usable.
+
+## 9. Código refactorizado
+
+El código se considera refactorizado si...
+
+- Compila correctamente y no presenta fallos críticos que impidan su uso.
+- Pasa todas las pruebas y workflows de integración continua correctamente.
+- Mejora la legibilidad, mantenibilidad o estructura respecto a la versión anterior.
+- Es comprensible por los demás miembros del equipo.
+- Está correctamente formateado.
+- No contiene código duplicado ni comentarios innecesarios.
+
+## 10. Historial de versiones
+
+| Versión | Fecha      | Descripción                                              | Autor(es)                  |
+| ------- | ---------- | -------------------------------------------------------- | -------------------------- |
+| 1.0.0   | 10/02/2026 | Primera versión de la definición de hecho                | Paula Rosa González Páez   |
+| 1.1.0   | 10/02/2026 | Priorización Core vs Extras                              | Paula Rosa González Páez   |
+| 2.0.0   | 12/05/2026 | Cambio de "DoD del proyecto" a "DoD de tarea completada" | Lucía Ponce García de Sola |
 
 ---
 
-## 1. Criterios Generales de Desarrollo (CORE)
-* **Funcionalidad Completa:** El código satisface los criterios de aceptación de la HU.
-* **Validación de Entradas:** Formularios validan datos obligatorios (fotos, precios, ciudades y fechas).
-* **Gestión de Errores:** Mensajes claros (ej. "Objeto no disponible").
-* **Refactorización:** Código limpio y sin comentarios innecesarios.
-* **Pruebas Completas:** Todas las pruebas unitarias y funcionales son correctas.
-* **Documentación:** El código fuente está debidamente documentado.
-* **Repositorio:** Los cambios están actualizados y subidos al repositorio correspondiente.
-* **Compatibilidad:** Se han realizado las pruebas en los dispositivos y navegadores acordados.
-* **Criterios de Aceptación:** Se cumplen todos los criterios de aceptación específicos de la historia de usuario.
-* **Calidad de Texto:** La ortografía y gramática de la interfaz han sido revisadas.
-
-## 2. Criterios Específicos por Rol (CORE)
-* **Arrendatario:** Cálculo de precio total (inicio/fin) y flujo de pago con 20% de garantía.
-* **Arrendador:** Bloqueo de edición/borrado de objetos alquilados y división de pago 50/50.
-* **Administrador:** Gestión de categorías y rangos de precio operativos.
-
----
-
-## 3. Pruebas y QA (Aseguramiento de Calidad)
-
-### Nivel CORE 
-* **Flujo E2E Crítico:** Registro -> Subir Objeto -> Armar Kit -> Pago -> Confirmación -> Devolución.
-* **Seguridad de Datos:** Verificación de que un usuario no puede acceder a datos ajenos mediante manipulación de IDs en la URL.
-* **Integración de Pagos:** Transacciones exitosas en *sandbox* validando el reparto 50/50 y la retención del 20%.
-* **Estado de Inventario:** El objeto alquilado desaparece de las búsquedas y el calendario del arrendador queda bloqueado.
-* **Casos de Límites (Edge Cases):** Bloqueo de fechas pasadas, alquileres de duración mínima y solapamiento de reservas.
-* **Integridad de Base de Datos:** Verificación de que al borrar un usuario (cumpliendo condiciones), no queden registros "huérfanos".
-* **Code Review:** Revisión por pares terminada y aprobación de arquitectura.
-
-### Nivel EXTRAS (Mejoras de producto)
-* **Persistencia de Borradores:** Recuperación del kit personalizado tras cierre de sesión o fallo de conexión.
-* **Carga y Rendimiento:** Estabilidad de la búsqueda de artículos con carga de usuarios concurrentes.
-* **Notificaciones Multi-canal:** Validación de que los triggers de email/push llegan en el tiempo exacto (HU23).
-* **Usabilidad Avanzada:** Pruebas de navegación "sin salida" (asegurar botones de cancelar/atrás siempre visibles).
-* **Compatibilidad:** Funcionamiento verificado en Chrome, Safari y Firefox.
-
----
-
-## 4. Checklist Final de Entrega
-
-### Bloque 1: Entregables CORE (Hitos de Negocio)
-| Criterio | Descripción | Verificación |
-| :--- | :--- | :---: |
-| **Flujo de Pago 50/50** | El primer 50% llega al arrendador y el resto queda retenido por la plataforma. | [ ] |
-| **Garantía (20%)** | La retención y devolución automática del depósito (HU40) funciona tras el OK. | [ ] |
-| **Cálculo de Fechas** | El sistema calcula el precio exacto por días y bloquea el calendario de forma efectiva. | [ ] |
-| **Gestión de Daños** | El reporte de daños (HU33/35) bloquea el pago al arrendador y la fianza al arrendatario. | [ ] |
-| **Consistencia Local** | Los kits solo muestran objetos disponibles en la ciudad destino seleccionada (HU5). | [ ] |
-| **Control Admin** | El admin puede modificar comisiones, rangos de precio y ver estadísticas reales. | [ ] |
-| **Privacidad Core** | Encriptación de contraseñas y protección de datos sensibles de pago. | [ ] |
-| **Despliegue** | Código mergeado y funcional en entorno de staging sin errores de consola. | [ ] |
-
-### Bloque 2: Entregables EXTRAS (Mejoras de Experiencia)
-| Criterio | Descripción | Verificación |
-| :--- | :--- | :---: |
-| **Sistema de Feedback** | Valoraciones (HU34 y HU30) visibles en el perfil del objeto y del usuario. | [ ] |
-| **Logística Flexible** | Registro correcto de la elección entre mensajería o punto de encuentro (HU20). | [ ] |
-| **Filtros Avanzados** | Búsqueda por categorías, "Ampliar búsqueda" (HU11) y avisos de costes extra. | [ ] |
-| **Disponibilidad** | Botón "Avisarme" (HU10) y generación de alerta cuando hay nuevo stock. | [ ] |
-| **Documentación** | Manual de uso rápido y documentación técnica del API/Base de datos. | [ ] |
-| **UX de Error** | Pantallas de error personalizadas. | [ ] |
-
----
-
-> **Aprobación:** Este documento actúa como contrato de calidad entre el equipo de desarrollo y los interesados del proyecto. El equipo se compromete a priorizar el **Bloque 1 (CORE)**. Los elementos del **Bloque 2 (EXTRAS)** se desarrollarán e integrarán solo si el cronograma lo permite, sin comprometer la estabilidad del núcleo del sistema.
+**Redactado por:** Paula Rosa González Páez y Lucía Ponce García de Sola  
+**Fecha:** 12/05/2026  
+**Versión:** 2.0.0
