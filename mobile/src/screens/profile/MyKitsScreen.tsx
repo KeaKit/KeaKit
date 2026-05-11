@@ -26,7 +26,7 @@ const MyKitsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadKits = useCallback(async () => {
+const loadKits = useCallback(async () => {
     console.log('[MyKits] loadKits called — user:', user?.id, 'authLoading:', authLoading);
     if (!user?.token) {
       console.log('[MyKits] no user or token, stopping loader');
@@ -48,8 +48,16 @@ const MyKitsScreen: React.FC = () => {
       }
 
       const data = await response.json();
-      // Filtramos los cancelados para no mostrarlos en la pantalla principal
-      setKits(data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED));
+      
+      // 1. Filtramos los cancelados
+      const filteredKits = data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED);
+      
+      // 2. Ordenamos los kits para que los más recientes (mayor ID) queden primero
+      const sortedKits = filteredKits.sort((a: KitResponse, b: KitResponse) => b.id - a.id);
+      
+      // 3. Guardamos en el estado
+      setKits(sortedKits);
+
     } catch (err) {
       console.log('[MyKits] error:', err);
       setError("Error al cargar alquileres");
