@@ -3,30 +3,30 @@
 ## Índice del documento
 
 1. [Generales](#1-generales)  
-1.1. [CU-GENERAL-05: Home](#11-cu-general-05-home)
+   1.1. [CU-GENERAL-05: Home](#11-cu-general-05-home)
 2. [Arrendador](#2-arrendador)  
-2.1. [CU-ARRENDADOR-04: Gestión de fin de alquiler](#21-cu-arrendador-04-gestión-de-fin-de-alquiler)  
-2.2. [CU-ARRENDADOR-05: Retirada de ingresos](#22-cu-arrendador-05-retirada-de-ingresos)  
-2.3. [CU-ARRENDADOR-06: Alertas de demanda](#23-cu-arrendador-06-alertas-de-demanda)  
-2.4. [CU-ARRENDADOR-07: Filtros en “Mis artículos”](#24-cu-arrendador-07-filtros-en-mis-artículos)  
-2.5. [CU-ARRENDADOR-08: Notificaciones de actividad](#25-cu-arrendador-08-notificaciones-de-actividad)  
-2.6. [CU-ARRENDADOR-09: Análisis demanda](#26-cu-arrendador-09-análisis-demanda)  
-2.7. [CU-ARRENDADOR-10: Historial de alquileres de un objeto](#27-cu-arrendador-10-historial-de-alquileres-de-un-objeto)  
+   2.1. [CU-ARRENDADOR-04: Gestión de fin de alquiler](#21-cu-arrendador-04-gestión-de-fin-de-alquiler)  
+   2.2. [CU-ARRENDADOR-05: Retirada de ingresos](#22-cu-arrendador-05-retirada-de-ingresos)  
+   2.3. [CU-ARRENDADOR-06: Alertas de demanda](#23-cu-arrendador-06-alertas-de-demanda)  
+   2.4. [CU-ARRENDADOR-07: Filtros en “Mis artículos”](#24-cu-arrendador-07-filtros-en-mis-artículos)  
+   2.5. [CU-ARRENDADOR-08: Notificaciones de actividad](#25-cu-arrendador-08-notificaciones-de-actividad)  
+   2.6. [CU-ARRENDADOR-09: Análisis demanda](#26-cu-arrendador-09-análisis-demanda)  
+   2.7. [CU-ARRENDADOR-10: Historial de alquileres de un objeto](#27-cu-arrendador-10-historial-de-alquileres-de-un-objeto)
 3. [Arrendatario](#3-arrendatario)  
-3.1. [CU-ARRENDATARIO-06: Validación de recepción y liberación del pago restante](#31-cu-arrendatario-06-validación-de-recepción-y-liberación-del-pago-restante)  
-3.2. [CU-ARRENDATARIO-07: Modificar kits predeterminados](#32-cu-arrendatario-07-modificar-kits-predeterminados)  
-3.3. [CU-ARRENDATARIO-08: Filtrado de artículos disponibles](#33-cu-arrendatario-08-filtrado-de-artículos-disponibles)  
-3.4. [CU-ARRENDATARIO-09: Avisos de disponibilidad](#34-cu-arrendatario-09-avisos-de-disponibilidad)  
-3.5. [CU-ARRENDATARIO-10: Ampliación de búsqueda geográfica](#35-cu-arrendatario-10-ampliación-de-búsqueda-geográfica)  
-3.6. [CU-ARRENDATARIO-11: Historial de alquileres](#36-cu-arrendatario-11-historial-de-alquileres)  
+   3.1. [CU-ARRENDATARIO-06: Validación de recepción y liberación del pago restante](#31-cu-arrendatario-06-validación-de-recepción-y-liberación-del-pago-restante)  
+   3.2. [CU-ARRENDATARIO-07: Modificar kits predeterminados](#32-cu-arrendatario-07-modificar-kits-predeterminados)  
+   3.3. [CU-ARRENDATARIO-08: Filtrado de artículos disponibles](#33-cu-arrendatario-08-filtrado-de-artículos-disponibles)  
+   3.4. [CU-ARRENDATARIO-09: Avisos de disponibilidad](#34-cu-arrendatario-09-avisos-de-disponibilidad)  
+   3.5. [CU-ARRENDATARIO-10: Ampliación de búsqueda geográfica](#35-cu-arrendatario-10-ampliación-de-búsqueda-geográfica)  
+   3.6. [CU-ARRENDATARIO-11: Historial de alquileres](#36-cu-arrendatario-11-historial-de-alquileres)
 4. [Administrador](#4-administrador)  
-4.1. [CU-ADMIN-04: Gestión de usuarios](#41-cu-admin-04-gestión-de-usuarios)  
-4.2. [CU-ADMIN-05: Configuración modelo negocio (% transacción)](#42-cu-admin-05-configuración-modelo-negocio--transacción)  
-4.3. [CU-ADMIN-06: Creación kits predeterminados](#43-cu-admin-06-creación-kits-predeterminados)  
+   4.1. [CU-ADMIN-04: Gestión de usuarios](#41-cu-admin-04-gestión-de-usuarios)  
+   4.2. [CU-ADMIN-05: Configuración modelo negocio (% transacción)](#42-cu-admin-05-configuración-modelo-negocio--transacción)  
+   4.3. [CU-ADMIN-06: Creación kits predeterminados](#43-cu-admin-06-creación-kits-predeterminados)
 5. [Historias de usuario](#5-historias-de-usuario)  
-5.1. [Arrendador](#51-arrendador)  
-5.2. [Arrendatario](#52-arrendatario)  
-5.3. [Administrador](#53-administrador)  
+   5.1. [Arrendador](#51-arrendador)  
+   5.2. [Arrendatario](#52-arrendatario)  
+   5.3. [Administrador](#53-administrador)
 6. [Historial de versiones](#6-historial-de-versiones)
 
 ## 1. Generales
@@ -58,8 +58,8 @@
 | **Precondiciones**       | -                                                                                                                                                         |
 | **Flujo principal**      | 1. Entrar al artículo correspondiente <br> 2. Pulsar sobre una de las opciones posibles sobre la devolución del objeto                                    |
 | **Excepciones**          | -                                                                                                                                                         |
-| **Resultado**            | **Si está en buen estado**: Se devuleve el 20% de depósito de garantía al arrendatario <br> **Si hay daños**: Se retiene total o parcialmente la garantía |
-| **Historias de usuario** | HU-ARRENDADOR-02 <br> HU-ARRENDADOR-33 <br> HU-ARRENDADOR-34 <br> HU-ARRENDATARIO-37 <br> HU-ARRENDATARIO-40                                                                                             |
+| **Resultado**            | **Si está en buen estado**: Se devuelve el 20% de depósito de garantía al arrendatario <br> **Si hay daños**: Se retiene total o parcialmente la garantía |
+| **Historias de usuario** | HU-ARRENDADOR-02 <br> HU-ARRENDADOR-33 <br> HU-ARRENDADOR-34 <br> HU-ARRENDATARIO-37 <br> HU-ARRENDATARIO-40                                              |
 
 ### 2.2. **CU-ARRENDADOR-05:** Retirada de ingresos
 
@@ -68,14 +68,14 @@
 | **ID**                   | CU-ARRENDADOR-05                                                                                                                                                       |
 | **Nombre**               | Retirada de ingresos                                                                                                                                                   |
 | **Actores**              | Arrendador                                                                                                                                                             |
-| **Objetivo**             | Los arrendadores deben poder retirar el dinero ganado poniendo en alquiler sus artículos a su cuenta bancara                                                           |
+| **Objetivo**             | Los arrendadores deben poder retirar el dinero ganado poniendo en alquiler sus artículos a su cuenta bancaria                                                          |
 | **Precondiciones**       | -                                                                                                                                                                      |
 | **Flujo principal**      | 1. Acceder al perfil de usuario <br> 2. Pulsar en el botón "Cartera" <br> 3. Pulsar el botón "Retirar" <br> 4. Indicar datos de retirada <br> 5. Confirmar la retirada |
 | **Excepciones**          | -                                                                                                                                                                      |
 | **Resultado**            | Ingreso retirado                                                                                                                                                       |
-| **Historias de usuario** | HU-ARRENDADOR-06 <br> HU-ARRENDADOR-30 <br> HU-ARRENDADOR-31                                                                                                          |
+| **Historias de usuario** | HU-ARRENDADOR-06 <br> HU-ARRENDADOR-30 <br> HU-ARRENDADOR-31                                                                                                           |
 
-### 2.3. **CU-ARRENDADOR-06** Alertas de demanda
+### 2.3. **CU-ARRENDADOR-06:** Alertas de demanda
 
 | **Elemento**             | **Descripción**                                                                                  |
 | ------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -115,7 +115,7 @@
 | **Flujo principal**      | 1. Acceder al buzón de notificaciones <br> 2. Buscar la notificación correspondiente                                               |
 | **Excepciones**          | -                                                                                                                                  |
 | **Resultado**            | Listado de artículos que cumplen los filtros aplicados                                                                             |
-| **Historias de usuario** | HU-ARRENDADOR-24 <br> HU-ARRENDADOR-25 <br> HU-ARRENDADOR-32 <br> HU-ARRENDATARIO-18 <br> HU-ARRENDATARIO-24                                                                                          |
+| **Historias de usuario** | HU-ARRENDADOR-24 <br> HU-ARRENDADOR-25 <br> HU-ARRENDADOR-32 <br> HU-ARRENDATARIO-18 <br> HU-ARRENDATARIO-24                       |
 
 ### 2.6. **CU-ARRENDADOR-09:** Análisis demanda
 
@@ -177,24 +177,24 @@
 
 ### 3.3. **CU-ARRENDATARIO-08:** Filtrado de artículos disponibles
 
-| **Elemento**             | **Descripción**                                                                                                                                         |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ID**                   | CU-ARRENDATARIO-08                                                                                                                                      |
-| **Nombre**               | Filtrado de objetos disponibles                                                                                                                         |
-| **Actores**              | Arrendatario                                                                                                                                            |
-| **Objetivo**             | Los arrendatarios deben poder aplicar filtros avanzados a la hora de seleccionar los artículos en la creación de un kit                                 |
-| **Precondiciones**       | -                                                                                                                                                       |
-| **Flujo principal**      | 1. Acceder a la creación de un kit <br> 2. Pulsar el botón "Añadir artículo" <br> 3. Usar los filtros avanzados de la página de selección de artículos. |
-| **Excepciones**          | -                                                                                                                                                       |
-| **Resultado**            | -                                                                                                                                                       |
-| **Historias de usuario** | HU-ARRENDATARIO-26 <br> HU-ARRENDATARIO-27 <br> HU-ARRENDATARIO-28 <br> HU-ARRENDATARIO-29                                                              |
+| **Elemento**             | **Descripción**                                                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **ID**                   | CU-ARRENDATARIO-08                                                                                                                                     |
+| **Nombre**               | Filtrado de artículos disponibles                                                                                                                      |
+| **Actores**              | Arrendatario                                                                                                                                           |
+| **Objetivo**             | Los arrendatarios deben poder aplicar filtros avanzados a la hora de seleccionar los artículos en la creación de un kit                                |
+| **Precondiciones**       | -                                                                                                                                                      |
+| **Flujo principal**      | 1. Acceder a la creación de un kit <br> 2. Pulsar el botón "Añadir artículo" <br> 3. Usar los filtros avanzados de la página de selección de artículos |
+| **Excepciones**          | -                                                                                                                                                      |
+| **Resultado**            | -                                                                                                                                                      |
+| **Historias de usuario** | HU-ARRENDATARIO-26 <br> HU-ARRENDATARIO-27 <br> HU-ARRENDATARIO-28 <br> HU-ARRENDATARIO-29                                                             |
 
 ### 3.4. **CU-ARRENDATARIO-09:** Avisos de disponibilidad
 
 | **Elemento**             | **Descripción**                                                                                                                                                                        |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ID**                   | CU-ARRENDATARIO-09                                                                                                                                                                     |
-| **Nombre**               | Avisos de disponibilidads                                                                                                                                                              |
+| **Nombre**               | Avisos de disponibilidad                                                                                                                                                               |
 | **Actores**              | Arrendatario                                                                                                                                                                           |
 | **Objetivo**             | Los arrendatarios deben poder activar avisos de disponibilidad sobre artículos que no estén disponibles en ese momento                                                                 |
 | **Precondiciones**       | -                                                                                                                                                                                      |
@@ -247,19 +247,19 @@
 | **Resultado**            | -                                                                                                             |
 | **Historias de usuario** | HU-ADMIN-14 <br> HU-ADMIN-11                                                                                  |
 
-### 4.2. **CU-ADMIN-05:** Configuración modelo negocio (% transacción)
+### 4.2. **CU-ADMIN-05:** Configuración modelo negocio (% comisión)
 
-| **Elemento**             | **Descripción**                                                                                                                       |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **ID**                   | CU-ADMIN-05                                                                                                                           |
-| **Nombre**               | Configuración modelo negocio (% transacción)                                                                                          |
-| **Actores**              | Administrador                                                                                                                         |
-| **Objetivo**             | Los administradores deben poder configurar el porcentaje que se lleva la aplicaicón por kit alquilado                                 |
-| **Precondiciones**       | -                                                                                                                                     |
-| **Flujo principal**      | 1. Acceder al apartado "Configuraciones" <br> 2. Acceder al apartado "% por transacción" <br> 3. Editar el porcentaje por transacción |
-| **Excepciones**          | -                                                                                                                                     |
-| **Resultado**            | -                                                                                                                                     |
-| **Historias de usuario** | HU-ADMIN-12                                                                                                                           |
+| **Elemento**             | **Descripción**                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                   | CU-ADMIN-05                                                                                                                            |
+| **Nombre**               | Configuración modelo negocio (% comisión)                                                                                              |
+| **Actores**              | Administrador                                                                                                                          |
+| **Objetivo**             | Los administradores deben poder configurar el porcentaje de comisión que cobra la plataforma por kit alquilado                         |
+| **Precondiciones**       | -                                                                                                                                      |
+| **Flujo principal**      | 1. Acceder al apartado "Configuraciones" <br> 2. Acceder al apartado "Comisión de Plataforma" <br> 3. Editar el porcentaje de comisión |
+| **Excepciones**          | -                                                                                                                                      |
+| **Resultado**            | -                                                                                                                                      |
+| **Historias de usuario** | HU-ADMIN-12                                                                                                                            |
 
 ### 4.3. **CU-ADMIN-06:** Creación kits predeterminados
 
@@ -313,9 +313,9 @@
 
 ### 5.2. Arrendatario
 
-**HU-ARRENDATARIO-07 (core)**: Como arrendatario, quiero poder añadir un objeto determinado, para personalizar mi kit según mis necesidades.  
+**HU-ARRENDATARIO-07 (core)**: Como arrendatario, quiero poder añadir un objeto determinado, para personalizar mi kit según mis necesidades.
 
-**HU-ARRENDATARIO-09 (core)**: Como arrendatario, quiero eliminar objetos fácilmente, para ajustar el kit.  
+**HU-ARRENDATARIO-09 (core)**: Como arrendatario, quiero eliminar objetos fácilmente, para ajustar el kit.
 
 **HU-ARRENDATARIO-10**: Como arrendatario, quiero marcar “Avisarme cuando esté disponible” en un objeto faltante, para poder alquilarlo cuando alguien lo suba.
 
@@ -361,7 +361,7 @@
 
 **HU-ADMIN-07**: Como administrador, quiero asociar cada tipo de objeto a una categoría concreta, para mantener una estructura organizada y coherente.
 
-**HU-ADMIN-08**: Como administrador, quiero modificar la categoría asociada a un tipo de objeto, para reorganizar el catálogo cuando sea necesario.  
+**HU-ADMIN-08**: Como administrador, quiero modificar la categoría asociada a un tipo de objeto, para reorganizar el catálogo cuando sea necesario.
 
 **HU-ADMIN-11**: Como administrador, quiero mediar en caso de conflicto entre arrendador y arrendatario, para decidir entre devolución, compensación o alternativa.
 
@@ -369,13 +369,15 @@
 
 **HU-ADMIN-14 (core)**: Como administrador, quiero crear, editar y eliminar cuentas, para mantener el control sobre la aplicación.
 
-| Versión | Fecha      | Descripción                                                                                                     | Autor(es)                |
-| ------- | ---------- | --------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| 1.0.0   | 11/02/2026 | Primera versión de casos de uso de la aplicación                                                                | Marta Aguilar Morcillo   |
-| 1.1.0   | 18/02/2026 | Añadidos algunos casos de uso                                                                                   | Cristina Fernández Chica |
-| 2.0.0   | 24/02/2026 | Reestructuración de los casos de uso core y no core. Se han añadido algunos casos y unificado algunos de ellos  | Cristina Fernández Chica |
+| Versión | Fecha      | Descripción                                                                                                    | Autor(es)                  |
+| ------- | ---------- | -------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 1.0.0   | 11/02/2026 | Primera versión de casos de uso de la aplicación                                                               | Marta Aguilar Morcillo     |
+| 1.1.0   | 18/02/2026 | Añadidos algunos casos de uso                                                                                  | Cristina Fernández Chica   |
+| 2.0.0   | 24/02/2026 | Reestructuración de los casos de uso core y no core. Se han añadido algunos casos y unificado algunos de ellos | Cristina Fernández Chica   |
+| 3.0.0   | 11/05/2026 | Reestructuración, formateo y revisión ortográfica                                                              | Lucía Ponce García de Sola |
 
 ---
+
 **Redactado por:** Marta Aguilar Morcillo y Cristina Fernández Chica  
-**Fecha:** 24/02/2026  
-**Versión:** 2.0.0
+**Fecha:** 11/05/2026  
+**Versión:** 3.0.0
