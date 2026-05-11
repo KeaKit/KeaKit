@@ -3,32 +3,31 @@
 ## Índice del documento
 
 1. [Generales](#1-generales)  
-1.1. [CU-GENERAL-01: Registro e inicio de sesión](#11-cu-general-01-registro-e-inicio-de-sesión)  
-1.2. [CU-GENERAL-02: Gestión de datos personales](#12-cu-general-02-gestión-de-datos-personales)  
-1.3. [CU-GENERAL-03: Valoraciones](#13-cu-general-03-valoraciones)  
-1.4. [CU-GENERAL-04: Soporte](#14-cu-general-04-soporte)  
+   1.1. [CU-GENERAL-01: Registro e inicio de sesión](#11-cu-general-01-registro-e-inicio-de-sesión)  
+   1.2. [CU-GENERAL-02: Gestión de datos personales](#12-cu-general-02-gestión-de-datos-personales)  
+   1.3. [CU-GENERAL-03: Valoraciones](#13-cu-general-03-valoraciones)  
+   1.4. [CU-GENERAL-04: Soporte](#14-cu-general-04-soporte)
 2. [Arrendador](#2-arrendador)  
-2.1. [CU-ARRENDADOR-01: Subida de artículos](#21-cu-arrendador-01-subida-de-artículos)  
-2.2. [CU-ARRENDADOR-02: Listado de artículos subidos](#22-cu-arrendador-02-listado-de-artículos-subidos)  
-2.3. [CU-ARRENDADOR-03: Gestión de artículos subidos](#23-cu-arrendador-03-gestión-de-artículos-subidos)  
+   2.1. [CU-ARRENDADOR-01: Subida de artículos](#21-cu-arrendador-01-subida-de-artículos)  
+   2.2. [CU-ARRENDADOR-02: Listado de artículos subidos](#22-cu-arrendador-02-listado-de-artículos-subidos)  
+   2.3. [CU-ARRENDADOR-03: Gestión de artículos subidos](#23-cu-arrendador-03-gestión-de-artículos-subidos)
 3. [Arrendatario](#3-arrendatario)  
-3.1. [CU-ARRENDATARIO-01: Creación de kits](#31-cu-arrendatario-01-creación-de-kits)  
-3.2. [CU-ARRENDATARIO-02: Visualización dinámica de precios](#32-cu-arrendatario-02-visualización-dinámica-de-precios)  
-3.3. [CU-ARRENDATARIO-03: Gestión logística del alquiler](#33-cu-arrendatario-03-gestión-logística-del-alquiler)  
-3.4. [CU-ARRENDATARIO-04: Pago del kit](#34-cu-arrendatario-04-pago-del-kit)  
-3.5. [CU-ARRENDATARIO-05: Seguimiento de alquileres activos](#35-cu-arrendatario-05-seguimiento-de-alquileres-activos)  
+   3.1. [CU-ARRENDATARIO-01: Creación de kits](#31-cu-arrendatario-01-creación-de-kits)  
+   3.2. [CU-ARRENDATARIO-02: Visualización dinámica de precios](#32-cu-arrendatario-02-visualización-dinámica-de-precios)  
+   3.3. [CU-ARRENDATARIO-03: Gestión logística del alquiler](#33-cu-arrendatario-03-gestión-logística-del-alquiler)  
+   3.4. [CU-ARRENDATARIO-04: Pago del kit](#34-cu-arrendatario-04-pago-del-kit)  
+   3.5. [CU-ARRENDATARIO-05: Seguimiento de alquileres activos](#35-cu-arrendatario-05-seguimiento-de-alquileres-activos)
 4. [Administrador](#4-administrador)  
-4.1. [CU-ADMIN-01: Gestión de categorías](#41-cu-admin-01-gestión-de-categorías)  
-4.2. [CU-ADMIN-02: Listado de usuarios](#42-cu-admin-02-listado-de-usuarios)  
+   4.1. [CU-ADMIN-01: Gestión de categorías](#41-cu-admin-01-gestión-de-categorías)  
+   4.2. [CU-ADMIN-02: Listado de usuarios](#42-cu-admin-02-listado-de-usuarios)
 5. [Historias de usuario](#5-historias-de-usuario)  
-5.1. [Generales](#51-generales)  
-5.2. [Arrendador](#52-arrendador)  
-5.3. [Arrendatario](#53-arrendatario)  
-5.4. [Administrador](#54-administrador)  
+   5.1. [Generales](#51-generales)  
+   5.2. [Arrendador](#52-arrendador)  
+   5.3. [Arrendatario](#53-arrendatario)  
+   5.4. [Administrador](#54-administrador)
 6. [Historial de versiones](#6-historial-de-versiones)
 
 ## 1. Generales
-
 
 ### 1.1. **CU-GENERAL-01:** Registro e inicio de sesión
 
@@ -53,24 +52,24 @@
 | **Actores**              | Arrendador, arrendatario y administrador                                                                                                    |
 | **Objetivo**             | Los usuarios deben poder editar sus datos personales                                                                                        |
 | **Precondiciones**       | -                                                                                                                                           |
-| **Flujo principal**      | 1. Ir al apartado de perfil <br> 2. Puslar el botón para editar el perfil <br> 3. Editar los datos que se desee <br> 4. Guardar los cambios |
+| **Flujo principal**      | 1. Ir al apartado de perfil <br> 2. Pulsar el botón para editar el perfil <br> 3. Editar los datos que se desee <br> 4. Guardar los cambios |
 | **Excepciones**          | -                                                                                                                                           |
 | **Resultado**            | Datos personales actualizados                                                                                                               |
 | **Historias de usuario** | HU-ARRENDATARIO-03 <br> HU-ARRENDATARIO-42 <br> HU-ARRENDADOR-35                                                                            |
 
 ### 1.3. **CU-GENERAL-03:** Valoraciones
 
-| **Elemento**             | **Descripción**                                                                                                             |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| **ID**                   | CU-GENERAL-03                                                                                                               |
-| **Nombre**               | Valoraciones                                                                                                                |
-| **Actores**              | Arrendador y arrendatario                                                                                                   |
-| **Objetivo**             | Los usuarios deben poder valorar al resto de usuarios en calidad de arrendador y arrendatario                               |
-| **Precondiciones**       | -                                                                                                                           |
-| **Flujo principal**      | 1. Acceder al perfil del usuario a valorar <br> 2. Pulsar el botón para añadir una valoración <br> 3. Enviar la valoración. |
-| **Excepciones**          | -                                                                                                                           |
-| **Resultado**            | Valoración creada                                                                                                           |
-| **Historias de usuario** | HU-ARRENDATARIO-34 <br> HU-ARRENDADOR-29                                                                                    |
+| **Elemento**             | **Descripción**                                                                                                            |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                   | CU-GENERAL-03                                                                                                              |
+| **Nombre**               | Valoraciones                                                                                                               |
+| **Actores**              | Arrendador y arrendatario                                                                                                  |
+| **Objetivo**             | Los usuarios deben poder valorar al resto de usuarios en calidad de arrendador y arrendatario                              |
+| **Precondiciones**       | -                                                                                                                          |
+| **Flujo principal**      | 1. Acceder al perfil del usuario a valorar <br> 2. Pulsar el botón para añadir una valoración <br> 3. Enviar la valoración |
+| **Excepciones**          | -                                                                                                                          |
+| **Resultado**            | Valoración creada                                                                                                          |
+| **Historias de usuario** | HU-ARRENDATARIO-34 <br> HU-ARRENDADOR-29                                                                                   |
 
 ### 1.4. **CU-GENERAL-04:** Soporte
 
@@ -90,16 +89,16 @@
 
 ### 2.1. **CU-ARRENDADOR-01:** Subida de artículos
 
-| **Elemento**             | **Descripción**                                                                                                                                                                                                        |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ID**                   | CU-ARRENDADOR-01                                                                                                                                                                                                       |
-| **Nombre**               | Subida de artículos                                                                                                                                                                                                    |
-| **Actores**              | Arrendador                                                                                                                                                                                                             |
-| **Objetivo**             | Los usuarios deben poder subir artículos para ponerlos en alquiler                                                                                                                                                     |
-| **Precondiciones**       | -                                                                                                                                                                                                                      |
-| **Flujo principal**      | 1. Pulsar sobre el botón "Subir artículo" <br> 2. Rellenar los datos del atículo <br> 3. Confirmar la subida del artículo                                                                                              |
-| **Excepciones**          | -                                                                                                                                                                                                                      |
-| **Resultado**            | Artículo subido a la aplicación                                                                                                                                                                                        |
+| **Elemento**             | **Descripción**                                                                                                                                                                                                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **ID**                   | CU-ARRENDADOR-01                                                                                                                                                                                                                                                   |
+| **Nombre**               | Subida de artículos                                                                                                                                                                                                                                                |
+| **Actores**              | Arrendador                                                                                                                                                                                                                                                         |
+| **Objetivo**             | Los usuarios deben poder subir artículos para ponerlos en alquiler                                                                                                                                                                                                 |
+| **Precondiciones**       | -                                                                                                                                                                                                                                                                  |
+| **Flujo principal**      | 1. Pulsar sobre el botón "Subir artículo" <br> 2. Rellenar los datos del artículo <br> 3. Confirmar la subida del artículo                                                                                                                                         |
+| **Excepciones**          | -                                                                                                                                                                                                                                                                  |
+| **Resultado**            | Artículo subido a la aplicación                                                                                                                                                                                                                                    |
 | **Historias de usuario** | HU-ARRENDADOR-01 <br> HU-ARRENDADOR-10 <br> HU-ARRENDADOR-11 <br> HU-ARRENDADOR-12 <br> HU-ARRENDADOR-13 <br> HU-ARRENDADOR-14 <br> HU-ARRENDADOR-15 <br> HU-ARRENDADOR-16 <br> HU-ARRENDADOR-17 <br> HU-ARRENDADOR-26 <br> HU-ARRENDADOR-27 <br> HU-ARRENDADOR-28 |
 
 ### 2.2. **CU-ARRENDADOR-02:** Listado de artículos subidos
@@ -141,7 +140,7 @@
 | **Actores**              | Arrendatario                                                                                                                                                                                                                                                                                                                                                                               |
 | **Objetivo**             | El arrendatario debe poder crear kits personalizados para alquilarlos                                                                                                                                                                                                                                                                                                                      |
 | **Precondiciones**       | -                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Flujo principal**      | 1. Pulsar en el botón "Alquilar kit" <br> 2. Rellenar los datos en relación al alquiler del kit <br> 3. Añadir los productos a alquilar <br> 4. Pulsar el botón "Pagar kit"                                                                                                                                                                                                                |
+| **Flujo principal**      | 1. Pulsar en el botón "Alquilar kit" <br> 2. Rellenar los datos del alquiler del kit <br> 3. Añadir los productos a alquilar <br> 4. Pulsar el botón "Pagar kit"                                                                                                                                                                                                                           |
 | **Excepciones**          | -                                                                                                                                                                                                                                                                                                                                                                                          |
 | **Resultado**            | Se accederá a la pantalla de pago del kit                                                                                                                                                                                                                                                                                                                                                  |
 | **Historias de usuario** | HU-ARRENDATARIO-04 <br> HU-ARRENDATARIO-05 <br> HU-ARRENDATARIO-06 <br> HU-ARRENDATARIO-07 <br> HU-ARRENDATARIO-08 <br> HU-ARRENDATARIO-09 <br> HU-ARRENDATARIO-12 <br> HU-ARRENDATARIO-13 <br> HU-ARRENDATARIO-16 <br> HU-ARRENDATARIO-26 <br> HU-ARRENDATARIO-27 <br> HU-ARRENDATARIO-28 <br> HU-ARRENDATARIO-29 <br> HU-ARRENDATARIO-30 <br> HU-ARRENDATARIO-31 <br> HU-ARRENDATARIO-32 |
@@ -158,28 +157,28 @@
 | **Flujo principal**      | 1. Pantalla de creación de kits <br> 2. Cada artículo lleva su precio individual asignado <br> 3. En la parte inferior de la pantalla, se observará el precio total |
 | **Excepciones**          | -                                                                                                                                                                   |
 | **Resultado**            | -                                                                                                                                                                   |
-| **Historias de usuario** | HU-ARRENDATARIO-14 <br> HU-ARRENDATARIO-15 <br> HU-ARRENDATARIO-35 <br> HU-ARRENDATARIO-36 <br> HU-ARRENDADOR-03                                                                          |
+| **Historias de usuario** | HU-ARRENDATARIO-14 <br> HU-ARRENDATARIO-15 <br> HU-ARRENDATARIO-35 <br> HU-ARRENDATARIO-36 <br> HU-ARRENDADOR-03                                                    |
 
 ### 3.3. **CU-ARRENDATARIO-03:** Gestión logística del alquiler
 
-| **Elemento**             | **Descripción**                                                                                                                                                                                   |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ID**                   | CU-ARRENDATARIO-03                                                                                                                                                                                |
-| **Nombre**               | Gestión logística del alquiler                                                                                                                                                                    |
-| **Actores**              | Arrendatario                                                                                                                                                                                      |
-| **Objetivo**             | El arrendatario debe poder elegir el método de entrega (mensajería o punto de encuentro) y ver detalles logísticos                                                                                |
-| **Precondiciones**       | -                                                                                                                                                                                                 |
-| **Flujo principal**      | 1. Pantalla de creación de kits <br> 2. Acceder a alguno de los artículos añadidos <br> 3. Elegir el método de entrega 4. Acceder a detalles del kit 5. Ir a la sección "Ver detalles logísticos" |
-| **Excepciones**          | -                                                                                                                                                                                                 |
-| **Resultado**            | Método de entrega para el artículo seleccionado                                                                                                                                                   |
-| **Historias de usuario** | HU-ARRENDATARIO-20 <br> HU-ARRENDATARIO-19 <br> HU-ARRENDADOR-02                                                                                                                                                        |
+| **Elemento**             | **Descripción**                                                                                                                                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID**                   | CU-ARRENDATARIO-03                                                                                                                                                                                          |
+| **Nombre**               | Gestión logística del alquiler                                                                                                                                                                              |
+| **Actores**              | Arrendatario                                                                                                                                                                                                |
+| **Objetivo**             | El arrendatario debe poder elegir el método de entrega (mensajería o punto de encuentro) y ver detalles logísticos                                                                                          |
+| **Precondiciones**       | -                                                                                                                                                                                                           |
+| **Flujo principal**      | 1. Pantalla de creación de kits <br> 2. Acceder a alguno de los artículos añadidos <br> 3. Elegir el método de entrega <br> 4. Acceder a detalles del kit <br> 5. Ir a la sección "Ver detalles logísticos" |
+| **Excepciones**          | -                                                                                                                                                                                                           |
+| **Resultado**            | Método de entrega para el artículo seleccionado                                                                                                                                                             |
+| **Historias de usuario** | HU-ARRENDATARIO-20 <br> HU-ARRENDATARIO-19 <br> HU-ARRENDADOR-02                                                                                                                                            |
 
 ### 3.4. **CU-ARRENDATARIO-04:** Pago del kit
 
 | **Elemento**             | **Descripción**                                                                                                                        |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
 | **ID**                   | CU-ARRENDATARIO-04                                                                                                                     |
-| **Nombre**               | Pago kit                                                                                                                               |
+| **Nombre**               | Pago del kit                                                                                                                           |
 | **Actores**              | Arrendatario                                                                                                                           |
 | **Objetivo**             | El arrendatario debe poder pagar el kit de forma segura                                                                                |
 | **Precondiciones**       | -                                                                                                                                      |
@@ -212,7 +211,7 @@
 | **Nombre**               | Gestión de categorías                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | **Actores**              | Administrador                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | **Objetivo**             | El administrador debe poder ver, crear, editar y eliminar categorías de la aplicación                                                                                                                                                                                                                                                                                                                                                                |
-| **Precondiciones**       | - y tener rol administrador                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Precondiciones**       | Tener rol de administrador                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | **Flujo principal**      | 1. Acceder a la sección "Categorías" <br> 2. Realizar la gestión correspondiente: Para ver, pulsar sobre una categoría, para crear pulsar sobre "Añadir categoría", para editar, pulsar sobre el lápiz en la categoría a editar, y para eliminar, pulsar en el icono de la papelera en la categoría a eliminar. <br> 3. En caso de creación, rellenar los datos y confirmar la creación. En caso de edición, editar los datos y confirmar la edición |
 | **Excepciones**          | -                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **Resultado**            | -                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -226,7 +225,7 @@
 | **Nombre**               | Listado de usuarios                                                          |
 | **Actores**              | Administrador                                                                |
 | **Objetivo**             | El administrador debe poder ver todos los usuarios registrados en el sistema |
-| **Precondiciones**       | Tener rol administrador                                                      |
+| **Precondiciones**       | Tener rol de administrador                                                   |
 | **Flujo principal**      | 1. Acceder a la sección "Usuarios"                                           |
 | **Excepciones**          | -                                                                            |
 | **Resultado**            | Vista de listado de usuarios                                                 |
@@ -376,13 +375,15 @@
 
 ## 6. Historial de versiones
 
-| Versión | Fecha      | Descripción                                                                                                     | Autor(es)                |
-| ------- | ---------- | --------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| 1.0.0   | 11/02/2026 | Primera versión de casos de uso de la aplicación                                                                | Marta Aguilar Morcillo   |
-| 1.1.0   | 18/02/2026 | Añadidos algunos casos de uso                                                                                   | Cristina Fernández Chica |
-| 2.0.0   | 24/02/2026 | Reestructuración de los casos de uso core y no core. Se han añadido algunos casos y unificado algunos de ellos  | Cristina Fernández Chica |
+| Versión | Fecha      | Descripción                                                                                                    | Autor(es)                  |
+| ------- | ---------- | -------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 1.0.0   | 11/02/2026 | Primera versión de casos de uso de la aplicación                                                               | Marta Aguilar Morcillo     |
+| 1.1.0   | 18/02/2026 | Añadidos algunos casos de uso                                                                                  | Cristina Fernández Chica   |
+| 2.0.0   | 24/02/2026 | Reestructuración de los casos de uso core y no core. Se han añadido algunos casos y unificado algunos de ellos | Cristina Fernández Chica   |
+| 3.0.0   | 11/05/2026 | Reestructuración, formateo y revisión ortográfica                                                              | Lucía Ponce García de Sola |
 
 ---
+
 **Redactado por:** Marta Aguilar Morcillo y Cristina Fernández Chica  
-**Fecha:** 24/02/2026  
-**Versión:** 2.0.0
+**Fecha:** 11/05/2026  
+**Versión:** 3.0.0
