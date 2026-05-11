@@ -41,15 +41,12 @@ export const CategoryArticlesComponent = ({
   const [latestArticles, setLatestArticles] = useState<UserArticle[]>([]);
   const { width } = useWindowDimensions();
 
-  // Calcular número de columnas dinámicamente
-  // Cada item tiene 140px de ancho, mínimo 3 columnas
-  // Consideramos espaciado de 16px entre items
   const itemWidth = 140;
-  const horizontalPadding = Spacing.lg * 2; // padding left + right del contenedor
+  const horizontalPadding = Spacing.lg * 2;
   const gapBetweenItems = Spacing.md;
-  const availableWidth = width - horizontalPadding;
+  const availableWidth = width - horizontalPadding - Spacing.lg * 2;
   const numColumns = Math.max(
-    3,
+    2,
     Math.floor(availableWidth / (itemWidth + gapBetweenItems)),
   );
   const firstRowFull = latestArticles.length >= numColumns;
