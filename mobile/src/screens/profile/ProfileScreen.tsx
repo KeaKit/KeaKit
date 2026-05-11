@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { getWalletByUserId } from '../../services/walletService';
 import { ProfileImageWithBadge } from '../../components/ProfileImageWithBadge';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 
 type ProfileNav = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 
@@ -33,6 +34,7 @@ interface ActionButton {
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileNav>();
+  const navbarOffset = useNavbarOffset();
   const { user, signOut } = useAuth();
 
   const [availableBalance, setAvailableBalance] = useState<number | null>(null);
@@ -137,7 +139,7 @@ const ProfileScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, {paddingBottom: navbarOffset > 0 ? navbarOffset + 20 : 20}]}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={22} color="#103a57" />
       </TouchableOpacity>

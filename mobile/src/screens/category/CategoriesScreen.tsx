@@ -28,6 +28,7 @@ import {
   KeakitSearchBar,
   KeakitModal,
 } from "../../components";
+import { useNavbarOffset } from "../../hooks/useWindowDimensions";
 
 const { categoryCard, cardLeft, categoryName, cardRight, buttonsArea } =
   categoriesScreenStyles;
@@ -43,6 +44,7 @@ interface CategoryWithCount extends Category {
 
 export default function CategoriesScreen() {
   const navigation = useNavigation<CategoriesNav>();
+  const navbarOffset = useNavbarOffset();
   const { user } = useAuth();
   const token = (user as AuthUser)?.token || "";
 
@@ -184,7 +186,7 @@ export default function CategoriesScreen() {
   );
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.containerWhite, {paddingBottom: navbarOffset}]}>      
       <Header
         title="Gestión de categorías"
         showBack={true}

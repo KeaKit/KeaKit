@@ -18,6 +18,7 @@ import { RootStackParamList, Service, ServiceStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { useNotification } from '../../components/NotificationContext';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 
 type MyServicesNav = NativeStackNavigationProp<RootStackParamList, 'MyServices'>;
 type FilterType = 'ALL' | 'ACTIVE' | 'UNAVAILABLE' | 'DRAFT';
@@ -25,6 +26,7 @@ type FilterType = 'ALL' | 'ACTIVE' | 'UNAVAILABLE' | 'DRAFT';
 const MyServicesScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<MyServicesNav>();
+  const navbarOffset = useNavbarOffset();
   const { showNotification } = useNotification();
 
   const [services, setServices] = useState<Service[]>([]);
@@ -334,13 +336,13 @@ const MyServicesScreen: React.FC = () => {
           data={filteredServices}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderService}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: navbarOffset > 0 ? navbarOffset + 74 : 90 }]}
           showsVerticalScrollIndicator={false}
         />
       )}
 
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: navbarOffset > 0 ? navbarOffset + 10 : 28}]}
         onPress={() => navigation.navigate('PromoteService')}
         activeOpacity={0.85}
       >
@@ -431,7 +433,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Spacing.md,
-    paddingBottom: 100,
   },
   serviceCard: {
     flexDirection: 'row',
@@ -550,7 +551,6 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 28,
     right: 24,
     width: 60,
     height: 60,

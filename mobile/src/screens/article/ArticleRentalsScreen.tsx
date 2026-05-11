@@ -17,6 +17,7 @@ import { RootStackParamList, ArticleRecordDTO, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { API_ROUTES } from '../../config/api';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 
 type ArticleRentals = NativeStackNavigationProp<RootStackParamList, 'ArticleRentals'>;
 type ArticleRentalsRoute = RouteProp<RootStackParamList, 'ArticleRentals'>;
@@ -24,6 +25,7 @@ type ArticleRentalsRoute = RouteProp<RootStackParamList, 'ArticleRentals'>;
 const ArticleRentalsScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<ArticleRentals>();
+  const navbarOffset = useNavbarOffset();
   const route = useRoute<ArticleRentalsRoute>();
   const { articleId, articleTitle } = route.params;
 
@@ -164,7 +166,7 @@ const loadRecords = async () => {
   }
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.container, {paddingBottom: navbarOffset}]}>
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

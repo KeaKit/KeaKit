@@ -13,6 +13,7 @@ import { Colors, Spacing, commonStyles } from "../../styles";
 import { SelectPicker } from "../../components/SelectPicker";
 import { useLocationPicker } from "../../hooks/useLocationPicker";
 import { getBusyCouriers } from "../../services/kitService";
+import { useNavbarOffset } from "../../hooks/useWindowDimensions";
 
 
 type CouriersNav = NativeStackNavigationProp<RootStackParamList, "Couriers">;
@@ -20,7 +21,7 @@ type CouriersNav = NativeStackNavigationProp<RootStackParamList, "Couriers">;
 const CouriersScreen = () => {
   const { user } = useAuth();
   const navigation = useNavigation<CouriersNav>();
-
+  const navbarOffset = useNavbarOffset();
   const [couriers, setCouriers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const { selectedCountry, cities, loadingCities, onCountryChange, countries } = useLocationPicker("", "");
@@ -64,7 +65,7 @@ const CouriersScreen = () => {
   }
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.containerWhite, {paddingBottom: navbarOffset}]}>      
       <View style={commonStyles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
