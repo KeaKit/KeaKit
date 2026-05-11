@@ -18,6 +18,7 @@ import { RootStackParamList } from '../../types';
 import { getLoggedUserWallet } from '../../services';
 import { SkeletonPulse } from '../../components';
 import { Colors } from '../../styles/theme';
+import { Helmet } from 'react-helmet-async'; 
 
 type CourierHomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -78,6 +79,11 @@ const CourierHomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+      <Helmet>
+        <title>Panel de Repartidor | KeaKit</title>
+        <meta name="description" content="Panel de gestión de logística y transporte para repartidores de KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <ScrollView 
         contentContainerStyle={styles.scroll} 
         showsVerticalScrollIndicator={false}

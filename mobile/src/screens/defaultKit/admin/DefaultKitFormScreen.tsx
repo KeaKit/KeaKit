@@ -37,6 +37,7 @@ import {
 } from "../../../services/defaultKitService";
 import { fetchItemsForRent } from "../../../services/itemService";
 import { getArticlesForMap } from "../../../services/articleService";
+import { Helmet } from 'react-helmet-async'; 
 
 type CreateDefaultKitNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -337,9 +338,28 @@ const DefaultKitFormScreen: React.FC = () => {
     },
   };
 
+  const getHelmetTitle = () => {
+    return mode === "edit"
+      ? "Editar kit predeterminado"
+      : "Crear kit predeterminado";
+  };
+
+  const getMetaDescription = () => {
+    if (mode === "edit") {
+      return "Edita un kit predeterminado y gestiona los productos incluidos en KeaKit.";
+    }
+
+    return "Crea un kit predeterminado seleccionando productos y configurando su contenido en KeaKit.";
+  };
+
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.containerWhite}>
+          <Helmet>
+          <title>{getHelmetTitle()}</title>
+          <meta name="description" content={getMetaDescription()} />
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>        
         <Header
           title={mode === "edit" ? "Editar Kit" : "Crear Kit Predeterminado"}
           showBack

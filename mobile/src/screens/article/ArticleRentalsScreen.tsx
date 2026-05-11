@@ -17,6 +17,7 @@ import { RootStackParamList, ArticleRecordDTO, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { API_ROUTES } from '../../config/api';
+import { Helmet } from 'react-helmet-async'; 
 
 type ArticleRentals = NativeStackNavigationProp<RootStackParamList, 'ArticleRentals'>;
 type ArticleRentalsRoute = RouteProp<RootStackParamList, 'ArticleRentals'>;
@@ -165,6 +166,11 @@ const loadRecords = async () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Historial de Alquileres | KeaKit</title>
+        <meta name="description" content="Historial de alquileres de artículos en la plataforma KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

@@ -13,6 +13,7 @@ import { Colors, Spacing, commonStyles } from "../../styles";
 import { SelectPicker } from "../../components/SelectPicker";
 import { useLocationPicker } from "../../hooks/useLocationPicker";
 import { getBusyCouriers } from "../../services/kitService";
+import { Helmet } from 'react-helmet-async'; 
 
 
 type CouriersNav = NativeStackNavigationProp<RootStackParamList, "Couriers">;
@@ -65,6 +66,11 @@ const CouriersScreen = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Gestión de Repartidores | KeaKit</title>
+        <meta name="description" content="Listado y gestión de repartidores de la plataforma KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <View style={commonStyles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

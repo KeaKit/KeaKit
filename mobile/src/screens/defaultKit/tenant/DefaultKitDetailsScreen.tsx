@@ -12,6 +12,8 @@ import {
   Colors,
   Spacing,
 } from "../../../styles";
+import { Helmet } from 'react-helmet-async'; 
+
 
 const DefaultKitDetailsScreen = () => {
   const { user } = useAuth();
@@ -83,6 +85,11 @@ const DefaultKitDetailsScreen = () => {
 
   return (
     <SafeAreaView style={commonStyles.containerWhite}>
+      <Helmet>
+        <title> {isAdmin ? "Gestión de kits predeterminados" : "Kits Express"} | KeaKit </title>
+        <meta name="description" content={isAdmin ? "Gestiona los kits predeterminados disponibles en la plataforma KeaKit." : "Explora kits express con productos listos para alquilar en KeaKit."}/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Header
         title={kit ? kit.name : "Detalles del Kit"}
         showBack
