@@ -1,10 +1,10 @@
-# Acta de Reunión - [Título de la reunión]
+# Acta de Reunión - Coordinación para la realización de mockups 3
 
 ## Información general
 
 **Fecha:** 10/02/2026
 **Hora:** 10:02 - 12:18  
-**Lugar:** Sevilla / Telemático
+**Lugar:** Microsoft Teams
 **Grupo convocado:** Mockups
 
 ## Participantes
@@ -52,7 +52,6 @@ Para cada una de las pantallas, se han asignado los casos de uso core a cada uno
 | Registro y Login | CU1-Arrendador, CU1-Arrendatario, CU3-Admin | Candela Jazmín Gutiérrez |
 | Cartera          | CU6-Arrendador, (Arrendatario)              | Jose Luis Moraza Vergara |
 
-
 **Arrendatario:**
 
 | Pantalla            | Casos de uso               | Encargado                |
@@ -61,7 +60,6 @@ Para cada una de las pantallas, se han asignado los casos de uso core a cada uno
 | Modificar/Crear Kit | CU8, CU9, CU12, CU13, CU14 | Ismael Carrasco Mkhazni  |
 | Pasarela de Pago    | CU10                       | Ismael Carrasco Mkhazni  |
 | Mis Alquileres      | CU11                       | Candela Jazmín Gutiérrez |
-
 
 **Arrendador:**
 
@@ -72,7 +70,6 @@ Para cada una de las pantallas, se han asignado los casos de uso core a cada uno
 | Editar Articulo | CU4                                 | Guillermo García León    |
 | Notificaciones  | CU8                                 | Cristina Fernández Chica |
 | Perfil          |                                     | Jose Luis Moraza Vergara |
-
 
 **Admin:**
 
@@ -106,5 +103,5 @@ No especificado
 
 ---
 
-**Acta redactada por:** Guillermo García León 
-**Fecha de redacción:** 12/02/2004
+**Acta redactada por:** Guillermo García León  
+**Fecha de redacción:** 12/02/2004  

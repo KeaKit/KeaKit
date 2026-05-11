@@ -1,10 +1,10 @@
-# Acta de Reunión - [Título de la reunión]
+# Acta de Reunión - Análisis de competidores
 
 ## Información general
 
-**Fecha:** [04/02/2026]  
-**Hora:** [18:00 - 18:30]  
-**Lugar:** Sevilla (telemático)  
+**Fecha:** 04/02/2026  
+**Hora:** 18:00 - 18:30  
+**Lugar:** Microsoft Teams  
 **Grupo convocado:** Subgrupo análisis de competidores
 
 ## Participantes
@@ -13,15 +13,17 @@
 
 | Nombre                      | Rol      |
 | --------------------------- | -------- |
-| Ángel Amo Sánchez           | Analísta |
-| Marta Aguilar Morcillo      | Analísta |
-| Alejandro González Macías   | Analísta |
-| Miguel Álvarez Raya         | Analísta |
-| Germán Ojeda Garrido        | Analísta |
-| Luis Emmanuel Chávez Malave | Analísta |
-| Salma El Hakimy Ettorabi    | Analísta |
+| Ángel Amo Sánchez           | Analista |
+| Marta Aguilar Morcillo      | Analista |
+| Alejandro González Macías   | Analista |
+| Miguel Álvarez Raya         | Analista |
+| Germán Ojeda Garrido        | Analista |
+| Luis Emmanuel Chávez Malave | Analista |
+| Salma El Hakimy Ettorabi    | Analista |
 
 ### Ausentes
+
+No procede.
 
 ## Orden del día
 
@@ -63,11 +65,11 @@ Se discutió cómo se realizarían las diapositivas y se analizarían los compet
 
 ### 5. Resolución de dudas
 
-No procede
+No procede.
 
 ### 6. Ruegos y preguntas
 
-No procede
+No procede.
 
 ## Resumen de acuerdos y decisiones
 
@@ -82,21 +84,16 @@ No procede
 
 | #   | Descripción breve                                                             | Responsable(s)     | Fecha límite |
 | --- | ----------------------------------------------------------------------------- | ------------------ | ------------ |
-| 1   | Busqueda de información sobre competdores Swappito y Waki                     | Marta y Ángel      | [05/02/2026] |
-| 2   | Busqueda de información sobre competdores Markade y TradeMade                 | Salma y Emmanuel   | [05/02/2026] |
-| 3   | Busqueda de información sobre competdores Trueques.com, Freecycle y Olio      | Alejandro y Miguel | [05/02/2026] |
-| 4   | Busqueda de información sobre competdores QuieroCambiarlo y OfrezcoCambio.com | Germán             | [05/02/2026] |
+| 1   | Busqueda de información sobre competdores Swappito y Waki                     | Marta y Ángel      | 05/02/2026   |
+| 2   | Busqueda de información sobre competdores Markade y TradeMade                 | Salma y Emmanuel   | 05/02/2026   |
+| 3   | Busqueda de información sobre competdores Trueques.com, Freecycle y Olio      | Alejandro y Miguel | 05/02/2026   |
+| 4   | Busqueda de información sobre competdores QuieroCambiarlo y OfrezcoCambio.com | Germán             | 05/02/2026   |
 
 ## Próxima reunión
 
-**Fecha:** No presenta
-**Hora:** No presenta
-**Lugar:** No presenta
-
-**Temas a tratar:**
-No presenta
+No procede.
 
 ---
 
 **Acta redactada por:** Ángel Amo Sánchez
-**Fecha de redacción:** [04/02/2026]
+**Fecha de redacción:** 04/02/2026

@@ -1,43 +1,46 @@
-# Acta de Reunión - Reunión general
+# Acta de Reunión - Reunión general 3
 
 ## Información general
 
-**Fecha:** [09/02/2026]  
-**Hora:** [20:03 - 20:58]  
-**Lugar:** Teams  
+**Fecha:** 09/02/2026  
+**Hora:** 20:03 - 20:58  
+**Lugar:** Microsoft Teams  
 **Grupo convocado:** Todo el equipo
 
 ## Participantes
 
 ### Asistentes
 
-| Nombre     | Rol   |
-|------------|-------|
-| Guillermo García León | Participante|
-| Salma El Hakimy Ettorabi| Participante|
-| Candela Jazmín Gutierrez González | Participante|
-| Marta Aguilar Morcillo | Participante|
-| Luis Emmanuel Chávez Malave | Participante|
-| Samuel Tamayo Balogh  | Participante|
-| Marta de la Calle González | Participante|
-| Adrián Miguel Chabrera Rubio | Participante|
-| Enrique Nicolae Barac Ploae | Participante|
-| Alejandro González Macías | Participante|
-| Miguel Álvarez Raya | Participante|
-| Cristina Fernández Chica | Participante|
-| Rosa María Espinosa Martínez | Participante|
-| Guillermo Ciria González | Moderador|
-| Ángel Amo Sánchez | Participante|
-| José Luis Moraza Vergara | Participante|
-| Germán Ojeda Garrido | Participante|
-| Ismael Carrasco Mkhazni | Participante|
-| Lucía Ponce García de Sola | Participante|
-| Paula Rosa González Páez | Participante|
+| Nombre                            | Rol          |
+| --------------------------------- | ------------ |
+| Guillermo García León             | Participante |
+| Salma El Hakimy Ettorabi          | Participante |
+| Candela Jazmín Gutierrez González | Participante |
+| Marta Aguilar Morcillo            | Participante |
+| Luis Emmanuel Chávez Malave       | Participante |
+| Samuel Tamayo Balogh              | Participante |
+| Marta de la Calle González        | Participante |
+| Adrián Miguel Chabrera Rubio      | Participante |
+| Enrique Nicolae Barac Ploae       | Participante |
+| Alejandro González Macías         | Participante |
+| Miguel Álvarez Raya               | Participante |
+| Cristina Fernández Chica          | Participante |
+| Rosa María Espinosa Martínez      | Participante |
+| Guillermo Ciria González          | Moderador    |
+| Ángel Amo Sánchez                 | Participante |
+| José Luis Moraza Vergara          | Participante |
+| Germán Ojeda Garrido              | Participante |
+| Ismael Carrasco Mkhazni           | Participante |
+| Lucía Ponce García de Sola        | Participante |
+| Paula Rosa González Páez          | Participante |
 
 ### Ausentes
--
+
+No procede.  
+
 ## Orden del día
--
+
+No procede.  
 
 ## Desarrollo de la reunión
 
@@ -61,61 +64,60 @@ Se concluye la reunión a las 20:58, proponiendo la siguiente reunión para el l
 
 En base a una encuesta realizada por Whatsapp y un formulario que se realizó para tener en cuenta las preferencias de áreas de trabajo de los integrantes del grupo, el grupo de Organización (conformado por Guillermo Ciria, Rosa María Espinosa, Samuel Tamayo, Paula Rosa González, Lucía Ponce y Miguel Álvarez) se queda en la reunión para dividir el grupo en subgrupos de trabajo.
 
-
 El resultado de las divisiones fue el siguiente:
 
 **Grupo 1**
 
-| Integrantes |
-|-------------|
-| Lucía Ponce |
-| Miguel Álvarez |
-| Enrique Barac |
-| Salma El Hakimy |
+| Integrantes          |
+| -------------------- |
+| Lucía Ponce          |
+| Miguel Álvarez       |
+| Enrique Barac        |
+| Salma El Hakimy      |
 | Luis Emmanuel Chavez |
 
 **Grupo 2**
 
-| Integrantes |
-|-------------|
+| Integrantes         |
+| ------------------- |
 | Rosa María Espinosa |
-| Samuel Tamayo  |
-| Guillermo García |
-| Ismael Carrasco |
-| Germán Ojeda |
+| Samuel Tamayo       |
+| Guillermo García    |
+| Ismael Carrasco     |
+| Germán Ojeda        |
 
 **Grupo 3**
 
-| Integrantes |
-|-------------|
-| Guillermo Ciria |
-| Rafael Harana |
+| Integrantes        |
+| ------------------ |
+| Guillermo Ciria    |
+| Rafael Harana      |
 | Alejandro González |
-| Adrián Chabrera |
-| Marta de la Calle |
+| Adrián Chabrera    |
+| Marta de la Calle  |
 
 **Grupo 4**
 
-| Integrantes |
-|---------------------------|
+| Integrantes         |
+| ------------------- |
 | Paula Rosa González |
-| Marta Aguilar |
-| Cristina Fernández |
-| Ángel Amo |
-| Jose Luis Moraza |
-| Candela Jazmín |
+| Marta Aguilar       |
+| Cristina Fernández  |
+| Ángel Amo           |
+| Jose Luis Moraza    |
+| Candela Jazmín      |
 
 ## Cierre
+
 La reunión finaliza a las 20:58. Próxima reunión: lunes siguiente (16/02/2026) a las 20:00.
 
 ## Próxima reunión
 
-**Fecha:** [16/02/2026]  
-**Hora:** [20:00]  
-**Lugar:** Teams 
+**Fecha:** 16/02/2026  
+**Hora:** 20:00  
+**Lugar:** Microsoft Teams
 
 ---
 
-**Acta redactada por:** [Rosa María Espinosa Martínez]  
-**Fecha de redacción:** [11/02/2026]
-
+**Acta redactada por:** Rosa María Espinosa Martínez  
+**Fecha de redacción:** 11/02/2026

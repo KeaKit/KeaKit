@@ -2,37 +2,38 @@
 
 ## Información general
 
-**Fecha:** [06/02/2025]
-**Hora:** [15:37 - 16:16] 
-**Lugar:** Teams  
+**Fecha:** 06/02/2025
+**Hora:** 15:37 - 16:16
+**Lugar:** Microsoft Teams  
 **Grupo convocado:** Todo el equipo
 
 ## Participantes
 
 ### Asistentes
 
-| Nombre                            | Rol           |
-|-----------------------------------|---------------|
-| Marta Aguilar Morcillo            | -             |
-| Miguel Álvarez Raya               | -             |
-| Ángel Amo Sánchez                 | -             |
-| Enrique Nicolae Barac Ploae       | -             |
-| Ismael Carrasco Mkhazni           | -             |
-| Luis Emmanuel Chavez Malave       | -             |
-| Guillermo Ciria Gonzalez          | Coordinador   |
-| Marta De La Calle González        | -             |
-| Salma El Hakimy Ettorabi          | -             |
-| Cristina Fernández Chica          | -             |
-| Guillermo García León             | -             |
-| Paula Rosa González Páez          | -             |
-| Candela Jazmin Gutierez Gonzalez  | -             |
-| Rafael Harana Mancilla            | -             |
-| José Luis Moraza Vergara          | -             |
-| German Ojeda Garrido              | -             |
-| Lucía Ponce García de Sola        | -             |
-| Samuel Tamayo Balogh              | -             |
+| Nombre                           | Rol         |
+| -------------------------------- | ----------- |
+| Marta Aguilar Morcillo           | -           |
+| Miguel Álvarez Raya              | -           |
+| Ángel Amo Sánchez                | -           |
+| Enrique Nicolae Barac Ploae      | -           |
+| Ismael Carrasco Mkhazni          | -           |
+| Luis Emmanuel Chavez Malave      | -           |
+| Guillermo Ciria Gonzalez         | Coordinador |
+| Marta De La Calle González       | -           |
+| Salma El Hakimy Ettorabi         | -           |
+| Cristina Fernández Chica         | -           |
+| Guillermo García León            | -           |
+| Paula Rosa González Páez         | -           |
+| Candela Jazmin Gutierez Gonzalez | -           |
+| Rafael Harana Mancilla           | -           |
+| José Luis Moraza Vergara         | -           |
+| German Ojeda Garrido             | -           |
+| Lucía Ponce García de Sola       | -           |
+| Samuel Tamayo Balogh             | -           |
 
 ### Ausentes
+
 - Adrián Miguel Chabrera Rubio
 - Jose Egido Carnerero
 - Rosa María Espinosa Martínez
@@ -52,11 +53,12 @@
 
 ### 1. Aprobar y refinar nueva idea
 
-Guillermo Ciria González da comienzo a la reunión y le solicita a Marta Aguilar Morcillo que exponga la nueva idea. 
+Guillermo Ciria González da comienzo a la reunión y le solicita a Marta Aguilar Morcillo que exponga la nueva idea.
 
 Marta Aguilar explicó el cambio de la idea original (trueque) a una plataforma de alquiler de kits (tanto de objetos como servicios) para mudanzas al extranjero. Detalló que la aplicación tendrá dos vertientes: el cliente que configura su kit personalizado y el propietario que alquila sus objetos para obtener ingresos. El sistema será parecido a Wallapop, pero en lugar de ventas se realizarán alquileres.
 
 Guillermo expone varios problemas de logística:
+
 - Disponibilidad de los objetos. Puede que haya objetos que la persona desee pero no se encuentren disponibles. Una posible solución sería exponer a los arrendadores esta demanda y motivarlos reduciendo comisiones.
 - Cómo hacer llegar los objetos a la gente. Debemos agrupar todos los objetos a una zona y después mandarlos a la persona que ha solicitado el pack. Se descarta subcontratar a una empresa de mensajería por falta de presupuesto. Una posible solución sería crear un programa de fidelización, dirigido principalmente a estudiantes, donde ellos pueden almacenar los objetos hasta que la persona que se muda pueda ir a recogerlos. Deben además pagar una fianza por si rompen algo. Ellos recogen el producto, lo escanean, lo almacenan y esperan a que recojan el kit.
 
@@ -91,6 +93,7 @@ Guillermo Ciria menciona que podrían ser kits flexibles. Se podrían ofrecer pl
 Marta Aguilar apoya la idea y propone incluir objetos con mucho stock en esos kits. Además, propone hacer otros kits predeterminados con objetos que gusten menos, pero que resulten más económicos.
 
 ### 2. Quien va a presentar
+
 Samuel se disculpa por no haber podido exponer, ya que estaba en una formación y tenía entendido que el grupo exponía en último lugar.
 Guillermo Ciria explica que los demás grupos cambiaron los turnos a última hora.
 Marta Aguilar añade que otros grupos quisieron cambiar la planificación por las inclemencias climatológicas, y al ser los últimos en decidir nuestro turno, se nos quitó poder de decisión.
@@ -146,34 +149,35 @@ Lucía Ponce menciona que desea cambiarse de equipo, porque no conocer Figma le 
 
 ## Resumen de acuerdos y decisiones
 
-| # | Acuerdo/Decisión | Responsable(s) |
-|---|------------------|----------------|
-| 1 | Se desarrollará una plataforma de alquiler de kits (tanto de objetos como servicios) para mudanzas al extranjero | Grupo al completo |
-| 2 | Si hay falta de stock sobre un objeto muy solicitado, se expondrá a los arrendadores esta demanda y se les motivará a suplirla reduciendo comisiones | Guillermo Ciria | 
-| 3 | Se descarta subcontratar a una empresa de mensajería | Profesorado |
-| 4 | El usuario podría fijar el precio y la plataforma la comisión | Marta De La Calle |
-| 5 | La aplicación debe dar una opción más económica que una compra de primera mano | Marta Aguilar |
-| 6 | No se contemplará la venta de bienes | Profesorado |
-| 7 | Se realizará un estudio sobre en qué ciudades operará la plataforma | Marta Aguilar |
-| 8 | Habrá una fianza que se devuelva al devolver el kit correctamente | Marta Aguilar |
-| 9 | El sistema contará con kits predeterminados o plantillas, que ayuden a nivelar el stock | Miguel Álvarez, Guillermo Ciria y Marta Aguilar |
-| 10 | Se publicará una encuesta para conocer las preferencias de cada miembro del equipo durante el desarrollo del sprint | Guillermo Ciria |
-| 11 | Lucía Ponce será sustituida por Rafael Harana en la realización de mockups | Rafael Harana y Lucía Ponce |
+| #   | Acuerdo/Decisión                                                                                                                                     | Responsable(s)                                  |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 1   | Se desarrollará una plataforma de alquiler de kits (tanto de objetos como servicios) para mudanzas al extranjero                                     | Grupo al completo                               |
+| 2   | Si hay falta de stock sobre un objeto muy solicitado, se expondrá a los arrendadores esta demanda y se les motivará a suplirla reduciendo comisiones | Guillermo Ciria                                 |
+| 3   | Se descarta subcontratar a una empresa de mensajería                                                                                                 | Profesorado                                     |
+| 4   | El usuario podría fijar el precio y la plataforma la comisión                                                                                        | Marta De La Calle                               |
+| 5   | La aplicación debe dar una opción más económica que una compra de primera mano                                                                       | Marta Aguilar                                   |
+| 6   | No se contemplará la venta de bienes                                                                                                                 | Profesorado                                     |
+| 7   | Se realizará un estudio sobre en qué ciudades operará la plataforma                                                                                  | Marta Aguilar                                   |
+| 8   | Habrá una fianza que se devuelva al devolver el kit correctamente                                                                                    | Marta Aguilar                                   |
+| 9   | El sistema contará con kits predeterminados o plantillas, que ayuden a nivelar el stock                                                              | Miguel Álvarez, Guillermo Ciria y Marta Aguilar |
+| 10  | Se publicará una encuesta para conocer las preferencias de cada miembro del equipo durante el desarrollo del sprint                                  | Guillermo Ciria                                 |
+| 11  | Lucía Ponce será sustituida por Rafael Harana en la realización de mockups                                                                           | Rafael Harana y Lucía Ponce                     |
 
 ## Tareas asignadas
 
-| # | Descripción breve | Responsable(s) | Fecha límite |
-|---|------------------|----------------|--------------|
-| 1 | Redefinir los casos de uso core | Guillermo Ciria, Marta Aguilar y Luis Emmanuel Chávez | 12/02/2026 |
-| 2 | Gestión de los 3 sprints | Guillermo Ciria | 12/02/2026 |
+| #   | Descripción breve               | Responsable(s)                                        | Fecha límite |
+| --- | ------------------------------- | ----------------------------------------------------- | ------------ |
+| 1   | Redefinir los casos de uso core | Guillermo Ciria, Marta Aguilar y Luis Emmanuel Chávez | 12/02/2026   |
+| 2   | Gestión de los 3 sprints        | Guillermo Ciria                                       | 12/02/2026   |
 
 ## Próxima reunión
 
 **Fecha:** 09/02/2026  
 **Hora:** 20:00  
-**Lugar:** Microsoft Teams  
+**Lugar:** Microsoft Teams
 
 **Temas a tratar:**
+
 - Seguimiento de tareas pendientes
 - Dudas y problemas encontrados.
 

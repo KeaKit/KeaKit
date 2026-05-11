@@ -1,24 +1,24 @@
-# Acta de Reunión - Usuarios Pilotos
+# Acta de Reunión - Usuarios Pilotos (Arrendatarios) 1
 
 ## Información general
 
-**Fecha:** [15/02/2026]  
-**Hora:** [11:00 - 11:54]  
-**Lugar:** Teams  
-**Grupo convocado:** Grupo 4
+**Fecha:** 15/02/2026  
+**Hora:** 11:00 - 11:54  
+**Lugar:** Microsoft Teams  
+**Grupo convocado:** Grupo 4 (parcial)
 
 ## Participantes
 
 ### Asistentes
 
-| Nombre     | Rol   |
-|------------|-------|
-| Paula Rosa González Páez | Grupo 4|
-| Marta Aguilar Morcillo | Grupo 4 |
-
+| Nombre                   | Rol     |
+| ------------------------ | ------- |
+| Paula Rosa González Páez | Grupo 4 |
+| Marta Aguilar Morcillo   | Grupo 4 |
 
 ### Ausentes
 
+No procede.
 
 ## Orden del día
 
@@ -29,6 +29,7 @@
 ## Desarrollo de la reunión
 
 ### 1. Definición detallada de perfiles para usuarios piloto
+
 Se realizó una sesión de trabajo conjunta para detallar los perfiles de los usuarios que probarán la plataforma, asegurando que cubran las necesidades reales del mercado objetivo. Los puntos clave tratados fueron:
 
 **Perfil 1**: Estudiante Erasmus Internacional ("Lucas")
@@ -60,20 +61,20 @@ Solución KeaKit: Un kit de vajilla completo que sea una fracción del precio de
 Redacción de documentos.
 
 ### 3. Ruegos y preguntas
+
 No presenta.
 
 ## Resumen de acuerdos y decisiones
 
-| # | Acuerdo/Decisión | Responsable(s) |
-|---|------------------|----------------|
-| 1 | Finalización de la redacción de los 3 perfiles piloto | Paula Rosa González Páez, Marta Aguilar Morcillo |
-
+| #   | Acuerdo/Decisión                                      | Responsable(s)                                   |
+| --- | ----------------------------------------------------- | ------------------------------------------------ |
+| 1   | Finalización de la redacción de los 3 perfiles piloto | Paula Rosa González Páez, Marta Aguilar Morcillo |
 
 ## Tareas asignadas
 
-| # | Descripción breve | Responsable(s) | Fecha límite |
-|---|------------------|----------------|--------------|
-| 1 | Finalización de la redacción de los 3 perfiles piloto | Paula Rosa González Páez, Marta Aguilar Morcillo | [15/02/2026] |
+| #   | Descripción breve                                     | Responsable(s)                                   | Fecha límite |
+| --- | ----------------------------------------------------- | ------------------------------------------------ | ------------ |
+| 1   | Finalización de la redacción de los 3 perfiles piloto | Paula Rosa González Páez, Marta Aguilar Morcillo | 15/02/2026   |
 
 ## Próxima reunión
 
@@ -86,5 +87,5 @@ No presenta
 
 ---
 
-**Acta redactada por:** [Paula Rosa González Páez]  
-**Fecha de redacción:** [16/02/2026]
+**Acta redactada por:** Paula Rosa González Páez  
+**Fecha de redacción:** 16/02/2026
