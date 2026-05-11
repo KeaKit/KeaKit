@@ -188,6 +188,8 @@ export const API_ROUTES = {
   // Insignia
   TOGGLE_FOUNDER_BADGE: (id: number) => `${BASE_URL}/api/admin/users/${id}/founder-badge`,
 
+  GET_TRANSACTION_DETAILS: (id: number) => `${BASE_URL}/api/wallet/transactions/${id}/details`,
+
 } as const;
 
 export default BASE_URL;

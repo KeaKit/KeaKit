@@ -41,6 +41,7 @@ import IncidentDetailScreen from "../screens/incidents/IncidentDetailScreen";
 import WalletScreen from "../screens/wallet/WalletScreen";
 import WithdrawMoneyScreen from "../screens/wallet/WithdrawMoneyScreen";
 import CheckoutScreen from "../screens/kit/CheckoutScreen";
+import TransactionDetailScreen from "../screens/wallet/TransactionDetailScreen";
 
 // Categories
 import CategoriesScreen from "../screens/category/CategoriesScreen";
@@ -282,6 +283,10 @@ const AppNavigator: React.FC = () => {
                 <Stack.Screen
                   name="Wallet"
                   component={WalletScreen}
+                />
+                <Stack.Screen 
+                  name="TransactionDetail" 
+                  component={TransactionDetailScreen} 
                 />
 
                 {/* Incidencias */}
