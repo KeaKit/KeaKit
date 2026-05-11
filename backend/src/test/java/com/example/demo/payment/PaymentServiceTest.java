@@ -180,14 +180,12 @@ public class PaymentServiceTest {
 
     @Test
     void processPayment_ShouldCompleteSuccessfully_WhenPayWithWalletIsFalse() throws Exception {
-        // Mocks de servicios
         when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
         when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
         when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
         when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
         when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
         when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
-        // No se necesita mock para TENANT_WALLET porque no se descuenta dinero
 
         assertDoesNotThrow(() -> paymentService.processPayment(KIT_ID, false));
 
