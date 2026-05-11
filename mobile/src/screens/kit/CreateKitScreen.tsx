@@ -1115,7 +1115,17 @@ const checkItemsAvailability = (start: Date, end: Date): string[] => {
             selectedProducts.map((item) => (
               <KitItemComponent
                 key={item.id}
-                item={item}
+                item={{
+                  id: item.id,
+                  title: item.title,
+                  city: item.city,
+                  pricePerMonth: item.pricePerMonth,
+                  totalUnits: item.totalUnits,
+                  imageUrl: item.imageUrl,
+                  category: item.category,
+                  ownerName: item.ownerName,
+                  condition: item.condition,
+                }}
                 quantity={selectedQuantities[item.id] ?? 1}
                 maxQuantity={item.totalUnits}
                 duration={monthsBetween ?? 0}
