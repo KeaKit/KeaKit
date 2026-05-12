@@ -9,6 +9,8 @@ import { useAuth } from "../../context/AuthContext";
 import { withdrawToBank } from "../../services/walletService";
 import { RootStackParamList } from "../../types";
 import { Colors, commonStyles, FontWeights, Spacing } from "../../styles";
+import { Helmet } from 'react-helmet-async'; 
+
 
 type WithdrawMoneyNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -142,6 +144,11 @@ export default function WithdrawMoneyScreen() {
 
   return (
     <SafeAreaView style={commonStyles.containerWhite}>
+     <Helmet>
+        <title>Retirar dinero| KeaKit</title>
+        <meta name="description" content="Retira dinero de tu wallet introduciendo tu número de cuenta y la cantidad que deseas retirar."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>    
       <Header
         title="Retirar Dinero"
         showBack={true}
