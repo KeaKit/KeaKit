@@ -195,19 +195,15 @@ const CreateKitScreen: React.FC = () => {
       setCity(user.city);
       setSelectedCity(user.city);
     }
-    if (user?.city && user?.country) {
-    }
-  }, []);
+  }, [user?.city, user?.country]);
 
   useEffect(() => {
     const isCityAndCountryPresent =
-      city != null &&
-      country != null &&
       city.trim() !== "" &&
       country.trim() !== "";
     if (isCityAndCountryPresent) {
       const coords = Promise.resolve(getCityCoordinates(city, country));
-      coords.then(setTargetCityCoords);
+      void coords.then(setTargetCityCoords);
     }
   }, [city, country]);
 
@@ -297,7 +293,7 @@ const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
         availableUntil: (p as any).availableUntil ?? undefined,
       }));
 
-      const filteredByOwner = mapped.filter(p => p.ownerId !== user?.id);
+      const filteredByOwner = mapped.filter(p => p.ownerId !== user.id);
 
       setAvailableProducts(filteredByOwner);
       setErrors((prev) => ({ ...prev, general: undefined }));
@@ -1155,7 +1151,6 @@ const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
                   }}
                   onBlur={() => {
                     if (
-                      deliveryMethod === "MEETING_POINT" &&
                       meetingPoint.trim().length > 0 &&
                       meetingPoint.trim().length <= MAX_MEETING_POINT_LENGTH
                     ) {
@@ -1202,7 +1197,6 @@ const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
                   }}
                   onBlur={() => {
                     if (
-                      deliveryMethod === "COURIER" &&
                       courierAddress.trim().length > 0 &&
                       courierAddress.trim().length <= MAX_COURIER_ADDRESS_LENGTH
                     ) {
@@ -1453,7 +1447,7 @@ const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
           visible={confirmVisible}
           transparent
           animationType="fade"
-          onRequestClose={() => setConfirmVisible(false)}
+          onRequestClose={() => {setConfirmVisible(false)}}
         >
           <View
             style={{
@@ -1495,7 +1489,7 @@ const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
               >
                 <Button
                   mode="outlined"
-                  onPress={() => setConfirmVisible(false)}
+                  onPress={() => {setConfirmVisible(false)}}
                 >
                   Cancelar
                 </Button>
@@ -1503,7 +1497,7 @@ const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
                   mode="contained"
                   onPress={() => {
                     setConfirmVisible(false);
-                    handleSubmit();
+                    void handleSubmit();
                   }}
                 >
                   Aceptar
