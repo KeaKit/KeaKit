@@ -16,6 +16,7 @@ import {
   updatePilotUser,
   bulkSetActivePilotUsers,
 } from '../../services/pilotUserService';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 
 type PilotUsersNav = NativeStackNavigationProp<RootStackParamList, 'PilotUsers'>;
 
@@ -43,6 +44,7 @@ const FadeIn: React.FC<{ delay?: number; children: React.ReactNode }> = ({ delay
 
 const PilotUsersScreen: React.FC = () => {
   const navigation = useNavigation<PilotUsersNav>();
+  const navbarOffset = useNavbarOffset();
   const { user } = useAuth();
 
   const [pilotUsers,    setPilotUsers]    = useState<PilotUserResponse[]>([]);
@@ -216,7 +218,7 @@ const PilotUsersScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.root, {paddingBottom: navbarOffset}]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>

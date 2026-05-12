@@ -16,6 +16,7 @@ import { RootStackParamList, IncidentResponse, IncidentStatus } from '../../type
 import { useAuth } from '../../context/AuthContext';
 import { getIncidentsByUser, getReceivedIncidents } from '../../services/incidentService';
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } from '../../styles';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 
 type MyIncidentsNav = NativeStackNavigationProp<RootStackParamList, 'MyIncidents'>;
 type TabType = 'sent' | 'received';
@@ -33,6 +34,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const MyIncidentsScreen: React.FC = () => {
   const navigation = useNavigation<MyIncidentsNav>();
+  const navbarOffset = useNavbarOffset();
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabType>('sent');
@@ -144,11 +146,11 @@ const MyIncidentsScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.container, {paddingBottom: navbarOffset - 20 }]}>
       {/* Cabecera */}
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Mis Incidencias</Text>
         <View style={{ width: 24 }} />
@@ -286,7 +288,7 @@ const MyIncidentsScreen: React.FC = () => {
           {/* Botón flotante de creación — solo en la pestaña "enviadas" */}
           {activeTab === 'sent' && (
             <TouchableOpacity
-              style={styles.fab}
+              style={[styles.fab, {marginBottom: navbarOffset > 0 ? navbarOffset - 20 : 0}]}
               onPress={() => navigation.navigate('CreateIncident')}
               activeOpacity={0.8}
             >

@@ -18,6 +18,7 @@ import { RootStackParamList } from '../../types';
 import { getLoggedUserWallet } from '../../services';
 import { SkeletonPulse } from '../../components';
 import { Colors } from '../../styles/theme';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 
 type CourierHomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -52,6 +53,7 @@ const FadeIn: React.FC<{ delay?: number; children: React.ReactNode }> = ({ delay
 const CourierHomeScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<CourierHomeNav>();
+  const navbarOffset = useNavbarOffset();
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
 
@@ -77,7 +79,7 @@ const CourierHomeScreen: React.FC = () => {
   const firstName = user?.name?.split(' ')[0] ?? 'Repartidor';
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.root, {paddingBottom: navbarOffset}]} edges={['top', 'left', 'right']}>
       <ScrollView 
         contentContainerStyle={styles.scroll} 
         showsVerticalScrollIndicator={false}

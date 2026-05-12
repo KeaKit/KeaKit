@@ -807,7 +807,7 @@ const MyArticlesScreen: React.FC = () => {
             data={filteredArticles}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderArticle}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[styles.listContent, { paddingBottom: navbarOffset > 0 ? navbarOffset + 74 : 90 }]}
             showsVerticalScrollIndicator={false}
           />
         )}
@@ -1091,7 +1091,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Spacing.md,
-    paddingBottom: 100,
   },
   expandButton: {
     flexDirection: "row",

@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Modal,
   StyleSheet,
+  Modal,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
