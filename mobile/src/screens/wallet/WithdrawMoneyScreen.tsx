@@ -146,7 +146,7 @@ export default function WithdrawMoneyScreen() {
     <SafeAreaView style={commonStyles.containerWhite}>
      <Helmet>
         <title>Retirar dinero| KeaKit</title>
-        <meta name="description" content="Retira dinero de tu wallet introduciendo tu número de cuenta y la cantidad que deseas retirar."/>
+        <meta name="description" content="Retira dinero de tu wallet introduciendo el número de tu cuenta bancaria y la cantidad que deseas retirar."/>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>    
       <Header

@@ -216,7 +216,7 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <Helmet>
         <title>Inicio | KeaKit</title>
-        <meta name="description" content="Panel principal de KeaKit para gestionar tus alquileres, kits, wallet y artículos publicados."/>
+        <meta name="description" content="Panel principal de KeaKit para gestionar tus alquileres, kits, wallet y los artículos y servicios que hayas publicado."/>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       
