@@ -44,6 +44,7 @@ import {
   es,
   registerTranslation,
 } from "react-native-paper-dates";
+import { useNavbarOffset } from "../../hooks/useWindowDimensions";
 import { formatOwnerCommissionPromoBadgeLabel } from "../../utils/ownerCommissionPromo";
 
 type MyArticlesNav = NativeStackNavigationProp<
@@ -86,6 +87,7 @@ if (
 const MyArticlesScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<MyArticlesNav>();
+  const navbarOffset = useNavbarOffset();
   const { showNotification } = useNotification();
 
   const [articles, setArticles] = useState<UserArticle[]>([]);
@@ -565,9 +567,7 @@ const MyArticlesScreen: React.FC = () => {
   const renderArticle = ({ item }: { item: UserArticle }) => {
     const isDeleting = deletingId === item.id;
     const isExpanded = expandedId === item.id;
-    const ownerPromoBadgeLabel = formatOwnerCommissionPromoBadgeLabel(
-      item.ownerCommissionPromoCode,
-    );
+    const ownerPromoBadgeLabel = formatOwnerCommissionPromoBadgeLabel(item.ownerCommissionPromoCode);
     const hasPaidRental =
       item.rentals?.some((rental) => rental.status === "PAID") ?? false;
 
