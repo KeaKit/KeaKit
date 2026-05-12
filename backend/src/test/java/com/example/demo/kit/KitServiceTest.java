@@ -1073,6 +1073,87 @@ public class KitServiceTest {
     }
 
     @Test
+    void getKitPayment_observedRentalPrice1399_returnsGuarantee280() {
+        KitCreateRequest.ItemSelectionRequest selection =
+                new KitCreateRequest.ItemSelectionRequest(100L, 1, 13.99);
+
+        KitCreateRequest request = new KitCreateRequest(
+            "Kit Diagnostico", "ES", "MAD",
+            LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 30),
+            KitStatus.DRAFT, DeliveryMethod.MEETING_POINT, "Plaza Mayor",
+            1L, List.of(selection)
+        );
+
+        KitPaymentDTO result = kitService.getKitPayment(request);
+
+        assertEquals(1399, result.subtotalPrice());
+        assertEquals(280, result.guarantee());
+        assertEquals(1679, result.totalPrice());
+        assertEquals(0, result.courierPrice());
+    }
+
+    @Test
+    void getKitPayment_refund4267CorrespondsToSubtotal21335NotRentalPrice1399() {
+        KitCreateRequest.ItemSelectionRequest selection =
+                new KitCreateRequest.ItemSelectionRequest(100L, 1, 213.35);
+
+        KitCreateRequest request = new KitCreateRequest(
+            "Kit Diagnostico Importe Alto", "ES", "MAD",
+            LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 30),
+            KitStatus.DRAFT, DeliveryMethod.MEETING_POINT, "Plaza Mayor",
+            1L, List.of(selection)
+        );
+
+        KitPaymentDTO result = kitService.getKitPayment(request);
+
+        assertEquals(21335, result.subtotalPrice());
+        assertEquals(4267, result.guarantee());
+        assertEquals(25602, result.totalPrice());
+    }
+
+    @Test
+    void getKitPayment_zeroSubtotal_returnsZeroGuaranteeAndZeroTotal() {
+        KitCreateRequest.ItemSelectionRequest selection =
+                new KitCreateRequest.ItemSelectionRequest(100L, 1, 0.0);
+
+        KitCreateRequest request = new KitCreateRequest(
+            "Kit Gratis", "ES", "MAD",
+            LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 30),
+            KitStatus.DRAFT, DeliveryMethod.MEETING_POINT, "Plaza Mayor",
+            1L, List.of(selection)
+        );
+
+        KitPaymentDTO result = kitService.getKitPayment(request);
+
+        assertEquals(0, result.subtotalPrice());
+        assertEquals(0, result.guarantee());
+        assertEquals(0, result.totalPrice());
+    }
+
+    @Test
+    void getKitPayment_validDiscountDoesNotReduceGuaranteeUnderCurrentRule() {
+        when(promoCodeService.validateForTenantDiscount("MITAD", "tenant@test.com"))
+                .thenReturn(new com.example.demo.dto.PromoCodeValidationResponse(true, 0.50, "Mitad de precio"));
+
+        KitCreateRequest.ItemSelectionRequest selection =
+                new KitCreateRequest.ItemSelectionRequest(100L, 1, 13.99);
+
+        KitCreateRequest request = new KitCreateRequest(
+            "Kit Diagnostico Promo", "ES", "MAD",
+            LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 30),
+            KitStatus.DRAFT, DeliveryMethod.MEETING_POINT, "Plaza Mayor",
+            1L, List.of(selection)
+        );
+
+        KitPaymentDTO result = kitService.getKitPayment(request, "MITAD", "tenant@test.com");
+
+        assertEquals(1399, result.subtotalPrice());
+        assertEquals(700, result.discount());
+        assertEquals(280, result.guarantee());
+        assertEquals(979, result.totalPrice());
+    }
+
+    @Test
     void getKitPayment_fromRequest_meetingPoint_returnsCorrectPaymentDetailsWithZeroCourierPrice() {
         KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(100L, 3, 10.0);
 
