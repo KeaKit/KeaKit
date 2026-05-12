@@ -192,6 +192,12 @@ public class KitService {
         }
 
         validateDates(kit.getStartDate(), kit.getEndDate());
+
+        LocalDate today = LocalDate.now();
+
+        if (kit.getStartDate().isBefore(today) || kit.getEndDate().isBefore(today)) {
+            throw new RuntimeException("Tanto la fecha de inicio como la de finalización deben estar en el futuro.");
+        }
     }
 
     public KitPaymentDTO getKitPayment(KitCreateRequest request, String promoCode, String userEmail) {
