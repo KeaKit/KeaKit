@@ -180,7 +180,7 @@ public class KitService {
 
         if (!snapshots.isEmpty()) {
             for (ItemMemento item : snapshots) {
-                Item foundItem = itemRepository.findById(item.getId())
+                Item foundItem = itemRepository.findById(item.getOriginalItemId())
                         .orElseThrow(() -> new RuntimeException("Item no encontrado: " + item.getId()));
 
                 if (kit.getTenant().getId().equals(foundItem.getOwner().getId())) {
