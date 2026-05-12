@@ -6,13 +6,13 @@ Este documento detalla la hoja de ruta para el desarrollo del sistema, dividida 
 
 ## Índice del documento
 
-1. [Sprint 1: MVP](#sprint-1-mvp)
-2. [Sprint 2: MVP v1](#sprint-2-mvp-v1)
-3. [Sprint 3: MVP v2](#sprint-3-mvp-v2)
-4. [Historial de versiones](#historial-de-versiones)
+1. [Sprint 1: MVP](#1-sprint-1-mvp)
+2. [Sprint 2: MVP v1](#2-sprint-2-mvp-v1)
+3. [Sprint 3: MVP v2](#3-sprint-3-mvp-v2)
+4. [Historial de versiones](#4-historial-de-versiones)
 
 
-## Sprint 1: MVP
+## 1. Sprint 1: MVP
 **Periodo:** 20/02/2026 - 04/03/2026  
 **Objetivos:**
 - Alcanzar el Producto Mínimo Viable establececiendo la infraestructura base y desarrollando los casos de uso core.
@@ -31,7 +31,7 @@ Este documento detalla la hoja de ruta para el desarrollo del sistema, dividida 
 * **Documentación:** Todos los squads.
 
 
-## Sprint 2: MVP v1
+## 2. Sprint 2: MVP v1
 **Periodo:** 05/03/2026 - 25/03/2026  
 **Objetivos:**
 - Desarrollar una versión mejorada del Producto Mínimo Viable.
@@ -51,7 +51,7 @@ Este documento detalla la hoja de ruta para el desarrollo del sistema, dividida 
 * **Análisis de feedback:** Equipo de marketing.
 * **Tareas relacionadas con el feedback obtenido:** Se repartirán entre todos los squads.
 
-## Sprint 3: MVP v2
+## 3. Sprint 3: MVP v2
 **Periodo:** 26/03/2026 - 15/04/2026  
 **Objetivos:**
 - Desarrollar una versión mejorada del Producto Mínimo Viable.
@@ -73,7 +73,7 @@ Este documento detalla la hoja de ruta para el desarrollo del sistema, dividida 
 
 
 
-## Historial de versiones
+## 4. Historial de versiones
 
 | Versión | Fecha       | Descripción                   | Autor(es)       |
 |---------|------------|--------------------------------|------------|
