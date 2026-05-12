@@ -1,386 +1,81 @@
 # KeaKit
-Repositorio principal proyecto KeaKit
-
-## Índice del Repositorio
-
-### 📁 `docs/`
-Documentación completa del proyecto KeaKit.
-
-#### 📂 `docs/actas reuniones/`
-Actas y minutas de las reuniones del equipo.
 
-#### 📂 `docs/agreement/`
-Documentos de acuerdos y compromisos del equipo (Commitment Agreement).
-
-#### 📂 `docs/fase DP/`
-Documentación de la fase de Desarrollo del Proyecto (DP).
-
-- **[6-DP-deliverable.md](docs/fase%20DP/6-DP-deliverable.md)**: Información sobre el entregable de la fase DP.
-- **[6-DP-slides.md](docs/fase%20DP/6-DP-slides.md)**: Enlace a las diapositivas de presentación de la fase DP.
-- **[analisis-de-competidores.md](docs/fase%20DP/analisis-de-competidores.md)**: Análisis de la competencia y productos similares en el mercado.
-- **[analisis-de-tecnologias.md](docs/fase%20DP/analisis-de-tecnologias.md)**: Comparativa de tecnologías, frameworks y plataformas de despliegue evaluados para el stack tecnológico. Incluye el análisis de riesgos y planes de contingencia para cada uno de ellos.
-- **[casos-de-uso-core.md](docs/fase%20DP/casos-de-uso-core.md)**: Descripción de los casos de uso principales del sistema.
-- **[definition-of-done.md](docs/fase%20DP/definition-of-done.md)**: Criterios de aceptación y definición de completitud para tareas.
-- **[feedback-w3.md](docs/fase%20DP/feedback-w3.md)**: Retroalimentación recibida en la semana 3.
-- **[img/](docs/fase%20DP/img/)**: Imágenes y recursos gráficos utilizados en la documentación.
-- **[informe-contribuciones-base-conocimiento-comun.md](docs/fase%20DP/informe-contribuciones-base-conocimiento-comun.md)**: Reporte de contribuciones a la base de conocimiento compartida.
-- **[informe-de-uso-de-ia.md](docs/fase%20DP/informe-de-uso-de-ia.md)**: Informe declarativo del uso de herramientas de IA durante el proyecto.
-- **[Mockups.md](docs/fase%20DP/Mockups.md)**: Diseños y prototipos de interfaz de usuario.
-- **[organizacion-sprints.md](docs/fase%20DP/organizacion-sprints.md)**: Planificación y organización de los sprints de desarrollo.
-- **[participantes.md](docs/fase%20DP/participantes.md)**: Listado de participantes del proyecto con roles y agrupaciones.
-- **[PDFs Entrega/](docs/fase%20DP/PDFs%20Entrega/)**: Versiones definitivas de los documentos para la entrega oficial en Enseñanza Virtual.
-- **[politica-commits-ramas-archivos.md](docs/fase%20DP/politica-commits-ramas-archivos.md)**: Guía de buenas prácticas para commits, ramas y estructura de archivos.
-
-#### 📂 `docs/Sprint 1/`
-Documentación del primer sprint de desarrollo.
-
-- **[6-S1-deliverable.md](docs/Sprint%201/6-S1-deliverable.md)**: Información sobre el entregable del Sprint 1.
-- **[analisis-cumplimiento-commitment-agreement-sprint1.md](docs/Sprint%201/analisis-cumplimiento-commitment-agreement-sprint1.md)**: Análisis del cumplimiento del Commitment Agreement durante Sprint 1.
-- **[analisis-feedback-sprint1.md](docs/Sprint%201/analisis-feedback-sprint1.md)**: Análisis de la retroalimentación recibida de los usuarios piloto en Sprint 1.
-- **[estimacion-rentabilidad-proyecto.md](docs/Sprint%201/estimacion-rentabilidad-proyecto.md)**: Estimación de la rentabilidad del proyecto.
-- **[gestion-de-costes.md](docs/Sprint%201/gestion-de-costes.md)**: Gestión y control de costes en Sprint 1.
-- **[img/](docs/Sprint%201/img/)**: Imágenes y recursos gráficos utilizados en la documentación.
-- **[informe-contribuciones-base-conocimiento-comun.md](docs/Sprint%201/informe-contribuciones-base-conocimiento-comun.md)**: Reporte de contribuciones a la base de conocimiento compartida.
-- **[informe-de-uso-de-ia.md](docs/Sprint%201/informe-de-uso-de-ia.md)**: Informe declarativo del uso de herramientas de IA durante Sprint 1.
-- **[metodologia-adaptada.md](docs/Sprint%201/metodologia-adaptada.md)**: Metodología de trabajo adaptada para el Sprint 1.
-- **[plan-gestion-de-costes.md](docs/Sprint%201/plan-gestion-de-costes.md)**: Plan de gestión de costes.
-- **[registro-de-incidencias-riesgos.md](docs/Sprint%201/registro-de-incidencias-riesgos.md)**: Registro de incidencias y riesgos identificados durante Sprint 1.
-- **[sprint-1-backlog-squad-1.md](docs/Sprint%201/sprint-1-backlog-squad-1.md)**: Backlog del Sprint 1 para Squad 1.
-- **[sprint-1-backlog-squad-2.md](docs/Sprint%201/sprint-1-backlog-squad-2.md)**: Backlog del Sprint 1 para Squad 2.
-- **[sprint-1-backlog-squad-3.md](docs/Sprint%201/sprint-1-backlog-squad-3.md)**: Backlog del Sprint 1 para Squad 3.
-- **[sprint-1-backlog-squad-4.md](docs/Sprint%201/sprint-1-backlog-squad-4.md)**: Backlog del Sprint 1 para Squad 4.
-- **[sprint-1-retrospective.md](docs/Sprint%201/sprint-1-retrospective.md)**: Retrospectiva del Sprint 1.
-- **[PDFs Entrega/](docs/Sprint%201/PDFs%20Entrega/)**: Versiones definitivas de los documentos para la entrega oficial en Enseñanza Virtual.
-  - **[6-S1-slides.pdf](docs/Sprint%201/PDFs%20Entrega/6-S1-slides.pdf)**: Presentación del Sprint 1.
-  - **[6-S1-deliverable.pdf](docs/Sprint%201/PDFs%20Entrega/6-S1-deliverable.pdf)**: Información sobre el entregable del Sprint 1.
-  - **[6-S1-dedication.xlsx](docs/Sprint%201/PDFs%20Entrega/6-S1-dedication.xlsx)**: Reporte de tiempo-esfuerzo para cada miembro del grupo.
-  - **[6-S1-software-review-guidelines.pdf](docs/Sprint%201/PDFs%20Entrega/6-S1-software-review-guidelines.pdf)**: Información sobre revisión de software.
-  - **[6-S1-time-report.pdf](docs/Sprint%201/PDFs%20Entrega/6-S1-time-report.pdf)**: Documento con el enlace al time report del Sprint 1.
-
-#### 📂 `docs/plantillas/`
-Plantillas reutilizables para documentos del proyecto.
-
-#### 📂 `docs/uso de ia/`
-Informes individuales y uno global del uso de herramientas de Inteligencia Artificial.
-
-#### 📂 `docs/usuarios pilotos/`
-Información y gestión de usuarios piloto del proyecto.
-
-- **[feedback-propuesta-de-idea.md](docs/usuarios%20pilotos/analisis-propuesta-de-cuestionario-usuarios-piloto.md)**: Propuesta de la idea y captación de usuarios piloto.
-- **[analisis-feedback-propuesta-de-idea.md](docs/usuarios%20pilotos/analisis-feedback-propuesta-de-idea.md)**: Análisis de las respuestas recibidas del formulario de propuesta de la idea.
-- **[estrategia-incentivos.md](docs/usuarios%20pilotos/estrategia-incentivos.md)**: Estrategia de incentivos para usuarios piloto.
-- **[definicion-de-usuarios-piloto.md](docs/usuarios%20pilotos/definicion-de-usuarios-piloto.md)**: Listado de los distintos perfiles distinguidos en los tipos de usuario arrendador y arrendatario.
-- **[listado-usuarios-piloto.md](docs/usuarios%20pilotos/listado-usuarios-piloto.md)**: Listado completo de usuarios piloto del proyecto.
-- **[plan-beneficiacion-usuarios-pilotos.md](docs/usuarios%20pilotos/plan-beneficiacion-usuarios-pilotos.md)**: Plan de beneficiación para usuarios piloto.
-
-
-## Instalación del devcontainer
-
-### Windows 11
-
-Este proyecto utiliza **Dev Containers** para proporcionar
-automáticamente todas las herramientas necesarias (Java, Maven, Node.js,
-PostgreSQL, Expo, etc.).
-
-**No necesitas instalar Java, Node ni PostgreSQL manualmente.**
-
-------------------------------------------------------------------------
-
-### 1. Instalar WSL2 (Linux dentro de Windows)
-
-Abrir **PowerShell como Administrador** y ejecutar:
-
-``` powershell
-wsl --install
-```
-
-Reiniciar el ordenador cuando lo solicite.
-
-Verificar la instalación:
-
-``` powershell
-wsl -l -v
-```
-
-Debe aparecer algo similar a:
-
-    Ubuntu    Version 2
-
-------------------------------------------------------------------------
-
-### 2. Instalar Docker Desktop
-
-Descargar e instalar:
-
-https://www.docker.com/products/docker-desktop/
-
-Durante la instalación:
-
--  Activar **Use WSL 2 backend**
-
-Después abrir Docker Desktop y esperar a que indique:
-
-    Docker Desktop is running
-
-### Activar integración con WSL
-
-En Docker Desktop:
-
-    Settings → Resources → WSL Integration
-
-Activar:
-
--  Ubuntu
-
-Pulsar **Apply & Restart**.
-
-------------------------------------------------------------------------
-
-### 3. Instalar Visual Studio Code
-
-Descargar:
-
-https://code.visualstudio.com/
-
-Instalar la extensión:
-
--   **Dev Containers** (Microsoft)
-
-------------------------------------------------------------------------
-
-###  4. Clonar el proyecto (MUY IMPORTANTE)
-
-Abrir terminal **Ubuntu (WSL)**, NO PowerShell.
-
-``` bash
-wsl
-mkdir -p ~/projects
-cd ~/projects
-git clone <URL_DEL_REPO>
-cd <repo>
-```
-
- **No trabajar en `C:\Users\...`**, ya que provoca lentitud y errores
-con Docker.
-
-------------------------------------------------------------------------
-
-### 5. Abrir el proyecto en VS Code
-
-Desde la terminal WSL:
-
-``` bash
-code .
-```
-
-Abajo a la izquierda en VS Code debe aparecer:
-
-    WSL: Ubuntu
-
-------------------------------------------------------------------------
-
-### 6. Abrir en Dev Container
-
-VS Code detectará automáticamente la configuración:
-
-    Reopen in Container
-
-Haz click.
-
-La primera vez tardará varios minutos porque se instalará todo
-automáticamente.
-
-------------------------------------------------------------------------
-
-### 7. Verificar instalación
-
-Abrir una terminal en VS Code y ejecutar:
-
-``` bash
-java -version
-mvn -version
-node -v
-npm -v
-```
-
-Si muestran versiones → entorno listo
-
-------------------------------------------------------------------------
-
-##  Ejecutar el proyecto
-
-### Backend (Spring Boot)
-
-``` bash
-cd backend
-./mvnw spring-boot:run
-```
-
-Backend disponible en:
-
-    http://localhost:8080 o el puerto que indique la aplicación
-
-------------------------------------------------------------------------
-
-### Mobile (React Native / Expo)
-
-``` bash
-cd mobile
-npx expo start
-```
-
-Escanear el QR con **Expo Go** o abrir en navegador.
-
-------------------------------------------------------------------------
-
-### Tests de rendimiento (Locust)
-
-Para ejecutar los tests de rendimiento, iniciar el backend en una terminal con el siguiente perfil para usar la bbdd en memoria:
-
-``` bash
-cd backend
-./mvnw spring-boot:run -Dspring-boot.run.profiles=loadtest
-```
-
-Y en otra terminal distinta:
-
-``` bash
-cd locust
-locust -f locustfile.py --host=http://localhost:8080
-```
-
-------------------------------------------------------------------------
-
-### Notas importantes
-
--   Todo se ejecuta dentro de Docker.
--   No instalar dependencias manualmente en Windows.
--   El entorno es idéntico para todo el equipo.
-
-------------------------------------------------------------------------
-
-### Problemas comunes
-
-### No aparece "Reopen in Container"
-
-    Ctrl + Shift + P
-    → Dev Containers: Reopen in Container
-
-### Docker no arranca
-
-Abrir Docker Desktop manualmente.
-
-### Proyecto lento
-
-Asegurarse de que el proyecto está dentro de WSL (`/home/...`) y no en
-`C:\`.
-
-
-
-### Instalación de Dev Containers en VS Code (Linux)
-
-Guía rápida para configurar **Dev Containers** en Visual Studio Code
-usando Linux.
-
-------------------------------------------------------------------------
-
-### Instalar Docker
-
-Abrir la terminal y ejecutar:
-
-``` bash
-sudo apt update
-sudo apt install docker.io -y
-sudo systemctl enable docker
-sudo systemctl start docker
-sudo usermod -aG docker $USER
-```
-
-###Reinicia sesión después de ejecutar el último comando.
-
-Verificar instalación:
-
-``` bash
-docker run hello-world
-```
-
-------------------------------------------------------------------------
-
-### Instalar Visual Studio Code
-
-Si no está instalado:
-
-``` bash
-sudo snap install code --classic
-```
-
-------------------------------------------------------------------------
-
-### Instalar la extensión Dev Containers
-
-1.  Abrir VS Code\
-2.  Ir a **Extensiones** (`Ctrl + Shift + X`)\
-3.  Buscar: `Dev Containers`\
-4.  Instalar la extensión
-
-------------------------------------------------------------------------
-
-### Crear un Dev Container
-
-1.  Abrir la carpeta del proyecto en VS Code
-2.  Presionar:
-
-```{=html}
-<!-- -->
-```
-    Ctrl + Shift + P
-
-3.  Ejecutar:
-
-```{=html}
-<!-- -->
-```
-    Dev Containers: Add Dev Container Configuration Files
-
-4.  Seleccionar el entorno deseado (Python, Node, Ubuntu, etc.)
-
-------------------------------------------------------------------------
-
-### Abrir el proyecto dentro del container
-
-Ejecutar:
-
-    Dev Containers: Reopen in Container
-
-VS Code construirá automáticamente el contenedor y abrirá el proyecto
-dentro de él.
-
-------------------------------------------------------------------------
-
-### Verificación
-
-Si todo funciona correctamente, en la esquina inferior izquierda
-aparecerá:
-
-    Dev Container: <nombre-del-entorno>
-
-La terminal ya estará ejecutándose dentro del contenedor.
-
-------------------------------------------------------------------------
-
-### Problemas comunes
-
-#### Docker no conecta
-
-``` bash
-sudo systemctl start docker
-sudo systemctl status docker
-```
-
-#### Problemas de permisos
-
-``` bash
-sudo usermod -aG docker $USER
-```
-
-(Reiniciar sesión después)
+Repositorio principal del proyecto KeaKit.
+
+![Banner de KeaKit](./docs/Preparing%20Project%20Launch/img/keakit-banner.jpg)
+
+## Índice
+
+1. [¿Qué es KeaKit?](#1-qué-es-keakit)
+2. [¿Quiénes somos?](#2-quiénes-somos)
+3. [Funcionalidades principales](#3-funcionalidades-principales)
+4. [Estructura del proyecto](#4-estructura-del-proyecto)
+5. [Instalación y ejecución](#5-instalación-y-ejecución)
+
+## 1. ¿Qué es KeaKit?
+
+**KeaKit** es una plataforma digital que conecta a personas para **alquilar objetos y contratar servicios** en un único lugar, permitiendo crear **soluciones personalizadas** mediante “kits” que combinan ambos según la necesidad. Su **enfoque bidireccional** facilita tanto a usuarios encontrar lo que necesitan de forma **rápida y sencilla**, como a otros **rentabilizar** objetos en desuso, todo a través de un proceso **centralizado, flexible y sin complicaciones**.
+
+## 2. ¿Quiénes somos?
+
+En KeaKit somos unos apasionados de la economía circular y la eficiencia. Creemos firmemente que la flexibilidad es la clave para resolver las necesidades del día a día. Nacimos a partir de una idea sencilla pero poderosa: ¿por qué comprar algo que vas a usar solo una vez si puedes alquilarlo? Y, sobre todo, ¿por qué buscar productos y servicios por separado cuando puedes tenerlos integrados?
+
+Somos más que una plataforma; somos una comunidad impulsada por la colaboración. Nuestro objetivo es conectar a personas que quieren sacarle partido a lo que ya tienen con aquellas que buscan soluciones prácticas, inteligentes y, sobre todo, hechas a su medida.
+
+## 3. Funcionalidades principales
+
+KeaKit ofrece una plataforma completa que integra alquiler de objetos y contratación de servicios en una única experiencia:
+
+- **Gestión de usuarios:** registro, inicio de sesión, edición de perfil y sistema de valoraciones.
+- **Publicación de artículos:** los usuarios pueden subir, editar y gestionar objetos disponibles para alquiler.
+- **Creación de kits personalizados:** combinación flexible de productos y servicios en un solo paquete.
+- **Cálculo dinámico de precios:** visualización en tiempo real del coste según la configuración del kit.
+- **Gestión logística:** selección de fechas, ubicaciones y condiciones de entrega o recogida.
+- **Pagos integrados:** contratación y pago seguro directamente desde la plataforma.
+- **Seguimiento de alquileres:** control del estado de pedidos activos
+
+Estas funcionalidades permiten una experiencia centralizada, flexible y eficiente para todos nuestros usuarios.
+
+## 4. Estructura del proyecto
+
+- 📁 [`docs/`](./docs/) : Documentación completa del proyecto KeaKit.
+  - 📂 [`./Actas de reuniones/`](./docs/Actas%20de%20reuniones/) : Actas y minutas de las reuniones del equipo.
+  - 📂 [`./Acuerdos de compromiso/`](./docs/Acuerdos%20de%20compromiso/) : Documentos de acuerdos y compromisos del equipo (Commitment Agreement).
+  - 📂 [`./Demos/`](./docs/Demos/) : Enlaces a las demos del proyecto.
+  - 📂 [`./Devising a Project/`](./docs/Devising%20a%20Project/) : Documentos generados en la fase de diseño y planificación del proyecto.
+    - 📂 [`./Alcance del proyecto/`](./docs/Devising%20a%20Project/Alcance%20del%20proyecto/) : Contiene los diseños iniciales de la aplicación (casos de uso divididos en core y no core, diagrama de clases UML y prototipos).
+    - 📂 [`./Directrices/`](./docs/Devising%20a%20Project/Directrices/) : Contiene la planificación, organización del equipo, el plan de gestión de riesgos, la definición de hecho y la política de ramas, commits y nombres de archivos.
+    - 📂 [`./Entregable/`](./docs/Devising%20a%20Project/Entregable/) : Documentos solicitados por el profesorado para la evaluación del proyecto.
+    - 📂 [`./Feedback/`](./docs/Devising%20a%20Project/Feedback/) : Contiene informes sobre el feedback obtenido y otorgado.
+    - 📂 [`./Informes y análisis/`](./docs/Devising%20a%20Project/Informes%20y%20análisis/) :
+      - 📂 [`./Informes sobre el uso de IA`](./docs/Devising%20a%20Project/Informes%20y%20análisis/Informes%20sobre%20el%20uso%20de%20IA/) : Resumen de interacciones con la inteligencia artificial para el desarrollo del proyecto.
+      - 📄 [`analisis-de-competidores.md`](./docs/Devising%20a%20Project/Informes%20y%20análisis/analisis-de-competidores.md)
+      - 📄 [`analisis-de-tecnologias.md`](./docs/Devising%20a%20Project/Informes%20y%20análisis/analisis-de-tecnologias.md) : Análisis de tecnologías a utilizar para el desarrollo del proyecto.
+      - 📄 [`registro-de-riesgos.md`](./docs/Devising%20a%20Project/Informes%20y%20análisis/registro-de-riesgos.md) : Registro de riesgos acontecidos durante la fase de diseño.
+  - 📂 [`./Plantillas/`](./docs/Plantillas/) : Plantillas reutilizables para documentos del proyecto.
+  - 📂 [`./Preparing Project Launch/`](./docs/Preparing%20Project%20Launch/) : Documentos generados durante la penúltima entrega del proyecto.
+  - 📂 [`./Sprint 1/`](./docs/Sprint%201/) : Documentos generados durante el primer sprint de desarrollo.
+    - 📂 [`./Directrices/`](./docs/Sprint%201/Directrices/)  
+      - 📄 [`gestion-de-costes.md`](./docs/Sprint%201/Directrices/gestion-de-costes-S1.md): Gestión y control de costes en Sprint 1.
+      - 📄 [`metodologia-adaptada.md`](./docs/Sprint%201/Directrices/metodologia-adaptada.md): Descripción de la metodología de trabajo adaptada a partir del estándar Scrum.
+      - 📄 [`plan-gestion-de-costes.md`](./docs/Sprint%201/Directrices/plan-gestion-de-costes.md): Plan de gestión de costes a lo largo del proyecto.
+  - 📂 [`./Sprint 2/`](./docs/Sprint%202/) : Documentos generados durante el segundo sprint de desarrollo.
+  - 📂 [`./Sprint 3/`](./docs/Sprint%203/) : Documentos generados durante el tercer sprint de desarrollo.
+  - 📂 [`./Usuarios piloto/`](./docs/Usuarios%20piloto/) : Información relativa al pilotaje del sistema.
+    - 📄 [`analisis-feedback-propuesta-de-idea.md`](./docs/Usuarios%20piloto/analisis-feedback-propuesta-de-idea.md): Análisis de las respuestas recibidas del formulario de propuesta de la idea.
+    - 📄 [`analisis-feedback-sprint1.md`](./docs/Usuarios%20piloto/analisis-feedback-sprint1.md) : Análisis del feedback recibido sobre la primera versión de la aplicación.
+    - 📄 [`analisis-feedback-sprint2.md`](./docs/Usuarios%20piloto/analisis-feedback-sprint2.md) : Análisis del feedback recibido sobre la segunda versión de la aplicación.
+    - 📄 [`definicion-de-usuarios-piloto.md`](./docs/Usuarios%20piloto/definicion-de-usuarios-piloto.md) : Listado de los distintos perfiles clasificados en arrendador y arrendatario.
+    - 📄 [`feedback-propuesta-de-idea.md`](./docs/Usuarios%20piloto/feedback-propuesta-de-idea.md): Propuesta de cuestionario para que los usuarios piloto validen la idea.
+    - 📄 [`gestion-de-usuarios-piloto.md`](./docs/Usuarios%20piloto/gestion-de-usuarios-piloto.md) : Plan de gestión de usuarios piloto.
+    - 📄 [`incentivos.md`](./docs/Usuarios%20piloto/incentivos.md) : Beneficios para usuarios piloto.
+    - 📄 [`listado-usuarios-piloto.md`](./docs/Usuarios%20piloto/listado-usuarios-piloto.md) : Listado completo de usuarios piloto del proyecto.
+    - 📄 [`plan-beneficiacion-usuarios-pilotos.md`](./docs/Usuarios%20piloto/plan-beneficiacion-usuarios-pilotos.md) : Describe el programa de usuarios piloto, incluyendo sus objetivos, incentivos y funcionamiento. Además, detalla el modelo de ingresos de la plataforma y el impacto económico de esta fase inicial. Por último, evalúa la inversión necesaria para validar el producto antes de su lanzamiento oficial.
+    - 📄 [`plan-de-expansion.md`](./docs/Usuarios%20piloto/plan-de-expansion.md) : Plan de expansión y captación de nuevos usuarios piloto.
+  - 📄 [`manual-de-instalación.md`](./docs/manual-de-instalación.md) : Manual de instalación del sistema.
+  - 📄 [`product-backlog.md`](./docs/product-backlog.md) : Product Backlog del proyecto.
+  - 📄 [`reglas-de-negocio.md`](./docs/reglas-de-negocio.md) : Reglas de negocio del sistema.
+
+## 5. Instalación y ejecución
+
+Puede consultar las instrucciones de instalación y ejecución del sistema en el archivo [manual-de-instalación.md](./docs/manual-de-instalación.md).
