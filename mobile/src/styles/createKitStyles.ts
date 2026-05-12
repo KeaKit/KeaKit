@@ -111,44 +111,6 @@ export const createKitStyles = StyleSheet.create({
     alignItems: "center",
   },
 
-  productRow: {
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.backgroundWhite,
-    marginBottom: Spacing.sm,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.md,
-  },
-
-  productRowSelected: {
-    borderColor: Colors.border,
-    backgroundColor: "#FAFAFA",
-  },
-
-  productThumb: {
-    width: 52,
-    height: 52,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.brandBeige,
-    borderWidth: 1,
-    borderColor: Colors.brandBorder,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  productInfo: {
-    flex: 1,
-  },
-
-  productTitle: {
-    fontSize: FontSizes.lg,
-    fontWeight: FontWeights.bold,
-    color: Colors.primary,
-    marginBottom: 2,
-  },
-
   productDesc: {
     fontSize: FontSizes.sm,
     color: Colors.textSecondary,
@@ -260,5 +222,79 @@ export const createKitStyles = StyleSheet.create({
   },
   modalBtn: {
     flex: 1,
+  },
+  productRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.backgroundWhite,
+    marginBottom: Spacing.sm,
+    padding: Spacing.md,
+    gap: Spacing.md,
+  },
+  productRowSelected: {
+    borderColor: Colors.border,
+    backgroundColor: "#FAFAFA",
+  },
+  productImage: {
+    width: 70,
+    height: 70,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.border,
+  },
+  productImagePlaceholder: {
+    width: 70,
+    height: 70,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  productInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  productTitle: {
+    fontSize: FontSizes.base,
+    fontWeight: FontWeights.semibold as "600",
+    color: Colors.textPrimary,
+  },
+  rightColumn: {
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: Spacing.sm,
+    minWidth: 100,
+  },
+  largePrice: {
+    fontSize: FontSizes.xl,
+    fontWeight: FontWeights.bold as "700",
+    color: Colors.primary,
+    textAlign: "right",
+  },
+  actionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  quantitySelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  quantityText: {
+    fontSize: FontSizes.lg,
+    fontWeight: FontWeights.semibold as "600",
+    color: Colors.textPrimary,
+    minWidth: 28,
+    textAlign: "center",
+  },
+  removeButton: {
+    padding: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.backgroundWhite,
   },
 });

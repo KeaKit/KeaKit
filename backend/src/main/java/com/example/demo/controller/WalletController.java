@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.Wallet;
 import com.example.demo.model.Transaction;
 import com.example.demo.dto.TransactionDTO;
+import com.example.demo.dto.TransactionWithDetailsDTO;
 import com.example.demo.dto.WalletDTO;
 import com.example.demo.service.WalletService;
 import com.example.demo.service.AuthService;
@@ -30,11 +31,8 @@ public class WalletController {
     @GetMapping("/my-wallet")
     public ResponseEntity<?> getLogedUserWallet() throws ResourceNotFoundException, UnauthorizedException {
         Long userId = authService.getAuthenticatedUserId();
-
         Wallet wallet = walletService.getWalletByUserId(userId);
-
         WalletDTO walletDTO = toDTO(wallet);
-
         return ResponseEntity.ok(walletDTO);
     }
 
@@ -42,41 +40,39 @@ public class WalletController {
     public ResponseEntity<List<TransactionDTO>> getLogedUserWalletTransactions()
             throws ResourceNotFoundException, UnauthorizedException {
         Long userId = authService.getAuthenticatedUserId();
-
         List<Transaction> transactions = walletService.getTransactionsForUser(userId);
-        // Si no hay transacciones, devuelve una lista vacía
         List<TransactionDTO> transactionDTOs = transactions.stream()
                 .map(this::toDTO)
                 .toList();
-
         return ResponseEntity.ok(transactionDTOs);
+    }
+
+    @GetMapping("/transactions/{transactionId}/details")
+    public ResponseEntity<?> getTransactionDetails(@PathVariable Long transactionId)
+            throws ResourceNotFoundException, UnauthorizedException {
+        Long userId = authService.getAuthenticatedUserId();
+        TransactionWithDetailsDTO transactionDetails = walletService.getTransactionWithDetails(transactionId, userId);
+        return ResponseEntity.ok(transactionDetails);
     }
 
     // Rutas de administrador para acceder a cualquier wallet y sus transacciones
     @GetMapping("/user/{userId}")
     public ResponseEntity<WalletDTO> getWalletByUserId(@PathVariable Long userId)
             throws ResourceNotFoundException, UnauthorizedException, AccessForbiddenException {
-
         authService.validateAccess(userId);
-
         Wallet wallet = walletService.getWalletByUserId(userId);
         WalletDTO walletDTO = toDTO(wallet);
-
         return ResponseEntity.ok(walletDTO);
     }
 
     @GetMapping("/user/{userId}/transactions")
     public ResponseEntity<List<TransactionDTO>> getWalletTransactions(@PathVariable Long userId)
             throws ResourceNotFoundException, UnauthorizedException, AccessForbiddenException {
-
         authService.validateAccess(userId);
-
         List<Transaction> transactions = walletService.getTransactionsForUser(userId);
-
         List<TransactionDTO> transactionDTOs = transactions.stream()
                 .map(this::toDTO)
                 .toList();
-
         return ResponseEntity.ok(transactionDTOs);
     }
 

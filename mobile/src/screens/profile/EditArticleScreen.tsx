@@ -18,6 +18,7 @@ import { es, registerTranslation } from 'react-native-paper-dates';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNotification } from '../../components/NotificationContext';
+import { getPurchaseDateValidationError } from '../../utils/articlePurchaseDate';
 
 const MAX_TITLE_LENGTH = 255;
 const MAX_TOTAL_UNITS = 2147483647; 
@@ -84,15 +85,6 @@ const isoToDate = (iso: string | null | undefined): Date | undefined => {
   if (!iso) return undefined;
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d);
-};
-
-const isValidIsoDate = (iso: string): boolean => {
-  if (!iso) return true;
-  const [y, m, d] = iso.split('-').map(Number);
-  if (m < 1 || m > 12) return false;
-  if (d < 1 || d > 31) return false;
-  const date = new Date(y, m - 1, d);
-  return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
 };
 
 const hasAtMostTwoDecimals = (value: string): boolean =>
@@ -228,8 +220,10 @@ const EditArticleScreen: React.FC = () => {
     if (!availableUntil) newErrors.availableUntil = 'Selecciona la fecha de fin';
     if (availableFrom && availableUntil && availableFrom >= availableUntil)
       newErrors.availableUntil = 'Debe ser posterior a la fecha de inicio';
-    if (purchaseDate && !isValidIsoDate(purchaseDate))
-      newErrors.purchaseDate = 'Fecha de compra no válida';
+    const purchaseDateError = getPurchaseDateValidationError(purchaseDate);
+    if (purchaseDateError) {
+      newErrors.purchaseDate = purchaseDateError;
+    }
     if (!totalUnits || isNaN(Number(totalUnits)) || Number(totalUnits) < 1 || !Number.isInteger(Number(totalUnits))) {
       newErrors.totalUnits = 'Introduce un número de unidades válido (mínimo 1)';
     }
@@ -649,8 +643,14 @@ const EditArticleScreen: React.FC = () => {
                 onConfirm={(params: { date?: Date }) => {
                   setShowPurchaseDatePicker(false);
                   if (params.date) {
+                    const nextPurchaseDate = toIso(params.date);
+                    const purchaseDateError = getPurchaseDateValidationError(nextPurchaseDate);
+                    if (purchaseDateError) {
+                      setErrors((prev) => ({ ...prev, purchaseDate: purchaseDateError }));
+                      return;
+                    }
                     setPurchaseDateObj(params.date);
-                    setPurchaseDate(toIso(params.date));
+                    setPurchaseDate(nextPurchaseDate);
                     clearError('purchaseDate');
                   }
                 }}
