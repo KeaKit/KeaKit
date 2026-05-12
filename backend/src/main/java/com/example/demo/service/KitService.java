@@ -181,7 +181,7 @@ public class KitService {
         if (!snapshots.isEmpty()) {
             for (ItemMemento item : snapshots) {
                 Item foundItem = itemRepository.findById(item.getOriginalItemId())
-                        .orElseThrow(() -> new RuntimeException("Item no encontrado: " + item.getId()));
+                        .orElseThrow(() -> new RuntimeException("Item no encontrado: " + item.getOriginalItemId()));
 
                 if (kit.getTenant().getId().equals(foundItem.getOwner().getId())) {
                     throw new RuntimeException("El arrendatario no puede seleccionar sus propios items");
