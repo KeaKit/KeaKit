@@ -55,6 +55,8 @@ type Item = {
   imageUrl: string;
   ownerName: string;
 };
+import { Helmet } from 'react-helmet-async'; 
+
 
 type CheckoutNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
@@ -279,6 +281,11 @@ export default function CheckoutScreen({ route }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Helmet>
+        <title>Pagar kit | KeaKit</title>
+        <meta name="description" content="Finaliza el pago de tu kit en KeaKit de forma segura con Stripe o con tu saldo disponible en la app."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>         
       {/* Header */}
       <Header
         title="Pagar el kit"

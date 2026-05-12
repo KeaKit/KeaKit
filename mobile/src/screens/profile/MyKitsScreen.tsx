@@ -16,6 +16,7 @@ import { KitResponse, KitStatus, RootStackParamList } from "../../types";
 import { API_ROUTES } from "../../config/api";
 import { Colors, Spacing, commonStyles } from "../../styles";
 import { useNavbarOffset } from "../../hooks/useWindowDimensions";
+import { Helmet } from 'react-helmet-async'; 
 
 type MyKitsNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 
@@ -210,6 +211,11 @@ const loadKits = useCallback(async () => {
 
   return (
     <SafeAreaView style={[commonStyles.container, {paddingBottom: navbarOffset}]}>
+      <Helmet>
+        <title>Mis alquileres | KeaKit</title>
+        <meta name="description" content="Consulta los alquileres que has realizado en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>            
       <View style={commonStyles.header}>
         <TouchableOpacity
           style={styles.backButton}

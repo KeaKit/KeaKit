@@ -1,0 +1,92 @@
+# Informe Declarativo del Uso de la IA
+
+## Introducción
+El objetivo de este documento consiste en detallar el uso de herramientas de Inteligencia Artificial durante el desarrollo del proyecto KeaKit. A continuación, se describen las interacciones realizadas con la IA, especificando la herramienta empleada, el prompt utilizado, la respuesta obtenida y el objetivo de la interacción.
+
+
+## Registro de Interacciones
+
+### Interacción 1
+
+**Usuario:** Rosa María Espinosa Martínez.
+
+**Herramienta y versión de Inteligencia Artificial utilizada:** Copilot en Visual Studio Code, modelo GPT-4.1 en modo Agente.
+
+**Fecha de uso:** 17/02/2026
+
+**Objetivo del uso:** Pulir la redacción del documento que estaba redactando antes de subirlo al repositorio.
+
+**Enlace a la conversación:** Copilot no permite compartir enlaces de la conversación. Adjunto captura de pantalla.
+
+<div style="text-align: center;">
+  <img src="img/rmem-copilot-politica-commits.png" width="500" height="auto" style="object-fit: cover;" alt="Captura Conversación Copilot">
+</div>
+
+---
+
+### Interacción 2
+
+**Usuario:** Alejandro González Macías.
+
+**Herramienta y versión de Inteligencia Artificial utilizada:** ChatGPT, modelo GPT-5.2.
+
+**Fecha de uso:** 18/2/2026
+
+**Objetivo del uso:** Asegurar que la versión final del documento sobre el análisis de competidores no contenga ningún error ortográfico grave.
+
+**Enlace a la conversación:** [Ver conversación](https://chatgpt.com/share/6995a278-ceac-8005-9a86-4da19e4b53e6)
+
+---
+
+### Interacción 3
+
+**Usuario:** Lucía Ponce García de Sola  
+
+**Herramienta y versión de Inteligencia Artificial utilizada:** ChatGPT, modelo GPT-5.2.
+
+**Fecha de uso:** 08/02/2026
+
+**Objetivo del uso:** Investigar y comparar diferentes frameworks y tecnologías para el desarrollo del backend y frontend del proyecto KeaKit, analizando ventajas, desventajas, documentación disponible y compatibilidad entre herramientas para realizar el análisis del stack tecnológico.
+
+**Enlace a la conversación:** [Enlace](https://chatgpt.com/share/6996048a-7eec-8005-bbc0-9f322538c4c2)
+
+---
+
+### Interacción 4
+
+**Usuario:** Lucía Ponce García de Sola  
+**Herramienta y versión de Inteligencia Artificial utilizada:** Gemini 3 Flash
+
+**Fecha de uso:** 23/02/2026
+
+**Objetivo del uso:** Sintetizar y extraer información relevante de la transcripción de la reunión de organización realizada el 21 de febrero 2026, para ayudar en la redacción de su correspondiente acta.
+
+**Enlace a la conversación:** Gemini no permite compartir conversaciones si se utiliza un email corporativo (como los pertenecientes al dominio alum.us.es).
+
+---
+
+### Interacción 5
+
+**Usuario:** Luis Emmanuel Chávez Malavé 
+
+**Herramienta y versión de Inteligencia Artificial utilizada:** ChatGPT, modelo GPT-5.2.
+
+**Fecha de uso:** 25/02/2026
+
+**Objetivo del uso:** Investigar el tiempo y peso promedio de busquedas de objetos en tablas sql para tener un estimado de cuanta quota se puede llegar a gastar a lo largo del proyecto, debido a que solo se estaba estimando casos hipoteticos no se requirió una investigación más profunda por los datos aproximados de chatgpt se utilizaron de manera directa en el análisis
+
+**Enlace a la conversación:** [Ver conversación](https://chatgpt.com/share/699f577c-14a4-8013-9d7c-ba35fbdd2400)
+
+---
+
+### Interacción 6
+
+**Usuario:** Adrián Chabrera Rubio
+
+**Herramienta y versión de Inteligencia Artificial utilizada:**  Gemini 3 Flash
+
+**Fecha de uso:** 23/03/2026
+
+**Objetivo del uso:** Generar y validar casos de prueba para distintas funcionalidades del proyecto, incluyendo tests unitarios y de integración. La IA ayudó a proponer escenarios de prueba.
+
+**Enlace a la conversación:** Gemini no permite compartir conversaciones si se utiliza un email corporativo (como los pertenecientes al dominio alum.us.es).

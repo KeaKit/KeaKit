@@ -8,6 +8,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { KitResponse, KitStatus, RootStackParamList } from "../../types";
 import { Colors, Spacing, commonStyles } from "../../styles";
 import { getAssignedKits } from "../../services/kitService";
+import { Helmet } from 'react-helmet-async'; 
+
 
 type AssignedKitsNav = NativeStackNavigationProp<RootStackParamList, "AssignedKits">;
 
@@ -101,6 +103,11 @@ const AssignedKitsScreen = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Kits asignados | KeaKit</title>
+        <meta name="description" content="Consulta los kits que tienes asignados en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>       
       <View style={commonStyles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

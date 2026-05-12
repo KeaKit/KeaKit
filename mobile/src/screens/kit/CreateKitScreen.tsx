@@ -60,11 +60,9 @@ import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
 } from "./createKitSelection";
-
-import {
-  formatRentalDuration,
-  calculateMonthsBetween,
-} from "../../utils/duration";
+import { styles } from "../../styles/uploadArticleScreenStyles";
+import { formatRentalDuration, calculateMonthsBetween } from "../../utils/duration";
+import { Helmet } from 'react-helmet-async'; 
 
 const COMISION = 0;
 const GUARANTEE_PERCENTAGE = 0.2;
@@ -872,6 +870,11 @@ const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
+        <Helmet>
+          <title>Crear un kit | KeaKit</title>
+          <meta name="description" content="Crea un nuevo kit en KeaKit y personalízalo según tus necesidades."/>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>  
         <ScrollView
           contentContainerStyle={createKitStyles.content}
           keyboardShouldPersistTaps="handled"

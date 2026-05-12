@@ -20,6 +20,7 @@ import { RootStackParamList, IncidentType, RentedItemResponse } from '../../type
 import { useAuth } from '../../context/AuthContext';
 import { createIncident, getRentedItems } from '../../services/incidentService';
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } from '../../styles';
+import { Helmet } from 'react-helmet-async'; 
 
 type CreateIncidentNav = NativeStackNavigationProp<RootStackParamList, 'CreateIncident'>;
 
@@ -197,6 +198,11 @@ const CreateIncidentScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Nueva Incidencia | KeaKit</title>
+        <meta name="description" content="Crea una incidencia en KeaKit para reportar problemas con tus artículos, alquileres o servicios y recibe asistencia rápidamente."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>        
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

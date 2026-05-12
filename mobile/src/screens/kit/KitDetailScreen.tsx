@@ -19,6 +19,7 @@ import { useAuth } from '../../context/AuthContext';
 import { API_ROUTES } from "../../config/api";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { deleteKit, validateKit } from '../../services/kitService';
+import { Helmet } from 'react-helmet-async'; 
 import { createIncident } from '../../services';
 
 type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
@@ -228,6 +229,11 @@ const KitDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Detalles del kit | KeaKit</title>
+        <meta name="description" content="Consulta los detalles de tu kit en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>        
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

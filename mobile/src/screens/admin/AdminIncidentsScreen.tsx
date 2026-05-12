@@ -19,6 +19,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getAllIncidents } from '../../services/incidentService';
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } from '../../styles';
 import { filterIncidents, computeSummary } from '../../utils/incidentFilters';
+import { Helmet } from 'react-helmet-async'; 
 
 export { filterIncidents, computeSummary };
 
@@ -257,6 +258,11 @@ const AdminIncidentsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Gestión de Incidencias | KeaKit</title> 
+        <meta name="description" content="Panel de administración de KeaKit. Gestión y mediación de incidencias entre usuarios." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Cabecera */}
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>

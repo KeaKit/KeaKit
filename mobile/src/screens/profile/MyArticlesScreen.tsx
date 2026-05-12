@@ -1,58 +1,25 @@
-import React, { useState, useCallback, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  SafeAreaView,
-  TouchableOpacity,
-  Pressable,
-  Image,
-  Modal,
-  TextInput,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-} from "react-native";
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, SafeAreaView, TouchableOpacity, Pressable, Image, Modal, TextInput, LayoutAnimation, Platform, UIManager } from 'react-native';
 
-import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import {
-  RootStackParamList,
-  UserArticle,
-  Category,
-  ArticleRecordDTO,
-} from "../../types";
-import { fetchAllCategories } from "../../services/categoryService";
-import {
-  getMyArticles,
-  deleteArticle,
-  getArticleById,
-  getArticleRecord,
-  processArticleReturn,
-} from "../../services/articleService";
-import { Colors, Spacing, commonStyles } from "../../styles";
-import { useNotification } from "../../components/NotificationContext";
-import { ConfirmModal } from "../../components/ConfirmModal";
-import { SelectPicker } from "../../components/SelectPicker";
-import { Provider as PaperProvider, MD3LightTheme } from "react-native-paper";
-import {
-  DatePickerModal,
-  es,
-  registerTranslation,
-} from "react-native-paper-dates";
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList, UserArticle, Category, ArticleRecordDTO } from '../../types';
+import { fetchAllCategories } from '../../services/categoryService';
+import { getMyArticles, deleteArticle, getArticleById, getArticleRecord, processArticleReturn } from '../../services/articleService';
+import { Colors, Spacing, commonStyles } from '../../styles';
+import { useNotification } from '../../components/NotificationContext'; 
+import { ConfirmModal } from '../../components/ConfirmModal'; 
+import { SelectPicker } from '../../components/SelectPicker';
+import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { DatePickerModal, es, registerTranslation } from 'react-native-paper-dates';
+import { formatOwnerCommissionPromoBadgeLabel } from '../../utils/ownerCommissionPromo';
+import { Helmet } from 'react-helmet-async'; 
 import { useNavbarOffset } from "../../hooks/useWindowDimensions";
-import { formatOwnerCommissionPromoBadgeLabel } from "../../utils/ownerCommissionPromo";
-
-type MyArticlesNav = NativeStackNavigationProp<
-  RootStackParamList,
-  "MyArticles"
->;
-type FilterType = "ALL" | "AVAILABLE" | "RENTED";
-registerTranslation("es", es);
+type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
+type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
+registerTranslation('es', es);
 
 const CONDITION_OPTIONS = [
   { value: "", label: "Cualquier estado" },
@@ -738,6 +705,11 @@ const MyArticlesScreen: React.FC = () => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
+        <Helmet>
+          <title>Mis artículos | KeaKit</title>
+          <meta name="description" content="Consulta los artículos que has publicado en KeaKit."/>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>           
         <View style={commonStyles.header}>
           <TouchableOpacity
             style={styles.backButton}

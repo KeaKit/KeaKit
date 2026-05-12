@@ -17,6 +17,8 @@ import { useAuth } from '../../context/AuthContext';
 import { getIncidentsByUser, getReceivedIncidents } from '../../services/incidentService';
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } from '../../styles';
 import { useNavbarOffset } from '../../hooks/useWindowDimensions';
+import { Helmet } from 'react-helmet-async'; 
+
 
 type MyIncidentsNav = NativeStackNavigationProp<RootStackParamList, 'MyIncidents'>;
 type TabType = 'sent' | 'received';
@@ -147,6 +149,11 @@ const MyIncidentsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[commonStyles.container, {paddingBottom: navbarOffset - 20 }]}>
+      <Helmet>
+        <title>Centro de incidencias | KeaKit</title>
+        <meta name="description" content="Gestiona todas tus incidencias en KeaKit. Revisa solicitudes enviadas y recibidas relacionadas con tus alquileres, artículos y servicios."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>        
       {/* Cabecera */}
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>

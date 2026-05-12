@@ -16,6 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { Colors } from '../../styles';
 import { useNavbarOffset } from '../../hooks/useWindowDimensions';
+import { Helmet } from 'react-helmet-async';
 
 type AdminHomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -166,6 +167,13 @@ const AdminHomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.root, {paddingBottom: navbarOffset}]} edges={['top', 'left', 'right']}>
+      
+      <Helmet>
+        <title>Panel de Administración | KeaKit</title>
+        <meta name="description" content="Panel de administración de KeaKit. Gestión de usuarios, kits, categorías, repartidores y configuración de la plataforma." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+
       <ScrollView 
         contentContainerStyle={styles.scroll} 
         showsVerticalScrollIndicator={false}

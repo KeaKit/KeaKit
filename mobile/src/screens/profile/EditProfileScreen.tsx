@@ -19,6 +19,7 @@ import { updateProfile, uploadProfileImage } from '../../services/userService';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { ProfileImageWithBadge } from '../../components/ProfileImageWithBadge';
+import { Helmet } from 'react-helmet-async'; 
 
 type EditProfileNav = NativeStackNavigationProp<RootStackParamList, 'EditProfile'>;
 
@@ -183,6 +184,11 @@ const EditProfileScreen: React.FC = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <Helmet>
+        <title>Editar perfil | KeaKit</title>
+        <meta name="description" content="Edita tu perfil en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>         
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={24} color="#103a57" />
       </TouchableOpacity>

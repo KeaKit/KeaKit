@@ -26,6 +26,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
 import { getMyKits, getKitTracking, getUpdatrableTrackingKits } from "../../services/kitService";
 import { useNavbarOffset } from '../../hooks/useWindowDimensions';
+import { Helmet } from 'react-helmet-async'; 
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -215,6 +216,11 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.root, {paddingBottom: navbarOffset}]} edges={['top', 'left', 'right']}>
+      <Helmet>
+        <title>Inicio | KeaKit</title>
+        <meta name="description" content="Panel principal de KeaKit para gestionar tus alquileres, kits, wallet y los artículos y servicios que hayas publicado."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       
       {/* Main scrollable container */}
       <ScrollView

@@ -18,6 +18,7 @@ import {
 } from "../../services/walletService";
 import { Colors, commonStyles, FontSizes, FontWeights } from "../../styles";
 import { ActivityIndicator } from "react-native-paper";
+import { Helmet } from 'react-helmet-async'; 
 
 type WalletNav = NativeStackNavigationProp<RootStackParamList, "Wallet">;
 
@@ -141,6 +142,11 @@ export default function WalletScreen() {
 
   return (
     <SafeAreaView style={[commonStyles.container, { paddingBottom: insets.bottom }]}>
+      <Helmet>
+        <title>Mi Wallet | KeaKit</title>
+        <meta name="description" content="Consulta el dinero disponible en tu wallet y el historial de transacciones realizadas en KeaKit. Además, puedes retirar el dinero en cualquier momento."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>        
       <Header title="Mi Wallet" showBack={true} onBack={navigation.goBack} />
       <View style={styles.content}>
         {/* Tarjeta de Balance */}
