@@ -32,6 +32,27 @@
 | `**aparren*****` | Nómada |
 | `**44137*****` | Erasmus |
 
+#### Cuarta captación (Feedback sprint 3)
+| `**alez20*****` | Rentabilizador |
+| `**ealescar*****` | Rentabilizador |
+| `**dedimo*****` | Práctico |
+
+#### Quinta captación (Sorteo de descuentos)
+| `**rezsant*****` | - |
+| `**opezcarr*****` | - |
+| `**taperezsa*****` | - |
+| `**medme*****` | - |
+| `**densp4m*****` | - |
+| `**ni.colodrom*****` | - |
+| `**abelenguer*****` | - |
+| `**ez.fernandez37*****` | - |
+| `**ogarciaamo*****` | - |
+| `**lipu4*****` | - |
+| `**oto*****` | - |
+| `**e.ajose*****` | - |
+| `**cu.lul3*****` | - |
+*Al no ser un formulario de feedback no se ha considerado necesario recoger el perfil de arrendatario de los usuarios*
+
 ### Arrendadores (Oferta)
 *Usuarios con objetos disponibles.*
 
@@ -64,3 +85,19 @@
 | `**enezguer*****​` | Eco-colaborador |  
 | `**cia.d.ga*****​` | Práctica |
 | `**uchogv*****​` | Eco-colaborador |
+
+#### Cuarta captación (Feedback sprint 3)
+| `**gopa10*****` | Erasmus |
+| `**zaco975*****` | Erasmus |
+
+#### Quinta captación (Sorteo de descuentos)
+| `**steral*****` | - |
+| `**csari*****` | - |
+| `**usrusla*****` | - |
+| `**nciscojosean*****` | - |
+| `**ela.04*****` | - |
+| `**sdejos*****` | - |
+| `**chegod*****` | - |
+| `**ocastillacan*****` | - |
+| `**ialobel9*****` | - |
+*Al no ser un formulario de feedback no se ha considerado necesario recoger el perfil de arrendador de los usuarios*
