@@ -321,7 +321,7 @@ public class ArticleService {
 
         String finalStatus;
         
-        if (isInActiveKit && !("AVAILABLE".equals(currentStatus) || "DAMAGED".equals(currentStatus))) {
+        if (isInActiveKit) {
             finalStatus = "RENTED";
         } 
         else if (isInPaidKit) {
@@ -378,6 +378,10 @@ public class ArticleService {
         // Buscar el kit activo. Si no hay, ya se devolvió todo el kit.
         Kit activeKit = kitRepository.findActiveKitByItemId(articleId, KitStatus.ACTIVE)
             .orElseThrow(() -> new RuntimeException("No se encontró un Kit activo para este artículo. Es posible que ya se haya cerrado."));
+
+        if (activeKit.getEndDate() != null && activeKit.getEndDate().isAfter(LocalDate.now())) {
+            throw new RuntimeException("La devolución solo puede evaluarse cuando finalice el período de alquiler.");
+        }
 
         Long tenantId = activeKit.getTenant().getId();
         String tenantEmail = activeKit.getTenant().getEmail();
