@@ -51,7 +51,9 @@ const TrackingNotificationsScreen: React.FC = () => {
     }, [notifications, markAllRead]),
   );
 
-  const data: NotificationItem[] = notifications.map((n) => ({
+  const data: NotificationItem[] = Array.from(
+    new Map(notifications.map(n => [n.id, n])).values()
+  ).map((n) => ({
     id: n.id,
     title: `Kit ${n.kitName}`,
     message: n.message,
