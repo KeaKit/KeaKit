@@ -96,8 +96,8 @@ public class KitService {
                 ? request.itemSelections()
                 : List.of();
 
-        if (status != KitStatus.DRAFT && selections.isEmpty()) {
-            throw new RuntimeException("Se deben seleccionar items a menos que el kit esté en estado DRAFT");
+        if (selections.isEmpty()) {
+            throw new RuntimeException("Se deben seleccionar items");
         }
 
         DeliveryMethod deliveryMethod = request.deliveryMethod() != null
