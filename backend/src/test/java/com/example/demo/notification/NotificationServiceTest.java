@@ -3,6 +3,7 @@ package com.example.demo.notification;
 import com.example.demo.model.*;
 import com.example.demo.repository.ArticleAvailabilityRequestRepository;
 import com.example.demo.repository.ArticleRepository;
+import com.example.demo.repository.ItemRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.UserRepository;
@@ -41,6 +42,9 @@ class NotificationServiceTest {
 
     @Mock
     private ArticleRepository articleRepository;
+
+    @Mock
+    private ItemRepository itemRepository;
 
     @Mock
     private UserRepository userRepository;
@@ -184,7 +188,7 @@ class NotificationServiceTest {
         article.setStatus(ArticleStatus.RENTED);
         article.setOwner(owner);
 
-        when(articleRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
         when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -199,13 +203,51 @@ class NotificationServiceTest {
         verify(notificationRepository).save(any(Notification.class));
     }
 
-    @Test
-    void createDemandAlert_articleAvailable_throwsIllegalState() {
+    @Test    void createDemandAlert_serviceActiveFullyRentedForDates_createsNotification() {
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(6L);
+        serviceItem.setTitle("Instalación Software");
+        serviceItem.setStatus(ServiceStatus.ACTIVE);
+        serviceItem.setTotalUnits(1);
+        serviceItem.setOwner(owner);
+
+        requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        LocalDate start = LocalDate.of(2026, 5, 7);
+        LocalDate end = LocalDate.of(2026, 5, 20);
+
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(6L);
+        snapshot.setSelectedUnits(1);
+
+        Kit overlappingKit = new Kit();
+        overlappingKit.setStatus(KitStatus.ACTIVE);
+        overlappingKit.setStartDate(start);
+        overlappingKit.setEndDate(end);
+        overlappingKit.setSnapshots(List.of(snapshot));
+
+        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
+        when(kitRepository.findOverlappingKitsForItem(6L, start, end,
+                List.of(KitStatus.PAID, KitStatus.ACTIVE))).thenReturn(List.of(overlappingKit));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(6L, 20L, start, end);
+
+        assertThat(result.getUser()).isEqualTo(owner);
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isNull();
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test    void createDemandAlert_articleAvailable_throwsIllegalState() {
         Article article = new Article();
         article.setId(5L);
         article.setStatus(ArticleStatus.AVAILABLE);
 
-        when(articleRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
 
         assertThrows(IllegalStateException.class, () -> notificationService.createDemandAlert(5L, 20L));
         verify(notificationRepository, never()).save(any());
@@ -213,11 +255,63 @@ class NotificationServiceTest {
 
     @Test
     void createDemandAlert_articleNotFound_throwsRuntimeException() {
-        when(articleRepository.findById(99L)).thenReturn(Optional.empty());
+        when(itemRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> notificationService.createDemandAlert(99L, 20L));
         verify(notificationRepository, never()).save(any());
     }
+
+    @Test
+    void createDemandAlert_serviceCreatesNotificationForOwner() {
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(6L);
+        serviceItem.setTitle("Servicio de limpieza");
+        serviceItem.setStatus(ServiceStatus.UNAVAILABLE);
+        serviceItem.setOwner(owner);
+
+        requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(6L, 20L);
+
+        assertThat(result.getUser()).isEqualTo(owner);
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getMessage()).contains("contratar tu servicio");
+        assertThat(result.getMessage()).contains("Servicio de limpieza");
+        assertThat(result.getRelatedArticleId()).isNull();
+    }
+
+    @Test
+    void createDemandAlert_serviceActiveWithZeroUnits_createsNotificationForOwner() {
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(6L);
+        serviceItem.setTitle("Instalación Software");
+        serviceItem.setStatus(ServiceStatus.ACTIVE);
+        serviceItem.setTotalUnits(0);
+        serviceItem.setOwner(owner);
+
+        requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(6L, 20L);
+
+        assertThat(result.getUser()).isEqualTo(owner);
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isNull();
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+
 
     @Test
     void createDemandAlert_ownerIsRequester_throwsIllegalState() {
@@ -230,12 +324,14 @@ class NotificationServiceTest {
         article.setStatus(ArticleStatus.RENTED);
         article.setOwner(owner);
 
-        when(articleRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
         when(userRepository.findById(10L)).thenReturn(Optional.of(owner));
 
         assertThrows(IllegalStateException.class, () -> notificationService.createDemandAlert(5L, 10L));
         verify(notificationRepository, never()).save(any());
     }
+
+
 
     @Test
     void checkUpcomingReturns_createsRemindersForCorrectKits() {
@@ -270,9 +366,9 @@ class NotificationServiceTest {
 
     @Test
     void requestAvailability_Success() {
-        when(articleRepository.findById(10L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
         when(userRepository.findById(2L)).thenReturn(Optional.of(requester));
-        when(requestRepository.findByArticleIdAndRequesterId(10L, 2L)).thenReturn(Optional.empty());
+        when(requestRepository.findByItemIdAndRequesterId(10L, 2L)).thenReturn(Optional.empty());
 
         service.requestAvailabilityNotification(10L, 2L);
 
@@ -282,7 +378,7 @@ class NotificationServiceTest {
     @Test
     void requestAvailability_ThrowsIfArticleAlreadyAvailable() {
         article.setStatus(ArticleStatus.AVAILABLE);
-        when(articleRepository.findById(10L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
 
         Exception exception = assertThrows(IllegalStateException.class, () -> {
             service.requestAvailabilityNotification(10L, 2L);
@@ -293,7 +389,7 @@ class NotificationServiceTest {
 
     @Test
     void requestAvailability_ThrowsIfRequesterIsOwner() {
-        when(articleRepository.findById(10L)).thenReturn(Optional.of(article));
+        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
         when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
 
         Exception exception = assertThrows(IllegalStateException.class, () -> {
@@ -301,6 +397,138 @@ class NotificationServiceTest {
         });
 
         assertTrue(exception.getMessage().contains("propietario no puede solicitar el aviso"));
+    }
+
+
+    @Test
+    void createDemandAlert_forArticle_relatedArticleIdShouldNotBeNull() {
+        User owner = new User();
+        owner.setId(10L);
+        owner.setName("Owner");
+
+        User requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        Article article = new Article();
+        article.setId(5L);
+        article.setTitle("Taladro");
+        article.setStatus(ArticleStatus.RENTED);
+        article.setOwner(owner);
+
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(5L, 20L);
+
+        // Verificar que para artículos, relatedArticleId debe ser el ID del artículo
+        assertThat(result.getRelatedArticleId()).isEqualTo(5L);
+        assertThat(result.getMessage()).contains("Taladro");
+        assertThat(result.getMessage()).contains("Requester");
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    // ── Fechas fuera del rango de disponibilidad ─────────────────────────
+
+    @Test
+    void createDemandAlert_articleAvailableButDatesOutOfRange_createsAlert() {
+        User owner = new User();
+        owner.setId(10L);
+        owner.setName("Owner");
+
+        User requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        Article article = new Article();
+        article.setId(5L);
+        article.setTitle("Taladro");
+        article.setStatus(ArticleStatus.AVAILABLE);
+        article.setAvailableFrom(LocalDate.of(2026, 1, 1));
+        article.setAvailableUntil(LocalDate.of(2026, 12, 31));
+        article.setOwner(owner);
+
+        // Fechas fuera del rango (2030)
+        LocalDate start = LocalDate.of(2030, 3, 1);
+        LocalDate end   = LocalDate.of(2030, 3, 15);
+
+        when(itemRepository.findById(5L)).thenReturn(Optional.of(article));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(5L, 20L, start, end);
+
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isEqualTo(5L);
+        assertThat(result.getMessage()).contains("Taladro");
+        assertThat(result.getMessage()).contains("2030");
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void createDemandAlert_serviceActiveButDatesOutOfRange_createsAlert() {
+        User owner = new User();
+        owner.setId(10L);
+        owner.setName("Owner");
+
+        User requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(7L);
+        serviceItem.setTitle("Servicio de fontanería");
+        serviceItem.setStatus(ServiceStatus.ACTIVE);
+        serviceItem.setTotalUnits(2);
+        serviceItem.setAvailableFrom(LocalDate.of(2026, 1, 1));
+        serviceItem.setAvailableUntil(LocalDate.of(2026, 12, 31));
+        serviceItem.setOwner(owner);
+
+        // Fechas fuera del rango (2030)
+        LocalDate start = LocalDate.of(2030, 6, 1);
+        LocalDate end   = LocalDate.of(2030, 6, 10);
+
+        when(itemRepository.findById(7L)).thenReturn(Optional.of(serviceItem));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(7L, 20L, start, end);
+
+        assertThat(result.getType()).isEqualTo(NotificationType.DEMAND_ALERT);
+        assertThat(result.getRelatedArticleId()).isNull();
+        assertThat(result.getMessage()).contains("fontanería");
+        assertThat(result.getMessage()).contains("2030");
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void createDemandAlert_forService_relatedArticleIdShouldBeNull() {
+        User owner = new User();
+        owner.setId(10L);
+        owner.setName("Owner");
+
+        User requester = new User();
+        requester.setId(20L);
+        requester.setName("Requester");
+
+        ServiceItem serviceItem = new ServiceItem();
+        serviceItem.setId(6L);
+        serviceItem.setTitle("Servicio de limpieza");
+        serviceItem.setStatus(ServiceStatus.UNAVAILABLE);
+        serviceItem.setOwner(owner);
+
+        when(itemRepository.findById(6L)).thenReturn(Optional.of(serviceItem));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(requester));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.createDemandAlert(6L, 20L);
+
+        // Verificar que para servicios, relatedArticleId debe ser null
+        assertThat(result.getRelatedArticleId()).isNull();
+        assertThat(result.getMessage()).contains("contratar tu servicio");
+        assertThat(result.getMessage()).contains("Servicio de limpieza");
+        verify(notificationRepository).save(any(Notification.class));
     }
 
     

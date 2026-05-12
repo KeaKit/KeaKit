@@ -25,7 +25,7 @@ import {
 registerTranslation("es", es);
 
 import { useAuth } from "../../context/AuthContext";
-import { createKit, filterItemsForKit, getActiveServices } from "../../services/kitService";
+import { createKit, filterItemsForKit } from "../../services/kitService";
 import {
   getNearbyArticles,
   getArticlesForMap,
@@ -114,6 +114,11 @@ const CONDITION_OPTIONS = [
   { label: "Usado", value: "USED" },
   { label: "Desgastado", value: "WORN" },
 ];
+
+const normalizeTotalUnits = (value: unknown): number => {
+  const units = Number(value ?? 1);
+  return Number.isFinite(units) ? Math.max(0, units) : 1;
+};
 
 // Constantes de validación (movidas fuera del componente para garantizar su existencia)
 const MAX_KIT_NAME_LENGTH = 255;
@@ -311,7 +316,7 @@ const CreateKitScreen: React.FC = () => {
         ownerId: Number(p.ownerId),
         ownerName: p.ownerName ?? "",
         imageUrl: (p as any).imageUrl ?? null,
-        totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
+        totalUnits: normalizeTotalUnits(p.totalUnits),
         availableFrom: (p as any).availableFrom ?? undefined,
         availableUntil: (p as any).availableUntil ?? undefined,
       }));
@@ -427,21 +432,26 @@ const CreateKitScreen: React.FC = () => {
     [catalogCategories],
   );
 
+    
   const filteredProducts = useMemo(() => {
-    const q = searchText.trim().toLowerCase();
-    return availableProducts.filter((p) => {
-      const notInactive = p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
-      const bySearch =
-        q.length === 0 ||
-        p.title.toLowerCase().includes(q) ||
-        (p.city ?? "").toLowerCase().includes(q) ||
-        (p.category ?? "").toLowerCase().includes(q) ||
-        (p.ownerName ?? "").toLowerCase().includes(q) ||
-        (p.condition ?? "").toLowerCase().includes(q);
+      const q = searchText.trim().toLowerCase();
+      return availableProducts.filter((p) => {
+        const notInactive = p.itemType === "SERVICE" ? p.status === "ACTIVE" : p.status !== "INACTIVE";
+        
+        const isAvailable = p.status === "AVAILABLE" || p.status === "ACTIVE";
+        const passesAvailabilityFilter = showOnlyAvailable ? isAvailable : true;
 
-      return notInactive && bySearch;
-    });
-  }, [availableProducts, searchText]);
+        const bySearch =
+          q.length === 0 ||
+          p.title.toLowerCase().includes(q) ||
+          (p.city ?? "").toLowerCase().includes(q) ||
+          (p.category ?? "").toLowerCase().includes(q) ||
+          (p.ownerName ?? "").toLowerCase().includes(q) ||
+          (p.condition ?? "").toLowerCase().includes(q);
+
+        return notInactive && bySearch && passesAvailabilityFilter;
+      });
+    }, [availableProducts, searchText, showOnlyAvailable]);
 
   const openAddProductModal = async () => {
     const useCityFilter = city.trim().length > 0;
@@ -453,7 +463,11 @@ const CreateKitScreen: React.FC = () => {
 
     if (user?.token) {
       try {
-        const mapData = await getArticlesForMap(user.token, country.trim() || undefined);
+        const mapData = await getArticlesForMap(
+          user.token,
+          country.trim() || undefined,
+          true,
+        );
         setMapProducts(mapData);
       } catch (error) {
         console.warn('Error al cargar productos del mapa:', error);
@@ -1101,7 +1115,17 @@ const checkItemsAvailability = (start: Date, end: Date): string[] => {
             selectedProducts.map((item) => (
               <KitItemComponent
                 key={item.id}
-                item={item}
+                item={{
+                  id: item.id,
+                  title: item.title,
+                  city: item.city,
+                  pricePerMonth: item.pricePerMonth,
+                  totalUnits: item.totalUnits,
+                  imageUrl: item.imageUrl,
+                  category: item.category,
+                  ownerName: item.ownerName,
+                  condition: item.condition,
+                }}
                 quantity={selectedQuantities[item.id] ?? 1}
                 maxQuantity={item.totalUnits}
                 duration={monthsBetween ?? 0}

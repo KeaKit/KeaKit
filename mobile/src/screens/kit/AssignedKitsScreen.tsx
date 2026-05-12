@@ -36,6 +36,17 @@ const AssignedKitsScreen = () => {
     }
   }, [user?.token]);
 
+  const getDeliveryNotificationText = (item: KitResponse) => {
+    if (!item.deliveryNotification) return null;
+    if (item.status === KitStatus.FINISHED || item.status === KitStatus.CANCELLED || item.status === KitStatus.DRAFT) {
+      return null;
+    }
+    if (item.status === KitStatus.ACTIVE) {
+      return 'En uso';
+    }
+    return item.deliveryNotification;
+  };
+
   useEffect(() => {
     if (!authLoading) loadKits();
   }, [authLoading, loadKits]);
@@ -67,9 +78,12 @@ const AssignedKitsScreen = () => {
           <Ionicons name="location-outline" size={13} color="#888" /> {item.city}, {item.country}
         </Text>
 
-        {item.deliveryNotification ? (
-          <Text style={styles.deliveryNoticeText}>{item.deliveryNotification}</Text>
-        ) : null}
+        {(() => {
+          const deliveryNoticeText = getDeliveryNotificationText(item);
+          return deliveryNoticeText ? (
+            <Text style={styles.deliveryNoticeText}>{deliveryNoticeText}</Text>
+          ) : null;
+        })()}
       </View>
     </TouchableOpacity>
   );

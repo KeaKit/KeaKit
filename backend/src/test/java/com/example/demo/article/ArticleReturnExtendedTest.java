@@ -109,7 +109,7 @@ class ArticleReturnExtendedTest {
     assertThat(ex.getMessage()).contains("Solo el propietario puede confirmar la devolución");
     }
 
-    // ═══════════════ RN-DEV-02: Only RENTED articles can be returned ═══════════════
+// ═══════════════ RN-DEV-02: Only RENTED articles can be returned ═══════════════
 
     @Test
     void processReturn_articleNotRented_throwsException() {
@@ -124,7 +124,8 @@ class ArticleReturnExtendedTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-    assertThat(ex.getMessage()).contains("No se encontró un Kit activo para este artículo");
+        // FIX: Cambiamos el mensaje esperado por el nuevo de nuestra validación
+        assertThat(ex.getMessage()).contains("El artículo ya ha sido devuelto o no está alquilado.");
     }
 
     @Test
@@ -140,7 +141,8 @@ class ArticleReturnExtendedTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> articleService.processReturn(1L, owner.getId(), request));
-    assertThat(ex.getMessage()).contains("No se encontró un Kit activo para este artículo");
+        // FIX: Cambiamos el mensaje esperado por el nuevo de nuestra validación
+        assertThat(ex.getMessage()).contains("El artículo ya ha sido devuelto o no está alquilado.");
     }
 
     // ═══════════════ Article not found ═══════════════
@@ -347,6 +349,35 @@ class ArticleReturnExtendedTest {
 
         assertThat(response.message()).contains("60.0");
         assertThat(response.message()).contains("propietario");
+    }
+
+    @Test
+    void processReturn_partialDamage_messageMentionsPartialRefund() throws Exception {
+        Article damagedArticle = makeRentedArticle(6L, 50.0);
+        Article returnedGoodArticle = makeRentedArticle(7L, 100.0);
+        returnedGoodArticle.setStatus(ArticleStatus.AVAILABLE);
+
+        Kit activeKit = makeActiveKit();
+
+        ItemMemento damagedSnapshot = new ItemMemento();
+        damagedSnapshot.setOriginalItemId(6L);
+
+        ItemMemento goodSnapshot = new ItemMemento();
+        goodSnapshot.setOriginalItemId(7L);
+
+        activeKit.setSnapshots(List.of(damagedSnapshot, goodSnapshot));
+
+        when(articleRepository.findById(6L)).thenReturn(Optional.of(damagedArticle));
+        when(articleRepository.findById(7L)).thenReturn(Optional.of(returnedGoodArticle));
+        when(kitRepository.findActiveKitByItemId(6L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+        when(paymentService.processGuaranteeReturn(1L, owner.getId(), tenant.getId(), "DAMAGED")).thenReturn(20.0);
+
+        ReturnResponse response = articleService.processReturn(6L, owner.getId(), new ReturnRequest("DAMAGED", "Only one item broken"));
+
+        assertThat(response.resolution()).isEqualTo("DEPOSIT_RETAINED");
+        assertThat(response.amountProcessed()).isEqualTo(20.0);
+        assertThat(response.message()).contains("resto se ha devuelto al arrendatario");
     }
 
     // ═══════════════ Case-insensitive condition ═══════════════
