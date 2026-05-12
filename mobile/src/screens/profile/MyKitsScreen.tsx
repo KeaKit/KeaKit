@@ -15,13 +15,15 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { KitResponse, KitStatus, RootStackParamList } from "../../types";
 import { API_ROUTES } from "../../config/api";
 import { Colors, Spacing, commonStyles } from "../../styles";
+import { useNavbarOffset } from "../../hooks/useWindowDimensions";
+import { Helmet } from 'react-helmet-async'; 
 
 type MyKitsNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 
 const MyKitsScreen: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigation = useNavigation<MyKitsNav>();
-
+  const navbarOffset = useNavbarOffset();
   const [kits, setKits] = useState<KitResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -208,7 +210,12 @@ const loadKits = useCallback(async () => {
   }
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.container, {paddingBottom: navbarOffset}]}>
+      <Helmet>
+        <title>Mis alquileres | KeaKit</title>
+        <meta name="description" content="Consulta los alquileres que has realizado en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>            
       <View style={commonStyles.header}>
         <TouchableOpacity
           style={styles.backButton}

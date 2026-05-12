@@ -19,6 +19,7 @@ import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNotification } from '../../components/NotificationContext';
 import { getPurchaseDateValidationError } from '../../utils/articlePurchaseDate';
+import { Helmet } from 'react-helmet-async'; 
 
 const MAX_TITLE_LENGTH = 255;
 const MAX_TOTAL_UNITS = 2147483647; 
@@ -309,6 +310,11 @@ const EditArticleScreen: React.FC = () => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
+        <Helmet>
+          <title>Editar artículo | KeaKit</title>
+          <meta name="description" content="Edita tu artículo en KeaKit."/>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>        
         <View style={commonStyles.header}>
           <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={28} color={Colors.primary} />

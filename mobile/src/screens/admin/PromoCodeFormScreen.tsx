@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { createPromoCode, PromoCodeType, updatePromoCode } from '../../services/promoCodeService';
 import { getActivePilotEmails } from '../../services/pilotUserService';
 import { ApiError } from '../../types/ApiError';
+import { Helmet } from 'react-helmet-async'; 
 
 type PromoCodeFormNav = NativeStackNavigationProp<RootStackParamList, 'PromoCodeForm'>;
 type PromoCodeFormRoute = RouteProp<RootStackParamList, 'PromoCodeForm'>;
@@ -187,6 +188,11 @@ const PromoCodeFormScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+      <Helmet>
+        <title>{isEdit ? 'Editar Código Promocional' : 'Nuevo Código Promocional'} | KeaKit</title>
+        <meta name="description" content="Creación y edición de códigos promocionales de KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={26} color={KC.blue} />

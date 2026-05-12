@@ -66,8 +66,8 @@ public class OrderConfirmationEmailServiceTest {
         assertTrue(html.contains("Instalación Software"));
         assertTrue(html.contains("MacBook Pro"));
 
-        // Compute expected prorated numbers using same logic (days / 30)
-        int rentalDays = (int) ChronoUnit.DAYS.between(start, end);
+        // Compute expected prorated numbers using same logic as KitService ((days + 1) / 30)
+        int rentalDays = (int) ChronoUnit.DAYS.between(start, end) + 1;
         if (rentalDays <= 0) rentalDays = 1;
         double factor = ((double) rentalDays) / 30.0;
 

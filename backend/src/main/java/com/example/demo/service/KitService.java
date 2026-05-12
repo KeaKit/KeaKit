@@ -8,10 +8,12 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,8 +96,8 @@ public class KitService {
                 ? request.itemSelections()
                 : List.of();
 
-        if (status != KitStatus.DRAFT && selections.isEmpty()) {
-            throw new RuntimeException("Se deben seleccionar items a menos que el kit esté en estado DRAFT");
+        if (selections.isEmpty()) {
+            throw new RuntimeException("Se deben seleccionar items");
         }
 
         DeliveryMethod deliveryMethod = request.deliveryMethod() != null
@@ -157,6 +159,45 @@ public class KitService {
         }
 
         return savedKit;
+    }
+
+    public void validateKit(Long id) {
+        Kit kit = kitRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Kit no encontrado"));
+        List<ItemMemento> snapshots = kit.getSnapshots();
+
+        if (snapshots.isEmpty()) {
+            throw new RuntimeException("No puedes realizar el pago de un kit sin items");
+        }
+
+        DeliveryMethod deliveryMethod = kit.getDeliveryMethod() != null
+                ? kit.getDeliveryMethod()
+                : DeliveryMethod.COURIER;
+
+        String meetingPoint = kit.getMeetingPoint() != null ? kit.getMeetingPoint().trim() : null;
+        if (deliveryMethod == DeliveryMethod.MEETING_POINT && (meetingPoint == null || meetingPoint.isEmpty())) {
+            throw new RuntimeException("Se requiere punto de encuentro cuando el método de entrega es MEETING_POINT");
+        }
+
+        if (!snapshots.isEmpty()) {
+            for (ItemMemento item : snapshots) {
+                Item foundItem = itemRepository.findById(item.getOriginalItemId())
+                        .orElseThrow(() -> new RuntimeException("Item no encontrado: " + item.getOriginalItemId()));
+
+                if (kit.getTenant().getId().equals(foundItem.getOwner().getId())) {
+                    throw new RuntimeException("El arrendatario no puede seleccionar sus propios items");
+                }
+
+                validateItemAvailability(item.getOriginalItemId(), item.getSelectedUnits(), kit.getStartDate(), kit.getEndDate());
+            }
+        }
+
+        validateDates(kit.getStartDate(), kit.getEndDate());
+
+        LocalDate today = LocalDate.now();
+
+        if (kit.getStartDate().isBefore(today) || kit.getEndDate().isBefore(today)) {
+            throw new RuntimeException("Tanto la fecha de inicio como la de finalización deben estar en el futuro.");
+        }
     }
 
     public KitPaymentDTO getKitPayment(KitCreateRequest request, String promoCode, String userEmail) {
@@ -228,7 +269,7 @@ public class KitService {
         return (amount != null) ? (int) Math.round(amount * 100) : 0;
     }
 
-    private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
+    public double calculateMonthsBetween(LocalDate start, LocalDate end) {
         long diffDays = ChronoUnit.DAYS.between(start, end) + 1;
         return diffDays / 30.0;
 
@@ -548,6 +589,31 @@ public class KitService {
             // 3. Verificamos el stock para este día
             if (rentedUnitsOnDate + requestedQuantity > item.getTotalUnits()) {
                 throw new RuntimeException("El artículo '" + item.getTitle() + "' no tiene suficientes unidades disponibles para las fechas seleccionadas.");
+            }
+        }
+    }
+    
+    @Autowired
+    @Lazy 
+    private ArticleService articleService;
+    @Scheduled(cron = "0 5 0 * * ?") 
+    @Transactional
+    public void processExpiredKitsAutomatically() {
+        LocalDate gracePeriodDeadline = LocalDate.now().minusDays(7);
+
+        List<Kit> expiredKits = kitRepository.findByStatusAndEndDateLessThanEqual(KitStatus.ACTIVE, gracePeriodDeadline);
+        
+        if (expiredKits.isEmpty()) {
+            return;
+        }
+
+        System.out.println("Encontrados " + expiredKits.size() + " kits que superaron los 7 días de gracia.");
+
+        for (Kit kit : expiredKits) {
+            try {
+                articleService.autoCloseExpiredKitItems(kit);
+            } catch (Exception e) {
+                System.err.println("Fallo al auto-cerrar el kit " + kit.getId() + ": " + e.getMessage());
             }
         }
     }

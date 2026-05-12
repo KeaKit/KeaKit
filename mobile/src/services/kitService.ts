@@ -94,6 +94,24 @@ export async function getKit(kitId: number,
   return handleResponse<KitResponse>(res);
 }
 
+export async function validateKit(kitId: number,
+  token: string,
+): Promise<KitResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.VALIDATE_KIT(kitId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  console.log(res)
+
+  if (!res.ok) {
+    const errorText = await res.text(); 
+    throw new Error(errorText || "Error en la validación");
+  }
+
+  return handleResponse<KitResponse>(res);
+}
+
 export async function addItemToKit(
   kitId: number,
   itemId: number,

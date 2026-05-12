@@ -35,7 +35,7 @@ const getConditionLabel = (condition?: string | null): string => {
   }
 };
 
-const KitItemComponent: React.FC<KitItemComponentProps> = ({
+export const KitItemComponent: React.FC<KitItemComponentProps> = ({
   item,
   duration,
   quantity,
@@ -158,5 +158,3 @@ const KitItemComponent: React.FC<KitItemComponentProps> = ({
     </View>
   );
 };
-
-export default KitItemComponent;

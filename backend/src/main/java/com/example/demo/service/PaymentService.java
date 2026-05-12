@@ -135,8 +135,10 @@ public class PaymentService {
         }
 
         processGuarantee(paymentInfo.guarantee(), kitEntity);
-        kit.getItems().forEach(item -> processItemPaymentToOwner(item, promoCode));
 
+        double months = kitService.calculateMonthsBetween(kitEntity.getStartDate(), kitEntity.getEndDate());
+        kit.getItems().forEach(item -> processItemPaymentToOwner(item, promoCode, months));
+        
         if (promoCode != null && !promoCode.isBlank() && userEmail != null) {
             var validation = promoCodeService.validateForTenantDiscount(promoCode, userEmail);
             if (validation.isValid() && validation.getDiscountRate() != null) {
@@ -200,7 +202,7 @@ public class PaymentService {
         transactionRepository.save(guaranteeTransaction);
     }
 
-    private void processItemPaymentToOwner(KitItemResponse item, String promoCode) throws ResourceNotFoundException {
+    private void processItemPaymentToOwner(KitItemResponse item, String promoCode, double months) throws ResourceNotFoundException {
         Item itemDetails = null;
         boolean ownerPromoFeatureEnabled = promoCodeService != null;
         if (ownerPromoFeatureEnabled) {
@@ -234,7 +236,7 @@ public class PaymentService {
             canUseItemOwnerPromo
         );
 
-        double basePrice = item.getPricePerMonth() * item.getQuantity();
+        double basePrice = item.getPricePerMonth() * item.getQuantity() * months;
         Double finalPrice = calculateFinalOwnerPrice(basePrice, ownerId, ownerPromoCodeToApply, canUseItemOwnerPromo);
 
         Transaction payOwnerTransaction = payItemToOwner(ownerId, finalPrice);

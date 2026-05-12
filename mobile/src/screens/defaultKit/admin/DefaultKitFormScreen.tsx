@@ -37,6 +37,7 @@ import {
 } from "../../../services/defaultKitService";
 import { fetchItemsForRent } from "../../../services/itemService";
 import { getArticlesForMap } from "../../../services/articleService";
+import { Helmet } from 'react-helmet-async'; 
 
 type CreateDefaultKitNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -337,9 +338,28 @@ const DefaultKitFormScreen: React.FC = () => {
     },
   };
 
+  const getHelmetTitle = () => {
+    return mode === "edit"
+      ? "Editar kit predeterminado"
+      : "Crear kit predeterminado";
+  };
+
+  const getMetaDescription = () => {
+    if (mode === "edit") {
+      return "Edita un kit predeterminado y gestiona los productos incluidos en KeaKit.";
+    }
+
+    return "Crea un kit predeterminado seleccionando productos y configurando su contenido en KeaKit.";
+  };
+
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.containerWhite}>
+          <Helmet>
+          <title>{getHelmetTitle()} | Keakit</title>
+          <meta name="description" content={getMetaDescription()} />
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>        
         <Header
           title={mode === "edit" ? "Editar Kit" : "Crear Kit Predeterminado"}
           showBack
@@ -390,7 +410,8 @@ const DefaultKitFormScreen: React.FC = () => {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: Spacing.md,
+              flexWrap: "wrap",
+              gap: Spacing.sm,
             }}
           >
             <View
@@ -398,6 +419,7 @@ const DefaultKitFormScreen: React.FC = () => {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: Spacing.sm,
+                flexShrink: 1,
               }}
             >
               <Text style={[commonStyles.subtitle, { marginBottom: 0 }]}>
@@ -408,7 +430,7 @@ const DefaultKitFormScreen: React.FC = () => {
               </View>
             </View>
 
-            <View style={{ minWidth: 165 }}>
+            <View style={{ width: '100%', paddingTop: 10 }}>
               <KeakitButton
                 title="Añadir productos"
                 onPress={openAddProductModal}
