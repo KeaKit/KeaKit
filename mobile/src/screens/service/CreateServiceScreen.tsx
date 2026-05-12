@@ -576,7 +576,9 @@ const PromoteServiceScreen: React.FC = () => {
 
           <TouchableOpacity
             style={[commonStyles.primaryButton, loading && styles.buttonDisabled]}
-            onPress={() => setConfirmVisible(true)}  
+            onPress={() => {
+              if (validate()) setConfirmVisible(true)
+            }}  
             disabled={loading}
             activeOpacity={0.8}
           >
