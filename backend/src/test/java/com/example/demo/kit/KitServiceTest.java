@@ -1420,4 +1420,89 @@ public class KitServiceTest {
         verify(kitRepository, times(1)).findTrackingUpdateableByTenantId(tenantId);
     }
 
+    @Test
+    void validateKit_kitNotFound_throwsException() {
+        when(kitRepository.findById(99L)).thenReturn(Optional.empty());
+        
+        assertThrows(ResourceNotFoundException.class, () -> kitService.validateKit(99L));
+    }
+
+    @Test
+    void validateKit_emptySnapshots_throwsException() {
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setSnapshots(List.of()); // Lista vacía
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.validateKit(1L));
+        assertEquals("No puedes realizar el pago de un kit sin items", ex.getMessage());
+    }
+
+    @Test
+    void validateKit_meetingPointMissing_throwsException() {
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
+        kit.setMeetingPoint(null); // Error aquí
+        kit.setSnapshots(List.of(new ItemMemento())); 
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.validateKit(1L));
+        assertTrue(ex.getMessage().contains("Se requiere punto de encuentro"));
+    }
+
+    @Test
+    void validateKit_tenantRentOwnItem_throwsException() {
+        User tenant = createTestUser(1L, "Tenant");
+        
+        ItemMemento memento = new ItemMemento();
+        memento.setId(10L);
+        memento.setOriginalItemId(100L);
+        
+        Article ownArticle = createTestArticle(100L, "Mi Propio Item", 5, tenant);
+
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setTenant(tenant);
+        kit.setSnapshots(List.of(memento));
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusDays(5));
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(ownArticle));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.validateKit(1L));
+        assertEquals("El arrendatario no puede seleccionar sus propios items", ex.getMessage());
+    }
+
+    @Test
+    void validateKit_allValid_success() {
+        User tenant = createTestUser(1L, "Tenant");
+        User owner = createTestUser(2L, "Owner");
+        
+        Article article = createTestArticle(100L, "Item Ajeno", 10, owner);
+
+        ItemMemento memento = new ItemMemento();
+        memento.setId(10L);
+        memento.setOriginalItemId(100L);
+        memento.setSelectedUnits(1);
+
+        Kit kit = new Kit();
+        kit.setId(1L);
+        kit.setTenant(tenant);
+        kit.setSnapshots(List.of(memento));
+        kit.setStartDate(LocalDate.now());
+        kit.setEndDate(LocalDate.now().plusDays(5));
+        kit.setDeliveryMethod(DeliveryMethod.COURIER);
+
+        when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
+        
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
+        kitService.validateKit(1L);
+        
+        verify(kitRepository, times(1)).findById(1L);
+    }
 }

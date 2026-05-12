@@ -1023,4 +1023,53 @@ class KitIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
+
+    // ------------------ VALIDATE ------------------
+
+    @Test
+    void testValidateKit_fail_noItems() throws Exception {
+        savedKit.setSnapshots(List.of());
+        kitRepository.save(savedKit);
+
+        mockMvc.perform(get("/api/kits/validate/%d".formatted(savedKit.getId())))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("No puedes realizar el pago de un kit sin items"));
+    }
+
+    @Test
+    void testValidateKit_fail_meetingPointRequired() throws Exception {
+        User owner = new User();
+        owner.setName("Owner");
+        owner.setEmail("owner2@example.com");
+        owner.setPassword("123456");
+        owner.setRole(UserRole.USER);
+        owner.setAddress("Calle Falsa 123");
+        owner.setCity("Sevilla");
+        owner.setCountry("España");
+        owner.setPhone("666555444");
+        userRepository.save(owner);
+        Article article = createTestArticle("Item", owner);
+
+        ItemMemento snap = new ItemMemento();
+        snap.setKit(savedKit);
+        snap.setOriginalItemId(article.getId());
+        snap.setNameAtRental(article.getTitle());
+        snap.setPriceAtRental(article.getPricePerMonth());
+        snap.setSelectedUnits(1);
+        savedKit.setDeliveryMethod(DeliveryMethod.MEETING_POINT);
+        savedKit.setMeetingPoint(""); 
+        savedKit.setSnapshots(List.of(snap));
+        kitRepository.save(savedKit);
+
+        mockMvc.perform(get("/api/kits/validate/%d".formatted(savedKit.getId())))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Se requiere punto de encuentro cuando el método de entrega es MEETING_POINT"));
+    }
+
+    @Test
+    void testValidateKit_notFound() throws Exception {
+        mockMvc.perform(get("/api/kits/validate/999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Kit no encontrado"));
+    }
 }

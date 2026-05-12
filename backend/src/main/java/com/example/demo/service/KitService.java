@@ -161,6 +161,39 @@ public class KitService {
         return savedKit;
     }
 
+    public void validateKit(Long id) {
+        Kit kit = kitRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Kit no encontrado"));
+        List<ItemMemento> snapshots = kit.getSnapshots();
+
+        if (snapshots.isEmpty()) {
+            throw new RuntimeException("No puedes realizar el pago de un kit sin items");
+        }
+
+        DeliveryMethod deliveryMethod = kit.getDeliveryMethod() != null
+                ? kit.getDeliveryMethod()
+                : DeliveryMethod.COURIER;
+
+        String meetingPoint = kit.getMeetingPoint() != null ? kit.getMeetingPoint().trim() : null;
+        if (deliveryMethod == DeliveryMethod.MEETING_POINT && (meetingPoint == null || meetingPoint.isEmpty())) {
+            throw new RuntimeException("Se requiere punto de encuentro cuando el método de entrega es MEETING_POINT");
+        }
+
+        if (!snapshots.isEmpty()) {
+            for (ItemMemento item : snapshots) {
+                Item foundItem = itemRepository.findById(item.getOriginalItemId())
+                        .orElseThrow(() -> new RuntimeException("Item no encontrado: " + item.getOriginalItemId()));
+
+                if (kit.getTenant().getId().equals(foundItem.getOwner().getId())) {
+                    throw new RuntimeException("El arrendatario no puede seleccionar sus propios items");
+                }
+
+                validateItemAvailability(item.getOriginalItemId(), item.getSelectedUnits(), kit.getStartDate(), kit.getEndDate());
+            }
+        }
+
+        validateDates(kit.getStartDate(), kit.getEndDate());
+    }
+
     public KitPaymentDTO getKitPayment(KitCreateRequest request, String promoCode, String userEmail) {
         double months = calculateMonthsBetween(request.startDate(), request.endDate());
         double subtotalPrice = request.itemSelections().stream()
