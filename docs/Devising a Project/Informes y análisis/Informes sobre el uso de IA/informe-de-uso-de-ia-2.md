@@ -50,7 +50,7 @@ Corregí el término "tiporama" por "tipo-rama" en el formato de nombres de rama
 **Enlace a la conversación:** Copilot no permite compartir enlaces de la conversación. Adjunto captura de pantalla.
 
 <div style="text-align: center;">
-  <img src="img/ai-report/rmem-copilot-politica-commits.png" width="500" height="auto" style="object-fit: cover;" alt="Captura Conversación Copilot">
+  <img src="img/rmem-copilot-politica-commits.png" width="500" height="auto" style="object-fit: cover;" alt="Captura Conversación Copilot">
 </div>
 
 ---
