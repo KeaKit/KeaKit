@@ -79,10 +79,15 @@ public class KitServiceTest {
 
     @Test
     void createKit_withExplicitStatus_success() {
+        User owner = createTestUser(2L, "Owner");
+        Article article = createTestArticle(100L, "Tienda", 10, owner);
+        
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 2, 50.0);
         User tenant = createTestUser(1L, "Juan");
         KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid",
-            LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.DRAFT, null, null, tenant.getId(), List.of());
+            LocalDate.now(), LocalDate.now().plusDays(7), KitStatus.DRAFT, null, null, tenant.getId(), List.of(selection));
 
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
         mockUserAndKitSave(tenant);
         when(platformConfigService.getCommissionRate()).thenReturn(0.2);
 
@@ -92,10 +97,15 @@ public class KitServiceTest {
 
     @Test
     void createKit_withoutStatus_defaultsToDraft() {
+        User owner = createTestUser(2L, "Owner");
+        Article article = createTestArticle(100L, "Tienda", 10, owner);
+        
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 2, 50.0);
         User tenant = createTestUser(1L, "Juan");
         KitCreateRequest req = new KitCreateRequest("Kit Test", "España", "Madrid",
-            LocalDate.now(), LocalDate.now().plusDays(7), null, null, null, tenant.getId(), List.of());
+            LocalDate.now(), LocalDate.now().plusDays(7), null, null, null, tenant.getId(), List.of(selection));
 
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
         mockUserAndKitSave(tenant);
         when(platformConfigService.getCommissionRate()).thenReturn(0.2);
 
@@ -130,17 +140,21 @@ public class KitServiceTest {
 
     @Test
     void createKit_missingTenantId_throwsException() {
+        User owner = createTestUser(2L, "Owner");
+        Article article = createTestArticle(100L, "Tienda", 10, owner);
+        
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 2, 50.0);
         KitCreateRequest req = new KitCreateRequest(
             "Kit Test", "ES", "MAD",
             LocalDate.now(), LocalDate.now().plusDays(7),
             KitStatus.DRAFT, DeliveryMethod.COURIER, null,
-            null, List.of()
+            null, List.of(selection)
         );
 
         when(platformConfigService.getCommissionRate()).thenReturn(0.2);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.create(req));
-    assertEquals("Id del arrendatario requerido para crear un kit", ex.getMessage());
+        assertEquals("Id del arrendatario requerido para crear un kit", ex.getMessage());
     }
 
     @Test
@@ -185,22 +199,27 @@ public class KitServiceTest {
 
     @Test
     void createKit_setsCourierPrice_basedOnDeliveryMethod() {
+        User owner = createTestUser(2L, "Owner");
+        Article article = createTestArticle(100L, "Tienda", 10, owner);
+        
+        KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(article.getId(), 2, 50.0);
         User tenant = createTestUser(1L, "Tenant");
         when(platformConfigService.getCommissionRate()).thenReturn(0.2);
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
         mockUserAndKitSave(tenant);
 
         KitCreateRequest courierReq = new KitCreateRequest(
             "Kit Courier", "ES", "MAD",
             LocalDate.now(), LocalDate.now().plusDays(7),
             KitStatus.DRAFT, DeliveryMethod.COURIER, null,
-            tenant.getId(), List.of()
+            tenant.getId(), List.of(selection)
         );
 
         KitCreateRequest meetingReq = new KitCreateRequest(
             "Kit Meeting", "ES", "MAD",
             LocalDate.now(), LocalDate.now().plusDays(7),
             KitStatus.DRAFT, DeliveryMethod.MEETING_POINT, "Plaza",
-            tenant.getId(), List.of()
+            tenant.getId(), List.of(selection)
         );
 
         Kit courierKit = kitService.create(courierReq);

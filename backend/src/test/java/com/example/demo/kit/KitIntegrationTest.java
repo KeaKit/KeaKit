@@ -127,6 +127,18 @@ class KitIntegrationTest {
 
     @Test
     void testCreateKit_success() throws Exception {
+        User owner = new User();
+        owner.setName("Owner Valido");
+        owner.setEmail("owner_success_" + System.currentTimeMillis() + "@example.com");
+        owner.setPassword("1234567");
+        owner.setRole(UserRole.USER);
+        owner.setPhone("+34600000000");
+        owner.setAddress("Calle Mayor 1, Madrid");
+        owner.setCity("Madrid");
+        owner.setCountry("España");
+        owner = userRepository.save(owner);
+        Article article = createTestArticle("Item Test Success", owner);
+
         String json = """
                         {
                   "name": "Kit Nuevo",
@@ -138,10 +150,11 @@ class KitIntegrationTest {
                   "deliveryMethod": "MEETING_POINT",
                   "meetingPoint": "Plaza Mayor, bajo la estatua",
                   "tenantId": %d,
-                  "itemSelections": [
-                  ]
+                    "itemSelections": [
+                        { "itemId": %d, "quantity": 1, "pricePerMonth": 25.0 }
+                    ]
                 }
-                        """.formatted(tenant.getId());
+                        """.formatted(tenant.getId(), article.getId());
 
         mockMvc.perform(post("/api/kits/create")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -153,6 +166,18 @@ class KitIntegrationTest {
 
     @Test
     void testCreateKit_invalidDates() throws Exception {
+        User owner = new User();
+        owner.setName("Owner Valido");
+        owner.setEmail("owner_success_" + System.currentTimeMillis() + "@example.com");
+        owner.setPassword("1234567");
+        owner.setRole(UserRole.USER);
+        owner.setPhone("+34600000000");
+        owner.setAddress("Calle Mayor 1, Madrid");
+        owner.setCity("Madrid");
+        owner.setCountry("España");
+        owner = userRepository.save(owner);
+        Article article = createTestArticle("Item Test Success", owner);
+
         String json = """
         {
                   "name": "Kit Nuevo",
@@ -164,10 +189,11 @@ class KitIntegrationTest {
                   "deliveryMethod": "MEETING_POINT",
                   "meetingPoint": "Plaza Mayor, bajo la estatua",
                   "tenantId": %d,
-                  "itemSelections": [
-                  ]
+                    "itemSelections": [
+                        { "itemId": %d, "quantity": 1, "pricePerMonth": 25.0 }
+                    ]
                 }
-        """.formatted(tenant.getId());
+        """.formatted(tenant.getId(), article.getId());
 
         mockMvc.perform(post("/api/kits/create")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -178,6 +204,18 @@ class KitIntegrationTest {
 
     @Test
     void testCreateKit_meetingPointRequired_whenMeetingPointDelivery() throws Exception {
+        User owner = new User();
+        owner.setName("Owner Valido");
+        owner.setEmail("owner_success_" + System.currentTimeMillis() + "@example.com");
+        owner.setPassword("1234567");
+        owner.setRole(UserRole.USER);
+        owner.setPhone("+34600000000");
+        owner.setAddress("Calle Mayor 1, Madrid");
+        owner.setCity("Madrid");
+        owner.setCountry("España");
+        owner = userRepository.save(owner);
+        Article article = createTestArticle("Item Test Success", owner);
+
         String json = """
             {
             "name": "Kit MP Sin Punto",
@@ -189,9 +227,11 @@ class KitIntegrationTest {
             "deliveryMethod": "MEETING_POINT",
             "meetingPoint": "   ",
             "tenantId": %d,
-            "itemSelections": []
+            "itemSelections": [
+                { "itemId": %d, "quantity": 1, "pricePerMonth": 25.0 }
+            ]
             }
-            """.formatted(tenant.getId());
+            """.formatted(tenant.getId(), article.getId());
 
         mockMvc.perform(post("/api/kits/create")
                 .contentType(MediaType.APPLICATION_JSON)
