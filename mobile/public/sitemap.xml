@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://keakitppl.web.app/login</loc>
+    <loc>https://keakit.net/login</loc>
     <lastmod>2026-05-11</lastmod>
     <priority>0.7</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://keakitppl.web.app/register</loc>
+    <loc>https://keakit.net/register</loc>
     <lastmod>2026-05-11</lastmod>
     <priority>0.7</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://keakitppl.web.app/rgpd-policy</loc>
+    <loc>https://keakit.net/rgpd-policy</loc>
     <lastmod>2026-05-11</lastmod>
     <priority>0.5</priority>
     <changefreq>monthly</changefreq>
