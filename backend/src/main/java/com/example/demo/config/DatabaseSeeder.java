@@ -173,6 +173,46 @@ public class DatabaseSeeder {
             impresora.setImageUrl("https://i.imgur.com/3n9fIYP.png");
             articleRepo.save(impresora);
 
+            Article microfono = new Article();
+            microfono.setTitle("Micrófono Rode Wireless GO II");
+            microfono.setDescription("Sistema inalámbrico dual para grabaciones y podcasts");
+            microfono.setCategory(catTech);
+            microfono.setCity("Sevilla");
+            microfono.setCountry("Spain");
+            microfono.setOwner(owner);
+            microfono.setPricePerMonth(35.0);
+            microfono.setTotalUnits(1);
+            microfono.setStatus(ArticleStatus.RENTED);
+            microfono.setPurchaseDate(LocalDate.now().minusMonths(2));
+            microfono.setAvailableFrom(LocalDate.now().minusDays(7));
+            microfono.setAvailableUntil(LocalDate.now());
+            microfono.setImageUrl("https://i.imgur.com/aB4cDxF.png");
+            microfono.setCondition(ArticleCondition.LIGHTLY_USED);
+            articleRepo.save(microfono);
+
+            Kit luciaEndingTodayKit = new Kit();
+            luciaEndingTodayKit.setName("Pack Podcast Lucía");
+            luciaEndingTodayKit.setTenant(tenant);
+            luciaEndingTodayKit.setStatus(KitStatus.ACTIVE);
+            luciaEndingTodayKit.setDeliveryMethod(DeliveryMethod.COURIER);
+            luciaEndingTodayKit.setStartDate(LocalDate.now().minusDays(7));
+            luciaEndingTodayKit.setEndDate(LocalDate.now());
+            luciaEndingTodayKit.setCountry("Spain");
+            luciaEndingTodayKit.setCity("Sevilla");
+            kitRepo.save(luciaEndingTodayKit);
+
+            ItemMemento snapLucia = microfono.createSnapshot(
+                1,
+                luciaEndingTodayKit.getDeliveryMethod(),
+                luciaEndingTodayKit.getCourierPrice(),
+                luciaEndingTodayKit.getMeetingPoint()
+            );
+            snapLucia.setKit(luciaEndingTodayKit);
+            snapLucia.setPriceAtRental(microfono.getPricePerMonth());
+
+            luciaEndingTodayKit.setSnapshots(List.of(snapLucia));
+            kitRepo.save(luciaEndingTodayKit);
+
             // 6. Servicio (Herencia de Item)
             ServiceItem setupService = new ServiceItem();
             setupService.setTitle("Instalación Software");
@@ -201,12 +241,14 @@ public class DatabaseSeeder {
             kitRepo.save(myKit);
 
             Kit pendingPaidKit = new Kit();
-            pendingPaidKit.setName("Pack Trabajo Remoto");
+            pendingPaidKit.setName("Pack Trabajo Remoto Borrador");
             pendingPaidKit.setTenant(tenant);
             pendingPaidKit.setStatus(KitStatus.DRAFT);
             pendingPaidKit.setDeliveryMethod(DeliveryMethod.COURIER);
             pendingPaidKit.setStartDate(LocalDate.now().plusWeeks(2));
             pendingPaidKit.setEndDate(LocalDate.now().plusMonths(1));
+            pendingPaidKit.setCountry("Spain");
+            pendingPaidKit.setCity("Sevilla");
             kitRepo.save(pendingPaidKit);
 
             Kit audiovisualKit = new Kit();
@@ -243,7 +285,7 @@ public class DatabaseSeeder {
             snap4.setKit(pendingPaidKit);
             snap4.setPriceAtRental(setupService.getPricePerMonth());
 
-            pendingPaidKit.setSnapshots(List.of(snap3, snap4));
+            pendingPaidKit.setSnapshots(List.of(snap4));
             kitRepo.save(pendingPaidKit);
 
             ItemMemento snapAv1 = camara.createSnapshot(

@@ -190,6 +190,7 @@ const CommissionScreen: React.FC = () => {
                 placeholder="Ej: 20"
                 placeholderTextColor="#aaa"
                 editable={!loading && !saving}
+                maxLength={6}
               />
               <View style={styles.percentBadge}>
                 <Text style={styles.percentSymbol}>%</Text>
@@ -342,6 +343,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    minWidth: 0,
     height: 52,
     borderWidth: 1.5,
     borderColor: KC.border,
@@ -359,6 +361,7 @@ const styles = StyleSheet.create({
   percentBadge: {
     width: 48,
     height: 52,
+    flexShrink: 0,
     borderRadius: 12,
     backgroundColor: KC.grayLight,
     alignItems: 'center',

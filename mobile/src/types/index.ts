@@ -29,7 +29,7 @@ export interface UserResponse {
   address: string;
   city: string;
   country: string;
-  founderBadge: boolean; 
+  founderBadge: boolean;
   token?: string;
   profileImageUrl?: string;
 }
@@ -43,7 +43,7 @@ export interface AuthUser {
   address: string;
   city: string;
   country: string;
-  founderBadge: boolean; 
+  founderBadge: boolean;
   profileImageUrl?: string;
   token: string;
 }
@@ -200,8 +200,8 @@ export interface ItemFilterRequest {
   condition?: ArticleCondition;
   page?: number;
   size?: number;
-   startDate?: string;  
-  endDate?: string;   
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface ItemFilterResponse {
@@ -216,19 +216,19 @@ export interface ItemFilterResponse {
 
 export interface ItemCatalogResponse {
   id: number;
-    itemType: string; 
-    title: string;
-    description: string;
-    city: string;
-    pricePerMonth: number;
-    availableFrom: Date;
-    availableUntil: Date;
-    category: string;
-    totalUnits: number;
-    ownerId: number;
-    ownerName: string;
-    status?: string;   // solo para ARTICLE
-    imageUrl?: string; // solo para ARTICLE
+  itemType: string;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: Date;
+  availableUntil: Date;
+  category: string;
+  totalUnits: number;
+  ownerId: number;
+  ownerName: string;
+  status?: string; // solo para ARTICLE
+  imageUrl?: string; // solo para ARTICLE
 }
 
 export enum KitStatus {
@@ -316,8 +316,6 @@ export interface Category {
   minPrice: number;
   maxPrice: number;
 }
-
-
 
 export type IncidentType = "GENERAL" | "DAMAGED_ITEM";
 export type IncidentStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
@@ -444,7 +442,6 @@ export interface HeaderMenuSection {
   items: HeaderMenuItem[];
 }
 
-
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -492,7 +489,7 @@ export type RootStackParamList = {
   RgpdPolicy: undefined;
   EditPolicy: undefined;
   PromoCodes: undefined;
-  PromoCodeForm: { promoCode?: PromoCodeFormData; mode: 'create' | 'edit' };
+  PromoCodeForm: { promoCode?: PromoCodeFormData; mode: "create" | "edit" };
   PilotUsers: undefined;
   TransactionDetail: { 
     transactionId: number; 
@@ -607,7 +604,7 @@ export interface PromoCodeFormData {
   discountRate: number;
   active: boolean;
   singleUse: boolean;
-  type?: 'TENANT_DISCOUNT' | 'OWNER_COMMISSION_REDUCTION';
+  type?: "TENANT_DISCOUNT" | "OWNER_COMMISSION_REDUCTION";
   pilotUserOnly: boolean;
   pilotEmails: string[];
 }
@@ -662,6 +659,28 @@ export interface ArticleNearby {
   cityLat: number;
   cityLng: number;
   distanceKm: number;
+}
+
+export interface CatalogProduct {
+  id: number;
+  itemType: "ARTICLE" | "SERVICE" | string;
+  title: string;
+  pricePerMonth: number;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | "ACTIVE" | string;
+  category?: string;
+  condition?: ArticleCondition | null;
+  city?: string;
+  ownerId: number;
+  ownerName?: string;
+  imageUrl?: string | null;
+  totalUnits: number;
+  availableFrom?: string;
+  availableUntil?: string;
+  isAvailable?: boolean;
+  availabilityMessage?: string;
+  distanceKm?: number;
+  cityLat?: number;
+  cityLng?: number;
 }
 
 export interface ItemPaymentDetail {

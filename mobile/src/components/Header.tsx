@@ -1,6 +1,7 @@
 import React from 'react';
 import { Appbar } from 'react-native-paper';
 import { StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Shadows } from '../styles/theme';
 
 interface HeaderProps {
@@ -15,11 +16,10 @@ export const Header = ({ title, showBack = false, onBack }: HeaderProps) => {
       {/* Si showBack es true, mostramos la acción de retroceso */}
       {showBack && (
         <Appbar.Action 
-          icon="arrow-left-thick" 
+          icon={() => <Ionicons name="arrow-back" size={24} color={Colors.primaryHome} />} 
           onPress={onBack} 
           color={Colors.primaryHome} 
           style={styles.backButton}
-          size={32}
         />
       )}
 

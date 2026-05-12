@@ -25,6 +25,7 @@ import ProfileMenuModal from './ProfileMenuModal';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
 import { getMyKits, getKitTracking, getUpdatrableTrackingKits } from "../../services/kitService";
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 import { Helmet } from 'react-helmet-async'; 
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -42,6 +43,7 @@ const LAST_UPDATES_KEY = "@tracking_last_updates";
 const HomeScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<HomeNav>();
+  const navbarOffset = useNavbarOffset();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const { width } = useWindowDimensions();
   
@@ -106,7 +108,7 @@ const HomeScreen: React.FC = () => {
 
         if (lastUpdate && lastUpdate !== prevUpdate && tracking.status) {
           await addNotification({
-            id: `${kit.id}-${lastUpdate}`,
+            id: `${kit.id}-${tracking.status}`,
             kitId: kit.id,
             kitName: kit.name,
             status: tracking.status,
@@ -213,7 +215,7 @@ const HomeScreen: React.FC = () => {
     : '32%';
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.root, {paddingBottom: navbarOffset}]} edges={['top', 'left', 'right']}>
       <Helmet>
         <title>Inicio | KeaKit</title>
         <meta name="description" content="Panel principal de KeaKit para gestionar tus alquileres, kits, wallet y los artículos y servicios que hayas publicado."/>

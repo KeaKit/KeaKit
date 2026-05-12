@@ -410,7 +410,8 @@ const DefaultKitFormScreen: React.FC = () => {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: Spacing.md,
+              flexWrap: "wrap",
+              gap: Spacing.sm,
             }}
           >
             <View
@@ -418,6 +419,7 @@ const DefaultKitFormScreen: React.FC = () => {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: Spacing.sm,
+                flexShrink: 1,
               }}
             >
               <Text style={[commonStyles.subtitle, { marginBottom: 0 }]}>
@@ -428,7 +430,7 @@ const DefaultKitFormScreen: React.FC = () => {
               </View>
             </View>
 
-            <View style={{ minWidth: 165 }}>
+            <View style={{ width: '100%', paddingTop: 10 }}>
               <KeakitButton
                 title="Añadir productos"
                 onPress={openAddProductModal}

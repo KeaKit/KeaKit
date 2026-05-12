@@ -22,6 +22,7 @@ export const API_ROUTES = {
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
   GET_KITS: `${BASE_URL}/api/kits`,
   GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,
+  VALIDATE_KIT: (id: number) => `${BASE_URL}/api/kits/validate/${id}`,
   CONFIRM_KIT: (id: number) => `${BASE_URL}/api/kits/confirm/${id}`,
   ADD_ITEM_TO_KIT: (kitId: number, itemId: number, userId: number) =>
     `${BASE_URL}/api/kits/${kitId}/items/${itemId}?userId=${userId}`,

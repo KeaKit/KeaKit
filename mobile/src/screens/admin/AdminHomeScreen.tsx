@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { Colors } from '../../styles';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 import { Helmet } from 'react-helmet-async';
 
 type AdminHomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -153,6 +154,8 @@ const ADMIN_SECTIONS: AdminSection[] = [
 const AdminHomeScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<AdminHomeNav>();
+  const navbarOffset = useNavbarOffset();
+  
 
   const handleSectionPress = (section: AdminSection) => {
     if (section.implemented && section.screen) {
@@ -163,7 +166,7 @@ const AdminHomeScreen: React.FC = () => {
   const firstName = user?.name?.split(' ')[0] ?? 'Admin';
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.root, {paddingBottom: navbarOffset}]} edges={['top', 'left', 'right']}>
       
       <Helmet>
         <title>Panel de Administración | KeaKit</title>

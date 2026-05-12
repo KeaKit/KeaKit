@@ -28,6 +28,7 @@ import {
   KeakitSearchBar,
   KeakitModal,
 } from "../../components";
+import { useNavbarOffset } from "../../hooks/useWindowDimensions";
 import { Helmet } from 'react-helmet-async'; 
 
 const { categoryCard, cardLeft, categoryName, cardRight, buttonsArea } =
@@ -44,6 +45,7 @@ interface CategoryWithCount extends Category {
 
 export default function CategoriesScreen() {
   const navigation = useNavigation<CategoriesNav>();
+  const navbarOffset = useNavbarOffset();
   const { user } = useAuth();
   const token = (user as AuthUser)?.token || "";
 
@@ -185,7 +187,7 @@ export default function CategoriesScreen() {
   );
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.containerWhite, {paddingBottom: navbarOffset}]}>
       <Helmet>
         <title>Categorías | KeaKit</title>
         <meta name="description" content="Administra las categorías de artículos de KeaKit: crea, edita y organiza el contenido de la plataforma."/>

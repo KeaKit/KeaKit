@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { getWalletByUserId } from '../../services/walletService';
 import { ProfileImageWithBadge } from '../../components/ProfileImageWithBadge';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 import { Helmet } from 'react-helmet-async'; 
 
 type ProfileNav = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
@@ -34,6 +35,7 @@ interface ActionButton {
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileNav>();
+  const navbarOffset = useNavbarOffset();
   const { user, signOut } = useAuth();
 
   const [availableBalance, setAvailableBalance] = useState<number | null>(null);
@@ -138,7 +140,7 @@ const ProfileScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, {paddingBottom: navbarOffset > 0 ? navbarOffset + 20 : 20}]}>
       <Helmet>
         <title>Mi perfil | KeaKit</title>
         <meta name="description" content="Gestiona tu perfil en KeaKit: edita tu información personal, consulta tu saldo disponible, administra tus artículos, alquileres y servicios"/>

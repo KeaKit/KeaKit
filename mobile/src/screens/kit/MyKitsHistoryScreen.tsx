@@ -21,6 +21,7 @@ import { Colors, Spacing, commonStyles } from "../../styles";
 import { DatePickerModal } from 'react-native-paper-dates';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { es, registerTranslation } from 'react-native-paper-dates';
+import { useNavbarOffset } from "../../hooks/useWindowDimensions";
 import { Helmet } from 'react-helmet-async'; 
 
 registerTranslation('es', es);
@@ -70,7 +71,8 @@ const MyKitsHistoryScreen: React.FC = () => {
       onSurface: '#1C1B1F',
     },
   };
-
+  const navbarOffset = useNavbarOffset();
+  
   // Estados existentes
   const [kits, setKits] = useState<KitResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -522,7 +524,7 @@ const MyKitsHistoryScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.container, {paddingBottom: navbarOffset}]}>
       <Helmet>
         <title>Historial de alquileres | KeaKit</title>
         <meta name="description" content="Consulta el historial de tus alquileres en KeaKit."/>

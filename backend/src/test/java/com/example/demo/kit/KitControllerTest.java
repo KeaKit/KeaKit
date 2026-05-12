@@ -491,4 +491,41 @@ public class KitControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(content().string("Database error"));
     }
+
+    // ==========================================
+    // TESTS PARA validateKit
+    // ==========================================
+
+    @Test
+    void validateKit_success_returnsOk() throws Exception {
+        mockMvc.perform(get("/api/kits/validate/1"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("Kit válido"));
+
+        verify(kitService, times(1)).validateKit(1L);
+    }
+
+    @Test
+    void validateKit_businessError_returnsNotFound() throws Exception {
+        String errorMessage = "El arrendatario no puede seleccionar sus propios items";
+        
+        doThrow(new RuntimeException(errorMessage))
+            .when(kitService).validateKit(1L);
+
+        mockMvc.perform(get("/api/kits/validate/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string(errorMessage));
+    }
+
+    @Test
+    void validateKit_missingItems_returnsNotFound() throws Exception {
+        String errorMessage = "No puedes realizar el pago de un kit sin items";
+        
+        doThrow(new RuntimeException(errorMessage))
+            .when(kitService).validateKit(1L);
+
+        mockMvc.perform(get("/api/kits/validate/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string(errorMessage));
+    }
 }
