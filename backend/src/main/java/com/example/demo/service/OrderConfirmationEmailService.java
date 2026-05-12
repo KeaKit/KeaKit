@@ -172,7 +172,7 @@ public class OrderConfirmationEmailService {
             StringBuilder itemsHtml = new StringBuilder();
             int rentalDays = 0;
             if (kit.getStartDate() != null && kit.getEndDate() != null) {
-                rentalDays = (int) ChronoUnit.DAYS.between(kit.getStartDate(), kit.getEndDate());
+                rentalDays = (int) ChronoUnit.DAYS.between(kit.getStartDate(), kit.getEndDate()) + 1;
                 if (rentalDays <= 0) rentalDays = 1;
             }
             double prorationFactor = (rentalDays > 0) ? ((double) rentalDays) / 30.0 : 0.0;
