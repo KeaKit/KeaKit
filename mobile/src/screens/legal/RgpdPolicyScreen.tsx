@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../styles';
 import { API_ROUTES } from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { Helmet } from 'react-helmet-async'; 
 
 const RgpdPolicyScreen: React.FC = () => {
     const navigation = useNavigation();
@@ -64,6 +65,11 @@ const RgpdPolicyScreen: React.FC = () => {
 
     return (
         <View style={styles.container}>
+            <Helmet>
+                <title>Política de Privacidad | KeaKit</title>
+                <meta name="description" content="Política de privacidad de KeaKit. Consulta cómo gestionamos tus datos personales." />
+                <meta name="robots" content="index, follow" />
+            </Helmet>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back" size={24} color={Colors.primary} />

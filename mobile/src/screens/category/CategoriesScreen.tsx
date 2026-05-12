@@ -28,6 +28,7 @@ import {
   KeakitSearchBar,
   KeakitModal,
 } from "../../components";
+import { Helmet } from 'react-helmet-async'; 
 
 const { categoryCard, cardLeft, categoryName, cardRight, buttonsArea } =
   categoriesScreenStyles;
@@ -185,6 +186,11 @@ export default function CategoriesScreen() {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Categorías | KeaKit</title>
+        <meta name="description" content="Administra las categorías de artículos de KeaKit: crea, edita y organiza el contenido de la plataforma."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>     
       <Header
         title="Gestión de categorías"
         showBack={true}

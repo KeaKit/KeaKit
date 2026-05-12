@@ -15,6 +15,7 @@ import { SelectPicker } from '../../components/SelectPicker';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal, es, registerTranslation } from 'react-native-paper-dates';
 import { formatOwnerCommissionPromoBadgeLabel } from '../../utils/ownerCommissionPromo';
+import { Helmet } from 'react-helmet-async'; 
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
 type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
@@ -595,6 +596,11 @@ const MyArticlesScreen: React.FC = () => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
+        <Helmet>
+          <title>Mis artículos | KeaKit</title>
+          <meta name="description" content="Consulta los artículos que has publicado en KeaKit."/>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>           
         <View style={commonStyles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color={Colors.primary} />

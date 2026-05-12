@@ -10,6 +10,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { getAllPromoCodes, updatePromoCode, PromoCodeResponse } from '../../services/promoCodeService';
+import { Helmet } from 'react-helmet-async'; 
+
 
 type PromoCodesNav = NativeStackNavigationProp<RootStackParamList, 'PromoCodes'>;
 
@@ -215,6 +217,12 @@ const PromoCodesScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+
+      <Helmet>
+        <title>Códigos Promocionales | KeaKit</title>
+        <meta name="description" content="Gestión de códigos promocionales y descuentos de la plataforma KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>

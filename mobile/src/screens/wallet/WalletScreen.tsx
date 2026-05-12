@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, FlatList } from "react-native";
+import { StyleSheet, View, Text, FlatList, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets, SafeAreaView } from "react-native-safe-area-context";
 import {
   Header,
@@ -18,6 +18,7 @@ import {
 } from "../../services/walletService";
 import { Colors, commonStyles, FontSizes, FontWeights } from "../../styles";
 import { ActivityIndicator } from "react-native-paper";
+import { Helmet } from 'react-helmet-async'; 
 
 type WalletNav = NativeStackNavigationProp<RootStackParamList, "Wallet">;
 
@@ -31,20 +32,22 @@ const transactionTypeLabels: Record<string, string> = {
 
 const getTransactionLabel = (transaction: Transaction) => {
   if (transaction.type === "PAYOUT") {
-    return transaction.amount < 0 ? "Pago" : "Ingreso";
+    return transaction.amount < 0 ? "Pago de kit" : "Ingreso";
   }
-
   return transactionTypeLabels[transaction.type] ?? transaction.type.replaceAll("_", " ");
 };
 
 const TransactionItem = ({
   item,
   index,
+  onPress,
 }: {
   item: Transaction;
   index: number;
+  onPress: () => void;
 }) => {
   const isNegative = item.amount < 0;
+  const type = getTransactionLabel(item);
 
   const BASE_DELAY = 450;
   const STAGGER = 300;
@@ -52,26 +55,28 @@ const TransactionItem = ({
 
   return (
     <FadeInItem delay={calculatedDelay}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
         <View style={styles.transactionCard}>
-        <View>
-          <Text style={[commonStyles.body, { fontWeight: FontWeights.bold }]}>
-            {getTransactionLabel(item)}
-          </Text>
-          <Text style={commonStyles.caption}>
-            {new Date(item.createdAt).toLocaleDateString()}
+          <View>
+            <Text style={[commonStyles.body, { fontWeight: FontWeights.bold }]}>
+              {type}
+            </Text>
+            <Text style={commonStyles.caption}>
+              {new Date(item.createdAt).toLocaleDateString()}
+            </Text>
+          </View>
+          <Text
+            style={[
+              commonStyles.body,
+              { fontWeight: FontWeights.bold },
+              { color: isNegative ? "#E74C3C" : "#2ECC71" },
+            ]}
+          >
+            {isNegative ? "" : "+"}
+            {item.amount.toFixed(2)} €
           </Text>
         </View>
-        <Text
-          style={[
-            commonStyles.body,
-            { fontWeight: FontWeights.bold },
-            { color: isNegative ? "#E74C3C" : "#2ECC71" },
-          ]}
-        >
-          {isNegative ? "" : "+"}
-          {item.amount.toFixed(2)} €
-        </Text>
-      </View>
+      </TouchableOpacity>
     </FadeInItem>
   );
 };
@@ -118,6 +123,14 @@ export default function WalletScreen() {
     }
   };
 
+  const handleTransactionPress = (transaction: Transaction) => {
+    navigation.navigate("TransactionDetail", {
+      transactionId: transaction.id,
+      transactionType: transaction.type,
+      transactionAmount: transaction.amount,
+    });
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       if (user?.token) {
@@ -129,65 +142,73 @@ export default function WalletScreen() {
 
   return (
     <SafeAreaView style={[commonStyles.container, { paddingBottom: insets.bottom }]}>
+      <Helmet>
+        <title>Mi Wallet | KeaKit</title>
+        <meta name="description" content="Consulta el dinero disponible en tu wallet y el historial de transacciones realizadas en KeaKit. Además, puedes retirar el dinero en cualquier momento."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>        
       <Header title="Mi Wallet" showBack={true} onBack={navigation.goBack} />
-        <View style={styles.content} >
-      {/* Tarjeta de Balance */}
-      <FadeInItem delay={50}>
-        <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Balance Total</Text>
-          {loadingWallet ? (
-            <SkeletonPulse width={120} height={48} radius={8} dark />
+      <View style={styles.content}>
+        {/* Tarjeta de Balance */}
+        <FadeInItem delay={50}>
+          <View style={styles.balanceCard}>
+            <Text style={styles.balanceLabel}>Balance Total</Text>
+            {loadingWallet ? (
+              <SkeletonPulse width={120} height={48} radius={8} dark />
+            ) : (
+              <Text style={styles.balanceValue}>
+                {wallet
+                  ? wallet.balance.toLocaleString("es-ES", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  : "0,00"}{" "}
+                €
+              </Text>
+            )}
+          </View>
+        </FadeInItem>
+
+        <View style={commonStyles.divider} />
+
+        {/* Historial */}
+        <View style={styles.historyContainer}>
+          <Text style={commonStyles.subtitle}>Historial de Transacciones</Text>
+          {loadingTransactions ? (
+            <ActivityIndicator
+              size="large"
+              color={Colors.primaryHome}
+              style={{ marginTop: 20, justifyContent: "center", flex: 1 }}
+            />
+          ) : transactions.length === 0 ? (
+            <Text style={commonStyles.caption}>No tienes transacciones aún.</Text>
           ) : (
-            <Text style={styles.balanceValue}>
-              {wallet
-                ? wallet.balance.toLocaleString("es-ES", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                : "0,00"}{" "}
-              €
-            </Text>
+            <FlatList
+              data={transactions}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item, index }) => (
+                <TransactionItem
+                  item={item}
+                  index={index}
+                  onPress={() => handleTransactionPress(item)}
+                />
+              )}
+              contentContainerStyle={{ paddingBottom: insets.bottom + 85 }}
+              showsVerticalScrollIndicator={false}
+            />
           )}
         </View>
-      </FadeInItem>
-
-      <View style={commonStyles.divider} />
-
-      {/* Historial */}
-      <View style={styles.historyContainer}>
-        <Text style={commonStyles.subtitle}>Historial de Transacciones</Text>
-        {loadingTransactions ? (
-          <ActivityIndicator
-            size="large"
-            color={Colors.primaryHome}
-            style={{ marginTop: 20, justifyContent: "center", flex: 1 }}
-          />
-        ) : transactions.length === 0 ? (
-          <Text style={commonStyles.caption}>No tienes transacciones aún.</Text>
-        ) : (
-          <FlatList
-            data={transactions}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item, index }) => (
-              <TransactionItem item={item} index={index} />
-            )}
-            contentContainerStyle={{ paddingBottom: insets.bottom + 85 }}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-
       </View>
 
-      </View>
-      
-        <View style={[commonStyles.footerContainer, { paddingBottom: insets.bottom + 35}]} >
-            <FadeInItem delay={50}>
-            <KeakitButton
+      <View style={[commonStyles.footerContainer, { paddingBottom: insets.bottom + 35 }]}>
+        <FadeInItem delay={50}>
+          <KeakitButton
             title="Retirar dinero"
             onPress={() => navigation.navigate("WithdrawMoney")}
-        /></FadeInItem>
-        </View>
-        
+          />
+        </FadeInItem>
+      </View>
+
       <KeakitModal
         visible={errorModalVisible}
         onDismiss={() => setErrorModalVisible(false)}
@@ -203,12 +224,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundGray,
     justifyContent: "space-between",
-    padding:20
+    padding: 20,
   },
   balanceCard: {
     ...commonStyles.card,
     backgroundColor: Colors.primaryHome,
-    
     minHeight: 150,
     justifyContent: "space-between",
   },

@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { getCommissionConfig, updateCommissionConfig } from '../../services/PlatformConfigService';
+import { Helmet } from 'react-helmet-async'; 
 
 type CommissionNav = NativeStackNavigationProp<RootStackParamList, 'Commission'>;
 
@@ -132,7 +133,11 @@ const CommissionScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-
+      <Helmet>
+        <title>Comisión de plataforma | KeaKit</title>
+        <meta name="description" content="Gestiona la comisión de la plataforma KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>      
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={26} color={KC.blue} />

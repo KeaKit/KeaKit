@@ -56,6 +56,7 @@ import {
 } from "./createKitSelection";
 import { styles } from "../../styles/uploadArticleScreenStyles";
 import { formatRentalDuration, calculateMonthsBetween } from "../../utils/duration";
+import { Helmet } from 'react-helmet-async'; 
 
 const COMISION = 0;
 const GUARANTEE_PERCENTAGE = 0.2;
@@ -830,6 +831,11 @@ const checkItemsAvailability = (start: Date, end: Date): string[] => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
+        <Helmet>
+          <title>Crear un kit | KeaKit</title>
+          <meta name="description" content="Crea un nuevo kit en KeaKit y personalízalo según tus necesidades."/>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>  
         <ScrollView
           contentContainerStyle={createKitStyles.content}
           keyboardShouldPersistTaps="handled"
@@ -1115,7 +1121,17 @@ const checkItemsAvailability = (start: Date, end: Date): string[] => {
             selectedProducts.map((item) => (
               <KitItemComponent
                 key={item.id}
-                item={item}
+                item={{
+                  id: item.id,
+                  title: item.title,
+                  city: item.city,
+                  pricePerMonth: item.pricePerMonth,
+                  totalUnits: item.totalUnits,
+                  imageUrl: item.imageUrl,
+                  category: item.category,
+                  ownerName: item.ownerName,
+                  condition: item.condition,
+                }}
                 quantity={selectedQuantities[item.id] ?? 1}
                 maxQuantity={item.totalUnits}
                 duration={monthsBetween ?? 0}

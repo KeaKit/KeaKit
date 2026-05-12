@@ -16,6 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import { API_ROUTES } from '../../config/api';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { useNotification } from '../../components/NotificationContext';
+import { Helmet } from 'react-helmet-async'; 
 
 const EditPolicyScreen: React.FC = () => {
     const navigation = useNavigation();
@@ -124,6 +125,11 @@ const EditPolicyScreen: React.FC = () => {
 
     return (
         <SafeAreaView style={commonStyles.container}>
+            <Helmet>
+                <title>Editar Política de Privacidad | KeaKit</title>
+                <meta name="description" content="Edición y gestión de versiones de la política de privacidad de KeaKit." />
+                <meta name="robots" content="noindex, nofollow" />
+            </Helmet>
             {/* Header con botón de vuelta */}
             <View style={commonStyles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>

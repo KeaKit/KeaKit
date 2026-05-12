@@ -1,5 +1,5 @@
 import { API_ROUTES } from "../config/api";
-import { Wallet, Transaction, WithdrawRequest } from "../types";
+import { Wallet, Transaction, WithdrawRequest, TransactionWithDetails } from "../types";
 import { handleResponse, fetchWithTimeout, jsonHeaders } from "./utils";
 
 export const getWalletByUserId = async (
@@ -44,3 +44,14 @@ export const withdrawToBank = async (
 
   return handleResponse<string>(res);
 };
+
+export async function getTransactionDetails(
+  transactionId: number,
+  token: string,
+): Promise<TransactionWithDetails> {
+  const res = await fetch(API_ROUTES.GET_TRANSACTION_DETAILS(transactionId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<TransactionWithDetails>(res);
+}

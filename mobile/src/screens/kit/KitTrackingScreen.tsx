@@ -17,6 +17,7 @@ import { RootStackParamList, KitDeliveryResponse, DeliveryStatus } from "../../t
 import { Colors, Spacing, commonStyles } from "../../styles";
 import { useAuth } from "../../context/AuthContext";
 import { getKitTracking, updateKitTracking } from "../../services/kitService";
+import { Helmet } from 'react-helmet-async'; 
 
 type TrackingRouteProp = RouteProp<RootStackParamList, "Tracking">;
 
@@ -86,6 +87,11 @@ const KitTrackingScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Seguimiento del kit | KeaKit</title>
+        <meta name="description" content="Consulta el seguimiento y estado de entrega de tu kit en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>       
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={22} color={Colors.primary} />

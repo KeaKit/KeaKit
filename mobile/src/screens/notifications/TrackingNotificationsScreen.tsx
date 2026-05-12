@@ -22,6 +22,8 @@ import {
   componentStyles,
 } from "../../styles";
 import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
+import { Helmet } from 'react-helmet-async'; 
+
 
 type NotificationsNav = NativeStackNavigationProp<RootStackParamList, "TrackingNotifications">;
 
@@ -79,6 +81,11 @@ const TrackingNotificationsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Notificaciones de seguimiento | KeaKit</title>
+        <meta name="description" content="Consulta tus notificaciones de seguimiento en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>        
       <View style={commonStyles.header}>
         <TouchableOpacity
           style={componentStyles.iconButton}

@@ -16,6 +16,7 @@ import {
   updatePilotUser,
   bulkSetActivePilotUsers,
 } from '../../services/pilotUserService';
+import { Helmet } from 'react-helmet-async'; 
 
 type PilotUsersNav = NativeStackNavigationProp<RootStackParamList, 'PilotUsers'>;
 
@@ -217,6 +218,11 @@ const PilotUsersScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+      <Helmet>
+        <title>Usuarios Piloto | KeaKit</title>
+        <meta name="description" content="Gestión de usuarios piloto de la plataforma KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>

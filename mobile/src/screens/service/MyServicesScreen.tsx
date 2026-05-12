@@ -18,6 +18,7 @@ import { RootStackParamList, Service, ServiceStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { useNotification } from '../../components/NotificationContext';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { Helmet } from 'react-helmet-async'; 
 
 type MyServicesNav = NativeStackNavigationProp<RootStackParamList, 'MyServices'>;
 type FilterType = 'ALL' | 'ACTIVE' | 'UNAVAILABLE' | 'DRAFT';
@@ -297,6 +298,11 @@ const MyServicesScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Mis servicios | KeaKit</title>
+        <meta name="description" content="Consulta tus servicios en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>           
       <View style={commonStyles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

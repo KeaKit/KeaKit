@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { createRating } from '../../services/ratingService';
 import { Colors, Spacing, FontSizes, FontWeights, commonStyles } from '../../styles';
 import { API_ROUTES } from '../../config/api';
+import { Helmet } from 'react-helmet-async'; 
 
 type CreateRatingNav = NativeStackNavigationProp<RootStackParamList, 'CreateRating'>;
 type CreateRatingRoute = RouteProp<RootStackParamList, 'CreateRating'>;
@@ -143,6 +144,11 @@ const CreateRatingScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Valorar kit | KeaKit</title>
+        <meta name="description" content="Deja una valoración sobre tu experiencia con un kit en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>             
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

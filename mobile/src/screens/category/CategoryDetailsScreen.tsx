@@ -13,6 +13,7 @@ import {
   CategoryArticlesComponent,
 } from "../../components";
 import { Provider as PaperProvider, MD3LightTheme } from "react-native-paper";
+import { Helmet } from 'react-helmet-async'; 
 
 const customTheme = {
   ...MD3LightTheme,
@@ -60,9 +61,26 @@ export default function CategoryDetailsScreen() {
     return "Crear categoría";
   };
 
+  const getMetaDescription = () => {
+    if (formMode === "view") {
+      return "Consulta los detalles y artículos asociados a esta categoría en KeaKit.";
+    }
+
+    if (formMode === "edit") {
+      return "Edita la información y configuración de una categoría en KeaKit.";
+    }
+
+    return "Crea una nueva categoría para organizar artículos en la plataforma KeaKit.";
+  };
+
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
+        <Helmet>
+          <title>{getHeaderTitle()} | KeaKit</title>
+          <meta name="description" content={getMetaDescription()} />
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <Header
           title={getHeaderTitle()}
           showBack={true}

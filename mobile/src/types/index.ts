@@ -494,6 +494,11 @@ export type RootStackParamList = {
   PromoCodes: undefined;
   PromoCodeForm: { promoCode?: PromoCodeFormData; mode: 'create' | 'edit' };
   PilotUsers: undefined;
+  TransactionDetail: { 
+    transactionId: number; 
+    transactionType: string; 
+    transactionAmount: number;
+  };
 };
 
 export interface ProfileData {
@@ -657,6 +662,36 @@ export interface ArticleNearby {
   cityLat: number;
   cityLng: number;
   distanceKm: number;
+}
+
+export interface ItemPaymentDetail {
+  itemId: number;
+  itemType: 'ARTICLE' | 'SERVICE';
+  name: string;
+  category: string | null;
+  imageUrl: string | null;
+  ownerName: string | null;
+  ownerId: number | null;
+  quantity: number;
+  pricePerMonth: number;
+  total: number;
+}
+
+export interface TransactionDetails {
+  kitId: number;
+  kitName: string;
+  items: ItemPaymentDetail[];
+  subtotal: number;
+  guarantee: number;
+  platformFee: number;
+  courierFee: number;
+  discount: number;
+  total: number;
+  description?: string;
+}
+
+export interface TransactionWithDetails extends Transaction {
+  details?: TransactionDetails;
 }
 
 export * from "./defaultKitTypes";
