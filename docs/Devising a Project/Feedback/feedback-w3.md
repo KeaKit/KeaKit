@@ -3,6 +3,7 @@
 **Fecha:** 12/02/2026
 
 ## Índice del documento
+
 1. [Miembros del equipo](#1-miembros-del-equipo)
    - 1.1. [Ponentes](#11-ponentes)
    - 1.2. [Asistentes](#12-asistentes)
@@ -19,49 +20,51 @@
    - 4.4. [Bookmerang](#44-bookmerang)
    - 4.5. [StreetAsk](#45-streetask)
 5. [Feedback general](#5-feedback-general)
-6. [Historial de versiones](#6-historial-de-versiones) 
+6. [Historial de versiones](#6-historial-de-versiones)
 
 ## 1. Miembros del equipo
 
 ### 1.1. Ponentes
 
-| Nombre                        | Parte presentada                              |
-|-------------------------------|-----------------------------------------------|
-| Marta Aguilar Morcillo        | Quiénes somos y ¿Qué es KeaKit?               |
-| Guillermo Ciria González      | Casos de uso, Competidores y Análisis DAFO    |
-| Luis Emmanuel Chavez Malave   | Stack tecnológico                             |
-| Cristina Fernández Chica      | Mockups                                       |
+| Nombre                      | Parte presentada                           |
+| --------------------------- | ------------------------------------------ |
+| Marta Aguilar Morcillo      | Quiénes somos y ¿Qué es KeaKit?            |
+| Guillermo Ciria González    | Casos de uso, Competidores y Análisis DAFO |
+| Luis Emmanuel Chavez Malave | Stack tecnológico                          |
+| Cristina Fernández Chica    | Mockups                                    |
 
 ### 1.2. Asistentes
 
-| Nombre |
-|---|
-| Miguel Álvarez Raya |
-| Ángel Amo Sánchez |
-| Enrique Nicolae Barac Ploae |
-| Ismael Carrasco Mkhazni |
-| Adrián Miguel Chabrera Rubio |
-| Marta De La Calle González |
-| Salma El Hakimy Ettorabi |
-| Rosa María Espinosa Martínez |
-| Guillermo García León |
-| Paula Rosa González Páez |
+| Nombre                            |
+| --------------------------------- |
+| Miguel Álvarez Raya               |
+| Ángel Amo Sánchez                 |
+| Enrique Nicolae Barac Ploae       |
+| Ismael Carrasco Mkhazni           |
+| Adrián Miguel Chabrera Rubio      |
+| Marta De La Calle González        |
+| Salma El Hakimy Ettorabi          |
+| Rosa María Espinosa Martínez      |
+| Guillermo García León             |
+| Paula Rosa González Páez          |
 | Candela Jazmín Gutiérrez González |
-| Rafael Harana Mancilla |
-| José Luis Moraza Vergara |
-| Germán Ojeda Garrido |
-| Lucía Ponce García de Sola |
-| Samuel Tamayo Balogh |
+| Rafael Harana Mancilla            |
+| José Luis Moraza Vergara          |
+| Germán Ojeda Garrido              |
+| Lucía Ponce García de Sola        |
+| Samuel Tamayo Balogh              |
 
 ### 1.3. Ausentes
-| Nombre |
-|---|
-| Jose Egido Carnerero |
+
+| Nombre                    |
+| ------------------------- |
+| Jose Egido Carnerero      |
 | Alejandro González Macías |
 
 ## 2. Feedback de los profesores sobre nuestro equipo
 
 ### 2.1. Start
+
 Nuevas prácticas o comportamientos que deberían implementarse.
 
 ​🟠​ Mejorar el control del tiempo y ensayar las presentaciones.  
@@ -87,17 +90,21 @@ Actividades ineficientes o contraproducentes.
 ​🔴 Hablar mucho tiempo sin apoyo visual.
 
 ### 2.3. Continue
+
 Buenas prácticas que generan valor.
 
 🟢​​ Buen nivel de imagen de marca.  
 🟢​​ Feedback recibido sobre texto.
 
 ## 3. Feedback del propio equipo
+
 🟠 Medir tiempo y dejar tiempo para preguntas.  
 🟠 No se ha entendido bien qué hacía cada competidor.
 
 ## 4. Feedback para otros equipos
+
 ### 4.1. Current
+
 🔗​ https://currentcalendar.netlify.app/
 
 🟢 Mencionar Docker.  
@@ -123,7 +130,7 @@ Buenas prácticas que generan valor.
 
 ### 4.2. NexUS
 
-🟠 Tener todo el killer opener escrito en la presentación mientras se presenta le quita emoción y distrae la atención hacia la pantalla, mejor utilizar una sola imagen estática para que la atención se centre en el ponente.   
+🟠 Tener todo el killer opener escrito en la presentación mientras se presenta le quita emoción y distrae la atención hacia la pantalla, mejor utilizar una sola imagen estática para que la atención se centre en el ponente.  
 🟠 Uso notorio de Inteligencia Artificial en las imágenes.  
 🔴 Presentación descuadrada en algunas diapositivas.  
 🔴 La presentación no refleja la imagen de marca ni su paleta de colores.  
@@ -141,7 +148,7 @@ Buenas prácticas que generan valor.
 🟠 En algunos prototipos falta consistencia en los tonos de verdes.  
 🟠 Algunas imágenes cortadas al final de la presentación.  
 🟢 DAFO colorido atractivo y visual.  
-🟠 Los prototipos deben mostrarse primero, y los detalles con QR después.   
+🟠 Los prototipos deben mostrarse primero, y los detalles con QR después.  
 🟠 Medir el coste de la escalabilidad.  
 🔴 Textos repetidos y pequeños.  
 🔴 Si la audiencia conoce un tema, no explicarlo como teoría.  
@@ -165,6 +172,7 @@ Buenas prácticas que generan valor.
 🟠 Después del killer opener presentar todas las ideas.
 
 ### 4.4. Bookmerang
+
 🔗 https://habit-arctic-24812122.figma.site/
 
 🔴 La foto "selfie en el espejo" se ve demasiado informal.  
@@ -182,6 +190,7 @@ Buenas prácticas que generan valor.
 🟠 Funciones limitadas en lugar de quitadas, para “poner el caramelo en la boca”.
 
 ### 4.5. StreetAsk
+
 🔗 https://streetask2.netlify.app/
 
 🔴 Ponente muy lejos de la presentación.  
@@ -194,7 +203,7 @@ Buenas prácticas que generan valor.
 🔴 Pagar solo por no tener anuncios no es suficiente.  
 🔴 DAFO en 4 diapositivas exagerado.  
 🟢 No se usaron diagramas de flujo complejos.  
-🔴 Necesario dar ventajas a los usuarios piloto para participar.  
+🔴 Necesario dar ventajas a los usuarios piloto para participar.
 
 ## 5. Feedback general
 
@@ -210,25 +219,26 @@ Feedback que proporcionaron los profesores para la clase al completo.
 - Debemos ver los **vídeos teóricos** y que dichos conocimientos se reflejen en la presentación.
 - Debemos tener en consideración las **condiciones de fallo** del entregable para evitar el suspenso del entregable.
 - El **foco** de la presentación para este entregable serán:
-    - Dejar clara la idea del proyecto.
-    - Mejorar los killer opener.
-    - Los mockups del MVP, claramente acotado.
-    - El análisis de competidores mostrando el valor diferencial del proyecto con respecto a la competencia.
-    - El stack tecnológico, acompañado de un análisis de riesgos concienzudo, con su plan de mitigación correspondiente.
-    - Gestión de los sprints, preferiblemente explicado mediante Gantt simplificado.
-    - Listado real de usuarios piloto, junto con cómo gestionarlos y premiarlos por su participación.
-    - Presentación de equipo y estructura mediante matriz RAFI.
-    - Slike de alto nivel del cumplimiento del Commitment Agreement, con nombres, tareas y horas.
+  - Dejar clara la idea del proyecto.
+  - Mejorar los killer opener.
+  - Los mockups del MVP, claramente acotado.
+  - El análisis de competidores mostrando el valor diferencial del proyecto con respecto a la competencia.
+  - El stack tecnológico, acompañado de un análisis de riesgos concienzudo, con su plan de mitigación correspondiente.
+  - Gestión de los sprints, preferiblemente explicado mediante Gantt simplificado.
+  - Listado real de usuarios piloto, junto con cómo gestionarlos y premiarlos por su participación.
+  - Presentación de equipo y estructura mediante matriz RAFI.
+  - Slike de alto nivel del cumplimiento del Commitment Agreement, con nombres, tareas y horas.
 - La presentación de evaluación durará un total de **16 minutos**, de los cuales 3 minutos serán dedicados al feedback.
 
 ## 6. Historial de versiones
 
-| Versión | Fecha       | Descripción                   | Autor(es)       |
-|---------|------------|-------------------------------|------------|
+| Versión | Fecha      | Descripción                                                                                                                                                                     | Autor(es)                  |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | 1.0.0   | 13/02/2026 | Creación del documento de feedback de la semana 3 con feedback recibido de profesores, feedback interno del equipo, feedback para otros equipos y feedback general de la clase. | Lucía Ponce García de Sola |
-| 1.1.0 | 13/02/2026 | Cambio de nombre del documento porque corresponde a la semana 3. | Lucía Ponce García de Sola |
+| 1.1.0   | 13/02/2026 | Cambio de nombre del documento porque corresponde a la semana 3.                                                                                                                | Lucía Ponce García de Sola |
 
 ---
+
 **Redactado por:** Lucía Ponce García de Sola  
 **Fecha de redacción:** 13/02/2026  
 **Versión:** 1.1.0
