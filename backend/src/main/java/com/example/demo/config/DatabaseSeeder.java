@@ -201,7 +201,7 @@ public class DatabaseSeeder {
             kitRepo.save(myKit);
 
             Kit pendingPaidKit = new Kit();
-            pendingPaidKit.setName("Pack Trabajo Remoto");
+            pendingPaidKit.setName("Pack Trabajo Remoto Borrador");
             pendingPaidKit.setTenant(tenant);
             pendingPaidKit.setStatus(KitStatus.DRAFT);
             pendingPaidKit.setDeliveryMethod(DeliveryMethod.COURIER);
@@ -242,7 +242,7 @@ public class DatabaseSeeder {
             snap4.setKit(pendingPaidKit);
             snap4.setPriceAtRental(setupService.getPricePerMonth());
 
-            pendingPaidKit.setSnapshots(List.of(snap3, snap4));
+            pendingPaidKit.setSnapshots(List.of(snap4));
             kitRepo.save(pendingPaidKit);
 
             ItemMemento snapAv1 = camara.createSnapshot(
