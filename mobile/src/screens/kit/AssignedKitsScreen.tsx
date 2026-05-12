@@ -38,7 +38,7 @@ const AssignedKitsScreen = () => {
 
   const getDeliveryNotificationText = (item: KitResponse) => {
     if (!item.deliveryNotification) return null;
-    if (item.status === KitStatus.FINISHED || item.status === KitStatus.CANCELLED) {
+    if (item.status === KitStatus.FINISHED || item.status === KitStatus.CANCELLED || item.status === KitStatus.DRAFT) {
       return null;
     }
     if (item.status === KitStatus.ACTIVE) {
