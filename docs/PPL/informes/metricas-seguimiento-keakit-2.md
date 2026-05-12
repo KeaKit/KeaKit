@@ -284,7 +284,7 @@ La cuenta de TikTok se abrió el 4 de mayo de 2026. Los datos recogidos correspo
 | Veces compartido | 8 |
 | Guardados totales | 11 |
 | Total de interacciones (likes + comentarios + shares + guardados) | 409 |
-| Número total de seguidores | - | 30 |
+| Número total de seguidores | 30 |
 
 El 94 % del tráfico procede del For You Page (FYP), mientras que el 5,1 % llega desde el perfil personal y el 0,6 % desde la búsqueda. Que prácticamente todo el tráfico provenga del FYP indica que el algoritmo está distribuyendo el contenido más allá de los seguidores actuales, lo cual es muy favorable para una cuenta recién creada.
 
