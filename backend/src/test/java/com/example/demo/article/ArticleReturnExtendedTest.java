@@ -173,6 +173,28 @@ class ArticleReturnExtendedTest {
     assertThat(ex.getMessage()).contains("No se encontró un Kit activo para este artículo");
     }
 
+    @Test
+    void processReturn_activeKitBeforeEndDate_throwsAndDoesNotChangeState() {
+        Article article = makeRentedArticle(1L, 100.0);
+        Kit activeKit = makeActiveKit();
+        activeKit.setEndDate(LocalDate.now().plusDays(1));
+
+        when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
+        when(kitRepository.findActiveKitByItemId(1L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+
+        ReturnRequest request = new ReturnRequest("GOOD", "");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> articleService.processReturn(1L, owner.getId(), request));
+
+        assertThat(ex.getMessage()).contains("No se puede procesar la devolución antes de la fecha de fin del contrato");
+        assertThat(article.getStatus()).isEqualTo(ArticleStatus.RENTED);
+        assertThat(activeKit.getStatus()).isEqualTo(KitStatus.ACTIVE);
+        verify(articleRepository, never()).save(any(Article.class));
+        verify(kitRepository, never()).save(any(Kit.class));
+        verifyNoInteractions(paymentService);
+    }
+
     // ═══════════════ RN-DEV-05 / HU-ARRENDATARIO-40: GOOD → deposit returned ═══════════════
 
     @Test

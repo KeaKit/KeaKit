@@ -379,6 +379,10 @@ public class ArticleService {
         Kit activeKit = kitRepository.findActiveKitByItemId(articleId, KitStatus.ACTIVE)
             .orElseThrow(() -> new RuntimeException("No se encontró un Kit activo para este artículo. Es posible que ya se haya cerrado."));
 
+        if (activeKit.getEndDate() != null && activeKit.getEndDate().isAfter(LocalDate.now())) {
+            throw new RuntimeException("No se puede procesar la devolución antes de la fecha de fin del contrato.");
+        }
+
         Long tenantId = activeKit.getTenant().getId();
         String tenantEmail = activeKit.getTenant().getEmail();
 
