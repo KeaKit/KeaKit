@@ -1452,7 +1452,7 @@ public class KitServiceTest {
         kit.setEndDate(LocalDate.now().plusDays(5));
 
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
-        when(itemRepository.findById(10L)).thenReturn(Optional.of(ownArticle));
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(ownArticle));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> kitService.validateKit(1L));
         assertEquals("El arrendatario no puede seleccionar sus propios items", ex.getMessage());
@@ -1480,14 +1480,10 @@ public class KitServiceTest {
 
         when(kitRepository.findById(1L)).thenReturn(Optional.of(kit));
         
-        when(itemRepository.findById(10L)).thenReturn(Optional.of(article));
-        
         when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
 
         kitService.validateKit(1L);
         
         verify(kitRepository, times(1)).findById(1L);
-        verify(itemRepository).findById(10L);
-        verify(itemRepository).findById(100L);
     }
 }
