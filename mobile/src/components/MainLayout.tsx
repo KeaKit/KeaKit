@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import HeaderNavbar from './HeaderNavbar';
+import HeaderNavbar, { navbarBreakpoint } from './HeaderNavbar';
 import Navbar from './Navbar';
 import { RgpdModal } from './RgpdModal';
 
@@ -17,7 +17,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   React.useEffect(() => {
     const checkIsMobile = () => {
       const { width } = Dimensions.get('window');
-      setIsMobile(width < 1116);
+      setIsMobile(width < navbarBreakpoint);
     };
 
     checkIsMobile();

@@ -15,6 +15,7 @@ import { SelectPicker } from '../../components/SelectPicker';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { DatePickerModal, es, registerTranslation } from 'react-native-paper-dates';
 import { formatOwnerCommissionPromoBadgeLabel } from '../../utils/ownerCommissionPromo';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
 
 type MyArticlesNav = NativeStackNavigationProp<RootStackParamList, 'MyArticles'>;
 type FilterType = 'ALL' | 'AVAILABLE' | 'RENTED';
@@ -50,6 +51,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const MyArticlesScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<MyArticlesNav>();
+  const navbarOffset = useNavbarOffset();
   const { showNotification } = useNotification(); 
 
   const [articles, setArticles] = useState<UserArticle[]>([]);
@@ -642,13 +644,13 @@ const MyArticlesScreen: React.FC = () => {
             data={filteredArticles}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderArticle}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[styles.listContent, { paddingBottom: navbarOffset > 0 ? navbarOffset + 74 : 90 }]}
             showsVerticalScrollIndicator={false}
           />
         )}
 
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, { bottom: navbarOffset > 0 ? navbarOffset + 10 : 28}]}
           onPress={() => navigation.navigate('UploadArticle')}
           activeOpacity={0.85}
         >
@@ -871,7 +873,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Spacing.md,
-    paddingBottom: 100,
   },
   expandButton: {
     flexDirection: 'row',
@@ -1021,7 +1022,6 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 28,
     right: 24,
     width: 60,
     height: 60,
