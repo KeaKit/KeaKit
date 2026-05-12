@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, useWindowDimensions } from "react-native";
 import { Text } from "react-native-paper";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { CommonActions, useNavigation } from "@react-navigation/native";
@@ -61,6 +61,8 @@ type Props = NativeStackScreenProps<RootStackParamList, "Checkout">;
 
 export default function CheckoutScreen({ route }: Props) {
   const { kitId } = route.params;
+  const { width } = useWindowDimensions();
+  const displayButtonsInRow = width >= 1000;
   const navigation = useNavigation<CheckoutNav>();
   const resetToMyKits = () => {
     navigation.dispatch(
@@ -343,6 +345,7 @@ export default function CheckoutScreen({ route }: Props) {
                     placeholderTextColor="#aaa"
                     autoCapitalize="characters"
                     editable={!loading}
+                    maxLength={20} 
                   />
                   <TouchableOpacity
                     style={[styles.promoBtn, (!promoInput.trim() || promoLoading) && styles.promoBtnDisabled]}
@@ -408,31 +411,35 @@ export default function CheckoutScreen({ route }: Props) {
           </View>
         </FadeInItem>
         <FadeInItem delay={50}>
-          <KeakitButton
-            title="Pagar con Stripe"
-            onPress={() => handlePayment(false)}
-            disabled={isStripePayDisabled}
-            variant="blue"
-            loading={loading}
-          />
-        </FadeInItem>
-        <FadeInItem delay={50}>
-          <KeakitButton
-            title="Pagar con mi saldo de KeaKit"
-            onPress={() => handlePayment(true)}
-            disabled={isWalletPayDisabled}
-            variant="green"
-            loading={loading}
-          />
-        </FadeInItem>
-        <FadeInItem delay={50}>
-          <KeakitButton
-            title="Cancelar"
-            onPress={() => navigation.navigate("KitDetail", { kitId })}
-            disabled={loading}
-            variant="violet"
-          />
-        </FadeInItem>
+        <View style={[styles.buttonsRow, displayButtonsInRow && styles.buttonsRowDesktop]}>
+          <View style={[styles.buttonWrapper, displayButtonsInRow && styles.buttonWrapperDesktop]}>
+            <KeakitButton
+              title="Pagar con Stripe"
+              onPress={() => handlePayment(false)}
+              disabled={isStripePayDisabled}
+              variant="blue"
+              loading={loading}
+            />
+          </View>
+          <View style={[styles.buttonWrapper, displayButtonsInRow && styles.buttonWrapperDesktop]}>
+            <KeakitButton
+              title="Pagar con mi saldo de KeaKit"
+              onPress={() => handlePayment(true)}
+              disabled={isWalletPayDisabled}
+              variant="green"
+              loading={loading}
+            />
+          </View>
+          <View style={[styles.buttonWrapper, displayButtonsInRow && styles.buttonWrapperDesktop]}>
+            <KeakitButton
+              title="Cancelar"
+              onPress={() => navigation.navigate("KitDetail", { kitId })}
+              disabled={loading}
+              variant="violet"
+            />
+          </View>
+        </View>
+      </FadeInItem>
 
         <Text style={[commonStyles.caption, styles.testCard]}>
           Tarjeta de prueba: 4242 4242 4242 4242 | Exp: 12/34 | CVV: 123
@@ -497,15 +504,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', gap: 10, alignItems: 'center',
   },
   promoInput: {
-    flex: 1, height: 48, borderWidth: 1.5, borderColor: '#CBD5E1',
-    borderRadius: 10, paddingHorizontal: 14, fontSize: 16,
-    fontWeight: '700', color: '#2d6e91', backgroundColor: '#f8fbff',
-    letterSpacing: 1,
+    flex: 1, minWidth: 0, height: 48, borderWidth: 1.5, borderColor: '#CBD5E1',
+    borderRadius: 10, paddingHorizontal: 14, fontSize: 16, fontWeight: '700', 
+    color: '#2d6e91', backgroundColor: '#f8fbff', letterSpacing: 1,
   },
   promoInputValid:  { borderColor: '#10B981', backgroundColor: '#f0fdf4' },
   promoInputError:  { borderColor: '#EF4444', backgroundColor: '#fef2f2' },
   promoBtn: {
-    height: 48, paddingHorizontal: 18, borderRadius: 10,
+    flexShrink: 0, height: 48, paddingHorizontal: 18, borderRadius: 10,
     backgroundColor: '#2d6e91', alignItems: 'center', justifyContent: 'center',
   },
   promoBtnDisabled: { opacity: 0.45 },
@@ -522,4 +528,8 @@ const styles = StyleSheet.create({
   promoAppliedSaving: { fontSize: 14, fontWeight: '700', color: '#4caf7d' },
   promoRemoveBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   promoRemoveText: { fontSize: 13, fontWeight: '700', color: '#e74c3c' },
+  buttonsRow: { flexDirection: 'column', gap: Spacing.sm },
+  buttonsRowDesktop: { flexDirection: 'row' },
+  buttonWrapper: { flex: 1 },
+  buttonWrapperDesktop: { flex: 1 },
 });
