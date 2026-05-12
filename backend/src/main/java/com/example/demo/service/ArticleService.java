@@ -22,6 +22,7 @@ import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Category;
+import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
@@ -321,7 +322,7 @@ public class ArticleService {
 
         String finalStatus;
         
-        if (isInActiveKit && !("AVAILABLE".equals(currentStatus) || "DAMAGED".equals(currentStatus))) {
+        if (isInActiveKit) {
             finalStatus = "RENTED";
         } 
         else if (isInPaidKit) {
@@ -722,4 +723,44 @@ public class ArticleService {
         k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE
     );
 }
+    
+    @Transactional
+    public void autoCloseExpiredKitItems(Kit expiredKit) {
+        Long tenantId = expiredKit.getTenant().getId();
+        boolean hasDamagedItems = false;
+        for (ItemMemento snapshot : expiredKit.getSnapshots()) {
+            Long originalId = snapshot.getOriginalItemId();
+            Article article = articleRepository.findById(originalId).orElse(null);
+            
+            if (article != null) {
+                if (article.getStatus() == ArticleStatus.DAMAGED) {
+                    hasDamagedItems = true;
+                }
+                else if (article.getStatus() == ArticleStatus.RENTED) {
+                    article.setStatus(ArticleStatus.AVAILABLE);
+                    article.setAvailableUntil(null);
+                    articleRepository.save(article);
+                    availabilityRequestService.notifyWatchersWhenAvailable(article);
+                }
+            }
+        }
+
+        expiredKit.setStatus(KitStatus.FINISHED);
+        kitRepository.save(expiredKit);
+
+        String finalCondition = hasDamagedItems ? "DAMAGED" : "GOOD";
+        Long effectiveOwnerId = expiredKit.getSnapshots().get(0).getKit().getTenant().getId(); 
+        
+        try {
+            paymentService.processGuaranteeReturn(
+                expiredKit.getId(),
+                effectiveOwnerId,
+                tenantId,
+                finalCondition
+            );
+            System.out.println("Kit " + expiredKit.getId() + " auto-cerrado tras 7 días. Condición final: " + finalCondition);
+        } catch (Exception e) {
+            System.err.println("Error procesando fianza automática para Kit " + expiredKit.getId() + ": " + e.getMessage());
+        }
+    }
 }

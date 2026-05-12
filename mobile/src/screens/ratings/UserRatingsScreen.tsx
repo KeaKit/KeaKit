@@ -18,6 +18,7 @@ import { getUserById } from '../../services/authService';
 import { ProfileImageWithBadge } from '../../components/ProfileImageWithBadge'; 
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } from '../../styles';
 import { getPublicUserProfile } from '../../services/userService';
+import { Helmet } from 'react-helmet-async'; 
 
 type UserRatingsNav = NativeStackNavigationProp<RootStackParamList, 'UserRatings'>;
 type UserRatingsRoute = RouteProp<RootStackParamList, 'UserRatings'>;
@@ -110,6 +111,11 @@ const [publicProfile, setPublicProfile] = useState<{ profileImageUrl?: string; f
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Valoraciones | KeaKit</title>
+        <meta name="description" content="Consulta las valoraciones que has recibido en Keakit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>           
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

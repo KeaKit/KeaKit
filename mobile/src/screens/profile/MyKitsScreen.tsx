@@ -15,18 +15,20 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { KitResponse, KitStatus, RootStackParamList } from "../../types";
 import { API_ROUTES } from "../../config/api";
 import { Colors, Spacing, commonStyles } from "../../styles";
+import { useNavbarOffset } from "../../hooks/useWindowDimensions";
+import { Helmet } from 'react-helmet-async'; 
 
 type MyKitsNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 
 const MyKitsScreen: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigation = useNavigation<MyKitsNav>();
-
+  const navbarOffset = useNavbarOffset();
   const [kits, setKits] = useState<KitResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadKits = useCallback(async () => {
+const loadKits = useCallback(async () => {
     console.log('[MyKits] loadKits called — user:', user?.id, 'authLoading:', authLoading);
     if (!user?.token) {
       console.log('[MyKits] no user or token, stopping loader');
@@ -48,8 +50,16 @@ const MyKitsScreen: React.FC = () => {
       }
 
       const data = await response.json();
-      // Filtramos los cancelados para no mostrarlos en la pantalla principal
-      setKits(data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED));
+      
+      // 1. Filtramos los cancelados
+      const filteredKits = data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED);
+      
+      // 2. Ordenamos los kits para que los más recientes (mayor ID) queden primero
+      const sortedKits = filteredKits.sort((a: KitResponse, b: KitResponse) => b.id - a.id);
+      
+      // 3. Guardamos en el estado
+      setKits(sortedKits);
+
     } catch (err) {
       console.log('[MyKits] error:', err);
       setError("Error al cargar alquileres");
@@ -200,7 +210,12 @@ const MyKitsScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.container, {paddingBottom: navbarOffset}]}>
+      <Helmet>
+        <title>Mis alquileres | KeaKit</title>
+        <meta name="description" content="Consulta los alquileres que has realizado en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>            
       <View style={commonStyles.header}>
         <TouchableOpacity
           style={styles.backButton}

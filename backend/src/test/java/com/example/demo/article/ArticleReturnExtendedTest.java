@@ -456,3 +456,4 @@ class ArticleReturnExtendedTest {
         verify(articleRepository, times(1)).save(article);
     }
 }
+

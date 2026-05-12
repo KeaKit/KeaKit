@@ -9,6 +9,7 @@ import { createUser, updateUser,  toggleFounderBadge } from '../../services/admi
 import { SelectPicker } from '../../components/SelectPicker';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { Colors, Spacing, commonStyles } from '../../styles';
+import { Helmet } from 'react-helmet-async'; 
 
 type AdminUserFormNav = NativeStackNavigationProp<RootStackParamList, 'AdminUsers'>;
 type AdminUserFormRoute = RouteProp<RootStackParamList, 'AdminUsers'>;
@@ -159,6 +160,11 @@ const AdminUserFormScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
+      <Helmet>
+        <title>{userToEdit ? 'Editar Usuario' : 'Crear Usuario'} | KeaKit</title>
+        <meta name="description" content="Formulario de gestión de usuarios de la plataforma KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <View style={commonStyles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

@@ -72,5 +72,6 @@ public interface KitRepository extends JpaRepository<Kit, Long> {
             "AND k.deliveryMethod = COURIER " +
             "AND k.tenant.id = :tenantId")
     List<Kit> findTrackingUpdateableByTenantId(@Param("tenantId") Long tenantId);
+    List<Kit> findByStatusAndEndDateLessThanEqual(KitStatus status, LocalDate date);
 }
 

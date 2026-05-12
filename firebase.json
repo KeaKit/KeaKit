@@ -1,12 +1,20 @@
 {
   "hosting": {
-    "public": "dist",
+    "public": "mobile/dist",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "!/robots.txt",
+        "destination": "/index.html"
+      },
+      {
+        "source": "!/sitemap.xml",
+        "destination": "/index.html"
+      },
       {
         "source": "**",
         "destination": "/index.html"

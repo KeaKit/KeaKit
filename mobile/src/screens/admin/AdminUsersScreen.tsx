@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import {getAdminUsers, deleteUser } from '../../services/adminService';
 import { UserResponse, RootStackParamList } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
+import { Helmet } from 'react-helmet-async'; 
 
 type AdminUsersNav = NativeStackNavigationProp<RootStackParamList, 'AdminUsers'>;
 
@@ -135,6 +136,11 @@ const AdminUsersScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Gestión de Usuarios | KeaKit</title>
+        <meta name="description" content="Administración de usuarios de la plataforma KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <View style={styles.actionsContainer}>
         <TouchableOpacity
           style={styles.createButton}

@@ -721,6 +721,25 @@ class ArticleServiceTest {
 
     @SuppressWarnings("unchecked")
     @Test
+    void findArticlesByUserId_activeKitKeepsArticleShownAsRented() {
+        Article articleReturnedEarly = makeArticle(12L, ArticleStatus.AVAILABLE);
+        LocalDate rentalEndDate = LocalDate.now().plusDays(3);
+        Kit activeKit = makeActiveKit(owner);
+        activeKit.setEndDate(rentalEndDate);
+
+        when(articleRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of(articleReturnedEarly));
+        when(articleRepository.findAllKitsWhereArticleHasBeen(12L)).thenReturn(List.of(activeKit));
+
+        List<UserArticle> result = articleService.findArticlesByUserId(owner.getId(), null, null, null, null);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).status()).isEqualTo("RENTED");
+        assertThat(result.get(0).rentedUntil()).isEqualTo(rentalEndDate);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     void findArticlesByUserId_emptyList_returnsEmpty() {
         when(articleRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
