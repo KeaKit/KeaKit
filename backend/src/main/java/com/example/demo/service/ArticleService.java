@@ -4,7 +4,6 @@ package com.example.demo.service;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -18,12 +17,12 @@ import com.example.demo.dto.CityCoordinatesDTO;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
-import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.dto.PromoCodeValidationResponse;
 import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Category;
+import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
@@ -34,6 +33,8 @@ import com.example.demo.repository.UserRepository;
 
 @Service
 public class ArticleService {
+
+    private static final String FUTURE_PURCHASE_DATE_MESSAGE = "La fecha de compra no puede ser posterior a hoy";
 
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
@@ -132,6 +133,8 @@ public class ArticleService {
         LocalDate until = article.getAvailableUntil();
         if (from != null && until != null && from.isAfter(until))
             throw new RuntimeException("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
+
+        validatePurchaseDate(article.getPurchaseDate());
 
         User owner = article.getOwner();
         if (owner == null || owner.getId() == null)
@@ -237,6 +240,12 @@ public class ArticleService {
             return false;
         }
         return l.equals(r);
+    }
+
+    private void validatePurchaseDate(LocalDate purchaseDate) {
+        if (purchaseDate != null && purchaseDate.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException(FUTURE_PURCHASE_DATE_MESSAGE);
+        }
     }
 
     public void deleteById(Long id, Long ownerId) {
@@ -403,25 +412,28 @@ public class ArticleService {
             activeKit.setStatus(KitStatus.FINISHED);
             kitRepository.save(activeKit);
 
-            Optional<Article> damagedArticle = activeKit.getSnapshots().stream()
+            List<Article> damagedArticles = activeKit.getSnapshots().stream()
                 .map(snapshot -> articleRepository.findById(snapshot.getOriginalItemId()).orElse(null))
                 .filter(a -> a != null && a.getStatus() == ArticleStatus.DAMAGED)
-                .findFirst();
+                .collect(Collectors.toList());
 
-            String finalCondition = damagedArticle.isPresent() ? "DAMAGED" : "GOOD";
-            Long effectiveOwnerId = damagedArticle.isPresent() ? damagedArticle.get().getOwner().getId() : ownerId;
+            String finalCondition = damagedArticles.isEmpty() ? "GOOD" : "DAMAGED";
 
             try {
                 amountProcessed = paymentService.processGuaranteeReturn(
                     activeKit.getId(),
-                    effectiveOwnerId,
+                    ownerId,
                     tenantId,
                     finalCondition
                 );
 
-                if (damagedArticle.isPresent()) {
+                if (!damagedArticles.isEmpty()) {
                     resolution = "DEPOSIT_RETAINED";
-                    message = "Artículo con daños. Se retiene la garantía de " + amountProcessed + "€ y se ha añadido al monedero del propietario.";
+                    if (damagedArticles.size() < activeKit.getSnapshots().size()) {
+                        message = "Se han retenido " + amountProcessed + "€ de la garantía por los artículos dañados y el resto se ha devuelto al arrendatario.";
+                    } else {
+                        message = "Artículo con daños. Se retiene la garantía de " + amountProcessed + "€ y se ha añadido al monedero del propietario.";
+                    }
                 } else {
                     resolution = "DEPOSIT_RETURNED";
                     message = "Artículo devuelto en buen estado. Se devuelve la garantía exacta (" + amountProcessed + "€) al monedero del arrendatario.";
@@ -524,7 +536,13 @@ public class ArticleService {
     }
 
     public List<ArticleNearbyDTO> findAllWithCoords(String country) {
-        List<Article> articles = articleRepository.findByStatus(ArticleStatus.AVAILABLE);
+        return findAllWithCoords(country, false);
+    }
+
+    public List<ArticleNearbyDTO> findAllWithCoords(String country, boolean includeRented) {
+        List<Article> articles = includeRented
+            ? articleRepository.findByStatusIn(List.of(ArticleStatus.AVAILABLE, ArticleStatus.RENTED))
+            : articleRepository.findByStatus(ArticleStatus.AVAILABLE);
         return articles.stream().map(article -> {
             String resolvedCountry = article.getCountry() != null ? article.getCountry() : country;
             CityCoordinatesDTO coords = resolvedCountry != null
@@ -683,10 +701,12 @@ public class ArticleService {
         if (from != null && until != null && from.isAfter(until))
             throw new RuntimeException("La fecha de inicio de disponibilidad debe ser posterior o igual a la fecha de finalización");
 
-        if (updateData.getPurchaseDate() != null) 
+        if (updateData.getPurchaseDate() != null) {
+            validatePurchaseDate(updateData.getPurchaseDate());
             article.setPurchaseDate(updateData.getPurchaseDate());
+        }
 
-        if (updateData.getCondition() != null) 
+        if (updateData.getCondition() != null)
             article.setCondition(updateData.getCondition());
             
         if (updateData.getImageUrl() != null) 
@@ -699,4 +719,44 @@ public class ArticleService {
         k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE
     );
 }
+    
+    @Transactional
+    public void autoCloseExpiredKitItems(Kit expiredKit) {
+        Long tenantId = expiredKit.getTenant().getId();
+        boolean hasDamagedItems = false;
+        for (ItemMemento snapshot : expiredKit.getSnapshots()) {
+            Long originalId = snapshot.getOriginalItemId();
+            Article article = articleRepository.findById(originalId).orElse(null);
+            
+            if (article != null) {
+                if (article.getStatus() == ArticleStatus.DAMAGED) {
+                    hasDamagedItems = true;
+                }
+                else if (article.getStatus() == ArticleStatus.RENTED) {
+                    article.setStatus(ArticleStatus.AVAILABLE);
+                    article.setAvailableUntil(null);
+                    articleRepository.save(article);
+                    availabilityRequestService.notifyWatchersWhenAvailable(article);
+                }
+            }
+        }
+
+        expiredKit.setStatus(KitStatus.FINISHED);
+        kitRepository.save(expiredKit);
+
+        String finalCondition = hasDamagedItems ? "DAMAGED" : "GOOD";
+        Long effectiveOwnerId = expiredKit.getSnapshots().get(0).getKit().getTenant().getId(); 
+        
+        try {
+            paymentService.processGuaranteeReturn(
+                expiredKit.getId(),
+                effectiveOwnerId,
+                tenantId,
+                finalCondition
+            );
+            System.out.println("Kit " + expiredKit.getId() + " auto-cerrado tras 7 días. Condición final: " + finalCondition);
+        } catch (Exception e) {
+            System.err.println("Error procesando fianza automática para Kit " + expiredKit.getId() + ": " + e.getMessage());
+        }
+    }
 }

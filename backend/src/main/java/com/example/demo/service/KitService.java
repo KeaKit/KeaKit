@@ -8,10 +8,12 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -548,6 +550,31 @@ public class KitService {
             // 3. Verificamos el stock para este día
             if (rentedUnitsOnDate + requestedQuantity > item.getTotalUnits()) {
                 throw new RuntimeException("El artículo '" + item.getTitle() + "' no tiene suficientes unidades disponibles para las fechas seleccionadas.");
+            }
+        }
+    }
+    
+    @Autowired
+    @Lazy 
+    private ArticleService articleService;
+    @Scheduled(cron = "0 5 0 * * ?") 
+    @Transactional
+    public void processExpiredKitsAutomatically() {
+        LocalDate gracePeriodDeadline = LocalDate.now().minusDays(7);
+
+        List<Kit> expiredKits = kitRepository.findByStatusAndEndDateLessThanEqual(KitStatus.ACTIVE, gracePeriodDeadline);
+        
+        if (expiredKits.isEmpty()) {
+            return;
+        }
+
+        System.out.println("Encontrados " + expiredKits.size() + " kits que superaron los 7 días de gracia.");
+
+        for (Kit kit : expiredKits) {
+            try {
+                articleService.autoCloseExpiredKitItems(kit);
+            } catch (Exception e) {
+                System.err.println("Fallo al auto-cerrar el kit " + kit.getId() + ": " + e.getMessage());
             }
         }
     }

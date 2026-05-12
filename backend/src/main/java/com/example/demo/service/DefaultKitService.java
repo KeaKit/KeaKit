@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Objects;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +57,25 @@ public class DefaultKitService {
         }
     }
 
+    private User getCurrentUserSafe() {
+        try {
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+                return null;
+            }
+            String email;
+            Object principal = auth.getPrincipal();
+            if (principal instanceof UserDetails) {
+                email = ((UserDetails) principal).getUsername();
+            } else {
+                email = principal.toString();
+            }
+            return userRepository.findByEmail(email).orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private void checkUserAdmin() {
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
@@ -83,10 +103,19 @@ public class DefaultKitService {
     }
 
     public List<DefaultKitResponse> getAllDefaultKits() {
+        User currentUser = getCurrentUserSafe();
         List<DefaultKit> kits = defaultKitRepository.findAll();
+        
         return kits.stream()
-               .map(this::mapToDefaultKitResponse) 
-               .collect(Collectors.toList());
+            .map(kit -> {
+                DefaultKitResponse response = mapToDefaultKitResponse(kit, currentUser);
+                if (kit.getItems() != null && !kit.getItems().isEmpty() && response.getItems().isEmpty()) {
+                    return null;
+                }
+                return response;
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 
     public DefaultKit getDefaultKitById(Long id) {
@@ -96,7 +125,11 @@ public class DefaultKitService {
 
     public DefaultKitResponse findDefaultKitById(Long id) {
         DefaultKit kit = getDefaultKitById(id);
-        return mapToDefaultKitResponse(kit); // Tu función que convierte entidad a DTO
+        DefaultKitResponse response = mapToDefaultKitResponse(kit, getCurrentUserSafe());
+        if (kit.getItems() != null && !kit.getItems().isEmpty() && response.getItems().isEmpty()) {
+            throw new RuntimeException("No puedes alquilar este kit porque eres el dueño de todos sus artículos.");
+        }
+        return response;
     }
 
     private void calculateAndSetBasePrice(DefaultKit defaultKit) {
@@ -166,7 +199,7 @@ public class DefaultKitService {
 
         calculateAndSetBasePrice(defaultKit);
         DefaultKit savedKit = defaultKitRepository.save(defaultKit);
-        return mapToDefaultKitResponse(savedKit);
+        return mapToDefaultKitResponse(savedKit, getCurrentUserSafe());
     }
 
     @Transactional
@@ -198,41 +231,63 @@ public class DefaultKitService {
     }
 
     public List<DefaultKitResponse> getDefaultKitsCatalog() {
-        List<DefaultKit> kits = defaultKitRepository.findAll();
-        return kits.stream()
-                   .map(this::mapToDefaultKitResponse)
-                   .collect(Collectors.toList());
+    User currentUser = getCurrentUserSafe();
+    List<DefaultKit> kits = defaultKitRepository.findAll();
+    
+    return kits.stream()
+        .map(kit -> {
+            DefaultKitResponse response = mapToDefaultKitResponse(kit, currentUser);
+            
+            if (kit.getItems() != null && !kit.getItems().isEmpty() && response.getItems().isEmpty()) {
+                return null; 
+            }
+            return response;
+        })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
     }
 
-    private DefaultKitResponse mapToDefaultKitResponse(DefaultKit kit) {
+    private DefaultKitResponse mapToDefaultKitResponse(DefaultKit kit, User currentUser) {
         DefaultKitResponse response = new DefaultKitResponse();
         response.setId(kit.getId());
         response.setName(kit.getName());
         response.setDescription(kit.getDescription());
-        response.setBasePrice(kit.getBasePrice());
 
         List<DefaultKitItemResponse> itemResponses = new ArrayList<>();
+        double dynamicBasePrice = 0.0;
+
         if (kit.getItems() != null) {
             for (DefaultKitItem kitItem : kit.getItems()) {
+                Item dbItem = kitItem.getItem();
+                
+                if (currentUser != null && dbItem != null && dbItem.getOwner() != null &&
+                    dbItem.getOwner().getId().equals(currentUser.getId())) {
+                    continue;
+                }
+
                 DefaultKitItemResponse itemResp = new DefaultKitItemResponse();
                 itemResp.setId(kitItem.getId());
 
-                // Mapeamos el Item (Article) real
                 ItemCatalogResponse catalogResp = new ItemCatalogResponse();
-                if (kitItem.getItem() != null) {
-                    Item dbItem = kitItem.getItem();
+                if (dbItem != null) {
                     catalogResp.setId(dbItem.getId());
                     catalogResp.setTitle(dbItem.getTitle());
                     catalogResp.setPricePerMonth(dbItem.getPricePerMonth());
                     catalogResp.setAvailableFrom(dbItem.getAvailableFrom());
                     catalogResp.setAvailableUntil(dbItem.getAvailableUntil());
-                    // Añade aquí cualquier otro campo que necesites en el front
+                    
+                    if (dbItem.getPricePerMonth() != null) {
+                        dynamicBasePrice += dbItem.getPricePerMonth();
+                    }
                 }
                 itemResp.setItem(catalogResp);
                 itemResponses.add(itemResp);
             }
         }
+        
         response.setItems(itemResponses);
+        response.setBasePrice(dynamicBasePrice); 
+        
         return response;
     }
 

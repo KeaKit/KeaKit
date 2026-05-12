@@ -28,3 +28,18 @@ export async function markNotificationRead(
 
   await handleResponse<void>(res);
 }
+
+export async function deleteNotification(
+  notificationId: number,
+  token: string,
+): Promise<void> {
+  const res = await fetchWithTimeout(
+    API_ROUTES.DELETE_NOTIFICATION(notificationId),
+    {
+      method: "DELETE",
+      headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+    },
+  );
+
+  await handleResponse<void>(res);
+}

@@ -102,6 +102,11 @@ const CONDITION_OPTIONS = [
   { label: "Desgastado", value: "WORN" },
 ];
 
+const normalizeTotalUnits = (value: unknown): number => {
+  const units = Number(value ?? 1);
+  return Number.isFinite(units) ? Math.max(0, units) : 1;
+};
+
 // Constantes de validación (movidas fuera del componente para garantizar su existencia)
 const MAX_KIT_NAME_LENGTH = 255;
 const MAX_MEETING_POINT_LENGTH = 500;
@@ -242,102 +247,83 @@ const CreateKitScreen: React.FC = () => {
     };
   }, [user?.token]);
 
-  const loadCatalog = useCallback(
-    async (overrides?: CatalogFilterOverrides) => {
-      if (!user?.token) {
-        setAvailableProducts([]);
-        setLoadingCatalog(false);
-        setErrors((prev) => ({
-          ...prev,
-          general: "Necesitas iniciar sesión.",
-        }));
-        return;
-      }
+const loadCatalog = useCallback(async (overrides?: CatalogFilterOverrides) => {
+    if (!user?.token) {
+      setAvailableProducts([]);
+      setLoadingCatalog(false);
+      setErrors((prev) => ({ ...prev, general: "Necesitas iniciar sesión." }));
+      return;
+    }
 
-      const nextShowOnlyMyCity = overrides?.showOnlyMyCity ?? showOnlyMyCity;
-      const nextSelectedCategoryId =
-        overrides?.selectedCategoryId ?? selectedCategoryId;
-      const nextSelectedCondition =
-        overrides?.selectedCondition ?? selectedCondition;
-      const nextMinPrice = overrides?.minPrice ?? minPriceFilter;
-      const nextMaxPrice = overrides?.maxPrice ?? maxPriceFilter;
+    const nextShowOnlyMyCity = overrides?.showOnlyMyCity ?? showOnlyMyCity;
+    const nextSelectedCategoryId = overrides?.selectedCategoryId ?? selectedCategoryId;
+    const nextSelectedCondition = overrides?.selectedCondition ?? selectedCondition;
+    const nextMinPrice = overrides?.minPrice ?? minPriceFilter;
+    const nextMaxPrice = overrides?.maxPrice ?? maxPriceFilter;
 
-      try {
-        setLoadingCatalog(true);
+    try {
+      setLoadingCatalog(true);
 
-        const response = await filterItemsForKit(
-          {
-            country: undefined,
-            city: nextShowOnlyMyCity && city.trim() ? city.trim() : undefined,
-            categoryId: nextSelectedCategoryId
-              ? Number(nextSelectedCategoryId)
-              : undefined,
-            condition: nextSelectedCondition
-              ? (nextSelectedCondition as ArticleCondition)
-              : undefined,
-            minPrice: nextMinPrice ? parseFloat(nextMinPrice) : undefined,
-            maxPrice: nextMaxPrice ? parseFloat(nextMaxPrice) : undefined,
-            page: 0,
-            size: 100,
-            startDate: startDate
-              ? `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}`
-              : undefined,
-            endDate: endDate
-              ? `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`
-              : undefined,
-          },
-          user.token,
-        );
+      const response = await filterItemsForKit(
+        {
+          country: undefined,
+          city: nextShowOnlyMyCity && city.trim() ? city.trim() : undefined,
+          categoryId: nextSelectedCategoryId ? Number(nextSelectedCategoryId) : undefined,
+          condition: nextSelectedCondition ? (nextSelectedCondition as ArticleCondition) : undefined,
+          minPrice: nextMinPrice ? parseFloat(nextMinPrice) : undefined,
+          maxPrice: nextMaxPrice ? parseFloat(nextMaxPrice) : undefined,
+          page: 0,
+          size: 100,
+          startDate: startDate ? `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}` : undefined,
+          endDate: endDate ? `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}` : undefined,
+        },
+        user.token,
+      );
 
-        const mapped: CatalogProduct[] = response.content.map((p) => ({
-          id: Number(p.id),
-          itemType: String(p.itemType ?? "ARTICLE"),
-          title: p.title ?? "Sin título",
-          pricePerMonth: Number(p.pricePerMonth ?? 0),
-          status: String(p.status ?? "AVAILABLE"),
-          category: typeof p.category === "string" ? p.category : "",
-          condition: (p as any).condition ?? null,
-          city: p.city ?? "",
-          ownerId: Number(p.ownerId),
-          ownerName: p.ownerName ?? "",
-          imageUrl: (p as any).imageUrl ?? null,
-          totalUnits: Math.max(1, Number(p.totalUnits ?? 1)),
-          availableFrom: (p as any).availableFrom ?? undefined,
-          availableUntil: (p as any).availableUntil ?? undefined,
-        }));
+      const mapped: CatalogProduct[] = response.content.map((p) => ({
+        id: Number(p.id),
+        itemType: String(p.itemType ?? "ARTICLE"),
+        title: p.title ?? "Sin título",
+        pricePerMonth: Number(p.pricePerMonth ?? 0),
+        status: String(p.status ?? "AVAILABLE"),
+        category: typeof p.category === "string" ? p.category : "",
+        condition: (p as any).condition ?? null,
+        city: p.city ?? "",
+        ownerId: Number(p.ownerId),
+        ownerName: p.ownerName ?? "",
+        imageUrl: (p as any).imageUrl ?? null,
+        totalUnits: normalizeTotalUnits(p.totalUnits),
+        availableFrom: (p as any).availableFrom ?? undefined,
+        availableUntil: (p as any).availableUntil ?? undefined,
+      }));
 
-        const filteredByOwner = mapped.filter((p) => p.ownerId !== user?.id);
+      const filteredByOwner = mapped.filter(p => p.ownerId !== user?.id);
 
-        setAvailableProducts(filteredByOwner);
+      setAvailableProducts(filteredByOwner);
+      setErrors((prev) => ({ ...prev, general: undefined }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo cargar el catálogo.";
+      if (message.toLowerCase().includes("no items found")) {
         setErrors((prev) => ({ ...prev, general: undefined }));
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "No se pudo cargar el catálogo.";
-        if (message.toLowerCase().includes("no items found")) {
-          setErrors((prev) => ({ ...prev, general: undefined }));
-        } else {
-          setErrors((prev) => ({ ...prev, general: message }));
-        }
-        setAvailableProducts([]);
-      } finally {
-        setLoadingCatalog(false);
+      } else {
+        setErrors((prev) => ({ ...prev, general: message }));
       }
-    },
-    [
-      city,
-      maxPriceFilter,
-      minPriceFilter,
-      selectedCategoryId,
-      selectedCondition,
-      showOnlyMyCity,
-      user?.token,
-      user?.id,
-      startDate,
-      endDate,
-    ],
-  );
+      setAvailableProducts([]);
+    } finally {
+      setLoadingCatalog(false);
+    }
+  }, [
+    city,
+    maxPriceFilter,
+    minPriceFilter,
+    selectedCategoryId,
+    selectedCondition,
+    showOnlyMyCity,
+    user?.token,
+    user?.id,
+    startDate, 
+    endDate,
+  ]);
 
   useEffect(() => {
     loadCatalog();
@@ -452,6 +438,7 @@ const CreateKitScreen: React.FC = () => {
         const mapData = await getArticlesForMap(
           user.token,
           country.trim() || undefined,
+          true,
         );
         setMapProducts(mapData);
       } catch (error) {
@@ -1295,7 +1282,17 @@ const CreateKitScreen: React.FC = () => {
             selectedProducts.map((item) => (
               <KitItemComponent
                 key={item.id}
-                item={item}
+                item={{
+                  id: item.id,
+                  title: item.title,
+                  city: item.city,
+                  pricePerMonth: item.pricePerMonth,
+                  totalUnits: item.totalUnits,
+                  imageUrl: item.imageUrl,
+                  category: item.category,
+                  ownerName: item.ownerName,
+                  condition: item.condition,
+                }}
                 quantity={selectedQuantities[item.id] ?? 1}
                 maxQuantity={item.totalUnits}
                 duration={monthsBetween ?? 0}
