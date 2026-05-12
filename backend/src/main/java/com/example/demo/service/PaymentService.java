@@ -121,15 +121,17 @@ public class PaymentService {
 
         KitResponse kit = kitService.findById(kitId);
         
-        // Validar que el kit aún no ha sido pagado
         if (kit.getStatus() != null && kit.getStatus() != com.example.demo.model.KitStatus.DRAFT) {
             throw new RuntimeException("Kit is already payed.");
         }
         
         KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId, promoCode, userEmail);
+        
+        Kit kitEntity = kitRepository.findById(kitId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kit not found"));
 
         if (payWithWallet) {
-            processTenantPayment(kit.getTenantId(), paymentInfo);
+            processTenantPaymentWithWallet(kit.getTenantId(), paymentInfo, kitEntity);
         }
 
         processGuarantee(paymentInfo.guarantee());
@@ -146,12 +148,11 @@ public class PaymentService {
         }
 
         kitService.markAsPaid(kitId);
-        Kit kitEntity = kitRepository.findById(kitId)
+        Kit kitAfterSave = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit not found for email confirmation"));
 
-        // Bucle en el backend (seguro y transaccional)
-        if (kitEntity.getSnapshots() != null) {
-            for (ItemMemento snapshot : kitEntity.getSnapshots()) {
+        if (kitAfterSave.getSnapshots() != null) {
+            for (ItemMemento snapshot : kitAfterSave.getSnapshots()) {
                 articleRepository.findById(snapshot.getOriginalItemId()).ifPresent(article -> {
                     article.setStatus(ArticleStatus.RENTED);
                     articleRepository.save(article);
@@ -160,7 +161,7 @@ public class PaymentService {
         }
 
         double discountEuros = paymentInfo.discount() != null ? paymentInfo.discount() / 100.0 : 0.0;
-        emailService.sendOrderConfirmation(kitEntity, discountEuros, promoCode);
+        emailService.sendOrderConfirmation(kitAfterSave, discountEuros, promoCode);
 
         if (promoCode != null && !promoCode.isBlank()) {
             markPromoAsUsedForAppliedContext(promoCode, userEmail, kit);
@@ -174,10 +175,21 @@ public class PaymentService {
         processPayment(kitId, payWithWallet, null, null);
     }
 
-    private void processTenantPayment(Long tenantId, KitPaymentDTO paymentInfo) {
+    private void processTenantPaymentWithWallet(Long tenantId, KitPaymentDTO paymentInfo, Kit kit)
+            throws NotEnoughBalanceException, ResourceNotFoundException {
         Double amount = toEuros(paymentInfo.totalPrice());
-        Transaction payment = payWithWallet(tenantId, amount);
-        transactionRepository.save(payment);
+        Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
+        
+        // Verificar saldo suficiente
+        if (tenantWallet.getBalance() < amount) {
+            throw new NotEnoughBalanceException(
+                "Saldo insuficiente en la cartera. Requerido: " + amount + ", Disponible: " + tenantWallet.getBalance());
+        }
+        
+        Transaction transaction = new Transaction(-amount, tenantWallet, TransactionType.PAYOUT);
+        transaction.setRelatedKit(kit);
+        transaction.setDescription("Pago con saldo KeaKit - Kit: " + kit.getName());
+        transactionRepository.save(transaction);
     }
 
     private void processGuarantee(Integer guaranteeRaw) throws ResourceNotFoundException, UserNotFoundException {
@@ -657,9 +669,7 @@ public class PaymentService {
         }
 
         Long amountInCents = (long) (amount * 100);
-        // Sacar dinero de Stripe en centimos
         createPayout(amountInCents);
-        // Restar saldo de la wallet del usuario
         walletService.updateWalletBalance(userId, amount);
     }
 

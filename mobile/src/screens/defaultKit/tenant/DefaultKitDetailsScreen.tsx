@@ -40,10 +40,8 @@ const DefaultKitDetailsScreen = () => {
           .filter(Boolean) as ItemCatalog[];
         setItems(fetchedItems);
       } catch (error) {
-        setErrorMessage(
-          "No se pudieron cargar los detalles del kit. Error: " +
-            (error instanceof Error ? error.message : ""),
-        );
+        const msg = error instanceof Error ? error.message : "Ocurrió un error inesperado";
+        setErrorMessage(msg);
         console.error("Error en DefaultKitDetailsScreen:", error);
       } finally {
         setLoading(false);
@@ -122,7 +120,10 @@ const DefaultKitDetailsScreen = () => {
         {errorMessage && (
           <KeakitModal
             visible={!!errorMessage}
-            onDismiss={() => { setErrorMessage(null) }}
+            onDismiss={() => { 
+              setErrorMessage(null);
+              navigation.goBack(); 
+            }}
             message={errorMessage}
             variant="error"
           />
