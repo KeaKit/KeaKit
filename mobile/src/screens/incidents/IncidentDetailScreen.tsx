@@ -291,7 +291,7 @@ const IncidentDetailScreen: React.FC = () => {
   return (
     <SafeAreaView style={commonStyles.container}>
       <Helmet>
-        <title>Detalle de Incidencia | KeaKit</title>
+        <title>Detalle de incidencia | KeaKit</title>
         <meta name="description" content="Consulta los detalles y comentarios de una incidencia en KeaKit."/>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>           

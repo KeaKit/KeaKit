@@ -104,7 +104,7 @@ const AssignedKitsScreen = () => {
   return (
     <SafeAreaView style={commonStyles.container}>
       <Helmet>
-        <title>Kits Asignados | KeaKit</title>
+        <title>Kits asignados | KeaKit</title>
         <meta name="description" content="Consulta los kits que tienes asignados en KeaKit."/>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>       

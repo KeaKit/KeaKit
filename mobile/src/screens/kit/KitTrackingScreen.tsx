@@ -88,7 +88,7 @@ const KitTrackingScreen: React.FC = () => {
   return (
     <SafeAreaView style={commonStyles.container}>
       <Helmet>
-        <title>Seguimiento del kit| KeaKit</title>
+        <title>Seguimiento del kit | KeaKit</title>
         <meta name="description" content="Consulta el seguimiento y estado de entrega de tu kit en KeaKit."/>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>       

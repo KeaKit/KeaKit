@@ -280,7 +280,7 @@ export default function CheckoutScreen({ route }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <Helmet>
-        <title>Pagar kit| KeaKit</title>
+        <title>Pagar kit | KeaKit</title>
         <meta name="description" content="Finaliza el pago de tu kit en KeaKit de forma segura con Stripe o con tu saldo disponible en la app."/>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>         

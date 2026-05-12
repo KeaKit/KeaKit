@@ -832,7 +832,7 @@ const checkItemsAvailability = (start: Date, end: Date): string[] => {
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
         <Helmet>
-          <title>Crear un kit| KeaKit</title>
+          <title>Crear un kit | KeaKit</title>
           <meta name="description" content="Crea un nuevo kit en KeaKit y personalízalo según tus necesidades."/>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>  

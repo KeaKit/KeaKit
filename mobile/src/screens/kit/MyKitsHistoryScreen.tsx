@@ -524,7 +524,7 @@ const MyKitsHistoryScreen: React.FC = () => {
   return (
     <SafeAreaView style={commonStyles.container}>
       <Helmet>
-        <title>Historial de alquileres| KeaKit</title>
+        <title>Historial de alquileres | KeaKit</title>
         <meta name="description" content="Consulta el historial de tus alquileres en KeaKit."/>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>      

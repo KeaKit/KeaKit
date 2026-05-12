@@ -356,7 +356,7 @@ const DefaultKitFormScreen: React.FC = () => {
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.containerWhite}>
           <Helmet>
-          <title>{getHelmetTitle()}</title>
+          <title>{getHelmetTitle()} | Keakit</title>
           <meta name="description" content={getMetaDescription()} />
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>        

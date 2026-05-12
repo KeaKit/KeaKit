@@ -167,7 +167,7 @@ const loadRecords = async () => {
   return (
     <SafeAreaView style={commonStyles.container}>
       <Helmet>
-        <title>Historial de Alquileres | KeaKit</title>
+        <title>Historial de alquileres | KeaKit</title>
         <meta name="description" content="Historial de alquileres de artículos en la plataforma KeaKit." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>

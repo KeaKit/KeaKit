@@ -143,7 +143,7 @@ const ActivityNotificationsScreen: React.FC = () => {
   return (
     <SafeAreaView style={commonStyles.container}>
       <Helmet>
-        <title>Notificaciones de actividad| KeaKit</title>
+        <title>Notificaciones de actividad | KeaKit</title>
         <meta name="description" content="Consulta tus notificaciones de actividad en KeaKit."/>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>       
