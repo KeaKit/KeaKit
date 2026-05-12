@@ -269,7 +269,7 @@ public class KitService {
         return (amount != null) ? (int) Math.round(amount * 100) : 0;
     }
 
-    private static double calculateMonthsBetween(LocalDate start, LocalDate end) {
+    public double calculateMonthsBetween(LocalDate start, LocalDate end) {
         long diffDays = ChronoUnit.DAYS.between(start, end) + 1;
         return diffDays / 30.0;
 
