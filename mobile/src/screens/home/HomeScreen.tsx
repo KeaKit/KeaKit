@@ -105,7 +105,7 @@ const HomeScreen: React.FC = () => {
 
         if (lastUpdate && lastUpdate !== prevUpdate && tracking.status) {
           await addNotification({
-            id: `${kit.id}-${lastUpdate}`,
+            id: `${kit.id}-${tracking.status}`,
             kitId: kit.id,
             kitName: kit.name,
             status: tracking.status,
