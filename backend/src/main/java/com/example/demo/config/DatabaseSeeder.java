@@ -207,6 +207,8 @@ public class DatabaseSeeder {
             pendingPaidKit.setDeliveryMethod(DeliveryMethod.COURIER);
             pendingPaidKit.setStartDate(LocalDate.now().plusWeeks(2));
             pendingPaidKit.setEndDate(LocalDate.now().plusMonths(1));
+            pendingPaidKit.setCountry("Spain");
+            pendingPaidKit.setCity("Sevilla");
             kitRepo.save(pendingPaidKit);
 
             Kit audiovisualKit = new Kit();

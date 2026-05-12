@@ -18,7 +18,7 @@ import { Colors, commonStyles } from '../../styles';
 import { useAuth } from '../../context/AuthContext';
 import { API_ROUTES } from "../../config/api";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { deleteKit } from '../../services/kitService';
+import { deleteKit, validateKit } from '../../services/kitService';
 
 type KitDetailRouteProp = RouteProp<RootStackParamList, 'KitDetail'>;
 
@@ -41,6 +41,7 @@ const KitDetailScreen: React.FC = () => {
   const [actionModalMessage, setActionModalMessage] = useState('');
   const [onActionConfirm, setOnActionConfirm] = useState<() => void>(() => () => {});
   const [ratedItems, setRatedItems] = useState<{ [key: number]: boolean }>({});
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const fetchKitDetail = useCallback(async () => {
     if (!kitId) return;
@@ -145,6 +146,20 @@ const KitDetailScreen: React.FC = () => {
     return kit.items.every(item => ratedItems[item.itemId] === true);
   };
 
+  const handleGoToPayment = async () => {
+    setValidationError(null);
+    try {
+      await validateKit(kitId, user?.token ?? "");
+
+      navigation.navigate("Checkout", { kitId: kitId });
+    } catch (error: any) {
+      const errorMessage = error.message || "Error desconocido al validar";
+      
+      setValidationError(errorMessage);
+      console.error("Fallo de validación en backend:", errorMessage);
+    }
+  };
+
   if (loading || confirming) {
     return (
       <View style={styles.centerContainer}>
@@ -239,6 +254,15 @@ const KitDetailScreen: React.FC = () => {
               <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color="#666" />
             </TouchableOpacity>
           )}
+
+          {validationError && (
+            <View style={[commonStyles.errorContainer, { marginBottom: 15, marginHorizontal: 0 }]}>
+              <Ionicons name="alert-circle" size={20} color={Colors.error} />
+              <Text style={[commonStyles.errorText, { fontSize: 14, marginLeft: 8 }]}>
+                {validationError}
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.priceContainer}>
@@ -275,12 +299,8 @@ const KitDetailScreen: React.FC = () => {
 
         {kit.status === KitStatus.DRAFT && (
           <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                isDisabled && styles.confirmButtonDisabled
-              ]}
-            onPress={() => navigation.navigate("Checkout", { kitId: kit.id })}
-            disabled={isDisabled}
+              style={styles.confirmButton}
+            onPress={handleGoToPayment}
           >
             <Text style={styles.confirmButtonText}>Realizar pedido</Text>
           </TouchableOpacity>
