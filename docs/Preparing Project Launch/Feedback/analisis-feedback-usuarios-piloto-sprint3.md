@@ -74,7 +74,7 @@ No obstante, esta cifra evidencia la dificultad recurrente de volver a involucra
 
 ## Análisis de respuestas
 
-Este análisis ha seguido el [plan de gestión de usuarios](../fase%20DP/gestion-de-usuarios-piloto.md).
+Este análisis ha seguido el [plan de gestión de usuarios piloto](../../Usuarios%20piloto/gestion-de-usuarios-piloto.md).
 
 ---
 
