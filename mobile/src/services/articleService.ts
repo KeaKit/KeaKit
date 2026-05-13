@@ -322,12 +322,23 @@ export interface ReturnRequest {
   condition: 'GOOD' | 'DAMAGED';
 }
 
+export interface ArticleReturnResponse {
+  articleId: number;
+  tenantEmail: string;
+  resolution: string;
+  amountProcessed: number;
+  message: string;
+  currentUserReceivesMoney?: boolean;
+  currentUserAmount?: number;
+  messageType?: 'PENDING' | 'INFO' | 'OWNER_PAYOUT' | 'TENANT_REFUND' | string;
+}
+
 export const processArticleReturn = async (
   articleId: number, 
   ownerId: number, 
   condition: 'GOOD' | 'DAMAGED', 
   token: string
-) => {
+): Promise<ArticleReturnResponse> => {
   const response = await fetch(API_ROUTES.ARTICLE_RETURN(articleId, ownerId), {
     method: 'POST',
     headers: {

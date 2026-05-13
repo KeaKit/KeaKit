@@ -31,6 +31,7 @@ const CONDITION_OPTIONS = [
 
 // Constante para precio máximo razonable
 const MAX_PRICE = 999999999;
+const RETURN_PROCESSED_MESSAGE = "Evaluación guardada. La garantía se procesará según el resultado final del kit.";
 
 const customTheme = {
   ...MD3LightTheme,
@@ -383,8 +384,15 @@ const MyArticlesScreen: React.FC = () => {
         condition,
         user.token,
       );
+      const shouldHideFinancialMessage =
+        response.currentUserReceivesMoney === false &&
+        response.messageType !== "PENDING" &&
+        response.messageType !== "INFO" &&
+        /€|garant[ií]a|retendr|devolver/i.test(response.message || "");
       showNotification(
-        response.message || "Devolución procesada correctamente",
+        shouldHideFinancialMessage
+          ? RETURN_PROCESSED_MESSAGE
+          : response.message || "Devolución procesada correctamente",
         "success",
       );
       setReturnModalVisible(false);

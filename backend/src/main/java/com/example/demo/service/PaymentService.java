@@ -12,6 +12,7 @@ import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Item;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
+import com.example.demo.dto.GuaranteeReturnResult;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.KitResponse.KitItemResponse;
 import com.example.demo.exception.ResourceNotFoundException;
@@ -469,6 +470,11 @@ public class PaymentService {
 
     @Transactional
     public Double processGuaranteeReturn(Long kitId, Long ownerId, Long tenantId, String condition) throws Exception {
+        return processGuaranteeReturnDetails(kitId, ownerId, tenantId, condition).totalProcessed();
+    }
+
+    @Transactional
+    public GuaranteeReturnResult processGuaranteeReturnDetails(Long kitId, Long ownerId, Long tenantId, String condition) throws Exception {
         if (!"GOOD".equalsIgnoreCase(condition) && !"DAMAGED".equalsIgnoreCase(condition)) {
             throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
         }
@@ -489,7 +495,7 @@ public class PaymentService {
             Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
             transactionRepository.save(tenantReceive);
             guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
-            return guaranteeAmount;
+            return new GuaranteeReturnResult(guaranteeAmount, guaranteeAmount, Map.of());
         }
 
         Map<Long, Integer> damagedSubtotalByOwner = new LinkedHashMap<>();
@@ -518,10 +524,11 @@ public class PaymentService {
             Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
             transactionRepository.save(tenantReceive);
             guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
-            return guaranteeAmount;
+            return new GuaranteeReturnResult(guaranteeAmount, guaranteeAmount, Map.of());
         }
 
         int retainedGuaranteeCents = 0;
+        Map<Long, Double> ownerPayouts = new LinkedHashMap<>();
         for (Map.Entry<Long, Integer> entry : damagedSubtotalByOwner.entrySet()) {
             int ownerGuaranteeCents = (int) (((long) entry.getValue() * guaranteeCents) / totalSnapshotWeightCents);
             retainedGuaranteeCents += ownerGuaranteeCents;
@@ -531,20 +538,23 @@ public class PaymentService {
             }
 
             Wallet ownerWallet = walletService.getWalletByUserId(entry.getKey());
-            Transaction ownerReceive = new Transaction(toEuros(ownerGuaranteeCents), ownerWallet, TransactionType.PAYOUT);
+            Double ownerPayoutAmount = toEuros(ownerGuaranteeCents);
+            Transaction ownerReceive = new Transaction(ownerPayoutAmount, ownerWallet, TransactionType.PAYOUT);
             transactionRepository.save(ownerReceive);
+            ownerPayouts.put(entry.getKey(), ownerPayoutAmount);
         }
 
         int tenantRefundCents = guaranteeCents - retainedGuaranteeCents;
+        Double tenantRefundAmount = toEuros(tenantRefundCents);
         if (tenantRefundCents > 0) {
             Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
-            Transaction tenantReceive = new Transaction(toEuros(tenantRefundCents), tenantWallet,
+            Transaction tenantReceive = new Transaction(tenantRefundAmount, tenantWallet,
                     TransactionType.GUARANTEE_REFUND);
             transactionRepository.save(tenantReceive);
             guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
         }
 
-        return toEuros(retainedGuaranteeCents);
+        return new GuaranteeReturnResult(toEuros(retainedGuaranteeCents), tenantRefundAmount, ownerPayouts);
     }
 
     private Long resolvePayoutOwnerId(ItemMemento snapshot, Item currentItem, Long fallbackOwnerId) {

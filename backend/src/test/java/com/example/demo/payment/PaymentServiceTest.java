@@ -591,8 +591,10 @@ public class PaymentServiceTest {
         assertThat(savedTransactions.get(0).getType()).isEqualTo(TransactionType.GUARANTEE_REFUND);
         assertThat(savedTransactions.get(1).getAmount()).isEqualTo(20.0);
         assertThat(savedTransactions.get(1).getType()).isEqualTo(TransactionType.PAYOUT);
+        assertThat(savedTransactions.get(1).getDestinationWallet().getUser().getId()).isEqualTo(secondOwner.getId());
         assertThat(savedTransactions.get(2).getAmount()).isEqualTo(60.0);
         assertThat(savedTransactions.get(2).getType()).isEqualTo(TransactionType.GUARANTEE_REFUND);
+        assertThat(savedTransactions.get(2).getDestinationWallet().getUser().getId()).isEqualTo(TENANT.getId());
     }
 
     @Test

@@ -3,7 +3,9 @@ package com.example.demo.service;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -14,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.dto.ArticleNearbyDTO;
 import com.example.demo.dto.ArticleRecordDTO;
 import com.example.demo.dto.CityCoordinatesDTO;
+import com.example.demo.dto.GuaranteeReturnResult;
 import com.example.demo.dto.ReturnRequest;
 import com.example.demo.dto.ReturnResponse;
 import com.example.demo.dto.UserArticle;
@@ -410,6 +413,9 @@ public class ArticleService {
         Double amountProcessed = 0.0;
         String resolution = "PENDING_KITS_ITEMS";
         String message = "Artículo devuelto. La fianza se procesará cuando se devuelvan todos los artículos del kit.";
+        boolean currentUserReceivesMoney = false;
+        Double currentUserAmount = 0.0;
+        String messageType = "PENDING";
 
         // 4. Cierre del Kit
         if (!isKitPending) {
@@ -424,23 +430,51 @@ public class ArticleService {
             String finalCondition = damagedArticles.isEmpty() ? "GOOD" : "DAMAGED";
 
             try {
-                amountProcessed = paymentService.processGuaranteeReturn(
+                GuaranteeReturnResult guaranteeResult = processGuaranteeReturnForKit(
                     activeKit.getId(),
                     ownerId,
                     tenantId,
-                    finalCondition
+                    finalCondition,
+                    damagedArticles
                 );
 
                 if (!damagedArticles.isEmpty()) {
                     resolution = "DEPOSIT_RETAINED";
-                    if (damagedArticles.size() < activeKit.getSnapshots().size()) {
-                        message = "Se han retenido " + amountProcessed + "€ de la garantía por los artículos dañados y el resto se ha devuelto al arrendatario.";
+                    Double currentOwnerPayout = guaranteeResult.amountForOwner(ownerId);
+                    if (currentOwnerPayout > 0) {
+                        currentUserReceivesMoney = true;
+                        currentUserAmount = currentOwnerPayout;
+                        amountProcessed = currentOwnerPayout;
+                        messageType = "OWNER_PAYOUT";
+                        message = "Se retendrá la garantía de " + currentOwnerPayout + "€ a tu favor como propietario por los daños en tus artículos.";
+                        if (guaranteeResult.tenantRefundAmount() > 0
+                                || damagedArticles.size() < activeKit.getSnapshots().size()) {
+                            message += " El resto se ha devuelto al arrendatario.";
+                        }
+                    } else if (ownerId.equals(tenantId) && guaranteeResult.tenantRefundAmount() > 0) {
+                        currentUserReceivesMoney = true;
+                        currentUserAmount = guaranteeResult.tenantRefundAmount();
+                        amountProcessed = guaranteeResult.tenantRefundAmount();
+                        messageType = "TENANT_REFUND";
+                        message = "Se va a devolver la garantía de " + guaranteeResult.tenantRefundAmount() + "€";
                     } else {
-                        message = "Artículo con daños. Se retiene la garantía de " + amountProcessed + "€ y se ha añadido al monedero del propietario.";
+                        amountProcessed = 0.0;
+                        messageType = "INFO";
+                        message = "Evaluación guardada. La garantía se ha procesado según el resultado final del kit.";
                     }
                 } else {
                     resolution = "DEPOSIT_RETURNED";
-                    message = "Artículo devuelto en buen estado. Se devuelve la garantía exacta (" + amountProcessed + "€) al monedero del arrendatario.";
+                    if (ownerId.equals(tenantId) && guaranteeResult.tenantRefundAmount() > 0) {
+                        currentUserReceivesMoney = true;
+                        currentUserAmount = guaranteeResult.tenantRefundAmount();
+                        amountProcessed = guaranteeResult.tenantRefundAmount();
+                        messageType = "TENANT_REFUND";
+                        message = "Se va a devolver la garantía de " + guaranteeResult.tenantRefundAmount() + "€";
+                    } else {
+                        amountProcessed = 0.0;
+                        messageType = "INFO";
+                        message = "Artículo devuelto en buen estado. La garantía se procesará para el arrendatario.";
+                    }
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Error procesando la devolución de la garantía: " + e.getMessage());
@@ -457,8 +491,64 @@ public class ArticleService {
             tenantEmail,
             resolution,
             amountProcessed,
-            message
+            message,
+            currentUserReceivesMoney,
+            currentUserAmount,
+            messageType
         );
+    }
+
+    private GuaranteeReturnResult processGuaranteeReturnForKit(
+            Long kitId,
+            Long ownerId,
+            Long tenantId,
+            String finalCondition,
+            List<Article> damagedArticles
+    ) throws Exception {
+        GuaranteeReturnResult result = paymentService.processGuaranteeReturnDetails(
+            kitId,
+            ownerId,
+            tenantId,
+            finalCondition
+        );
+        if (result != null) {
+            return result;
+        }
+
+        Double legacyAmount = paymentService.processGuaranteeReturn(
+            kitId,
+            ownerId,
+            tenantId,
+            finalCondition
+        );
+        return buildLegacyGuaranteeResult(legacyAmount, ownerId, damagedArticles, finalCondition);
+    }
+
+    private GuaranteeReturnResult buildLegacyGuaranteeResult(
+            Double legacyAmount,
+            Long ownerId,
+            List<Article> damagedArticles,
+            String finalCondition
+    ) {
+        Double amount = legacyAmount == null ? 0.0 : legacyAmount;
+        if (!"DAMAGED".equalsIgnoreCase(finalCondition) || damagedArticles.isEmpty()) {
+            return new GuaranteeReturnResult(amount, amount, Map.of());
+        }
+
+        Map<Long, Double> ownerPayouts = new LinkedHashMap<>();
+        List<Long> damagedOwnerIds = damagedArticles.stream()
+            .filter(article -> article.getOwner() != null && article.getOwner().getId() != null)
+            .map(article -> article.getOwner().getId())
+            .distinct()
+            .collect(Collectors.toList());
+
+        if (damagedOwnerIds.size() == 1) {
+            ownerPayouts.put(damagedOwnerIds.get(0), amount);
+        } else if (damagedOwnerIds.contains(ownerId)) {
+            ownerPayouts.put(ownerId, amount);
+        }
+
+        return new GuaranteeReturnResult(amount, 0.0, ownerPayouts);
     }
 
 

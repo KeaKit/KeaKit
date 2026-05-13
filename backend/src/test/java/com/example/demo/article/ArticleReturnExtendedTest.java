@@ -346,7 +346,7 @@ class ArticleReturnExtendedTest {
 
         assertThat(response.articleId()).isEqualTo(42L);
         assertThat(response.tenantEmail()).isEqualTo("tenant@example.com");
-        assertThat(response.amountProcessed()).isEqualTo(30.0);
+        assertThat(response.amountProcessed()).isEqualTo(0.0);
     }
 
     @Test
@@ -397,6 +397,97 @@ class ArticleReturnExtendedTest {
         assertThat(response.resolution()).isEqualTo("DEPOSIT_RETAINED");
         assertThat(response.amountProcessed()).isEqualTo(20.0);
         assertThat(response.message()).contains("resto se ha devuelto al arrendatario");
+    }
+
+    @Test
+    void processReturn_firstOwnerWhenAnotherArticleIsStillRented_keepsGuaranteePending() throws Exception {
+        User lucia = new User();
+        lucia.setId(4L);
+        lucia.setName("Lucia");
+        lucia.setEmail("lucia@example.com");
+        lucia.setRole(UserRole.USER);
+
+        Article ownerArticle = makeRentedArticle(8L, 50.0);
+
+        Article luciaPendingArticle = makeRentedArticle(9L, 50.0);
+        luciaPendingArticle.setOwner(lucia);
+
+        Kit activeKit = makeActiveKit();
+
+        ItemMemento ownerSnapshot = new ItemMemento();
+        ownerSnapshot.setOriginalItemId(8L);
+
+        ItemMemento luciaSnapshot = new ItemMemento();
+        luciaSnapshot.setOriginalItemId(9L);
+
+        activeKit.setSnapshots(List.of(ownerSnapshot, luciaSnapshot));
+
+        when(articleRepository.findById(8L)).thenReturn(Optional.of(ownerArticle));
+        when(articleRepository.findById(9L)).thenReturn(Optional.of(luciaPendingArticle));
+        when(kitRepository.findActiveKitByItemId(8L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+
+        ReturnResponse response = articleService.processReturn(
+                8L,
+                owner.getId(),
+                new ReturnRequest("GOOD", "El articulo llego bien")
+        );
+
+        assertThat(response.resolution()).isEqualTo("PENDING_KITS_ITEMS");
+        assertThat(response.amountProcessed()).isEqualTo(0.0);
+        assertThat(response.message()).contains("cuando se devuelvan todos los artículos del kit");
+        verifyNoInteractions(paymentService);
+        verify(kitRepository, never()).save(any(Kit.class));
+    }
+
+    @Test
+    void processReturn_lastGoodEvaluatorForDifferentOwnerDamage_doesNotExposeRetainedGuaranteeAmount() throws Exception {
+        User lucia = new User();
+        lucia.setId(4L);
+        lucia.setName("Lucia");
+        lucia.setEmail("lucia@example.com");
+        lucia.setRole(UserRole.USER);
+
+        Article ownerDamagedArticle = makeRentedArticle(6L, 50.0);
+        ownerDamagedArticle.setStatus(ArticleStatus.DAMAGED);
+
+        Article luciaReturnedArticle = makeRentedArticle(7L, 50.0);
+        luciaReturnedArticle.setOwner(lucia);
+
+        Kit activeKit = makeActiveKit();
+
+        ItemMemento ownerSnapshot = new ItemMemento();
+        ownerSnapshot.setOriginalItemId(6L);
+        ownerSnapshot.setPriceAtRental(50.0);
+        ownerSnapshot.setSelectedUnits(1);
+        ownerSnapshot.setOwnerAtRental(owner);
+
+        ItemMemento luciaSnapshot = new ItemMemento();
+        luciaSnapshot.setOriginalItemId(7L);
+        luciaSnapshot.setPriceAtRental(50.0);
+        luciaSnapshot.setSelectedUnits(1);
+        luciaSnapshot.setOwnerAtRental(lucia);
+
+        activeKit.setSnapshots(List.of(ownerSnapshot, luciaSnapshot));
+
+        when(articleRepository.findById(6L)).thenReturn(Optional.of(ownerDamagedArticle));
+        when(articleRepository.findById(7L)).thenReturn(Optional.of(luciaReturnedArticle));
+        when(kitRepository.findActiveKitByItemId(7L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+        when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArgument(0));
+        when(paymentService.processGuaranteeReturn(1L, lucia.getId(), tenant.getId(), "DAMAGED")).thenReturn(8.0);
+
+        ReturnResponse response = articleService.processReturn(
+                7L,
+                lucia.getId(),
+                new ReturnRequest("GOOD", "El articulo llego bien")
+        );
+
+        assertThat(response.resolution()).isEqualTo("DEPOSIT_RETAINED");
+        assertThat(response.amountProcessed()).isEqualTo(0.0);
+        assertThat(response.message())
+                .doesNotContain("8.0€")
+                .doesNotContain("retenido")
+                .doesNotContain("retenidos");
     }
 
     // ═══════════════ Case-insensitive condition ═══════════════

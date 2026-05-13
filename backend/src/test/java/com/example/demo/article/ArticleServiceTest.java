@@ -808,7 +808,7 @@ class ArticleServiceTest {
         ReturnResponse response = articleService.processReturn(20L, owner.getId(), request);
 
         assertThat(response.resolution()).isEqualTo("DEPOSIT_RETURNED");
-        assertThat(response.amountProcessed()).isEqualTo(20.0);
+        assertThat(response.amountProcessed()).isEqualTo(0.0);
         assertThat(response.articleId()).isEqualTo(20L);
         assertThat(response.tenantEmail()).isEqualTo("tenant@example.com");
         assertThat(response.message()).contains("buen estado");
