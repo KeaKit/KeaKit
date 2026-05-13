@@ -64,25 +64,43 @@
 
 ## 4. Sprint Backlog - Semana 3
 
+| ID Issue | Descripción | Prioridad | Estimación (SP) | Estado | Responsable |
+|----------|-------------|-----------|-----------------|--------|-------------|
+| [#716](https://github.com/KeaKit/KeaKit/issues/716) | [BUG] Pantalla de kits no refleja lo que el kit ha costado realmente | High | 1 | Done | Adrián Chabrera Rubio | 
+| [#741](https://github.com/KeaKit/KeaKit/issues/741) | [BUG] Al poner un kit como draft te permite ir a la pantalla de pago con datos inválidos | High | 1.5 | Done | Alejandro González Macías | 
+| [#775](https://github.com/KeaKit/KeaKit/issues/775) | [BUG] Al acceder al panel de notificaciones de Tracking, a veces se repiten | High | 0.5 | Done | Alejandro González Macías |
+| [#777](https://github.com/KeaKit/KeaKit/issues/775) | [BUG] Edicion de unidades disponibles en un servicio | High | 1 | Done | Marta de la Calle González |
+| [#778](https://github.com/KeaKit/KeaKit/issues/775) | [BUG] Al seleccionar mandar una notificación cuando un servicio no estaba disponible daba error | High | 1 | Done | Marta de la Calle González |
+| [#802](https://github.com/KeaKit/KeaKit/issues/802) | Añadir pueblos de España al json de ciudades | Low | 1 | Done | Adrián Chabrera Rubio | 
+| [#809](https://github.com/KeaKit/KeaKit/issues/809) | [BUG] Bugs visuales en vista de móvil que bloquean funcionalidad  | High | 1.5 | Done | Adrián Chabrera Rubio | 
+| [#810](https://github.com/KeaKit/KeaKit/issues/810) | [BUG] Bugs visuales en vista de móvil que no bloquean funcionalidad  | Mid | 1 | Done | Adrián Chabrera Rubio | 
+| [#824](https://github.com/KeaKit/KeaKit/issues/824) | [BUG] Puedo crear un kit como draft sin objetos que nunca podría pagar | Mid | 1 | Done | Alejandro González Macías | 
+| [#831](https://github.com/KeaKit/KeaKit/issues/831) | [BUG] Puedo alquilar kit en draft cuyas fechas de inicio y fin estén en pasado | High | 0.5 | Done | Alejandro González Macías | 
+| [#856](https://github.com/KeaKit/KeaKit/issues/856) | Landing Page | High | 2 | Done | Guillermo Ciria González | 
+| [#857](https://github.com/KeaKit/KeaKit/issues/857) | Fix SEO | High | 4 | Done | Guillermo Ciria González | 
+| [#876](https://github.com/KeaKit/KeaKit/issues/716) | Sprint Backlog semana 3 equipo 3 PPL | Low | 0.5 | Done | Adrián Chabrera Rubio | 
+
 ## 5. Resumen carga de trabajo
 
 | Responsable       | SP - Semana 1|  SP - Semana 2|  SP - Semana 3| **TOTAL** |
 |-------------------|------------------------|------------------------|------------------------|------------------------|
-| Adrián Chabrera Rubio | 4.5 SP |  5.5 SP | |                                    
-| Alejandro González Macías |  3.5 SP | 3 SP |    |                  
-| Guillermo Ciria González | 1.5 SP | 12 SP |     |                 
-| Marta De la Calle González | 1.5 SP | 2.5 SP |   |                  
-| **TOTAL EQUIPO**   | **11 SP**        |  **23 SP**  |    |     | 
+| Adrián Chabrera Rubio | 4.5 SP |  5.5 SP | 5 SP | **15 SP**                                    
+| Alejandro González Macías |  3.5 SP | 3 SP | 3.5 SP | **10 SP**                  
+| Guillermo Ciria González | 1.5 SP | 12 SP | 6 SP | **19.5**                 
+| Marta De la Calle González | 1.5 SP | 2.5 SP | 2 SP | **6 SP**                  
+| **TOTAL EQUIPO**   | **11 SP**        |  **23 SP**  | **16.5 SP** | **50.5 SP** | 
 
 ## 6. Historial de versiones
 
 | Versión | Fecha | Descripción  | Autor(es)                  |
 |---------|-------------|--------------------------------|----------------------------|
 | 1.0.0   | 06/05/2026  |  Sprint Backlog Semanas 1 y 2   | Adrián Chabrera Rubio |
+| 2.0.0   | 13/05/2026  |  Sprint Backlog Semana 3   | Adrián Chabrera Rubio |
+
 
 ---
 **Redactado por:** Adrián Chabrera Rubio
 
 **Fecha de redacción:** 06/05/2026  
 
-**Versión:** 1.0.0
+**Versión:** 2.0.0
