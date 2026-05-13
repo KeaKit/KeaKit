@@ -133,16 +133,24 @@ Documentos generados durante el tercer sprint de desarrollo.
 Documentos generados durante la penúltima entrega del proyecto.
 
 - 📂 [`Entregable/`](./docs/Preparing%20Project%20Launch/Entregable/) : Documentos solicitados por el profesorado para la evaluación del proyecto, divididos por formato.
+  - 📂 [`WPL Preparation/`](./docs/Preparing%20Project%20Launch/Entregable/WPL%20Preparation/)
 - 📂 [`Feedback/`](./docs/Preparing%20Project%20Launch/Feedback/) : Contiene informes sobre el feedback obtenido y otorgado.
-  - 📄 [`feedback-enviado-a-otros-equipos-S3.md`](./docs/Preparing%20Project%20Launch/Feedback/feedback-enviado-a-otros-equipos-S3.md) : Feedback otorgado a NexUS y MeerKatters sobre el desarrollo del Sprint 2.
-  - 📄 [`feedback-recibido-de-otros-equipos-S3.md`](./docs/Preparing%20Project%20Launch/Feedback/feedback-recibido-de-otros-equipos-S3.md) : Feedback recibido de otros equipos sobre el desarrollo del Sprint 2.
+  - 📄 [`analisis-feedback-usuarios-piloto-sprint3.md`](./docs/Preparing%20Project%20Launch/Feedback/analisis-feedback-usuarios-piloto-sprint3.md) : Análisis del feedback recibido por parte de los usuarios piloto.
+  - 📄 [`bugs-encontrados-equipo-sprint3.md`](./docs/Preparing%20Project%20Launch/Feedback/bugs-encontrados-equipo-sprint3.md) : Bugs encontrados sobre el desarrollo del Sprint 3.
+  - 📄 [`feedback-enviado-a-otros-equipos-S3.md`](./docs/Preparing%20Project%20Launch/Feedback/feedback-enviado-a-otros-equipos-S3.md) : Feedback otorgado a NexUS y MeerKatters sobre el desarrollo del Sprint 3.
+  - 📄 [`feedback-recibido-de-otros-equipos-S3.md`](./docs/Preparing%20Project%20Launch/Feedback/feedback-recibido-de-otros-equipos-S3.md) : Feedback recibido de otros equipos sobre el desarrollo del Sprint 3.
+  - 📄 [`resultados-plan-accion-feedback-sprint3.md`](./docs/Preparing%20Project%20Launch/Feedback/resultados-plan-accion-feedback-sprint3.md) : Resultados del plan de acción realizado a partir del feedback recibido.
 - 📂 [`Informes y análisis/`](./docs/Preparing%20Project%20Launch/Informes%20y%20análisis/)
+  - 📄 [`actualizacion-posicionamiento-keakit.md`](./docs/Preparing%20Project%20Launch/Informes%20y%20análisis/actualizacion-posicionamiento-keakit.md) : Actualización del análisis de posicionamiento tras implementar las mejoras con respecto a SEO y ASO.
   - 📄 [`analisis-de-posicionamiento.md`](./docs/Preparing%20Project%20Launch/Informes%20y%20análisis/analisis-de-posicionamiento.md) : Auditoría de Posicionamiento SEO y ASO.
   - 📄 [`analisis-de-segmentacion-del-mercado.md`](./docs/Preparing%20Project%20Launch/Informes%20y%20análisis/analisis-de-segmentacion-del-mercado.md) : Análisis de segmentación del mercado.
   - 📄 [`analisis-ia-storyboards.md`](./docs/Preparing%20Project%20Launch/Informes%20y%20análisis/analisis-ia-storyboards.md) : Análisis sobre el uso de IA para la creación de storyboards.
   - 📄 [`estimación-rentabilidad-y-costes.md`](./docs/Preparing%20Project%20Launch/Informes%20y%20análisis/estimación-rentabilidad-y-costes.md) : Estimación de rentabilidad, gestión de costes y plan de beneficiación de usuarios piloto.
   - 📄 [`metricas-seguimiento-keakit.md`](./docs/Preparing%20Project%20Launch/Informes%20y%20análisis/metricas-seguimiento-keakit.md) : Informe de métricas de seguimiento de marketing.
 - 📂 [`Marketing/`](./docs/Preparing%20Project%20Launch/Marketing/)
+  - 📂 [`Informes/`](./docs/Preparing%20Project%20Launch/Marketing/Informes/)
+    - 📄 [`metricas-seguimiento-keakit-2.md`](./docs/Preparing%20Project%20Launch/Marketing/Informes/metricas-seguimiento-keakit-2.md) : Actualización de las métricas de seguimiento.
+  - 📄 [`anuncios.md`](./docs/Preparing%20Project%20Launch/Marketing/anuncios.md) : Enlaces a los anuncios.
   - 📄 [`community-management-plan.md`](./docs/Preparing%20Project%20Launch/Marketing/community-management-plan.md) : Plan de Community Management (CM).
   - 📄 [`manual-de-identidad-corporativa.pdf`](./docs/Preparing%20Project%20Launch/Marketing/manual-de-identidad-corporativa.pdf) : Manual de identidad corporativa.
 - 📂 [`Sprint Backlogs/`](./docs/Preparing%20Project%20Launch/Sprint%20Backlogs/) : Sprint backlog de cada squad del equipo.
