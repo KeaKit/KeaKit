@@ -71,16 +71,16 @@ En términos de rol, el conjunto de usuarios piloto presenta una distribución c
 | Arrendador | 29 | 47,54 % |
 | **Total** | **61** | **100,00 %** |
 
-La distribución por perfiles permite observar con mayor detalle la composición de la muestra piloto. Entre los arrendatarios predomina el perfil Erasmus, mientras que entre los arrendadores destaca el perfil Eco-Colaborador.
+La distribución por perfiles permite observar con mayor detalle la composición de los usuarios con perfil clasificado. Entre los arrendatarios predomina el perfil Erasmus, mientras que entre los arrendadores destaca el perfil Eco-Colaborador.
 
-| Rol | Perfil | Usuarios | Porcentaje sobre el total |
+| Rol | Perfil | Usuarios | Porcentaje sobre perfiles clasificados |
 |---|---|---:|---:|
 | Arrendatario | Erasmus | 10 | 30,30 % |
 | Arrendatario | Nómada | 5 | 15,15 % |
 | Arrendador | Eco-Colaborador | 9 | 27,27 % |
 | Arrendador | Rentabilizador | 4 | 12,12 % |
 | Arrendador | Práctico | 5 | 15,15 % |
-| **Total** |  | **61** | **100,00 %** |
+| **Total** |  | **33** | **100,00 %** |
 
 Desde el punto de vista del marketing, estos datos son relevantes porque muestran que KeaKit está captando tanto demanda potencial, representada por arrendatarios, como oferta potencial, representada por arrendadores. Esta doble captación es especialmente importante en un modelo de plataforma, ya que la utilidad del servicio depende de mantener cierto equilibrio entre personas que necesitan alquilar objetos y personas que pueden ofrecerlos.
 
@@ -97,7 +97,7 @@ El documento de usuarios piloto indica que las encuestas de recogida de datos fu
 | Usuarios con dos encuestas completadas | 6 |
 | Porcentaje de usuarios con dos encuestas completadas | 18,18 % |
 
-Si se toma como base únicamente a los usuarios piloto registrados, la tasa interna de usuarios con al menos una encuesta completada es del 100 %. Este dato es positivo, porque indica que todos los usuarios recogidos en el documento han aportado al menos una respuesta útil para la validación inicial del proyecto.
+Si se toma como base únicamente a los usuarios incluidos en el registro de encuestas, la tasa interna de usuarios con al menos una encuesta completada es del 100 %. Este dato es positivo, porque indica que todos los usuarios recogidos en dicho registro han aportado al menos una respuesta útil para la validación inicial del proyecto.
 
 | Fase de captación | Usuarios captados | Encuestas completadas | Media de encuestas por usuario |
 |---|---:|---:|---:|
@@ -112,29 +112,29 @@ Sin embargo, la tasa de respuesta a encuestas difundidas por mensajería no pued
 
 **Tasa de respuesta a encuestas = (número de encuestas completadas / número de encuestas enviadas) x 100**
 
-Por tanto, con los datos actuales puede afirmarse que existen 39 respuestas registradas y que todos los usuarios piloto documentados completaron al menos una encuesta.
+Por tanto, con los datos actuales puede afirmarse que existen 39 respuestas registradas y que todos los usuarios incluidos en el registro de encuestas completaron al menos una encuesta.
 
 ## 6. Engagement en Instagram
 
 ### 6.1. Métricas generales
 
-La cuenta de Instagram registra 12205 visualizaciones y 4165 cuentas alcanzadas durante el periodo analizado, siendo el 52,5% de visualizaciones pertenecientes a los seguidores, y el 47,7% restante de no seguidores. Es un gran avance con respecto al informe anterior, dándose un aumento de visitas de un +1539,8%.
+La cuenta de Instagram registra 12.205 visualizaciones y 4.165 cuentas alcanzadas durante el periodo analizado, siendo el 52,3 % de visualizaciones pertenecientes a seguidores y el 47,7 % restante a no seguidores. Es un gran avance con respecto al informe anterior, con un aumento aproximado de visualizaciones del 1904,27 %.
 
 | Métrica general | Resultado Anterior | Resultado Actual |
 |---|---|---:|
-| Visualizaciones totales | 609 | 12205 |
-| Cuentas alcanzadas | 55 | 4165 |
-| Visualizaciones procedentes de seguidores | 98,2 % | 52,3% |
-| Visualizaciones procedentes de no seguidores | 1,8 % | 47,7% |
+| Visualizaciones totales | 609 | 12.205 |
+| Cuentas alcanzadas | 55 | 4.165 |
+| Visualizaciones procedentes de seguidores | 98,2 % | 52,3 % |
+| Visualizaciones procedentes de no seguidores | 1,8 % | 47,7 % |
 | Número total de seguidores | 52 | 110 |
 
-En relación con el tipo de contenido, los reels concentran el 57,6% de las visualizaciones, mientras que las publicaciones representan el 23,3% y las historias, un 19,2%. 
+En relación con el tipo de contenido, los reels concentran el 57,6 % de las visualizaciones, mientras que las publicaciones representan el 23,3 % y las historias, un 19,2 %. 
 
 | Tipo de contenido | Porcentaje de visualizaciones anterior | Porcentaje de visualizaciones actual |
 |---|---|---:|
-| Historias | 93,7% | 19,2% |
-| Publicaciones | 6,2% | 23,3% |
-| Reels|-|57,6%|
+| Historias | 93,7 % | 19,2 % |
+| Publicaciones | 6,2 % | 23,3 % |
+| Reels|-|57,6 %|
 
 Con esto, se ve que el contenido más efectivo han sido los reels. Solo con dos, siendo uno de ellos de humor y otro hablando a cámara, se ha conseguido multiplicar el número de visualizaciones. 
 
@@ -144,26 +144,26 @@ En concreto, se han analizado cuatro publicaciones de Instagram:
 
 | Publicación | Visualizaciones | Alcance | Interacciones |
 |---|---:|---:|---:|
-| Reel explicativo | 6046 | 3802 | 232 |
+| Reel explicativo | 6.046 | 3.802 | 232 |
 | Post día de la madre | 672 | 142 | 23 |
 | Artículo según signo del zodiaco | 694 | 237 | 32 |
 | Artículo garaje | 293 | 107 | 12 |
-| **Total** | **7705** | **4745** | **299** |
+| **Total** | **7.705** | **4.288** | **299** |
 
 Por otra parte, se observa cierta actividad en el perfil derivada de las publicaciones.
 
 | Indicador de actividad en perfil | Resultado acumulado |
 |---|---|
-| Actividad en el perfil | 723 (+740%) |
-| Visitas al perfil | 68 (+689,2%) |
-| Toques en enlace externo | 68 (+2166,7%) |
-| Nuevos seguidores | 58 (+107,5%) |
+| Actividad en el perfil | 723 (+740 %) |
+| Visitas al perfil | 68 (+689,2 %) |
+| Toques en enlace externo | 68 (+2166,7 %) |
+| Nuevos seguidores | 58 (+107,5 %) |
 
 Estos datos muestran que las publicaciones de este periodo de tiempo han sido muy efectivas, llamando la atención del público y generando interacciones con la cuenta.
 
 ### 6.3. Rendimiento de historias
 
-Se han analizado cuatro historias de Instagram. En conjunto, acumulan 196 visualizaciones, 125 cuentas alcanzadas y 4 interacciones.
+Se han analizado siete historias de Instagram. En conjunto, acumulan 1.277 visualizaciones, 751 cuentas alcanzadas, 23 interacciones y 61 clics en enlace.
 
 | Historia | Visualizaciones | Alcance | Interacciones | Clics en enlace |
 |---|---:|---:|---:|---:|
@@ -174,31 +174,31 @@ Se han analizado cuatro historias de Instagram. En conjunto, acumulan 196 visual
 | Sorteo con enlace | 573 | 294 | 7 | 25 |
 | Día de la madre interactivo | 71 | 45 | 1 | - |
 | Sorteo con enlace meme | 109 | 68 | 2 | 12 |
-| **Total** | **1277** | **751** | **23** | **61** |
+| **Total** | **1.277** | **751** | **23** | **61** |
 
 
-Por otra parte, las métricas de navegación muestran 176 acciones registradas. Predominan los avances a la siguiente pieza de contenido, seguidos por los abandonos.
+Por otra parte, las métricas de navegación muestran 717 acciones registradas. Predominan los avances a la siguiente pieza de contenido, seguidos por los abandonos.
 
 | Tipo de navegación | Total | Porcentaje aproximado |
 |---|---:|---:|
-| Avanzar | 459 | 64 % |
-| Abandonos | 189 | 27 % |
-| Siguiente historia | 55 | 8 % |
-| Retrocesos | 14 | 1 % |
-| **Total** | **176** | **100 %** |
+| Avanzar | 459 | 64,02 % |
+| Abandonos | 189 | 26,36 % |
+| Siguiente historia | 55 | 7,67 % |
+| Retrocesos | 14 | 1,95 % |
+| **Total** | **717** | **100 %** |
 
-El porcentaje de abandono indica que una parte relevante (27%) de la audiencia interrumpe el consumo de historias.
+El porcentaje de abandono indica que una parte relevante (26,36 %) de la audiencia interrumpe el consumo de historias.
 
 ### 6.4. Conclusiones
 
 Con estos datos, se calcula el engagement rate (teniendo solo en cuenta los datos de las publicaciones y reels de este periodo de tiempo):
->((Likes + Comments + Shares)/Followers) x 100 = (299/110)*100 = 271%
+>((Likes + Comments + Shares)/Followers) x 100 = (299/110)*100 = 271,82 %
 
 Se hace notar la presencia más fuerte del marketing en esta etapa del proyecto, superando con creces el objetivo marcado. Se ve que el contenido que más engagement genera es aquel en formato vídeo, sobre todo si es alguien hablando a cámara de forma dinámica. 
 
 ## 7. Engagement en LinkedIn
 
-## 7.1 Métricas generales
+### 7.1. Métricas generales
 
 Durante este periodo se han subido cinco publicaciones, de forma que las métricas generales han ascendido a los siguientes datos. 
 
@@ -214,7 +214,7 @@ Durante este periodo se han subido cinco publicaciones, de forma que las métric
 | Veces compartido | 0 |
 | Veces guardado | 0 |
 | Envíos en LinkedIn | 0 |
-| Número total de contactos | 2 | 17 (+750%) |
+| Número total de contactos | 17 |
 
 
 A partir de estos datos, se obtienen los siguientes indicadores calculados.
@@ -246,7 +246,7 @@ Esta audiencia resulta coherente con un proyecto emergente vinculado al entorno 
 
 ## 8. Engagement en X
 
-## 8.1. Métricas generales 
+### 8.1. Métricas generales 
 El acceso a las métricas de X es más limitado que en otras plataformas, ya que no se dispone de panel analítico completo. Los datos se han recogido manualmente desde la reactivación de la cuenta.
 
 | Métrica | Resultado |
@@ -277,13 +277,13 @@ La cuenta de TikTok se abrió el 4 de mayo de 2026. Los datos recogidos correspo
 
 | Métrica general | Resultado |
 |---|---:|
-| Visualizaciones totales | 5.161 |
+| Visualizaciones totales | 5.837 |
 | Visitas al perfil | 170 |
-| Likes totales | 369 |
+| Likes totales | 402 |
 | Comentarios totales | 21 |
-| Veces compartido | 8 |
+| Veces compartido | 6 |
 | Guardados totales | 11 |
-| Total de interacciones (likes + comentarios + shares + guardados) | 409 |
+| Total de interacciones (likes + comentarios + shares + guardados) | 440 |
 | Número total de seguidores | 30 |
 
 El 94 % del tráfico procede del For You Page (FYP), mientras que el 5,1 % llega desde el perfil personal y el 0,6 % desde la búsqueda. Que prácticamente todo el tráfico provenga del FYP indica que el algoritmo está distribuyendo el contenido más allá de los seguidores actuales, lo cual es muy favorable para una cuenta recién creada.
@@ -306,20 +306,20 @@ El vídeo de presentación es la pieza con mejor rendimiento absoluto, concentra
 
 | Indicador calculado | Resultado aproximado |
 |---|---:|
-| Visualizaciones medias por publicación | 860,17 |
-| Tasa de like sobre visualizaciones | 7,15 % |
-| Tasa de comentario sobre visualizaciones | 0,41 % |
-| Tasa de compartido sobre visualizaciones | 0,16 % |
-| Tasa de guardado sobre visualizaciones | 0,21 % |
+| Visualizaciones medias por publicación | 972,83 |
+| Tasa de like sobre visualizaciones | 6,89 % |
+| Tasa de comentario sobre visualizaciones | 0,36 % |
+| Tasa de compartido sobre visualizaciones | 0,10 % |
+| Tasa de guardado sobre visualizaciones | 0,19 % |
 | Tráfico procedente del FYP | 94,00 % |
 | Tráfico procedente del perfil | 5,10 % |
 | Tráfico procedente de búsqueda | 0,60 % |
 
 ### 9.4. Conclusiones
 
-TikTok presenta el mejor arranque de todos los canales analizados en términos de volumen y velocidad, lo cual está dentro de lo esperado dada la naturaleza de la aplicación. En solo 8 días ha acumulado 5.161 visualizaciones y 409 interacciones, superando ampliamente a LinkedIn y X, y compitiendo directamente con Instagram. La tasa de interacción global del 7,93 % es elevada, y la tasa de like del 7,15 % indica que el contenido resulta atractivo para la audiencia que lo consume.
+TikTok presenta el mejor arranque de todos los canales analizados en términos de volumen y velocidad, lo cual está dentro de lo esperado dada la naturaleza de la aplicación. En solo 8 días ha acumulado 5.837 visualizaciones y 440 interacciones, superando ampliamente a LinkedIn y X, y compitiendo directamente con Instagram. La tasa de interacción global del 7,54 % es elevada, y la tasa de like del 6,89 % indica que el contenido resulta atractivo para la audiencia que lo consume.
 
-TikTok genera buena variedad de interacciones: 21 comentarios y 8 compartidos, lo que favorece la difusión orgánica y la conversación en torno al proyecto. Además, el hecho de que el 94 % del tráfico provenga del FYP confirma que la plataforma está exponiendo el contenido a audiencias nuevas, una ventaja clave para la fase de descubrimiento.
+TikTok genera buena variedad de interacciones: 21 comentarios y 6 compartidos, lo que favorece la difusión orgánica y la conversación en torno al proyecto. Además, el hecho de que el 94 % del tráfico provenga del FYP confirma que la plataforma está exponiendo el contenido a audiencias nuevas, una ventaja clave para la fase de descubrimiento.
 
 ## 10. Comparación entre canales
 
@@ -327,13 +327,13 @@ La comparación entre los cuatro canales muestra diferencias claras en volumen, 
 
 La comparación sintética por canal queda del siguiente modo:
 
-- Instagram, publicaciones analizadas: 7.705 visualizaciones, 4.745 cuentas alcanzadas, 299 interacciones, 68 toques en enlace externo y 58 nuevos seguidores.
+- Instagram, publicaciones analizadas: 7.705 visualizaciones, 4.288 cuentas alcanzadas, 299 interacciones, 68 toques en enlace externo y 58 nuevos seguidores.
 - Instagram, historias analizadas: 1.277 visualizaciones, 751 cuentas alcanzadas, 23 interacciones y 61 clics en enlace.
 - LinkedIn: 218 impresiones, 48 miembros alcanzados, 6 interacciones sociales y 15 nuevos seguidores.
-- TikTok: 5.161 visualizaciones, 409 interacciones (369 likes, 21 comentarios, 8 shares, 11 guardados) y 170 visitas al perfil en 8 días.
+- TikTok: 5.837 visualizaciones, 440 interacciones (402 likes, 21 comentarios, 6 shares, 11 guardados) y 170 visitas al perfil en 8 días.
 - X: 61 impresiones totales en 17 publicaciones, 5 seguidores y 1 like.
 
-Instagram es el canal con mayor volumen absoluto y capacidad de conversión a seguidores. TikTok destaca por su velocidad de crecimiento y su elevada tasa de interacción, siendo el canal con mayor engagement relativo y el único que genera comentarios y compartidos de forma consistente. LinkedIn ofrece mejores tasas relativas de conversión sobre alcance. X se encuentra en una fase muy incipiente y su contribución es, por el momento, marginal.
+Instagram es el canal con mayor volumen absoluto y capacidad de conversión a seguidores. TikTok destaca por su gen erratas y pequeñas inconsistencias de redacción.velocidad de crecimiento y su elevada tasa de interacción, siendo el canal con mayor engagement relativo y el único que genera comentarios y compartidos de forma consistente. LinkedIn ofrece mejores tasas relativas de conversión sobre alcance. X se encuentra en una fase muy incipiente y su contribución es, por el momento, marginal.
 
 ## 11. Cuadro de métricas de seguimiento
 
@@ -342,10 +342,10 @@ Instagram es el canal con mayor volumen absoluto y capacidad de conversión a se
 | Tasa de inscripción | 61 usuarios piloto captados en cinco fases: 16 en fase inicial, 8 en Feedback Sprint 1, 9 en Feedback Sprint 2, 8 en Feedback Sprint 3 y 20 en Feedback PPL | La fase PPL fue la más intensa (32,79 %)|
 | Distribución por rol | 32 arrendatarios y 29 arrendadores | Distribución equilibrada (52,46 % / 47,54 %) entre demanda y oferta potencial |
 | Tasa de respuesta a encuestas | 39 encuestas completadas por 33 usuarios; 100 % de usuarios documentados con al menos una encuesta | Dato positivo para validación inicial |
-| Engagement en Instagram | 299 interacciones en publicaciones y reels, 23 en historias (322 en total); 58 nuevos seguidores; tasa de engagement del 271 % | Alto rendimiento; el formato reel concentra el 57,6 % de las visualizaciones y es el contenido más efectivo |
+| Engagement en Instagram | 299 interacciones en publicaciones y reels, 23 en historias (322 en total); 58 nuevos seguidores; tasa de engagement del 271,82 % | Alto rendimiento; el formato reel concentra el 57,6 % de las visualizaciones y es el contenido más efectivo |
 | Engagement en LinkedIn | 6 interacciones sociales, 15 visitas al perfil y 2 nuevos seguidores | Menor volumen que Instagram, pero tasas relativas de interacción y visualización del perfil elevadas |
 | Engagement en X | 61 impresiones, 1 like y 5 seguidores en 17 publicaciones | Canal con menor rendimiento; en fase inicial tras reactivación de la cuenta |
-| Engagement en TikTok | 5.161 visualizaciones y 409 interacciones (369 likes, 21 comentarios, 8 compartidos, 11 guardados) en 8 días; 30 seguidores | Mejor arranque de todos los canales |
+| Engagement en TikTok | 5.837 visualizaciones y 440 interacciones (402 likes, 21 comentarios, 6 compartidos, 11 guardados) en 8 días; 30 seguidores | Mejor arranque de todos los canales |
 
 ## 12. Conclusiones
 
@@ -353,11 +353,11 @@ Las acciones de marketing de KeaKit muestran un rendimiento positivo y creciente
 
 La captación ha mostrado un repunte significativo en la quinta fase (Feedback PPL), que con 20 usuarios supera incluso a la fase inicial. Las fases intermedias mantuvieron un flujo estable de 8-9 usuarios. Esta evolución indica que las acciones de difusión recurrentes están dando resultado, aunque convendría medir con mayor precisión qué canales generan registros efectivos.
 
-En relación con las encuestas, el resultado es favorable dentro de la muestra documentada: todos los usuarios piloto registrados completaron al menos una encuesta y se obtuvieron 39 respuestas en total. Sin embargo, la tasa de respuesta real sobre mensajería no puede calcularse si no se registra el número de mensajes o invitaciones enviadas.
+En relación con las encuestas, el resultado es favorable dentro de la muestra documentada: todos los usuarios incluidos en el registro de encuestas completaron al menos una encuesta y se obtuvieron 39 respuestas en total. Sin embargo, la tasa de respuesta real sobre mensajería no puede calcularse si no se registra el número de mensajes o invitaciones enviadas.
 
-En redes sociales, Instagram aporta mayor volumen de visualizaciones e interacciones, pero su alcance se concentra principalmente en seguidores actuales. Las publicaciones son el formato con mayor potencial de descubrimiento externo, mientras que las historias funcionan mejor como herramienta de mantenimiento de comunidad. LinkedIn presenta menor volumen absoluto, pero ofrece tasas relativas destacables: el 31,25 % de los miembros alcanzados visitaron el perfil y la tasa de interacción sobre alcance se sitúa en el 12,50 %, lo que indica un nivel de engagement significativo en relación con el tamaño de la audiencia.
+En redes sociales, Instagram aporta mayor volumen de visualizaciones e interacciones, con una distribución casi equilibrada entre seguidores actuales y no seguidores. Las publicaciones son el formato con mayor potencial de descubrimiento externo, mientras que las historias funcionan mejor como herramienta de mantenimiento de comunidad. LinkedIn presenta menor volumen absoluto, pero ofrece tasas relativas destacables: el 31,25 % de los miembros alcanzados visitaron el perfil y la tasa de interacción sobre alcance se sitúa en el 12,50 %, lo que indica un nivel de engagement significativo en relación con el tamaño de la audiencia.
 
-El principal punto débil del conjunto de acciones es la escasa profundidad de la interacción. Tanto en Instagram como en LinkedIn, la respuesta se concentra en acciones de baja implicación, principalmente “me gusta” o reacciones. La ausencia de comentarios, compartidos y guardados limita la difusión orgánica y reduce la capacidad de generar conversación sobre el proyecto.
+El principal punto débil del conjunto de acciones es que la interacción profunda todavía se concentra en pocos canales. LinkedIn y X presentan una respuesta limitada, basada principalmente en reacciones o likes, mientras que TikTok sí empieza a generar comentarios, compartidos y guardados. Esto indica que la conversación orgánica aún depende de reforzar los formatos y canales con mayor capacidad de participación.
 
 ## 13. Recomendaciones de mejora
 
@@ -365,7 +365,7 @@ En Instagram, dado que los reels han demostrado ser el formato más eficaz con d
 
 En TikTok, los resultados del arranque son muy prometedores y confirman que el canal debe consolidarse como pilar de la estrategia. Se recomienda mantener la frecuencia de publicación y experimentar con formatos que maximicen los comentarios y compartidos, ya que son las métricas que más favorecen la distribución algorítmica en el FYP. Dado que los vídeos con persona hablando a cámara superan las 1.000 visualizaciones de forma consistente, conviene priorizar este formato.
 
-En LinkedIn, se recomienda aumentar la frecuencia de publicación y orientar los contenidos hacia debate profesional, validación del problema y llamada directa a usuarios piloto. LEl volumen absoluto sigue siendo limitado. Distribuir la información en varias piezas temáticas (problema, solución, impacto sostenible, funcionamiento de la plataforma) puede ayudar a incrementar la frecuencia.
+En LinkedIn, se recomienda aumentar la frecuencia de publicación y orientar los contenidos hacia debate profesional, validación del problema y llamada directa a usuarios piloto. El volumen absoluto sigue siendo limitado. Distribuir la información en varias piezas temáticas (problema, solución, impacto sostenible, funcionamiento de la plataforma) puede ayudar a incrementar la frecuencia.
 
 En X, dado su rendimiento marginal, se recomienda evaluar si el esfuerzo dedicado a este canal compensa frente a la posibilidad de reforzar los canales con mejor tracción (Instagram y TikTok). En caso de mantenerlo, sería necesario aumentar significativamente la frecuencia y experimentar con formatos nativos de la plataforma, como hilos o publicaciones con imagen.
 
