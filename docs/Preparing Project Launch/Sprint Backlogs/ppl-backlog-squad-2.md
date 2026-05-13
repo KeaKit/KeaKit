@@ -1,4 +1,4 @@
-# Sprint Backlog: PPL - Squad 3
+# Sprint Backlog: PPL - Squad 2
 
 ## Índice del documento
 1. [Sprint Goal](#1-sprint-goal)
@@ -24,7 +24,7 @@
 
 **Duración**: 3 semanas (Semana de Feria no incluida)
 
-**Objetivo**: Corregir bugs y garantizar una versión final estable del sistema.
+**Objetivo**: Corregir bugs y tareas de marketing.
 
 ## 2. Sprint Backlog - Semana 1
 
@@ -49,28 +49,46 @@
 | [#683](https://github.com/KeaKit/KeaKit/issues/683) | [BUG] Bonificación por piloto no se visualiza | Mid | 4 | Done | Samuel Tamayo Balogh | 
 | [#460](https://github.com/KeaKit/KeaKit/issues/460) | TESTING pendiente CU-ARRENDATARIO-10 | High | 5 | Done | Samuel Tamayo Balogh | 
 | [#608](https://github.com/KeaKit/KeaKit/issues/608) | Elaboración del Informe de las Métricas de seguimiento RRSS | Mid | 4 | Done | Rosa María Espinosa Martínez | 
+| [#729](https://github.com/KeaKit/KeaKit/issues/729) | [BUG] Se puede evaluar devolución varias veces | Mid | 1 | Done | Guillermo García León | 
+| [#722](https://github.com/KeaKit/KeaKit/issues/729) | [BUG] Filtro solo productos en fechas seleccionadas | Mid | 1 | Done | Guillermo García León | 
+| [#514](https://github.com/KeaKit/KeaKit/issues/514) | [BUG] Rol de courier desaparece pestaña para ofrecer servicios | Mid | 0.5 | Done | Guillermo García León | 
 
 ## 4. Sprint Backlog - Semana 3
 
+| ID Issue | Descripción | Prioridad | Estimación (SP) | Estado | Responsable |
+|----------|-------------|-----------|-----------------|--------|-------------|
 | [#684](https://github.com/KeaKit/KeaKit/issues/684) | [BUG] Disponibilidad inconsistente entre lista y mapa - CU-ARRENDATARIO-01 | High | 1 | Done | Samuel Tamayo Balogh | 
 | [#734](https://github.com/KeaKit/KeaKit/issues/734) | [BUG] Al subir o editar un artículo, se permite seleccionar una fecha de compra futura | Mid | 3 | Done | Samuel Tamayo Balogh | 
+| [#873](https://github.com/KeaKit/KeaKit/issues/873) | T-1 TikTok contando qué es keakit | Mid | 2.5 | Done | Rosa María Espinosa Martínez | 
+| [#874](https://github.com/KeaKit/KeaKit/issues/874) | T-2: Tiktok realidad CM | Mid | 1 | Done | Rosa María Espinosa Martínez | 
+| [#872](https://github.com/KeaKit/KeaKit/issues/872) | Abrir cuenta de tiktok | Mid | 0.5 | Done | Rosa María Espinosa Martínez | 
+| [#871](https://github.com/KeaKit/KeaKit/issues/871) | Añadir información métricas y plan de CM a la presentación | Mid | 2 | Done | Rosa María Espinosa Martínez | 
+| [#867](https://github.com/KeaKit/KeaKit/issues/867) | IG-9: Story landing page | Mid | 1 | Done | Rosa María Espinosa Martínez | 
+| [#868](https://github.com/KeaKit/KeaKit/issues/868) | Análisis de métricas RRSS Final PPL | Mid | 1 | Done | Rosa María Espinosa Martínez | 
+| [#865](https://github.com/KeaKit/KeaKit/issues/865) | IG-7: Artículo según horóscopo | Mid | 2.5 | Done | Rosa María Espinosa Martínez | 
+| [#866](https://github.com/KeaKit/KeaKit/issues/866) | IG-5: Tres stories promocionando el sorteo | Mid | 2 | Done | Rosa María Espinosa Martínez | 
+| [#864](https://github.com/KeaKit/KeaKit/issues/864) | IG-8: Reel/TikTok contacto inicial | Mid | 2 | Done | Rosa María Espinosa Martínez | 
+| [#859](https://github.com/KeaKit/KeaKit/issues/859) | IG-1: Post día de la madre | Mid | 1 | Done | Rosa María Espinosa Martínez | 
+| [#875](https://github.com/KeaKit/KeaKit/issues/875) | T-3: TikTok IKEA | Mid | 3 | Done | Rosa María Espinosa Martínez | 
+
 
 
 ## 5. Resumen carga de trabajo
 
 | Responsable       | SP - Semana 1|  SP - Semana 2|  SP - Semana 3| **TOTAL** |
 |-------------------|------------------------|------------------------|------------------------|------------------------|
-| Adrián Chabrera Rubio | 4.5 SP |  5.5 SP | |                                    
-| Alejandro González Macías |  3.5 SP | 3 SP |    |                  
-| Guillermo Ciria González | 1.5 SP | 12 SP |     |                 
-| Marta De la Calle González | 1.5 SP | 2.5 SP |   |                  
-| **TOTAL EQUIPO**   | **11 SP**        |  **23 SP**  |    |     | 
+| Ismael Carrasco Mkhazni | 0 SP |  3.5 SP | 0 SP|  3.5 SP                                  
+| Rosa María Espinosa Martínez |  0 SP | 4 SP |  17.5 SP  | 21.5 SP|               
+| Guillermo García León | 0 SP | 2.5 SP |  0 SP   | 2.5 SP                
+| Samuel Tamayo Balogh | 0 SP | 9 SP | 4 SP  |   13 SP 
+| Germán Ojeda Garrido | 3.5 SP | 3 SP | 0 SP  |   6.5 SP              
+| **TOTAL EQUIPO**   | **3.5 SP**        |  **22 SP**  |  **21.5 SP**  |   **47 SP**  | 
 
 ## 6. Historial de versiones
 
 | Versión | Fecha | Descripción  | Autor(es)                  |
 |---------|-------------|--------------------------------|----------------------------|
-| 1.0.0   | 06/05/2026  |  Sprint Backlog Semanas 1 y 2   | Adrián Chabrera Rubio |
+| 1.0.0   | 13/05/2026  |  Sprint Backlog Semanas 1, 2 y 3  | Ismael Carrasco Mkhanzi|
 
 ---
 **Redactado por:** Ismael Carrasco Mkhazni
