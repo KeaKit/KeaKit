@@ -27,6 +27,7 @@ public class DatabaseSeeder {
             ArticleRepository articleRepo,
             ServiceRepository serviceRepo,
             KitRepository kitRepo,
+            KitDeliveryRepository kitDeliveryRepo,
             DefaultKitRepository defaultKitRepo, // <-- AÑADIDO: Repositorio para los kits predeterminados
             RatingRepository ratingRepo,
             CountryRepository countryRepo,
@@ -144,7 +145,7 @@ public class DatabaseSeeder {
             proyector.setTitle("Proyector Epson 4K");
             proyector.setDescription("3000 lúmenes, ideal para presentaciones y cine en casa");
             proyector.setCategory(catTech);
-            proyector.setCity("Cordoba");
+            proyector.setCity("Córdoba");
             proyector.setCountry("Spain");
             proyector.setOwner(owner);
             proyector.setPricePerMonth(60.0);
@@ -172,17 +173,59 @@ public class DatabaseSeeder {
             impresora.setImageUrl("https://i.imgur.com/3n9fIYP.png");
             articleRepo.save(impresora);
 
+            Article microfono = new Article();
+            microfono.setTitle("Micrófono Rode Wireless GO II");
+            microfono.setDescription("Sistema inalámbrico dual para grabaciones y podcasts");
+            microfono.setCategory(catTech);
+            microfono.setCity("Sevilla");
+            microfono.setCountry("Spain");
+            microfono.setOwner(owner);
+            microfono.setPricePerMonth(35.0);
+            microfono.setTotalUnits(1);
+            microfono.setStatus(ArticleStatus.RENTED);
+            microfono.setPurchaseDate(LocalDate.now().minusMonths(2));
+            microfono.setAvailableFrom(LocalDate.now().minusDays(7));
+            microfono.setAvailableUntil(LocalDate.now());
+            microfono.setImageUrl("https://i.imgur.com/aB4cDxF.png");
+            microfono.setCondition(ArticleCondition.LIGHTLY_USED);
+            articleRepo.save(microfono);
+
+            Kit luciaEndingTodayKit = new Kit();
+            luciaEndingTodayKit.setName("Pack Podcast Lucía");
+            luciaEndingTodayKit.setTenant(tenant);
+            luciaEndingTodayKit.setStatus(KitStatus.ACTIVE);
+            luciaEndingTodayKit.setDeliveryMethod(DeliveryMethod.COURIER);
+            luciaEndingTodayKit.setStartDate(LocalDate.now().minusDays(7));
+            luciaEndingTodayKit.setEndDate(LocalDate.now());
+            luciaEndingTodayKit.setCountry("Spain");
+            luciaEndingTodayKit.setCity("Sevilla");
+            kitRepo.save(luciaEndingTodayKit);
+
+            ItemMemento snapLucia = microfono.createSnapshot(
+                1,
+                luciaEndingTodayKit.getDeliveryMethod(),
+                luciaEndingTodayKit.getCourierPrice(),
+                luciaEndingTodayKit.getMeetingPoint()
+            );
+            snapLucia.setKit(luciaEndingTodayKit);
+            snapLucia.setPriceAtRental(microfono.getPricePerMonth());
+
+            luciaEndingTodayKit.setSnapshots(List.of(snapLucia));
+            kitRepo.save(luciaEndingTodayKit);
+
             // 6. Servicio (Herencia de Item)
             ServiceItem setupService = new ServiceItem();
             setupService.setTitle("Instalación Software");
             setupService.setDescription("Configuración inicial a domicilio");
             setupService.setCategory(catTech);
             setupService.setCity("Sevilla");
+            setupService.setCountry("Spain");
             setupService.setOwner(owner);
             setupService.setPricePerMonth(50.0);
             setupService.setTotalUnits(10);
             setupService.setAvailableFrom(LocalDate.now());
             setupService.setAvailableUntil(LocalDate.now().plusMonths(36));
+            setupService.setStatus(ServiceStatus.ACTIVE);
             serviceRepo.save(setupService);
 
             // 7. Kit (El Alquiler)
@@ -198,12 +241,14 @@ public class DatabaseSeeder {
             kitRepo.save(myKit);
 
             Kit pendingPaidKit = new Kit();
-            pendingPaidKit.setName("Pack Trabajo Remoto");
+            pendingPaidKit.setName("Pack Trabajo Remoto Borrador");
             pendingPaidKit.setTenant(tenant);
             pendingPaidKit.setStatus(KitStatus.DRAFT);
             pendingPaidKit.setDeliveryMethod(DeliveryMethod.COURIER);
-            pendingPaidKit.setStartDate(LocalDate.now());
+            pendingPaidKit.setStartDate(LocalDate.now().plusWeeks(2));
             pendingPaidKit.setEndDate(LocalDate.now().plusMonths(1));
+            pendingPaidKit.setCountry("Spain");
+            pendingPaidKit.setCity("Sevilla");
             kitRepo.save(pendingPaidKit);
 
             Kit audiovisualKit = new Kit();
@@ -211,8 +256,8 @@ public class DatabaseSeeder {
             audiovisualKit.setTenant(tenant);
             audiovisualKit.setStatus(KitStatus.FINISHED);
             audiovisualKit.setDeliveryMethod(DeliveryMethod.COURIER);
-            audiovisualKit.setStartDate(LocalDate.now());
-            audiovisualKit.setEndDate(LocalDate.now().plusMonths(1));
+            audiovisualKit.setStartDate(LocalDate.now().minusMonths(2));
+            audiovisualKit.setEndDate(LocalDate.now().minusMonths(2).plusWeeks(2));
             audiovisualKit.setCountry("Spain");
             audiovisualKit.setCity("Sevilla");
             kitRepo.save(audiovisualKit);
@@ -229,6 +274,9 @@ public class DatabaseSeeder {
             myKit.setSnapshots(List.of(snap1, snap2));
             kitRepo.save(myKit);
 
+            laptop.setStatus(ArticleStatus.RENTED);
+            articleRepo.save(laptop);
+
             ItemMemento snap3 = laptop.createSnapshot(1, pendingPaidKit.getDeliveryMethod(), pendingPaidKit.getCourierPrice(), pendingPaidKit.getMeetingPoint());
             snap3.setKit(pendingPaidKit);
             snap3.setPriceAtRental(laptop.getPricePerMonth());
@@ -237,7 +285,7 @@ public class DatabaseSeeder {
             snap4.setKit(pendingPaidKit);
             snap4.setPriceAtRental(setupService.getPricePerMonth());
 
-            pendingPaidKit.setSnapshots(List.of(snap3, snap4));
+            pendingPaidKit.setSnapshots(List.of(snap4));
             kitRepo.save(pendingPaidKit);
 
             ItemMemento snapAv1 = camara.createSnapshot(
@@ -426,7 +474,48 @@ public class DatabaseSeeder {
             ratingRepo.save(feedback);
 
             // 9. Países Y ciudades       
-            CityLoader.loadFromJson(countryRepo, cityRepo);          
+            CityLoader.loadFromJson(countryRepo, cityRepo);     
+            
+            // 10. Kit Delivery
+            KitDelivery delivery1 = new KitDelivery();
+            delivery1.setKit(myKit);
+            delivery1.setStatus(DeliveryStatus.DELIVERED);
+            delivery1.setEstimatedArrival(LocalDateTime.now());
+            delivery1.setLastLocation("Sevilla");
+            delivery1.setLastUpdate(LocalDateTime.now());
+            kitDeliveryRepo.save(delivery1);
+
+            KitDelivery delivery2 = new KitDelivery();
+            delivery2.setKit(audiovisualKit);
+            delivery2.setStatus(DeliveryStatus.DELIVERED);
+            delivery2.setEstimatedArrival(LocalDateTime.now().minusMonths(2));
+            delivery2.setLastLocation("Sevilla");
+            delivery2.setLastUpdate(LocalDateTime.now().minusMonths(2));
+            kitDeliveryRepo.save(delivery2);
+
+            KitDelivery delivery3 = new KitDelivery();
+            delivery3.setKit(finishedPhotoKit);
+            delivery3.setStatus(DeliveryStatus.DELIVERED);
+            delivery3.setEstimatedArrival(LocalDateTime.now().minusWeeks(1));
+            delivery3.setLastLocation("Sevilla");
+            delivery3.setLastUpdate(LocalDateTime.now().minusWeeks(1));
+            kitDeliveryRepo.save(delivery3);
+
+            KitDelivery delivery4 = new KitDelivery();
+            delivery4.setKit(streamingKit);
+            delivery4.setStatus(DeliveryStatus.DELIVERED);
+            delivery4.setEstimatedArrival(LocalDateTime.now().minusMonths(3));
+            delivery4.setLastLocation("Sevilla");
+            delivery4.setLastUpdate(LocalDateTime.now().minusMonths(3));
+            kitDeliveryRepo.save(delivery4);
+
+            KitDelivery delivery5 = new KitDelivery();
+            delivery5.setKit(droneKit);
+            delivery5.setStatus(DeliveryStatus.DELIVERED);
+            delivery5.setEstimatedArrival(LocalDateTime.now().minusDays(2));
+            delivery5.setLastLocation("Sevilla");
+            delivery5.setLastUpdate(LocalDateTime.now().minusDays(2));
+            kitDeliveryRepo.save(delivery5);
 
             System.out.println("✅ Seeder finalizado: Datos cargados en los repositorios.");
 

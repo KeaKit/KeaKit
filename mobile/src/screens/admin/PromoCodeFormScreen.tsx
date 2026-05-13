@@ -11,6 +11,8 @@ import { RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { createPromoCode, PromoCodeType, updatePromoCode } from '../../services/promoCodeService';
 import { getActivePilotEmails } from '../../services/pilotUserService';
+import { ApiError } from '../../types/ApiError';
+import { Helmet } from 'react-helmet-async'; 
 
 type PromoCodeFormNav = NativeStackNavigationProp<RootStackParamList, 'PromoCodeForm'>;
 type PromoCodeFormRoute = RouteProp<RootStackParamList, 'PromoCodeForm'>;
@@ -129,9 +131,37 @@ const PromoCodeFormScreen: React.FC = () => {
       }
       navigation.goBack();
     } catch (e: any) {
+      console.error('Error saving promo code:', e);
+
+      // 🔴 409 → código duplicado
+      if (e instanceof ApiError && e.status === 409) {
+        setCodeError('Este código ya existe');
+        return;
+      }
+
+      // 🔴 400 → validaciones backend
+      if (e instanceof ApiError && e.status === 400 && e.data) {
+        mapBackendErrors(e.data);
+        return;
+      }
+      console.error('Error saving promo code:', e);
       Alert.alert('Error', e.message ?? 'No se pudo guardar el código.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const mapBackendErrors = (errors: any) => {
+    if (errors.code) {
+      setCodeError(errors.code);
+    }
+
+    if (errors.discountRate) {
+      setDiscountError('El descuento debe estar entre 1% y 100%');
+    }
+
+    if (errors.pilotEmails) {
+      setEmailError('Hay emails inválidos');
     }
   };
 
@@ -153,9 +183,16 @@ const PromoCodeFormScreen: React.FC = () => {
     }
   };
 
+  const isSavingDisabled = saving || discountError !== '' || codeError !== '' || code.trim() === '' || discountStr.trim() === '';
+
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+      <Helmet>
+        <title>{isEdit ? 'Editar Código Promocional' : 'Nuevo Código Promocional'} | KeaKit</title>
+        <meta name="description" content="Creación y edición de códigos promocionales de KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={26} color={KC.blue} />
@@ -170,6 +207,7 @@ const PromoCodeFormScreen: React.FC = () => {
         <FadeIn delay={60}>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Código promocional</Text>
+            <Text style={styles.helperText}>Máximo {CODE_MAX_LENGTH} caracteres</Text>
             <TextInput
               style={[styles.input, !!codeError && styles.inputError]}
               value={code}
@@ -188,7 +226,7 @@ const PromoCodeFormScreen: React.FC = () => {
               autoCapitalize="characters"
               editable={!saving}
             />
-            <Text style={styles.helperText}>Máximo {CODE_MAX_LENGTH} caracteres</Text>
+            
             {!!codeError && <Text style={styles.errorText}>{codeError}</Text>}
 
             <Text style={[styles.cardTitle, { marginTop: 12 }]}>Porcentaje de descuento</Text>
@@ -196,7 +234,28 @@ const PromoCodeFormScreen: React.FC = () => {
               <TextInput
                 style={[styles.input, { flex: 1 }, !!discountError && styles.inputError]}
                 value={discountStr}
-                onChangeText={t => { setDiscountStr(t); setDiscountError(''); }}
+                onChangeText={t => {
+                  const onlyNumbers = t.replace(/[^0-9]/g, '');
+                  if (onlyNumbers === '') {
+                    setDiscountStr('');
+                    setDiscountError('');
+                    return;
+                  }
+
+                  const num = Number(onlyNumbers);
+
+                  if (num > 100) {
+                    return;
+                  }
+                  if (num < 1) {
+                    setDiscountError('El descuento debe ser al menos 1%');
+                    setDiscountStr(onlyNumbers);
+                    return;
+                  }
+
+                  setDiscountStr(onlyNumbers);
+                  setDiscountError(''); 
+                }}
                 placeholder="Ej: 15"
                 placeholderTextColor="#aaa"
                 keyboardType="number-pad"
@@ -364,9 +423,9 @@ const PromoCodeFormScreen: React.FC = () => {
         {/* Botón guardar */}
         <FadeIn delay={240}>
           <TouchableOpacity
-            style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+            style={[styles.saveBtn, isSavingDisabled && styles.saveBtnDisabled]}
             onPress={handleSave}
-            disabled={saving}
+            disabled={isSavingDisabled}
             activeOpacity={0.85}
           >
             {saving ? (

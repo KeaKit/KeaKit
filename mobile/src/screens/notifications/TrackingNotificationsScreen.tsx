@@ -22,6 +22,8 @@ import {
   componentStyles,
 } from "../../styles";
 import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
+import { Helmet } from 'react-helmet-async'; 
+
 
 type NotificationsNav = NativeStackNavigationProp<RootStackParamList, "TrackingNotifications">;
 
@@ -45,11 +47,15 @@ const TrackingNotificationsScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      markAllRead();
-    }, [markAllRead]),
+      if (notifications.some(n => !n.read)) {
+        markAllRead();
+      }
+    }, [notifications, markAllRead]),
   );
 
-  const data: NotificationItem[] = notifications.map((n) => ({
+  const data: NotificationItem[] = Array.from(
+    new Map(notifications.map(n => [n.id, n])).values()
+  ).map((n) => ({
     id: n.id,
     title: `Kit ${n.kitName}`,
     message: n.message,
@@ -77,6 +83,11 @@ const TrackingNotificationsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Notificaciones de seguimiento | KeaKit</title>
+        <meta name="description" content="Consulta tus notificaciones de seguimiento en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>        
       <View style={commonStyles.header}>
         <TouchableOpacity
           style={componentStyles.iconButton}
@@ -113,7 +124,7 @@ const TrackingNotificationsScreen: React.FC = () => {
       ) : (
         <FlatList
           data={data}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
         />

@@ -8,6 +8,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { KitResponse, KitStatus, RootStackParamList } from "../../types";
 import { Colors, Spacing, commonStyles } from "../../styles";
 import { getAssignedKits } from "../../services/kitService";
+import { Helmet } from 'react-helmet-async'; 
+
 
 type AssignedKitsNav = NativeStackNavigationProp<RootStackParamList, "AssignedKits">;
 
@@ -35,6 +37,17 @@ const AssignedKitsScreen = () => {
       setLoading(false);
     }
   }, [user?.token]);
+
+  const getDeliveryNotificationText = (item: KitResponse) => {
+    if (!item.deliveryNotification) return null;
+    if (item.status === KitStatus.FINISHED || item.status === KitStatus.CANCELLED || item.status === KitStatus.DRAFT) {
+      return null;
+    }
+    if (item.status === KitStatus.ACTIVE) {
+      return 'En uso';
+    }
+    return item.deliveryNotification;
+  };
 
   useEffect(() => {
     if (!authLoading) loadKits();
@@ -67,9 +80,12 @@ const AssignedKitsScreen = () => {
           <Ionicons name="location-outline" size={13} color="#888" /> {item.city}, {item.country}
         </Text>
 
-        {item.deliveryNotification ? (
-          <Text style={styles.deliveryNoticeText}>{item.deliveryNotification}</Text>
-        ) : null}
+        {(() => {
+          const deliveryNoticeText = getDeliveryNotificationText(item);
+          return deliveryNoticeText ? (
+            <Text style={styles.deliveryNoticeText}>{deliveryNoticeText}</Text>
+          ) : null;
+        })()}
       </View>
     </TouchableOpacity>
   );
@@ -87,6 +103,11 @@ const AssignedKitsScreen = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Kits asignados | KeaKit</title>
+        <meta name="description" content="Consulta los kits que tienes asignados en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>       
       <View style={commonStyles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

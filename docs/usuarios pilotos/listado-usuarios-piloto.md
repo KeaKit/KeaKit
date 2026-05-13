@@ -1,7 +1,7 @@
 # Listado de Usuarios Piloto
 **Fecha del informe:** 24/03/2026
 **Fuente de datos:** Formulario de Captación Usuarios Piloto, Feedback Sprint 1
-**Muestra total analizada:** 31 usuarios
+**Muestra total analizada:** 33 usuarios
 
 ### Arrendatarios (Demanda)
 *Usuarios que buscan equipamiento.*

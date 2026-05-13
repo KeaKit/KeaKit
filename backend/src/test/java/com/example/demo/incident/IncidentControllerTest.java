@@ -1,6 +1,7 @@
 package com.example.demo.incident;
 
 import com.example.demo.controller.IncidentController;
+import com.example.demo.dto.IncidentRequestDTO;
 import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentStatus;
 import com.example.demo.model.IncidentType;
@@ -60,7 +61,7 @@ class IncidentControllerTest {
 
     @Test
     void createIncident_success() throws Exception {
-        when(incidentService.createIncident(any(Incident.class))).thenReturn(sampleIncident);
+        when(incidentService.createIncident(any(IncidentRequestDTO.class))).thenReturn(sampleIncident);
 
         mockMvc.perform(post("/api/incidents")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -71,7 +72,7 @@ class IncidentControllerTest {
 
     @Test
     void createIncident_failure_returnsInternalServerError() throws Exception {
-        when(incidentService.createIncident(any(Incident.class))).thenThrow(new RuntimeException("Database error"));
+        when(incidentService.createIncident(any(IncidentRequestDTO.class))).thenThrow(new RuntimeException("Database error"));
 
         mockMvc.perform(post("/api/incidents")
                 .contentType(MediaType.APPLICATION_JSON)

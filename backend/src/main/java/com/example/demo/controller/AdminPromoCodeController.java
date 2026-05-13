@@ -22,33 +22,37 @@ public class AdminPromoCodeController {
 
     @GetMapping
     public ResponseEntity<List<PromoCodeResponse>> getAll() {
-        return ResponseEntity.ok(promoCodeService.findAll());
+        List<PromoCodeResponse> response = promoCodeService.findAll();
+        
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(promoCodeService.findById(id));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+    public ResponseEntity<PromoCodeResponse> getById(@PathVariable Long id) {
+        PromoCodeResponse response = promoCodeService.findById(id);
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(response);
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody PromoCodeRequest request) {
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(promoCodeService.create(request));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<PromoCodeResponse> create(@Valid @RequestBody PromoCodeRequest request) {
+        PromoCodeResponse response = promoCodeService.create(request);
+
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody PromoCodeRequest request) {
-        try {
-            return ResponseEntity.ok(promoCodeService.update(id, request));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<PromoCodeResponse> update(@PathVariable Long id, @Valid @RequestBody PromoCodeRequest request) {
+        PromoCodeResponse response = promoCodeService.update(id, request);
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(response);
     }
 }

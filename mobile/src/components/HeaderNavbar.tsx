@@ -47,6 +47,8 @@ interface HeaderMenuSection {
   items: HeaderMenuItem[];
 }
 
+export const navbarBreakpoint = 1116;
+
 const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut } = useAuth();
@@ -57,7 +59,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   const [showBadge, setShowBadge] = useState(false);
   const [activityUnreadCount, setActivityUnreadCount] = useState(0);
   const [windowWidth, setWindowWidth] = useState(Dimensions.get("window").width);
-  const [isMobile, setIsMobile] = useState(Dimensions.get("window").width < 1116);
+  const [isMobile, setIsMobile] = useState(Dimensions.get("window").width < navbarBreakpoint);
   const bellAnim = useRef(new Animated.Value(1)).current;
   const totalNotifications = (unreadCount || 0) + (activityUnreadCount || 0);
 
@@ -79,7 +81,7 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
   useEffect(() => {
     const subscription = Dimensions.addEventListener("change", ({ window }) => {
       setWindowWidth(window.width);
-      setIsMobile(window.width < 1116);
+      setIsMobile(window.width < navbarBreakpoint);
     });
     return () => subscription?.remove();
   }, []);
@@ -148,6 +150,12 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
     { name: "Kits Predeterminados", icon: "cube-outline", screen: "DefaultKits", requiresAdmin: true },
   ];
 
+
+  // Items para repartidores
+  const courierNavItems: NavbarHeaderItem[] = [
+    { name: "Kits Asignados", icon: "cube-outline", screen: "AssignedKits", requiresAuth: true }
+  ];
+
   // Filtrar items según autenticación y rol
   const getVisibleItems = () => {
     if (!user) return [];
@@ -158,6 +166,15 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
         return true;
       });
     }
+
+    if (user.role === "COURIER") {
+    return courierNavItems.filter((item) => {
+      if (item.requiresAdmin) return false;
+      if (item.requiresAuth && !user) return false;
+      return true;
+    });
+    }
+
     return userNavItems.filter((item) => {
       if (item.requiresAdmin) return false;
       if (item.requiresAuth && !user) return false;

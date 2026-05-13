@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -61,7 +62,7 @@ class ItemControllerTest {
 
         ItemFilterResponseDTO response = new ItemFilterResponseDTO(List.of(item), 0, 10, 1, 1, false, false);
 
-        when(itemService.filterItemsForKit(eq(20.0), eq(50.0), isNull(), isNull(), isNull(), eq("USED"), eq(0), eq(10)))
+        when(itemService.filterItemsForKit(eq(20.0), eq(50.0), isNull(), isNull(), isNull(), eq("USED"), eq(0), eq(10), isNull(), isNull()))
                 .thenReturn(response);
 
         mockMvc.perform(post("/api/items/filter-for-kit")
@@ -83,8 +84,48 @@ class ItemControllerTest {
     }
 
     @Test
+    void filterItemsForKit_withRequestedDates_returnsAvailabilityFromService() throws Exception {
+        LocalDate startDate = LocalDate.of(2026, 5, 10);
+        LocalDate endDate = LocalDate.of(2026, 5, 12);
+
+        ItemCatalogResponse item = new ItemCatalogResponse();
+        item.setId(2L);
+        item.setTitle("Taladro ya reservado");
+        item.setPricePerMonth(25.0);
+        item.setStatus("RENTED");
+        item.setItemType("ARTICLE");
+        item.setTotalUnits(0);
+        item.setAvailableFrom(LocalDate.of(2026, 5, 1));
+        item.setAvailableUntil(LocalDate.of(2026, 5, 31));
+
+        ItemFilterResponseDTO response = new ItemFilterResponseDTO(List.of(item), 0, 100, 1, 1, false, false);
+
+        when(itemService.filterItemsForKit(isNull(), isNull(), isNull(), eq("Sevilla"), isNull(), isNull(), eq(0), eq(100), eq(startDate), eq(endDate)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/items/filter-for-kit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "city": "Sevilla",
+                                  "page": 0,
+                                  "size": 100,
+                                  "startDate": "2026-05-10",
+                                  "endDate": "2026-05-12"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(2))
+                .andExpect(jsonPath("$.content[0].status").value("RENTED"))
+                .andExpect(jsonPath("$.content[0].totalUnits").value(0))
+                .andExpect(jsonPath("$.content[0].availableFrom").value("2026-05-01"))
+                .andExpect(jsonPath("$.content[0].availableUntil").value("2026-05-31"));
+    }
+
+    @Test
     void filterItemsForKit_whenMinPriceIsGreaterThanMaxPrice_returnsBadRequest() throws Exception {
-        when(itemService.filterItemsForKit(eq(60.0), eq(20.0), isNull(), isNull(), isNull(), isNull(), eq(0), eq(10)))
+        when(itemService.filterItemsForKit(eq(60.0), eq(20.0), isNull(), isNull(), isNull(), isNull(), eq(0), eq(10), isNull(), isNull()))
                 .thenThrow(new IllegalArgumentException("minPrice cannot be greater than maxPrice"));
 
         mockMvc.perform(post("/api/items/filter-for-kit")
@@ -103,7 +144,7 @@ class ItemControllerTest {
 
     @Test
     void filterItemsForKit_whenConditionIsInvalid_returnsBadRequest() throws Exception {
-        when(itemService.filterItemsForKit(eq(20.0), eq(50.0), isNull(), isNull(), isNull(), eq("BROKEN"), eq(0), eq(10)))
+        when(itemService.filterItemsForKit(eq(20.0), eq(50.0), isNull(), isNull(), isNull(), eq("BROKEN"), eq(0), eq(10), isNull(), isNull()))
                 .thenThrow(new IllegalArgumentException("condition must be one of: NEW, LIGHTLY_USED, USED, WORN"));
 
         mockMvc.perform(post("/api/items/filter-for-kit")

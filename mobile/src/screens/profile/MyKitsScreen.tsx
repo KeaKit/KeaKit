@@ -15,18 +15,20 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { KitResponse, KitStatus, RootStackParamList } from "../../types";
 import { API_ROUTES } from "../../config/api";
 import { Colors, Spacing, commonStyles } from "../../styles";
+import { useNavbarOffset } from "../../hooks/useWindowDimensions";
+import { Helmet } from 'react-helmet-async'; 
 
 type MyKitsNav = NativeStackNavigationProp<RootStackParamList, "MyKits">;
 
 const MyKitsScreen: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const navigation = useNavigation<MyKitsNav>();
-
+  const navbarOffset = useNavbarOffset();
   const [kits, setKits] = useState<KitResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadKits = useCallback(async () => {
+const loadKits = useCallback(async () => {
     console.log('[MyKits] loadKits called — user:', user?.id, 'authLoading:', authLoading);
     if (!user?.token) {
       console.log('[MyKits] no user or token, stopping loader');
@@ -48,8 +50,16 @@ const MyKitsScreen: React.FC = () => {
       }
 
       const data = await response.json();
-      // Filtramos los cancelados para no mostrarlos en la pantalla principal
-      setKits(data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED));
+      
+      // 1. Filtramos los cancelados
+      const filteredKits = data.filter((k: KitResponse) => k.status !== KitStatus.CANCELLED);
+      
+      // 2. Ordenamos los kits para que los más recientes (mayor ID) queden primero
+      const sortedKits = filteredKits.sort((a: KitResponse, b: KitResponse) => b.id - a.id);
+      
+      // 3. Guardamos en el estado
+      setKits(sortedKits);
+
     } catch (err) {
       console.log('[MyKits] error:', err);
       setError("Error al cargar alquileres");
@@ -97,10 +107,27 @@ const MyKitsScreen: React.FC = () => {
     }
   };
 
+  const getDeliveryNotificationText = (item: KitResponse) => {
+    if (!item.deliveryNotification) return null;
+    if (item.status === KitStatus.FINISHED || item.status === KitStatus.CANCELLED) {
+      return null;
+    }
+    if (item.status === KitStatus.ACTIVE) {
+      return 'En uso';
+    }
+    return item.deliveryNotification;
+  };
+
   const renderKit = ({ item }: { item: KitResponse }) => {
+    const deliveryNoticeText = getDeliveryNotificationText(item);
     const statusInfo = item.status
       ? getStatusInfo(item.status)
       : { label: "Desconocido", color: "#999" };
+
+    const originalTotal =
+      item.appliedDiscount && item.appliedDiscount > 0
+        ? item.totalPrice + item.subtotalPrice * item.appliedDiscount
+        : null;
 
     return (
       <TouchableOpacity
@@ -114,40 +141,57 @@ const MyKitsScreen: React.FC = () => {
         </View>
 
         <View style={styles.kitInfo}>
-          <View style={styles.titleRow}>
-            <Text style={styles.kitName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Text style={styles.priceTag}>
-              {item.totalPrice?.toLocaleString("es-ES")}€
-            </Text>
-          </View>
+          <Text style={styles.kitName} numberOfLines={1}>
+            {item.name}
+          </Text>
 
           <Text style={styles.locationText}>
             <Ionicons name="location-outline" size={13} color="#888" />{" "}
             {item.city}, {item.country}
           </Text>
 
-          {item.deliveryNotification ? (
+          {deliveryNoticeText ? (
             <Text style={styles.deliveryNoticeText}>
-              {item.deliveryNotification}
+              {deliveryNoticeText}
             </Text>
           ) : null}
 
-          <View style={styles.detailsRow}>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: statusInfo.color },
-              ]}
-            >
-              <Text style={styles.statusText}>{statusInfo.label}</Text>
-            </View>
+          <View style={[styles.statusBadge, { backgroundColor: statusInfo.color, alignSelf: "flex-start", marginTop: 8 }]}>
+            <Text style={styles.statusText}>{statusInfo.label}</Text>
+          </View>
+        </View>
 
-            <View style={styles.dateContainer}>
-              <Text style={styles.dateLabel}>Fin alquiler:</Text>
-              <Text style={styles.dateValue}>{formatDate(item.endDate)}</Text>
-            </View>
+        <View style={styles.kitRightColumn}>
+          <View style={styles.priceContainer}>
+            {originalTotal != null ? (
+              <>
+                <Text style={styles.priceTagStrikethrough}>
+                  {originalTotal.toLocaleString("es-ES", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}€
+                </Text>
+                <Text style={styles.promoAppliedText}>Descuento aplicado</Text>
+                <Text style={styles.priceTagDiscounted}>
+                  {item.totalPrice?.toLocaleString("es-ES", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}€
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.priceTag}>
+                {item.totalPrice?.toLocaleString("es-ES", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}€
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.dateContainer}>
+            <Text style={styles.dateLabel}>Fin alquiler:</Text>
+            <Text style={styles.dateValue}>{formatDate(item.endDate)}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -166,7 +210,12 @@ const MyKitsScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.container, {paddingBottom: navbarOffset}]}>
+      <Helmet>
+        <title>Mis alquileres | KeaKit</title>
+        <meta name="description" content="Consulta los alquileres que has realizado en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>            
       <View style={commonStyles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -219,27 +268,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: Spacing.lg,
   },
-  loadingText: { 
-    marginTop: Spacing.md, 
-    fontSize: 16, 
-    color: "#666" 
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: 16,
+    color: "#666",
   },
-  backButton: { 
-    padding: Spacing.sm 
+  backButton: {
+    padding: Spacing.sm,
   },
-  historyButton: { 
-    padding: Spacing.sm 
+  historyButton: {
+    padding: Spacing.sm,
   },
-  headerTitle: { 
-    fontSize: 20, 
-    fontWeight: "700", 
-    color: Colors.textPrimary 
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
   },
-  headerRight: { 
-    width: 40 
+  headerRight: {
+    width: 40,
   },
-  listContent: { 
-    padding: Spacing.md 
+  listContent: {
+    padding: Spacing.md,
   },
   kitCard: {
     flexDirection: "row",
@@ -265,32 +314,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  kitInfo: { 
-    flex: 1, 
-    marginLeft: Spacing.md, 
-    justifyContent: "center" 
-  },
-  titleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+  kitInfo: {
+    flex: 1,
+    marginLeft: Spacing.md,
+    justifyContent: "center",
   },
   kitName: {
     fontSize: 16,
     fontWeight: "700",
     color: Colors.textPrimary,
-    flex: 1,
-    marginRight: 4,
   },
-  priceTag: { 
-    fontSize: 14, 
-    fontWeight: "bold", 
-    color: Colors.primary 
-  },
-  locationText: { 
-    fontSize: 12, 
-    color: "#888", 
-    marginVertical: 4 
+  locationText: {
+    fontSize: 12,
+    color: "#888",
+    marginVertical: 4,
   },
   deliveryNoticeText: {
     fontSize: 12,
@@ -299,16 +336,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontWeight: "600",
   },
-  detailsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  statusBadge: { 
-    paddingHorizontal: 8, 
-    paddingVertical: 3, 
-    borderRadius: 6 
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   statusText: {
     fontSize: 10,
@@ -316,17 +347,51 @@ const styles = StyleSheet.create({
     color: "#fff",
     textTransform: "uppercase",
   },
-  dateContainer: { 
-    alignItems: "flex-end" 
+  kitRightColumn: {
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    paddingLeft: Spacing.sm,
+    minWidth: 100,
   },
-  dateLabel: { 
-    fontSize: 10, 
-    color: "#999" 
+  priceContainer: {
+    alignItems: "flex-end",
   },
-  dateValue: { 
-    fontSize: 12, 
-    fontWeight: "600", 
-    color: Colors.textPrimary 
+  priceTag: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: Colors.primary,
+    textAlign: "right",
+  },
+  priceTagStrikethrough: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#aaa",
+    textDecorationLine: "line-through",
+    textAlign: "right",
+  },
+  priceTagDiscounted: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#e05252",
+    textAlign: "right",
+  },
+  promoAppliedText: {
+    fontSize: 10,
+    color: "#e05252",
+    fontWeight: "600",
+    textAlign: "right",
+  },
+  dateContainer: {
+    alignItems: "flex-end",
+  },
+  dateLabel: {
+    fontSize: 10,
+    color: "#999",
+  },
+  dateValue: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.textPrimary,
   },
   emptyContainer: {
     flex: 1,

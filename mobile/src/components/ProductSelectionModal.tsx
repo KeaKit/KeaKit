@@ -14,13 +14,26 @@ import { TextInput as PaperTextInput, Button } from "react-native-paper";
 import { Colors, commonStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types";
+import { RootStackParamList, CatalogProduct } from "../types";
 import { useNavigation } from "@react-navigation/native";
 import { ArticleMapView } from "./ArticleMapView";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "./NotificationContext";
-import { requestArticleAvailabilityNotification } from "../services/articleService";
+import {
+  requestArticleAvailabilityNotification,
+  createDemandAlert,
+} from "../services/articleService";
 import { SelectPicker } from "./SelectPicker";
+import {
+  getAvailabilityAlertSuccessMessage,
+  shouldRequestAvailabilityNotification,
+} from "../utils/availabilityAlerts";
+import {
+  buildSelectableKitMapProducts,
+  hasAvailableUnits,
+  isCatalogProductAvailableForKitRange,
+  isRentableStatus,
+} from "../utils/kitAvailability";
 
 const sanitizePriceInput = (value: string): string => value.replace(/\D/g, "");
 
@@ -30,32 +43,13 @@ const parsePrice = (value?: string): number | undefined => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+const formatDate = (date: Date): string =>
+  `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+
 type ProductSelectionNav = NativeStackNavigationProp<
   RootStackParamList,
   "Home"
 >;
-
-type CatalogProduct = {
-  id: number;
-  itemType: "ARTICLE" | "SERVICE" | string;
-  title: string;
-  pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE" | "ACTIVE" | string;
-  category?: string;
-  city?: string;
-  ownerId: number;
-  ownerName?: string;
-  imageUrl?: string | null;
-  condition?: string | null;
-  totalUnits: number;
-  availableFrom?: string;
-  availableUntil?: string;
-  isAvailable?: boolean;
-  availabilityMessage?: string;
-  distanceKm?: number;
-  cityLat?: number;
-  cityLng?: number;
-};
 
 type ProductSelectionModalProps = {
   visible: boolean;
@@ -72,9 +66,7 @@ type ProductSelectionModalProps = {
   maxPrice?: string;
   onMinPriceChange?: (value: string) => void;
   onMaxPriceChange?: (value: string) => void;
-  onApplyFilters?: () => void;
   onClearFilters?: () => void;
-  filtersLoading?: boolean;
   categoryFilter?: "ALL" | string;
   onCategoryFilterChange?: (category: "ALL" | string) => void;
   categories?: string[];
@@ -90,9 +82,6 @@ type ProductSelectionModalProps = {
   onToggleAvailable: (show: boolean) => void;
   startDate?: Date | null;
   endDate?: Date | null;
-  expandedSearch: boolean;
-  onToggleExpandedSearch: () => void;
-  loadingNearby: boolean;
   targetCityCoords?: { lat: number; lng: number } | null;
   mapProducts?: {
     id: number;
@@ -123,9 +112,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   maxPrice,
   onMinPriceChange,
   onMaxPriceChange,
-  onApplyFilters,
   onClearFilters,
-  filtersLoading = false,
   categoryFilter,
   onCategoryFilterChange,
   categories,
@@ -141,9 +128,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   onToggleAvailable,
   startDate,
   endDate,
-  expandedSearch,
-  onToggleExpandedSearch,
-  loadingNearby,
   targetCityCoords,
   mapProducts = [],
 }) => {
@@ -154,10 +138,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   const [requestingIds, setRequestingIds] = React.useState<
     Record<number, boolean>
   >({});
-  const filteredProductIds = React.useMemo(
-    () => new Set(filteredProducts.map((product) => product.id)),
-    [filteredProducts],
-  );
   const resolvedCategoryOptions = React.useMemo(() => {
     if (categoryOptions && categoryOptions.length > 0) {
       return categoryOptions;
@@ -201,8 +181,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     return "";
   }, [minPriceValue, maxPriceValue]);
 
-  const hasPriceErrors = !!(minPriceError || maxPriceError || rangePriceError);
-
   const handleMinPriceInput = (value: string) => {
     setPriceValidationError("");
     (onMinPriceChange ?? (() => {}))(sanitizePriceInput(value));
@@ -223,7 +201,10 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     }
   };
 
-  const handleRequestAvailability = async (articleId: number) => {
+  const handleRequestAvailability = async (
+    itemId: number,
+    itemType: CatalogProduct["itemType"],
+  ) => {
     if (!user?.id || !user.token) {
       showNotification(
         "Necesitas iniciar sesión para solicitar el aviso.",
@@ -232,17 +213,34 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       return;
     }
 
-    if (requestingIds[articleId]) return;
-    setRequestingIds((prev) => ({ ...prev, [articleId]: true }));
+    if (requestingIds[itemId]) return;
+    setRequestingIds((prev) => ({ ...prev, [itemId]: true }));
+
+    const formatApiDate = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const startDateStr = startDate ? formatApiDate(startDate) : undefined;
+    const endDateStr = endDate ? formatApiDate(endDate) : undefined;
 
     try {
-      await requestArticleAvailabilityNotification(
-        articleId,
+      if (shouldRequestAvailabilityNotification(itemType)) {
+        await requestArticleAvailabilityNotification(
+          itemId,
+          user.id,
+          user.token,
+          startDateStr,
+          endDateStr,
+        );
+      }
+      await createDemandAlert(
+        itemId,
         user.id,
         user.token,
+        startDateStr,
+        endDateStr,
       );
+
       showNotification(
-        "Te avisaremos cuando el artículo vuelva a estar disponible.",
+        getAvailabilityAlertSuccessMessage(itemType),
         "success",
       );
     } catch (error) {
@@ -253,48 +251,55 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
         "error",
       );
     } finally {
-      setRequestingIds((prev) => ({ ...prev, [articleId]: false }));
+      setRequestingIds((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
-  // Calcular disponibilidad de productos basado en fechas para la LISTA
+
   const productsWithAvailability = React.useMemo(() => {
-    if (!startDate || !endDate) {
-      return filteredProducts.map((p) => ({ ...p, isAvailable: true }));
-    }
-
-    const requestStart = new Date(startDate);
-    requestStart.setHours(0, 0, 0, 0);
-    
-    const requestEnd = new Date(endDate);
-    requestEnd.setHours(0, 0, 0, 0);
-
     const mapped = filteredProducts.map((p) => {
-      if (!p.availableFrom || !p.availableUntil) {
+      const isAvailable = isCatalogProductAvailableForKitRange(
+        p,
+        startDate,
+        endDate,
+      );
+
+      if (isAvailable) {
+        return { ...p, isAvailable: true };
+      }
+
+      if (!hasAvailableUnits(p.totalUnits)) {
         return {
           ...p,
           isAvailable: false,
-          availabilityMessage: "Sin fechas de disponibilidad",
+          availabilityMessage: "Sin unidades disponibles",
         };
       }
 
-      const productFrom = new Date(p.availableFrom);
-      productFrom.setHours(0, 0, 0, 0);
-      
-      const productUntil = new Date(p.availableUntil);
-      productUntil.setHours(0, 0, 0, 0);
-
-      const isAvailable = requestStart >= productFrom && requestEnd <= productUntil;
-
-      if (!isAvailable) {
-        const formatDate = (date: Date) => {
-          return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+      if (!isRentableStatus(p.status)) {
+        return {
+          ...p,
+          isAvailable: false,
+          availabilityMessage: "No disponible",
         };
+      }
+
+      if (startDate && endDate && p.availableFrom && p.availableUntil) {
+        const productFrom = new Date(p.availableFrom);
+        productFrom.setHours(0, 0, 0, 0);
+
+        const productUntil = new Date(p.availableUntil);
+        productUntil.setHours(0, 0, 0, 0);
+
         const availabilityMessage = `Disponible: ${formatDate(productFrom)} - ${formatDate(productUntil)}`;
         return { ...p, isAvailable: false, availabilityMessage };
       }
 
-      return { ...p, isAvailable: true };
+      return {
+        ...p,
+        isAvailable: false,
+        availabilityMessage: "No disponible en estas fechas",
+      };
     });
 
     if (showOnlyAvailable) {
@@ -304,53 +309,26 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     return mapped;
   }, [filteredProducts, startDate, endDate, showOnlyAvailable]);
 
-  // Productos para el mapa (con marca de disponibilidad, sin filtrar)
+  // Productos para el mapa: solo los seleccionables segun el catalogo filtrado.
   const mapProductsWithAvailability = React.useMemo(() => {
-    let products = (showOnlyMyCity && userCity
-      ? mapProducts.filter(
-          (a) =>
-            filteredProductIds.has(a.id) &&
-            a.city?.toLowerCase() === userCity.toLowerCase(),
-        )
-      : mapProducts.filter((a) => filteredProductIds.has(a.id))
-    ).map((a) => ({
-      ...a,
-      city: a.city ?? undefined,
-      ownerName: a.ownerName ?? undefined,
-    }));
-
-    if (!startDate || !endDate) {
-      return products;
-    }
-
-    const requestStart = new Date(startDate);
-    requestStart.setHours(0, 0, 0, 0);
-    
-    const requestEnd = new Date(endDate);
-    requestEnd.setHours(0, 0, 0, 0);
-
-    const processedProducts = products.map((product) => {
-      if (!product.availableFrom || !product.availableUntil) {
-        return { ...product, isAvailableForDates: false };
-      }
-
-      const productFrom = new Date(product.availableFrom);
-      productFrom.setHours(0, 0, 0, 0);
-      
-      const productUntil = new Date(product.availableUntil);
-      productUntil.setHours(0, 0, 0, 0);
-
-      const isAvailable = requestStart >= productFrom && requestEnd <= productUntil;
-      
-      return { ...product, isAvailableForDates: isAvailable };
-    });
-
-    if (showOnlyAvailable) {
-      return processedProducts.filter(p => p.isAvailableForDates === true);
-    }
-    
-    return processedProducts;
-  }, [mapProducts, filteredProductIds, showOnlyMyCity, userCity, startDate, endDate, showOnlyAvailable]);
+    return buildSelectableKitMapProducts(
+      mapProducts,
+      filteredProducts,
+      {
+        startDate,
+        endDate,
+        showOnlyMyCity,
+        userCity,
+      },
+    );
+  }, [
+    mapProducts,
+    filteredProducts,
+    showOnlyMyCity,
+    userCity,
+    startDate,
+    endDate
+  ]);
   
   const navigateToUserReviews = (ownerId: number, ownerName: string) => {
     onDismiss();
@@ -613,8 +591,8 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                   p.id,
                 );
                 const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
-                const isRentableStatus = p.status === "AVAILABLE" || p.status === "ACTIVE";
-                const canBeAdded = p.isAvailable && isRentableStatus;
+                const canBeAdded = p.isAvailable === true;
+
 
                 return (
                   <Pressable
@@ -807,7 +785,9 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                         }}
                       >
                         <TouchableOpacity
-                          onPress={() => handleRequestAvailability(p.id)}
+                          onPress={() =>
+                            handleRequestAvailability(p.id, p.itemType)
+                          }
                           disabled={requestingIds[p.id]}
                           accessibilityRole="button"
                           accessibilityLabel={`Avisar cuando ${p.title} esté disponible`}

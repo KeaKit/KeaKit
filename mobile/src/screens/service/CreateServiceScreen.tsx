@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, TextInput, Alert, ActivityIndicator,
+  ScrollView, TextInput, Alert, ActivityIndicator, Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -12,12 +12,16 @@ import { fetchAllCategories } from '../../services/categoryService';
 import { validatePromoCode } from '../../services/promoCodeService';
 import { ServicePayload, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
-import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { Provider as PaperProvider, MD3LightTheme, Button } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { es, registerTranslation } from 'react-native-paper-dates';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNotification } from '../../components/NotificationContext';
+import { Helmet } from 'react-helmet-async'; 
+
+const MAX_TITLE_LENGTH = 255;
+const MAX_TOTAL_UNITS = 2147483647;
 
 registerTranslation('es', es);
 
@@ -121,6 +125,8 @@ const PromoteServiceScreen: React.FC = () => {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoMessage, setPromoMessage] = useState<{ text: string; valid: boolean } | null>(null);
   const { showNotification } = useNotification();
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -176,7 +182,12 @@ const PromoteServiceScreen: React.FC = () => {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!title.trim()) newErrors.title = 'El título es obligatorio';
+    if (!title.trim()) {
+      newErrors.title = 'El título es obligatorio';
+    } else if (title.trim().length > MAX_TITLE_LENGTH) {
+      newErrors.title = `El título no puede superar los ${MAX_TITLE_LENGTH} caracteres`;
+    }
+
     if (!description.trim()) newErrors.description = 'La descripción es obligatoria';
     if (description.length > 1000) newErrors.description = 'La descripción no puede superar los 1000 caracteres';
     if (!selectedCountry) newErrors.country = 'El país es obligatorio';
@@ -187,6 +198,8 @@ const PromoteServiceScreen: React.FC = () => {
       newErrors.pricePerMonth = 'Introduce un precio válido';
     } else if (!hasAtMostTwoDecimals(pricePerMonth)) {
       newErrors.pricePerMonth = 'El precio no puede tener más de 2 decimales';
+    } else if (Number(pricePerMonth) > 999999999) {
+      newErrors.pricePerMonth = 'El precio es demasiado alto';
     } else if (selectedCategory) {
       const price = Number(pricePerMonth);
       if (price < selectedCategory.minPrice || price > selectedCategory.maxPrice) {
@@ -194,8 +207,13 @@ const PromoteServiceScreen: React.FC = () => {
       }
     }
 
-    if (totalUnits && (isNaN(Number(totalUnits)) || Number(totalUnits) < 1)) {
-      newErrors.totalUnits = 'Las unidades deben ser un número mayor o igual a 1';
+    if (totalUnits) {
+      const unitsNum = Number(totalUnits);
+      if (isNaN(unitsNum) || unitsNum < 1 || unitsNum > MAX_TOTAL_UNITS) {
+        newErrors.totalUnits = `Las unidades deben ser un número entre 1 y ${MAX_TOTAL_UNITS.toLocaleString()}`;
+      } else if (!Number.isInteger(unitsNum)) {
+        newErrors.totalUnits = 'Las unidades deben ser un número entero';
+      }
     }
 
     if (!availableFrom) newErrors.availableFrom = 'Selecciona la fecha de inicio';
@@ -282,6 +300,11 @@ const PromoteServiceScreen: React.FC = () => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
+        <Helmet>
+          <title>Publicar un servicio | KeaKit</title>
+          <meta name="description" content="Publica un nuevo servicio en KeaKit incluyendo toda la información necesaria."/>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>          
         <View style={commonStyles.header}>
           <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={28} color={Colors.primary} />
@@ -435,7 +458,13 @@ const PromoteServiceScreen: React.FC = () => {
             <Field
               label="Unidades disponibles"
               value={totalUnits}
-              onChange={(t) => { setTotalUnits(t); clearError('totalUnits'); }}
+              onChange={(t) => {
+                const cleaned = t.replace(/[^0-9]/g, '');
+                if (cleaned.length <= 10) {
+                  setTotalUnits(cleaned);
+                }
+                clearError('totalUnits');
+              }}
               placeholder="Ej: 1"
               keyboardType="numeric"
               optional
@@ -553,7 +582,9 @@ const PromoteServiceScreen: React.FC = () => {
 
           <TouchableOpacity
             style={[commonStyles.primaryButton, loading && styles.buttonDisabled]}
-            onPress={handleSubmit}
+            onPress={() => {
+              if (validate()) setConfirmVisible(true)
+            }}  
             disabled={loading}
             activeOpacity={0.8}
           >
@@ -569,6 +600,25 @@ const PromoteServiceScreen: React.FC = () => {
 
           <View style={{ height: Spacing.xxl }} />
         </ScrollView>
+        <Modal
+          visible={confirmVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setConfirmVisible(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+            <View style={{ width: "100%", backgroundColor: "white", borderRadius: 16, padding: 20 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#111" }}>Comisión de publicación</Text>
+              <Text style={{ fontSize: 15, color: "#444", marginBottom: 20 }}>
+                Recuerda que se le aplicará un 20% de comisión sobre el precio por mes. Por ejemplo, si publica un servicio por 60€/mes y una persona lo alquila por un mes, recibirá 48€.
+              </Text>
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
+                <Button mode="outlined" onPress={() => setConfirmVisible(false)}>Cancelar</Button>
+                <Button mode="contained" onPress={() => { setConfirmVisible(false); handleSubmit(); }}>Aceptar</Button>
+              </View>
+            </View>
+          </View>
+      </Modal>
       </SafeAreaView>
     </PaperProvider>
   );

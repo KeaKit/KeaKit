@@ -29,7 +29,7 @@ export interface UserResponse {
   address: string;
   city: string;
   country: string;
-  founderBadge: boolean; 
+  founderBadge: boolean;
   token?: string;
   profileImageUrl?: string;
 }
@@ -43,7 +43,7 @@ export interface AuthUser {
   address: string;
   city: string;
   country: string;
-  founderBadge: boolean; 
+  founderBadge: boolean;
   profileImageUrl?: string;
   token: string;
 }
@@ -87,6 +87,7 @@ export interface UserArticle {
   pricePerMonth: number;
   status: "AVAILABLE" | "RENTED" | "INACTIVE";
   rentedUntil: string | null;
+  ownerCommissionPromoCode?: string | null;
   totalUnits?: number;
   rentals?: ArticleRecordDTO[];
 }
@@ -132,6 +133,7 @@ export interface Article {
   title: string;
   description: string;
   city: string;
+  country: string;
   pricePerMonth: number;
   availableFrom: string;
   availableUntil: string;
@@ -172,21 +174,21 @@ export interface Item {
 
 export interface ItemCatalog {
   id: number;
-  itemType: "ARTICLE" | "SERVICE" | string;
+  itemType: string;
   title: string;
   description: string;
   city: string;
-  country?: string | null;
+  country: string;
   pricePerMonth: number;
-  availableFrom?: string | null;
-  availableUntil?: string | null;
-  category?: string | null;
+  availableFrom: string; // ISO date (yyyy-mm-dd)
+  availableUntil: string; // ISO date
+  category: string;
   totalUnits: number;
   ownerId: number;
-  ownerName?: string | null;
-  status?: "AVAILABLE" | "RENTED" | "INACTIVE" | string | null;
-  condition?: ArticleCondition | null;
-  imageUrl?: string | null;
+  ownerName: string;
+  status?: string;     // solo para ARTICLE
+  condition?: string;  // solo para ARTICLE
+  imageUrl?: string;   // solo para ARTICLE
 }
 
 export interface ItemFilterRequest {
@@ -198,6 +200,8 @@ export interface ItemFilterRequest {
   condition?: ArticleCondition;
   page?: number;
   size?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface ItemFilterResponse {
@@ -212,19 +216,19 @@ export interface ItemFilterResponse {
 
 export interface ItemCatalogResponse {
   id: number;
-    itemType: string; 
-    title: string;
-    description: string;
-    city: string;
-    pricePerMonth: number;
-    availableFrom: Date;
-    availableUntil: Date;
-    category: string;
-    totalUnits: number;
-    ownerId: number;
-    ownerName: string;
-    status?: string;   // solo para ARTICLE
-    imageUrl?: string; // solo para ARTICLE
+  itemType: string;
+  title: string;
+  description: string;
+  city: string;
+  pricePerMonth: number;
+  availableFrom: Date;
+  availableUntil: Date;
+  category: string;
+  totalUnits: number;
+  ownerId: number;
+  ownerName: string;
+  status?: string; // solo para ARTICLE
+  imageUrl?: string; // solo para ARTICLE
 }
 
 export enum KitStatus {
@@ -301,6 +305,7 @@ export interface KitResponse {
   guaranteePrice: number;
   platformFee: number;
   totalPrice: number;
+  appliedDiscount?: number;
 }
 
 export interface Category {
@@ -311,8 +316,6 @@ export interface Category {
   minPrice: number;
   maxPrice: number;
 }
-
-
 
 export type IncidentType = "GENERAL" | "DAMAGED_ITEM";
 export type IncidentStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
@@ -414,7 +417,8 @@ export type NavbarHeaderScreen =
   | "Register"
   | "TrackingNotifications"
   | "ActivityNotifications"
-  | "Notifications";
+  | "Notifications"
+  | "AssignedKits";
 
 export interface NavbarHeaderItem {
   name: string;
@@ -437,7 +441,6 @@ export interface HeaderMenuSection {
   title?: string;
   items: HeaderMenuItem[];
 }
-
 
 export type RootStackParamList = {
   Login: undefined;
@@ -486,8 +489,13 @@ export type RootStackParamList = {
   RgpdPolicy: undefined;
   EditPolicy: undefined;
   PromoCodes: undefined;
-  PromoCodeForm: { promoCode?: PromoCodeFormData; mode: 'create' | 'edit' };
+  PromoCodeForm: { promoCode?: PromoCodeFormData; mode: "create" | "edit" };
   PilotUsers: undefined;
+  TransactionDetail: { 
+    transactionId: number; 
+    transactionType: string; 
+    transactionAmount: number;
+  };
 };
 
 export interface ProfileData {
@@ -505,6 +513,7 @@ export interface Service {
   title: string;
   description: string;
   city: string;
+  country: string;
   pricePerMonth: number;
   availableFrom: string;
   availableUntil: string;
@@ -512,6 +521,7 @@ export interface Service {
   status: ServiceStatus;
   totalUnits?: number;
   ownerCommissionPromoCode?: string | null;
+  rentedUnitsNow: number;
 }
 
 export interface ServicePayload {
@@ -594,7 +604,7 @@ export interface PromoCodeFormData {
   discountRate: number;
   active: boolean;
   singleUse: boolean;
-  type?: 'TENANT_DISCOUNT' | 'OWNER_COMMISSION_REDUCTION';
+  type?: "TENANT_DISCOUNT" | "OWNER_COMMISSION_REDUCTION";
   pilotUserOnly: boolean;
   pilotEmails: string[];
 }
@@ -615,7 +625,11 @@ export interface TrackingNotification {
   read: boolean;
 }
 
-export type ActivityNotificationType = "ITEM_RENTED" | "RETURN_REMINDER";
+export type ActivityNotificationType =
+  | "ITEM_RENTED"
+  | "RETURN_REMINDER"
+  | "DEMAND_ALERT"
+  | "ARTICLE_AVAILABLE";
 
 export interface ActivityNotification {
   id: number;
@@ -624,6 +638,7 @@ export interface ActivityNotification {
   read: boolean;
   type: ActivityNotificationType;
   relatedKitId: number | null;
+  relatedArticleId?: number | null;
 }
 
 export interface ArticleNearby {
@@ -644,6 +659,58 @@ export interface ArticleNearby {
   cityLat: number;
   cityLng: number;
   distanceKm: number;
+}
+
+export interface CatalogProduct {
+  id: number;
+  itemType: "ARTICLE" | "SERVICE" | string;
+  title: string;
+  pricePerMonth: number;
+  status: "AVAILABLE" | "RENTED" | "INACTIVE" | "ACTIVE" | string;
+  category?: string;
+  condition?: ArticleCondition | null;
+  city?: string;
+  ownerId: number;
+  ownerName?: string;
+  imageUrl?: string | null;
+  totalUnits: number;
+  availableFrom?: string;
+  availableUntil?: string;
+  isAvailable?: boolean;
+  availabilityMessage?: string;
+  distanceKm?: number;
+  cityLat?: number;
+  cityLng?: number;
+}
+
+export interface ItemPaymentDetail {
+  itemId: number;
+  itemType: 'ARTICLE' | 'SERVICE';
+  name: string;
+  category: string | null;
+  imageUrl: string | null;
+  ownerName: string | null;
+  ownerId: number | null;
+  quantity: number;
+  pricePerMonth: number;
+  total: number;
+}
+
+export interface TransactionDetails {
+  kitId: number;
+  kitName: string;
+  items: ItemPaymentDetail[];
+  subtotal: number;
+  guarantee: number;
+  platformFee: number;
+  courierFee: number;
+  discount: number;
+  total: number;
+  description?: string;
+}
+
+export interface TransactionWithDetails extends Transaction {
+  details?: TransactionDetails;
 }
 
 export * from "./defaultKitTypes";

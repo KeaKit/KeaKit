@@ -1,0 +1,71 @@
+name: Frontend CI & CD
+
+on:
+  push:
+    branches: 
+      - main
+      - 'release/*.*.*'
+      - fix/SEO-robots
+  pull_request:
+    branches: 
+      - main
+
+jobs:
+  test-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js v24.13.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.13.1'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar Tests con Jest
+        run: npm test
+
+  deploy-frontend:
+    needs: test-frontend
+    runs-on: ubuntu-latest
+    
+    if: github.event_name == 'push' 
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js v24.13.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.13.1'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Construir la web con Expo
+        run: npx expo export --platform web
+
+      - name: Desplegar a Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PPL2 }}'
+          projectId: '${{ secrets.FIREBASE_PROJECT_ID_PPL2 }}'
+          channelId: 'live' 
+          entryPoint: mobile

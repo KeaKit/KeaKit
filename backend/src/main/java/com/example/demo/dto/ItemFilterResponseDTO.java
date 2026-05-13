@@ -11,6 +11,7 @@ public class ItemFilterResponseDTO {
     private int totalPages;
     private boolean hasNext;
     private boolean hasPrevious;
+    
 
     public ItemFilterResponseDTO() {
     }

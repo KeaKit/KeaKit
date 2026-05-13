@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -444,5 +446,86 @@ public class KitControllerTest {
         mockMvc.perform(get("/api/kits/payment/999"))
             .andExpect(status().isNotFound())
             .andExpect(content().string("Kit not found"));
+    }
+
+@Test
+    void getTrackingUpdateableKits_success() throws Exception {
+        Long tenantId = 1L;
+        
+        Kit kit1 = new Kit();
+        kit1.setId(101L);
+        kit1.setName("Tracking Kit 1");
+        kit1.setStatus(KitStatus.PAID);
+
+        Kit kit2 = new Kit();
+        kit2.setId(102L);
+        kit2.setName("Tracking Kit 2");
+        kit2.setStatus(KitStatus.ACTIVE);
+
+        List<KitResponse> mockResponse = List.of(
+            new KitResponse(kit1),
+            new KitResponse(kit2)
+        );
+
+        when(kitService.findTrackingUpdateableByTenantId(tenantId))
+            .thenReturn(mockResponse);
+
+        mockMvc.perform(get("/api/kits/tracking-updateable-kits/" + tenantId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].id").value(101))
+            .andExpect(jsonPath("$[0].name").value("Tracking Kit 1"))
+            .andExpect(jsonPath("$[1].id").value(102))
+            .andExpect(jsonPath("$[1].name").value("Tracking Kit 2"));
+            
+        verify(kitService, times(1)).findTrackingUpdateableByTenantId(tenantId);
+    }
+
+    @Test
+    void getTrackingUpdateableKits_error_returnsBadRequest() throws Exception {
+        Long tenantId = 1L;
+        when(kitService.findTrackingUpdateableByTenantId(tenantId))
+            .thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(get("/api/kits/tracking-updateable-kits/" + tenantId))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().string("Database error"));
+    }
+
+    // ==========================================
+    // TESTS PARA validateKit
+    // ==========================================
+
+    @Test
+    void validateKit_success_returnsOk() throws Exception {
+        mockMvc.perform(get("/api/kits/validate/1"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("Kit válido"));
+
+        verify(kitService, times(1)).validateKit(1L);
+    }
+
+    @Test
+    void validateKit_businessError_returnsNotFound() throws Exception {
+        String errorMessage = "El arrendatario no puede seleccionar sus propios items";
+        
+        doThrow(new RuntimeException(errorMessage))
+            .when(kitService).validateKit(1L);
+
+        mockMvc.perform(get("/api/kits/validate/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string(errorMessage));
+    }
+
+    @Test
+    void validateKit_missingItems_returnsNotFound() throws Exception {
+        String errorMessage = "No puedes realizar el pago de un kit sin items";
+        
+        doThrow(new RuntimeException(errorMessage))
+            .when(kitService).validateKit(1L);
+
+        mockMvc.perform(get("/api/kits/validate/1"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().string(errorMessage));
     }
 }

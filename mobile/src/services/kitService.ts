@@ -45,7 +45,17 @@ export async function filterItemsForKit(
     };
   }
 
-  return handleResponse<ItemFilterResponse>(res);
+  const response = await handleResponse<ItemFilterResponse>(res);
+
+  return {
+    content: Array.isArray(response?.content) ? response.content : [],
+    page: response?.page ?? (filters.page ?? 0),
+    size: response?.size ?? (filters.size ?? 10),
+    totalElements: response?.totalElements ?? 0,
+    totalPages: response?.totalPages ?? 0,
+    hasNext: response?.hasNext ?? false,
+    hasPrevious: response?.hasPrevious ?? false,
+  };
 }
 
 export async function createKit(
@@ -80,6 +90,24 @@ export async function getKit(kitId: number,
     method: "GET",
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
+
+  return handleResponse<KitResponse>(res);
+}
+
+export async function validateKit(kitId: number,
+  token: string,
+): Promise<KitResponse> {
+  const res = await fetchWithTimeout(API_ROUTES.VALIDATE_KIT(kitId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+
+  console.log(res)
+
+  if (!res.ok) {
+    const errorText = await res.text(); 
+    throw new Error(errorText || "Error en la validación");
+  }
 
   return handleResponse<KitResponse>(res);
 }
@@ -129,6 +157,14 @@ export async function deleteKit(kitId: number, token: string): Promise<void> {
 
 export async function getMyKits(userId: number, token: string): Promise<KitResponse[]> {
   const res = await fetchWithTimeout(API_ROUTES.MY_KITS(userId), {
+    method: "GET",
+    headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<KitResponse[]>(res);
+}
+
+export async function getUpdatrableTrackingKits(userId: number, token: string): Promise<KitResponse[]> {
+  const res = await fetchWithTimeout(API_ROUTES.TRACKING_UPDATEABLE_KITS(userId), {
     method: "GET",
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
@@ -226,3 +262,4 @@ export async function getKitPaymentWithPromo(
   );
   return handleResponse<KitPaymentDTO>(res);
 }
+

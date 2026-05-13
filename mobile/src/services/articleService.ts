@@ -1,5 +1,5 @@
 import { API_ROUTES } from '../config/api';
-import { Article, ArticleNearby, ArticlePayload, ArticleRecordDTO } from '../types';
+import { Article, ArticleNearby, ArticlePayload, ArticleRecordDTO, UserArticle } from '../types';
 import { Platform } from 'react-native';
 
 const normalizeErrorMessage = (raw: string): string => {
@@ -40,7 +40,7 @@ export async function getMyArticles(
     minPrice?: number; 
     maxPrice?: number 
   }
-): Promise<Article[]> {
+): Promise<UserArticle[]> {
  
 
   let url = API_ROUTES.MY_ARTICLES(userId);
@@ -78,7 +78,7 @@ export async function getMyArticles(
     },
   });
   
-  return handleResponse<Article[]>(res);
+  return handleResponse<UserArticle[]>(res);
 }
 
 export async function getArticleById(id: number, token: string): Promise<Article> {
@@ -93,8 +93,35 @@ export async function requestArticleAvailabilityNotification(
   articleId: number,
   requesterId: number,
   token: string,
+  startDate?: string,
+  endDate?: string,
 ): Promise<string> {
-  const res = await fetch(API_ROUTES.REQUEST_AVAILABILITY_NOTIFICATION(articleId, requesterId), {
+  return postTextResult(
+    API_ROUTES.REQUEST_AVAILABILITY_NOTIFICATION(
+      articleId,
+      requesterId,
+      startDate,
+      endDate,
+    ),
+    token,
+  );
+}
+
+export async function createDemandAlert(
+  articleId: number,
+  requesterId: number,
+  token: string,
+  startDate?: string,
+  endDate?: string,
+): Promise<string> {
+  return postTextResult(
+    API_ROUTES.CREATE_DEMAND_ALERT(articleId, requesterId, startDate, endDate),
+    token,
+  );
+}
+
+async function postTextResult(url: string, token: string): Promise<string> {
+  const res = await fetch(url, {
     method: 'POST',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
@@ -265,8 +292,9 @@ export async function getNearbyArticles(
 export async function getArticlesForMap(
   token: string,
   country?: string,
+  includeRented: boolean = false,
 ): Promise<ArticleNearby[]> {
-  const res = await fetch(API_ROUTES.ARTICLE_MAP(country), {
+  const res = await fetch(API_ROUTES.ARTICLE_MAP(country, includeRented), {
     method: 'GET',
     headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
   });
@@ -284,6 +312,34 @@ export const getArticleRecord = async (articleId: number, token: string): Promis
 
   if (!response.ok) {
     throw new Error('No se pudo obtener el historial del artículo');
+  }
+
+  return await response.json();
+};
+
+// Definir el tipo según el backend
+export interface ReturnRequest {
+  condition: 'GOOD' | 'DAMAGED';
+}
+
+export const processArticleReturn = async (
+  articleId: number, 
+  ownerId: number, 
+  condition: 'GOOD' | 'DAMAGED', 
+  token: string
+) => {
+  const response = await fetch(API_ROUTES.ARTICLE_RETURN(articleId, ownerId), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ condition }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Error al procesar la devolución');
   }
 
   return await response.json();

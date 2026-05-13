@@ -1,12 +1,10 @@
-const BASE_URL = 'https://keakitv3api.duckdns.org'
+const BASE_URL = 'https://keakitpplapi.duckdns.org'
 
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
   LOGIN:    `${BASE_URL}/api/users/login`,
   UPDATE_PROFILE: (id: number) => `${BASE_URL}/api/users/${id}`,
-  // Update profile image endpoint
   UPLOAD_PROFILE_IMAGE: `${BASE_URL}/api/users/profile/image`,
-
   GET_USER: (id: number) => `${BASE_URL}/api/users/${id}`,
   GET_ALL_USERS: `${BASE_URL}/api/admin/users`,
   GET_ADMIN_ALL_USERS: `${BASE_URL}/api/admin/users/no-self`,
@@ -24,6 +22,7 @@ export const API_ROUTES = {
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
   GET_KITS: `${BASE_URL}/api/kits`,
   GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,
+  VALIDATE_KIT: (id: number) => `${BASE_URL}/api/kits/validate/${id}`,
   CONFIRM_KIT: (id: number) => `${BASE_URL}/api/kits/confirm/${id}`,
   ADD_ITEM_TO_KIT: (kitId: number, itemId: number, userId: number) =>
     `${BASE_URL}/api/kits/${kitId}/items/${itemId}?userId=${userId}`,
@@ -36,17 +35,23 @@ export const API_ROUTES = {
   UPLOAD_ARTICLE: (ownerId: number,categoryId: number) => `${BASE_URL}/api/article/upload?ownerId=${ownerId}&categoryId=${categoryId}`,
   UPLOAD_ARTICLE_WITH_IMAGE: (ownerId: number, categoryId: number) => `${BASE_URL}/api/article/upload-with-image?ownerId=${ownerId}&categoryId=${categoryId}`,
   GET_ARTICLE: (id: number) => `${BASE_URL}/api/article/${id}`,
-  REQUEST_AVAILABILITY_NOTIFICATION: (articleId: number, requesterId: number) => `${BASE_URL}/api/article/${articleId}/notify-when-available?requesterId=${requesterId}`,
-  UPDATE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,  
-  UPDATE_ARTICLE_WITH_IMAGE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/with-image?ownerId=${ownerId}`,  DELETE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
+  REQUEST_AVAILABILITY_NOTIFICATION: (articleId: number, requesterId: number, startDate?: string, endDate?: string) => {
+    let url = `${BASE_URL}/api/article/${articleId}/notify-when-available?requesterId=${requesterId}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+    return url;
+  },
+  UPDATE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
+  UPDATE_ARTICLE_WITH_IMAGE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/with-image?ownerId=${ownerId}`,
+  DELETE_ARTICLE: (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}?ownerId=${ownerId}`,
   TOGGLE_RENT:    (id: number, ownerId: number) => `${BASE_URL}/api/article/${id}/toggle-rent?ownerId=${ownerId}`,
+  ARTICLE_RETURN: (articleId: number, ownerId: number) => `${BASE_URL}/api/article/${articleId}/return?ownerId=${ownerId}`,
   CATEGORIES: `${BASE_URL}/api/category`,
   CATEGORY_BY_ID: (id: number) => `${BASE_URL}/api/category/${id}`,
   GET_LATEST_ARTICLES_BY_CATEGORY: (categoryId: number) => `${BASE_URL}/api/article/category/${categoryId}/latest`,
   GET_NUMBER_OF_ARTICLES_BY_CATEGORY: (categoryId: number) => `${BASE_URL}/api/article/category/${categoryId}/count`,
   ALL_ITEMS: `${BASE_URL}/api/items/all`,
   ITEMS_FOR_RENT: (ownerId: number) => `${BASE_URL}/api/items/for-rent/${ownerId}`,
-  FILTER_ITEMS_FOR_KIT: `${BASE_URL}/api/items/filter-for-kit`,
 
   // Incidents
   CREATE_INCIDENT:            `${BASE_URL}/api/incidents`,
@@ -62,6 +67,7 @@ export const API_ROUTES = {
 
   // Kits / Rented items
   MY_KITS:                    (userId: number) => `${BASE_URL}/api/kits/my-kits/${userId}`,
+  TRACKING_UPDATEABLE_KITS:   (userId: number) => `${BASE_URL}/api/kits/tracking-updateable-kits/${userId}`,
   GET_RENTED_ITEMS:           (userId: number) => `${BASE_URL}/api/kits/rented/${userId}`,
   MY_KITS_HISTORY: (page: number = 0, size: number = 10) => `${BASE_URL}/api/kits/my-history?page=${page}&size=${size}`,
 
@@ -88,6 +94,13 @@ export const API_ROUTES = {
   // Notifications (arrendador)
   USER_NOTIFICATIONS: (userId: number) => `${BASE_URL}/api/notifications/user/${userId}`,
   MARK_NOTIFICATION_READ: (notificationId: number) => `${BASE_URL}/api/notifications/${notificationId}/read`,
+  DELETE_NOTIFICATION: (notificationId: number) => `${BASE_URL}/api/notifications/${notificationId}`,
+  CREATE_DEMAND_ALERT: (articleId: number, requesterId: number, startDate?: string, endDate?: string) => {
+    let url = `${BASE_URL}/api/notifications/demand-alert?articleId=${articleId}&requesterId=${requesterId}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+    return url;
+  },
 
 
   // Payments
@@ -96,23 +109,18 @@ export const API_ROUTES = {
   PROCESS_PAYMENT_WALLET:    (kitId: number) => `${BASE_URL}/api/payments/process/wallet/${kitId}`,
   WITHDRAW_TO_BANK:          `${BASE_URL}/api/payments/withdraw`,
   GET_KIT_PAYMENT_BY_ID:     (kitId: number) => `${BASE_URL}/api/kits/payment/${kitId}`,
+  GET_KIT_PAYMENT_BY_ID_PROMO: (kitId: number, promoCode: string, email: string) =>
+    `${BASE_URL}/api/kits/payment/${kitId}?promoCode=${encodeURIComponent(promoCode)}&email=${encodeURIComponent(email)}`,
   SIMULATE_PAYMENT:           `${BASE_URL}/api/payments/pay-kit`,
-
-  // Wallet
-  GET_WALLET_BY_USER_ID:     (userId: number) => `${BASE_URL}/api/wallet/user/${userId}`,
-  GET_MY_WALLET:             `${BASE_URL}/api/wallet/my-wallet`,
-  GET_MY_TRANSACTIONS:       `${BASE_URL}/api/wallet/my-wallet/transactions`,
 
   // Promo Codes
   PROMO_CODES:                `${BASE_URL}/api/admin/promo-codes`,
   PROMO_CODE_BY_ID:           (id: number) => `${BASE_URL}/api/admin/promo-codes/${id}`,
   VALIDATE_PROMO_CODE:        (code: string, email: string) =>
       `${BASE_URL}/api/promo-codes/validate?code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
-  GET_KIT_PAYMENT_BY_ID_PROMO:(kitId: number, code: string, email: string) =>
-      `${BASE_URL}/api/kits/payment/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
-  PROCESS_PAYMENT_WALLET_PROMO:(kitId: number, code: string, email: string) =>
+  PROCESS_PAYMENT_WALLET_PROMO: (kitId: number, code: string, email: string) =>
       `${BASE_URL}/api/payments/process/wallet/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
-  PROCESS_PAYMENT_STRIPE_PROMO:(kitId: number, code: string, email: string) =>
+  PROCESS_PAYMENT_STRIPE_PROMO: (kitId: number, code: string, email: string) =>
       `${BASE_URL}/api/payments/process/stripe/${kitId}?promoCode=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}`,
 
   // Pilot Users
@@ -120,6 +128,11 @@ export const API_ROUTES = {
   PILOT_USER_BY_ID:         (id: number) => `${BASE_URL}/api/admin/pilot-users/${id}`,
   PILOT_USERS_ACTIVE_EMAILS:`${BASE_URL}/api/admin/pilot-users/active-emails`,
   PILOT_USERS_BULK_ACTIVE:  `${BASE_URL}/api/admin/pilot-users/bulk-active`,
+
+  // Wallet
+  GET_WALLET_BY_USER_ID:     (userId: number) => `${BASE_URL}/api/wallet/user/${userId}`,
+  GET_MY_WALLET:             `${BASE_URL}/api/wallet/my-wallet`,
+  GET_MY_TRANSACTIONS:       `${BASE_URL}/api/wallet/my-wallet/transactions`,
 
   // Services
   ACTIVE_SERVICES: `${BASE_URL}/api/services/active`,
@@ -139,10 +152,13 @@ export const API_ROUTES = {
   ARTICLE_NEARBY: (city: string, country: string, radiusKm = 150) =>
     `${BASE_URL}/api/article/nearby?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&radiusKm=${radiusKm}`,
 
-  ARTICLE_MAP: (country?: string) =>
-    country
-      ? `${BASE_URL}/api/article/map?country=${encodeURIComponent(country)}`
-      : `${BASE_URL}/api/article/map`,
+  ARTICLE_MAP: (country?: string, includeRented: boolean = false) => {
+    const params = new URLSearchParams();
+    if (country) params.append("country", country);
+    if (includeRented) params.append("includeRented", "true");
+    const query = params.toString();
+    return `${BASE_URL}/api/article/map${query ? `?${query}` : ""}`;
+  },
 
   // Ciudades
   GET_CITIES: `${BASE_URL}/api/cities`,
@@ -153,22 +169,27 @@ export const API_ROUTES = {
   // Article history
   GET_ARTICLE_HISTORY: (id: number) => `${BASE_URL}/api/article/record/${id}`,
 
+  // Kit item filtering
+  FILTER_ITEMS_FOR_KIT: `${BASE_URL}/api/items/filter-for-kit`,
+
   // Demand analysis
   DEMAND_ANALYSIS_TOP: (limit?: number) =>
-    limit && limit > 0 ? `${BASE_URL}/api/demand-analysis/top?limit=${limit}` : `${BASE_URL}/api/demand-analysis/top`,
-  // RGPD - Para usuarios autenticados
+    limit
+      ? `${BASE_URL}/api/demand-analysis/top?limit=${limit}`
+      : `${BASE_URL}/api/demand-analysis/top`,
+
+  // RGPD
   RGPD_CHECK: `${BASE_URL}/api/rgpd/check`,
   RGPD_ACCEPT: `${BASE_URL}/api/rgpd/accept`,
   RGPD_NEEDS_CONSENT: `${BASE_URL}/api/rgpd/needs-consent`,
-  
-  // RGPD - Política pública (sin autenticación)
   RGPD_CURRENT_POLICY: `${BASE_URL}/api/rgpd/current-policy`,
-  
-  // Admin RGPD
   ADMIN_CURRENT_POLICY: `${BASE_URL}/api/admin/rgpd/current`,
   ADMIN_CREATE_POLICY: `${BASE_URL}/api/admin/rgpd/policies`,
+
   // Insignia
   TOGGLE_FOUNDER_BADGE: (id: number) => `${BASE_URL}/api/admin/users/${id}/founder-badge`,
+
+  GET_TRANSACTION_DETAILS: (id: number) => `${BASE_URL}/api/wallet/transactions/${id}/details`,
 
 } as const;
 

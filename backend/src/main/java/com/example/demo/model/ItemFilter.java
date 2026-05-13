@@ -61,14 +61,14 @@ public class ItemFilter {
 
     public static Specification<Item> isRentable() {
         return (root, query, cb) -> cb.or(
-                cb.and(
-                        cb.equal(root.type(), Article.class),
-                        cb.equal(cb.treat(root, Article.class).get("status"), ArticleStatus.AVAILABLE)
-                ),
-                cb.and(
-                        cb.equal(root.type(), ServiceItem.class),
-                        cb.equal(cb.treat(root, ServiceItem.class).get("status"), ServiceStatus.ACTIVE)
-                )
-        );
-    }
+            cb.and(
+                    cb.equal(root.type(), Article.class),
+                    cb.not(cb.treat(root, Article.class).get("status").in(ArticleStatus.INACTIVE))
+            ),
+            cb.and(
+                    cb.equal(root.type(), ServiceItem.class),
+                    cb.equal(cb.treat(root, ServiceItem.class).get("status"), ServiceStatus.ACTIVE)
+            )
+    );
+}
 }

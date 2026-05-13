@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { Icon, TextInput } from "react-native-paper";
-import { commonStyles } from "../../styles";
+import { commonStyles, Spacing } from "../../styles";
 import { categoryFormScreenStyles } from "../../styles/categoryFormScreenStyles";
 import { SelectPicker } from "../SelectPicker";
 import { KeakitButton } from "../KeakitButton";
@@ -268,29 +268,32 @@ export const CategoryFormComponent: React.FC<CategoryFormComponentProps> = ({
 
       <View style={commonStyles.dividerSmall} />
       <View style={{ flexDirection: "column", gap: 4 }}>
-        <Text style={inputLabel}>Rango de precios: </Text>
-        <View style={inputRow}>
-          <TextInput
-            mode="outlined"
-            style={[input, priceInput]}
-            keyboardType="numeric"
-            placeholder="Mín"
-            value={formData.minPrice}
-            onChangeText={(text) => { handleChange("minPrice", text); }}
-          />
-          <Text style={priceSeparator}>€ -</Text>
-          <TextInput
-            mode="outlined"
-            style={[input, priceInput]}
-            keyboardType="numeric"
-            placeholder="Máx"
-            value={formData.maxPrice}
-            onChangeText={(text) => { handleChange("maxPrice", text); }}
-          />
+        <Text style={inputLabel}>Rango de precios:</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              mode="outlined"
+              style={input}
+              keyboardType="numeric"
+              placeholder="Mín"
+              value={formData.minPrice}
+              onChangeText={(text) => { handleChange("minPrice", text); }}
+            />
+          </View>
+          <Text style={priceSeparator}>-</Text>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              mode="outlined"
+              style={input}
+              keyboardType="numeric"
+              placeholder="Máx"
+              value={formData.maxPrice}
+              onChangeText={(text) => { handleChange("maxPrice", text); }}
+            />
+          </View>
           <Text style={priceSeparator}>€</Text>
         </View>
       </View>
-
       <View style={commonStyles.dividerSmall} />
 
       <View style={cardFooter}>

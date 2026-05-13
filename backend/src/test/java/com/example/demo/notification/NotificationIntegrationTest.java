@@ -5,6 +5,7 @@ import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.NotificationRepository;
+import com.example.demo.repository.ServiceRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.NotificationService;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,9 @@ class NotificationIntegrationTest {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ServiceRepository serviceRepository;
 
     @Test
     void notification_flow_trigger_fetch_and_read() throws Exception {
@@ -182,5 +186,74 @@ class NotificationIntegrationTest {
                 .param("articleId", String.valueOf(articleId))
                 .param("requesterId", String.valueOf(requesterId)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void demandAlert_service_flow_relatedArticleIdIsNull() throws Exception {
+        // 1. SETUP: propietario y solicitante
+        User owner = new User();
+        owner.setEmail("svc-owner@demand.com");
+        owner.setPassword("password123");
+        owner.setName("Propietario Servicio");
+        owner.setRole(UserRole.USER);
+        owner.setPhone("+34600000001");
+        owner.setAddress("Calle Servicio 1");
+        owner.setCity("Sevilla");
+        owner.setCountry("Spain");
+        owner = userRepository.save(owner);
+
+        User requester = new User();
+        requester.setEmail("svc-requester@demand.com");
+        requester.setPassword("password123");
+        requester.setName("Cliente Servicio");
+        requester.setRole(UserRole.USER);
+        requester.setPhone("+34600000002");
+        requester.setAddress("Calle Cliente 2");
+        requester.setCity("Sevilla");
+        requester.setCountry("Spain");
+        requester = userRepository.save(requester);
+
+        Category category = new Category();
+        category.setName("Servicios-" + System.currentTimeMillis());
+        category.setDescription("Servicios del hogar");
+        category.setStatus(CategoryStatus.ACTIVE);
+        category.setMinPrice(10.0);
+        category.setMaxPrice(500.0);
+        category = categoryRepository.save(category);
+
+        // Servicio UNAVAILABLE (sin unidades disponibles)
+        ServiceItem service = new ServiceItem();
+        service.setTitle("Fontanería Urgente");
+        service.setDescription("Reparaciones de fontanería");
+        service.setCity("Sevilla");
+        service.setPricePerMonth(120.0);
+        service.setAvailableFrom(java.time.LocalDate.now());
+        service.setAvailableUntil(java.time.LocalDate.now().plusMonths(6));
+        service.setStatus(ServiceStatus.UNAVAILABLE);
+        service.setOwner(owner);
+        service.setCategory(category);
+        service = serviceRepository.save(service);
+
+        final Long ownerId = owner.getId();
+        final Long requesterId = requester.getId();
+        final Long serviceId = service.getId();
+
+        // 2. CREAR ALERTA DE DEMANDA VÍA ENDPOINT
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/api/notifications/demand-alert")
+                .param("articleId", String.valueOf(serviceId))
+                .param("requesterId", String.valueOf(requesterId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.type").value("DEMAND_ALERT"))
+                .andExpect(jsonPath("$.relatedArticleId").doesNotExist())
+                .andExpect(jsonPath("$.read").value(false))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("contratar tu servicio")));
+
+        // 3. VERIFICAR QUE APARECE EN EL BUZÓN DEL ARRENDADOR SIN relatedArticleId
+        mockMvc.perform(get("/api/notifications/user/" + ownerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].type").value("DEMAND_ALERT"))
+                .andExpect(jsonPath("$[0].relatedArticleId").doesNotExist())
+                .andExpect(jsonPath("$[0].read").value(false));
     }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  ScrollView, TextInput, ActivityIndicator, Image, Platform,
+  ScrollView, TextInput, ActivityIndicator, Image, Platform, Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -13,12 +13,17 @@ import { fetchAllCategories } from '../../services/categoryService';
 import { validatePromoCode } from '../../services/promoCodeService';
 import { ArticlePayload, ArticleCondition, RootStackParamList, Category } from '../../types';
 import { Colors, Spacing, commonStyles, componentStyles } from '../../styles';
-import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { Provider as PaperProvider, MD3LightTheme, Button } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { es, registerTranslation } from 'react-native-paper-dates';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNotification } from '../../components/NotificationContext';
+import { getPurchaseDateValidationError } from '../../utils/articlePurchaseDate';
+import { Helmet } from 'react-helmet-async'; 
+
+const MAX_TITLE_LENGTH = 255;
+const MAX_TOTAL_UNITS = 2147483647; 
 
 
 registerTranslation('es', es);
@@ -82,15 +87,6 @@ const toDisplay = (iso: string): string => {
   return `${d}/${m}/${y}`;
 };
 
-const isValidIsoDate = (iso: string): boolean => {
-  if (!iso) return true;
-  const [y, m, d] = iso.split('-').map(Number);
-  if (m < 1 || m > 12) return false;
-  if (d < 1 || d > 31) return false;
-  const date = new Date(y, m - 1, d);
-  return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
-};
-
 const hasAtMostTwoDecimals = (value: string): boolean =>
   /^\d+(\.\d{1,2})?$/.test(value.trim());
 
@@ -150,6 +146,7 @@ const UploadArticleScreen: React.FC = () => {
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   useEffect(() => {
     const checkCameraAvailability = async () => {
@@ -319,7 +316,7 @@ const UploadArticleScreen: React.FC = () => {
     if (!selectedCity)       newErrors.city        = 'La ciudad es obligatoria';
     if (!selectedCategory)   newErrors.category    = 'Selecciona una categoría';
 
-    if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0) {
+    if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) < 0) {
       newErrors.pricePerMonth = 'Introduce un precio válido';
     } else if (!hasAtMostTwoDecimals(pricePerMonth)) {
       newErrors.pricePerMonth = 'El precio no puede tener más de 2 decimales';
@@ -333,11 +330,24 @@ const UploadArticleScreen: React.FC = () => {
     if (!availableUntil) newErrors.availableUntil = 'Selecciona la fecha de fin';
     if (availableFrom && availableUntil && availableFrom >= availableUntil)
       newErrors.availableUntil = 'Debe ser posterior a la fecha de inicio';
-    if (purchaseDate && !isValidIsoDate(purchaseDate))
-      newErrors.purchaseDate = 'Fecha de compra no válida';
+    const purchaseDateError = getPurchaseDateValidationError(purchaseDate);
+    if (purchaseDateError) {
+      newErrors.purchaseDate = purchaseDateError;
+    }
 
     if (!totalUnits || isNaN(Number(totalUnits)) || Number(totalUnits) < 1 || !Number.isInteger(Number(totalUnits))) {
       newErrors.totalUnits = 'Introduce un número de unidades válido (mínimo 1)';
+    }
+
+    if (title.trim().length > MAX_TITLE_LENGTH) {
+      newErrors.title = `El título no puede superar los ${MAX_TITLE_LENGTH} caracteres`;
+    }
+
+    const unitsNum = Number(totalUnits);
+    if (isNaN(unitsNum) || unitsNum < 1 || unitsNum > MAX_TOTAL_UNITS) {
+      newErrors.totalUnits = `Introduce un número de unidades válido (1 - ${MAX_TOTAL_UNITS.toLocaleString()})`;
+    } else if (!Number.isInteger(unitsNum)) {
+      newErrors.totalUnits = 'El número de unidades debe ser un número entero';
     }
 
     setErrors(newErrors);
@@ -410,6 +420,11 @@ const UploadArticleScreen: React.FC = () => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
+        <Helmet>
+          <title>Subir artículo | KeaKit</title>
+          <meta name="description" content="Publica un nuevo artículo en KeaKit. Añade fotos, categorías, disponibilidad, precio mensual y detalles del producto."/>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>           
         <View style={commonStyles.header}>
           <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={28} color={Colors.primary} />
@@ -535,7 +550,13 @@ const UploadArticleScreen: React.FC = () => {
             <Field
               label="Unidades disponibles"
               value={totalUnits}
-              onChange={(t) => { setTotalUnits(t); clearError('totalUnits'); }}
+              onChange={(t) => {
+                const cleaned = t.replace(/[^0-9]/g, '');
+                if (cleaned.length <= 10) {
+                  setTotalUnits(cleaned);
+                }
+                clearError('totalUnits');
+              }}
               placeholder="Ej: 1"
               keyboardType="numeric"
               error={errors.totalUnits}
@@ -750,8 +771,14 @@ const UploadArticleScreen: React.FC = () => {
                 onConfirm={(params: { date?: Date }) => {
                   setShowPurchaseDatePicker(false);
                   if (params.date) {
+                    const nextPurchaseDate = toIso(params.date);
+                    const purchaseDateError = getPurchaseDateValidationError(nextPurchaseDate);
+                    if (purchaseDateError) {
+                      setErrors((prev) => ({ ...prev, purchaseDate: purchaseDateError }));
+                      return;
+                    }
                     setPurchaseDateObj(params.date);
-                    setPurchaseDate(toIso(params.date));
+                    setPurchaseDate(nextPurchaseDate);
                     clearError('purchaseDate');
                   }
                 }}
@@ -762,7 +789,9 @@ const UploadArticleScreen: React.FC = () => {
 
           <TouchableOpacity
             style={[commonStyles.primaryButton, loading && styles.buttonDisabled]}
-            onPress={handleSubmit}
+            onPress={() => {
+              if (validate()) setConfirmVisible(true)
+            }}  
             disabled={loading}
             activeOpacity={0.8}
           >
@@ -829,6 +858,25 @@ const UploadArticleScreen: React.FC = () => {
             </View>
           </View>
         )}
+        <Modal
+          visible={confirmVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setConfirmVisible(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+            <View style={{ width: "100%", backgroundColor: "white", borderRadius: 16, padding: 20 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#111" }}>Atención</Text>
+              <Text style={{ fontSize: 15, color: "#444", marginBottom: 20 }}>
+                Recuerda que se le aplicará un 20% de comisión sobre el precio por mes. Por ejemplo, si publica un artículo por 60€/mes y una persona lo alquila por un mes, recibirá 48€.
+              </Text>
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
+                <Button mode="outlined" onPress={() => setConfirmVisible(false)}>Cancelar</Button>
+                <Button mode="contained" onPress={() => { setConfirmVisible(false); handleSubmit(); }}>Aceptar</Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </PaperProvider>
   );

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import com.example.demo.dto.IncidentRequestDTO;
 import com.example.demo.model.Incident;
 import com.example.demo.model.IncidentComment;
 import com.example.demo.model.IncidentStatus;
@@ -122,6 +123,35 @@ public class IncidentService {
         return incidentRepository.save(incident);
     }
 
+    public Incident createIncident(IncidentRequestDTO dto) {
+    Incident incident = new Incident();
+    
+    incident.setTitle(dto.getTitle());
+    incident.setDescription(dto.getDescription());
+    incident.setType(dto.getType());
+
+    if (dto.getUser() != null && dto.getUser().getId() != null) {
+        User user = userRepository.findById(dto.getUser().getId())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        incident.setUser(user);
+    }
+    
+    if (dto.getRelatedItem() != null && dto.getRelatedItem().getId() != null) {
+        Item relatedItem = itemRepository.findById(dto.getRelatedItem().getId())
+            .orElseThrow(() -> new RuntimeException("Objeto relacionado no encontrado"));
+        incident.setRelatedItem(relatedItem);
+    }
+    
+    if (dto.getRelatedKit() != null && dto.getRelatedKit().getId() != null) {
+        Kit relatedKit = kitRepository.findById(dto.getRelatedKit().getId())
+            .orElseThrow(() -> new RuntimeException("Kit de alquiler no encontrado"));
+        incident.setRelatedKit(relatedKit);
+    }
+
+    validateIncident(incident);
+    return incidentRepository.save(incident);
+}
+
     public Incident updateIncident(Long id, Incident updateData) {
         Incident incident = getIncidentById(id);
 
@@ -208,9 +238,6 @@ public class IncidentService {
         if (incident.getType() == IncidentType.DAMAGED_ITEM) {
             if (incident.getRelatedItem() == null) {
                 throw new IllegalArgumentException("Para incidencias de tipo objeto dañado, el ítem es obligatorio.");
-            }
-            if (incident.getRelatedKit() == null) {
-                throw new IllegalArgumentException("Para incidencias de tipo objeto dañado, el kit de alquiler es obligatorio.");
             }
         }
 

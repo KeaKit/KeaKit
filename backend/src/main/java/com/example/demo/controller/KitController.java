@@ -69,6 +69,16 @@ public class KitController {
         }
     }
 
+    @GetMapping("validate/{id}")
+    public ResponseEntity<?> validateKit(@PathVariable Long id) {
+        try {
+            kitService.validateKit(id);
+            return ResponseEntity.ok("Kit válido");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
     @PostMapping("/payment")
     public ResponseEntity<?> getKitPayment(@Valid @RequestBody KitCreateRequest request) {
         // No es necesario que el kit esté en el repositorio para calcular su precio
@@ -125,6 +135,16 @@ public class KitController {
     public ResponseEntity<?> getMyKits(@PathVariable Long tenantId) {
         try {
             List<KitResponse> response = kitService.findByTenantId(tenantId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/tracking-updateable-kits/{tenantId}")
+    public ResponseEntity<?> getTrackingUpdateableKits(@PathVariable Long tenantId) {
+        try {
+            List<KitResponse> response = kitService.findTrackingUpdateableByTenantId(tenantId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

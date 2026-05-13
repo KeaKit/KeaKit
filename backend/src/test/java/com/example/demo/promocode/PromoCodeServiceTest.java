@@ -3,6 +3,7 @@ package com.example.demo.promocode;
 import com.example.demo.dto.PromoCodeRequest;
 import com.example.demo.dto.PromoCodeResponse;
 import com.example.demo.dto.PromoCodeValidationResponse;
+import com.example.demo.exception.PromoCodeAlreadyExistsException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.PromoCode;
 import com.example.demo.model.PromoCodeType;
@@ -172,13 +173,13 @@ class PromoCodeServiceTest {
     }
 
     @Test
-    void create_withDuplicateCode_throwsRuntimeException() {
+    void create_withDuplicateCode_throwsPromoCodeAlreadyExistsException() {
         PromoCodeRequest request = new PromoCodeRequest(
                 "DESCUENTO20", 0.20, true, false, PromoCodeType.TENANT_DISCOUNT, false, List.of());
         when(promoCodeRepository.findByCodeIgnoreCase("DESCUENTO20"))
                 .thenReturn(Optional.of(tenantDiscount));
 
-        assertThrows(RuntimeException.class, () -> promoCodeService.create(request));
+        assertThrows(PromoCodeAlreadyExistsException.class, () -> promoCodeService.create(request));
         verify(promoCodeRepository, never()).save(any());
     }
 
@@ -250,7 +251,7 @@ class PromoCodeServiceTest {
     }
 
     @Test
-    void update_withCodeUsedByAnotherPromo_throwsRuntimeException() {
+    void update_withCodeUsedByAnotherPromo_throwsPromoCodeAlreadyExistsException() {
         PromoCode other = buildPromo(99L, "OWNER10", PromoCodeType.OWNER_COMMISSION_REDUCTION,
                 0.10, true, false, false, new ArrayList<>(), new ArrayList<>());
 
@@ -259,7 +260,7 @@ class PromoCodeServiceTest {
         when(promoCodeRepository.findById(1L)).thenReturn(Optional.of(tenantDiscount));
         when(promoCodeRepository.findByCodeIgnoreCase("OWNER10")).thenReturn(Optional.of(other));
 
-        assertThrows(RuntimeException.class, () -> promoCodeService.update(1L, request));
+        assertThrows(PromoCodeAlreadyExistsException.class, () -> promoCodeService.update(1L, request));
         verify(promoCodeRepository, never()).save(any());
     }
 

@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Modal,
   StyleSheet,
+  Modal,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -30,6 +30,8 @@ import {
   resolveIncident,
 } from '../../services/incidentService';
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } from '../../styles';
+import { Helmet } from 'react-helmet-async'; 
+
 
 type DetailNav = NativeStackNavigationProp<RootStackParamList, 'IncidentDetail'>;
 type DetailRoute = RouteProp<RootStackParamList, 'IncidentDetail'>;
@@ -111,7 +113,11 @@ const IncidentDetailScreen: React.FC = () => {
     setResolving(true);
     try {
       await resolveIncident(incidentId, user.token);
-      navigation.navigate('MyIncidents');
+      if (user.role === 'ADMIN') {
+        navigation.navigate('AdminIncidents');
+      } else {
+        navigation.navigate('MyIncidents');
+      }
     } catch (err) {
       console.error('Error al resolver la incidencia:', err);
     } finally {
@@ -124,7 +130,11 @@ const IncidentDetailScreen: React.FC = () => {
     setDeleting(true);
     try {
       await deleteIncident(incidentId, user.token);
-      navigation.navigate('MyIncidents');
+      if (user.role === 'ADMIN') {
+        navigation.navigate('AdminIncidents');
+      } else {
+        navigation.navigate('MyIncidents');
+      }
     } catch (err) {
       console.error('Error al eliminar la incidencia:', err);
       setDeleting(false);
@@ -280,6 +290,11 @@ const IncidentDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Detalle de incidencia | KeaKit</title>
+        <meta name="description" content="Consulta los detalles y comentarios de una incidencia en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>           
       {/* Cabecera */}
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>

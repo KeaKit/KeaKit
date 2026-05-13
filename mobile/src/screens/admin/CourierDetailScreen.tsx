@@ -10,6 +10,7 @@ import { RootStackParamList, KitResponse, KitStatus } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { getAllKits, assignCourier, getUnassignedKits} from "../../services/kitService";
 import { Colors, Spacing, commonStyles } from "../../styles";
+import { Helmet } from 'react-helmet-async'; 
 
 type CourierDetailRoute = RouteProp<RootStackParamList, "CourierDetail">;
 type CourierDetailNav = NativeStackNavigationProp<RootStackParamList, "CourierDetail">;
@@ -43,6 +44,11 @@ const CourierDetailScreen = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Detalle de Repartidor | KeaKit</title>
+        <meta name="description" content="Detalle y asignación de kits a repartidores de KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>     
       <View style={commonStyles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

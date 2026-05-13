@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import Divider from '../../components/Divider';
+import { Helmet } from 'react-helmet-async'; 
 
 type LoginNav = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -69,6 +70,11 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <Helmet>
+        <title>Iniciar Sesión | KeaKit</title>
+        <meta name="description" content="Inicia sesión en KeaKit y gestiona tus alquileres de kits de forma flexible." />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       {navigation.canGoBack() && (
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#103a57" />

@@ -7,14 +7,20 @@ import com.example.demo.model.Article;
 import com.example.demo.model.ArticleCondition;
 import com.example.demo.model.Item;
 import com.example.demo.model.ItemFilter;
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitStatus;
 import com.example.demo.model.ServiceItem;
+import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.ItemRepository;
+import com.example.demo.repository.KitRepository;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -22,10 +28,14 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
     private final DefaultKitService defaultKitService;
+    private final ArticleRepository articleRepository;
+    private final KitRepository kitRepository;
 
-    public ItemService(ItemRepository itemRepository, DefaultKitService defaultKitService) {
+    public ItemService(ItemRepository itemRepository, DefaultKitService defaultKitService, ArticleRepository articleRepository, KitRepository kitRepository) {
         this.itemRepository = itemRepository;
         this.defaultKitService = defaultKitService;
+        this.articleRepository = articleRepository;
+        this.kitRepository = kitRepository;
     }
 
     public List<Item> findAll() {
@@ -33,7 +43,7 @@ public class ItemService {
     }
 
     public ItemFilterResponseDTO filterItemsForKit(Double minPrice, Double maxPrice, String country, String city,
-            Long categoryId, String condition, Integer page, Integer size) {
+            Long categoryId, String condition, Integer page, Integer size, LocalDate startDate, LocalDate endDate) {
         ArticleCondition parsedCondition = validateAndParseFilterInput(minPrice, maxPrice, country, city, categoryId,
                 condition, page, size);
 
@@ -50,7 +60,55 @@ public class ItemService {
                 .and(ItemFilter.hasCategoryId(categoryId))
                 .and(ItemFilter.hasArticleCondition(parsedCondition));
 
-        Page<ItemCatalogResponse> resultPage = itemRepository.findAll(spec, pageable).map(this::toCatalogResponse);
+        Page<ItemCatalogResponse> resultPage = itemRepository.findAll(spec, pageable).map(item -> {
+            ItemCatalogResponse dto = toCatalogResponse(item);
+            
+            if (startDate != null && endDate != null) {
+                List<Kit> overlappingKits = kitRepository.findOverlappingKitsForItem(
+                    item.getId(), startDate, endDate,
+                    List.of(KitStatus.PAID, KitStatus.ACTIVE)
+                );
+
+                if (!overlappingKits.isEmpty()) {
+                    int maxRented = 0;
+                    for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                        int rentedToday = 0;
+                        for (Kit kit : overlappingKits) {
+                            if (!date.isBefore(kit.getStartDate()) && !date.isAfter(kit.getEndDate())) {
+                                rentedToday += kit.getSnapshots().stream()
+                                    .filter(snap -> snap.getOriginalItemId().equals(item.getId()))
+                                    .mapToInt(snap -> snap.getSelectedUnits())
+                                    .sum();
+                            }
+                        }
+                        if (rentedToday > maxRented) {
+                            maxRented = rentedToday;
+                        }
+                    }
+
+                    int available = dto.getTotalUnits() - maxRented;
+                    dto.setTotalUnits(Math.max(0, available));
+
+                    if ("ARTICLE".equals(dto.getItemType())) {
+                        if (available <= 0) dto.setStatus("RENTED");
+                        else dto.setStatus("AVAILABLE");
+                    }
+                } else {
+                    if ("ARTICLE".equals(dto.getItemType())) {
+                        dto.setStatus("AVAILABLE");
+                    }
+                }
+            } else if ("ARTICLE".equals(dto.getItemType())) {
+                boolean isRentedInKit = articleRepository.findAllKitsWhereArticleHasBeen(item.getId())
+                    .stream()
+                    .anyMatch(k -> k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE);
+                
+                if (isRentedInKit) dto.setStatus("RENTED");
+                else dto.setStatus("AVAILABLE");
+            }
+            
+            return dto;
+        });
 
         if (resultPage.isEmpty()) {
             throw new ResourceNotFoundException("Ningún artículo encontrado con los criterios de búsqueda proporcionados");

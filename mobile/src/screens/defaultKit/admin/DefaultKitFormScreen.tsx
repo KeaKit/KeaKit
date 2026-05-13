@@ -19,7 +19,7 @@ import {
   commonStyles,
   Spacing,
 } from "../../../styles";
-import { RootStackParamList, DefaultKitCreateRequest } from "../../../types";
+import { RootStackParamList, DefaultKitCreateRequest, ArticleNearby } from "../../../types";
 import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
@@ -36,6 +36,8 @@ import {
   updateDefaultKit,
 } from "../../../services/defaultKitService";
 import { fetchItemsForRent } from "../../../services/itemService";
+import { getArticlesForMap } from "../../../services/articleService";
+import { Helmet } from 'react-helmet-async'; 
 
 type CreateDefaultKitNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -88,11 +90,16 @@ const DefaultKitFormScreen: React.FC = () => {
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [showOnlyMyCity, setShowOnlyMyCity] = useState(false);
 
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogModalVisible, setCatalogModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const [mapProducts, setMapProducts] = useState<ArticleNearby[]>([]);
 
   const loadCatalog = useCallback(async () => {
     if (!user?.id || !token) {
@@ -183,6 +190,8 @@ const DefaultKitFormScreen: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     const q = searchText.trim().toLowerCase();
+    const minP = minPrice ? parseFloat(minPrice) : 0;
+    const maxP = maxPrice ? parseFloat(maxPrice) : 2000;
     return availableProducts.filter((p) => {
       const notInactive = p.itemType === "SERVICE" || p.status !== "INACTIVE";
       const byCategory =
@@ -191,14 +200,28 @@ const DefaultKitFormScreen: React.FC = () => {
         q.length === 0 ||
         p.title.toLowerCase().includes(q) ||
         (p.category ?? "").toLowerCase().includes(q);
-      return notInactive && byCategory && bySearch;
+      const byPrice = p.pricePerMonth >= minP && p.pricePerMonth <= maxP;
+      return notInactive && byCategory && bySearch && byPrice;
     });
-  }, [availableProducts, searchText, categoryFilter]);
+  }, [availableProducts, searchText, categoryFilter, minPrice, maxPrice]);
 
-  const openAddProductModal = () => {
+  const openAddProductModal = async () => {
     setTempSelectedQuantities(selectedQuantities);
     setSearchText("");
-    setCategoryFilter("ALL");
+    setShowOnlyAvailable(true);
+
+    if (user?.token) {
+      try {
+        const mapData = await getArticlesForMap(user.token, undefined);
+        setMapProducts(mapData);
+      } catch (error) {
+        console.warn('Error al cargar productos del mapa:', error);
+        setMapProducts([]);
+      }
+    } else {
+      setMapProducts([]);
+    }
+
     setCatalogModalVisible(true);
   };
 
@@ -315,9 +338,28 @@ const DefaultKitFormScreen: React.FC = () => {
     },
   };
 
+  const getHelmetTitle = () => {
+    return mode === "edit"
+      ? "Editar kit predeterminado"
+      : "Crear kit predeterminado";
+  };
+
+  const getMetaDescription = () => {
+    if (mode === "edit") {
+      return "Edita un kit predeterminado y gestiona los productos incluidos en KeaKit.";
+    }
+
+    return "Crea un kit predeterminado seleccionando productos y configurando su contenido en KeaKit.";
+  };
+
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.containerWhite}>
+          <Helmet>
+          <title>{getHelmetTitle()} | Keakit</title>
+          <meta name="description" content={getMetaDescription()} />
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>        
         <Header
           title={mode === "edit" ? "Editar Kit" : "Crear Kit Predeterminado"}
           showBack
@@ -368,7 +410,8 @@ const DefaultKitFormScreen: React.FC = () => {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: Spacing.md,
+              flexWrap: "wrap",
+              gap: Spacing.sm,
             }}
           >
             <View
@@ -376,6 +419,7 @@ const DefaultKitFormScreen: React.FC = () => {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: Spacing.sm,
+                flexShrink: 1,
               }}
             >
               <Text style={[commonStyles.subtitle, { marginBottom: 0 }]}>
@@ -386,7 +430,7 @@ const DefaultKitFormScreen: React.FC = () => {
               </View>
             </View>
 
-            <View style={{ minWidth: 165 }}>
+            <View style={{ width: '100%', paddingTop: 10 }}>
               <KeakitButton
                 title="Añadir productos"
                 onPress={openAddProductModal}
@@ -453,6 +497,16 @@ const DefaultKitFormScreen: React.FC = () => {
           onSearchChange={setSearchText}
           categoryFilter={categoryFilter}
           onCategoryFilterChange={setCategoryFilter}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onMinPriceChange={setMinPrice}
+          onMaxPriceChange={setMaxPrice}
+          onClearFilters={() => {
+            setSearchText("");
+            setCategoryFilter("ALL");
+            setMinPrice("");
+            setMaxPrice("");
+          }}
           categories={categories}
           filteredProducts={filteredProducts}
           tempSelectedQuantities={tempSelectedQuantities}
@@ -466,6 +520,7 @@ const DefaultKitFormScreen: React.FC = () => {
           expandedSearch={false}
           onToggleExpandedSearch={() => {}}
           loadingNearby={false}
+          mapProducts={mapProducts}
         />
       </SafeAreaView>
     </PaperProvider>

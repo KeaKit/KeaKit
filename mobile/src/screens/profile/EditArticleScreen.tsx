@@ -18,6 +18,11 @@ import { es, registerTranslation } from 'react-native-paper-dates';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
 import { useNotification } from '../../components/NotificationContext';
+import { getPurchaseDateValidationError } from '../../utils/articlePurchaseDate';
+import { Helmet } from 'react-helmet-async'; 
+
+const MAX_TITLE_LENGTH = 255;
+const MAX_TOTAL_UNITS = 2147483647; 
 
 registerTranslation('es', es);
 
@@ -83,15 +88,6 @@ const isoToDate = (iso: string | null | undefined): Date | undefined => {
   return new Date(y, m - 1, d);
 };
 
-const isValidIsoDate = (iso: string): boolean => {
-  if (!iso) return true;
-  const [y, m, d] = iso.split('-').map(Number);
-  if (m < 1 || m > 12) return false;
-  if (d < 1 || d > 31) return false;
-  const date = new Date(y, m - 1, d);
-  return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
-};
-
 const hasAtMostTwoDecimals = (value: string): boolean =>
   /^\d+(\.\d{1,2})?$/.test(value.trim());
 
@@ -103,6 +99,7 @@ const EditArticleScreen: React.FC = () => {
   const { showNotification } = useNotification();
 
   const originalCity = article.city ?? '';
+  const originalCountry = article.country ?? '';
 
   const [title,          setTitle]          = useState(article.title ?? '');
   const [description,    setDescription]    = useState(article.description ?? '');
@@ -130,7 +127,7 @@ const EditArticleScreen: React.FC = () => {
     loadingCities,
     countries,
     onCountryChange,
-  } = useLocationPicker('', originalCity);
+  } = useLocationPicker(originalCountry, originalCity);
 
   const [showDateRangePicker,    setShowDateRangePicker]    = useState(false);
   const [startDate,              setStartDate]              = useState<Date | undefined>(isoToDate(article.availableFrom));
@@ -210,7 +207,7 @@ const EditArticleScreen: React.FC = () => {
     if (!selectedCity)       newErrors.city        = 'La ciudad es obligatoria';
     if (!category)           newErrors.category    = 'Selecciona una categoría';
 
-    if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) <= 0) {
+    if (!pricePerMonth || isNaN(Number(pricePerMonth)) || Number(pricePerMonth) < 0) {
       newErrors.pricePerMonth = 'Introduce un precio válido';
     } else if (!hasAtMostTwoDecimals(pricePerMonth)) {
       newErrors.pricePerMonth = 'El precio no puede tener más de 2 decimales';
@@ -224,11 +221,25 @@ const EditArticleScreen: React.FC = () => {
     if (!availableUntil) newErrors.availableUntil = 'Selecciona la fecha de fin';
     if (availableFrom && availableUntil && availableFrom >= availableUntil)
       newErrors.availableUntil = 'Debe ser posterior a la fecha de inicio';
-    if (purchaseDate && !isValidIsoDate(purchaseDate))
-      newErrors.purchaseDate = 'Fecha de compra no válida';
+    const purchaseDateError = getPurchaseDateValidationError(purchaseDate);
+    if (purchaseDateError) {
+      newErrors.purchaseDate = purchaseDateError;
+    }
     if (!totalUnits || isNaN(Number(totalUnits)) || Number(totalUnits) < 1 || !Number.isInteger(Number(totalUnits))) {
       newErrors.totalUnits = 'Introduce un número de unidades válido (mínimo 1)';
     }
+
+    if (title.trim().length > MAX_TITLE_LENGTH) {
+      newErrors.title = `El título no puede superar los ${MAX_TITLE_LENGTH} caracteres`;
+    }
+
+    const unitsNum = Number(totalUnits);
+    if (isNaN(unitsNum) || unitsNum < 1 || unitsNum > MAX_TOTAL_UNITS) {
+      newErrors.totalUnits = `Introduce un número de unidades válido (1 - ${MAX_TOTAL_UNITS.toLocaleString()})`;
+    } else if (!Number.isInteger(unitsNum)) {
+      newErrors.totalUnits = 'El número de unidades debe ser un número entero';
+    }
+
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
@@ -299,6 +310,11 @@ const EditArticleScreen: React.FC = () => {
   return (
     <PaperProvider theme={customTheme}>
       <SafeAreaView style={commonStyles.container}>
+        <Helmet>
+          <title>Editar artículo | KeaKit</title>
+          <meta name="description" content="Edita tu artículo en KeaKit."/>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>        
         <View style={commonStyles.header}>
           <TouchableOpacity style={componentStyles.iconButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={28} color={Colors.primary} />
@@ -450,7 +466,13 @@ const EditArticleScreen: React.FC = () => {
             <Field
               label="Unidades disponibles"
               value={totalUnits}
-              onChange={(t) => { setTotalUnits(t); clearError('totalUnits'); }}
+              onChange={(t) => {
+                const cleaned = t.replace(/[^0-9]/g, '');
+                if (cleaned.length <= 10) {
+                  setTotalUnits(cleaned);
+                }
+                clearError('totalUnits');
+              }}
               placeholder="Ej: 1"
               keyboardType="numeric"
               error={errors.totalUnits}
@@ -627,8 +649,14 @@ const EditArticleScreen: React.FC = () => {
                 onConfirm={(params: { date?: Date }) => {
                   setShowPurchaseDatePicker(false);
                   if (params.date) {
+                    const nextPurchaseDate = toIso(params.date);
+                    const purchaseDateError = getPurchaseDateValidationError(nextPurchaseDate);
+                    if (purchaseDateError) {
+                      setErrors((prev) => ({ ...prev, purchaseDate: purchaseDateError }));
+                      return;
+                    }
                     setPurchaseDateObj(params.date);
-                    setPurchaseDate(toIso(params.date));
+                    setPurchaseDate(nextPurchaseDate);
                     clearError('purchaseDate');
                   }
                 }}

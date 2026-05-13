@@ -27,18 +27,17 @@ import {
   getUserNotifications,
   markNotificationRead,
 } from "../../services/notificationService";
+import {
+  formatNotificationDateTime,
+  getActivityNotificationTitle,
+} from "../../utils/activityNotifications";
+import { Helmet } from 'react-helmet-async'; 
 
 
 type NotificationsNav = NativeStackNavigationProp<
   RootStackParamList,
   "ActivityNotifications"
 >;
-
-const formatDateTime = (value: string): string => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
-};
 
 const ActivityNotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NotificationsNav>();
@@ -114,33 +113,40 @@ const ActivityNotificationsScreen: React.FC = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: ActivityNotification }) => (
-    <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
-      {!item.read && <View style={styles.unreadIndicator} />}
-      <View style={styles.cardHeader}>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-            {item.type === "ITEM_RENTED" ? "Objeto alquilado" : "Fin de alquiler"}
-          </Text>
-          <Text style={styles.cardDate}>{formatDateTime(item.createdAt)}</Text>
+  const renderItem = ({ item }: { item: ActivityNotification }) => {
+    return (
+      <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
+        {!item.read && <View style={styles.unreadIndicator} />}
+        <View style={styles.cardHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
+              {getActivityNotificationTitle(item.type, item.relatedArticleId)}
+            </Text>
+            <Text style={styles.cardDate}>{formatNotificationDateTime(item.createdAt)}</Text>
+          </View>
+          {!item.read && (
+            <TouchableOpacity
+              style={styles.markReadButton}
+              onPress={() => handleMarkSingleRead(item.id)}
+            >
+              <Ionicons name="checkmark-circle-outline" size={20} color={Colors.primary} />
+            </TouchableOpacity>
+          )}
         </View>
-        {!item.read && (
-          <TouchableOpacity
-            style={styles.markReadButton}
-            onPress={() => handleMarkSingleRead(item.id)}
-          >
-            <Ionicons name="checkmark-circle-outline" size={20} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
+        <Text style={[styles.cardMessage, item.read && styles.cardMessageRead]}>
+          {item.message}
+        </Text>
       </View>
-      <Text style={[styles.cardMessage, item.read && styles.cardMessageRead]}>
-        {item.message}
-      </Text>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Notificaciones de actividad | KeaKit</title>
+        <meta name="description" content="Consulta tus notificaciones de actividad en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>       
       <View style={commonStyles.header}>
         <TouchableOpacity
           style={componentStyles.iconButton}
