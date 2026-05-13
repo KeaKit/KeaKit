@@ -50,39 +50,36 @@ Las métricas de seguimiento establecidas para evaluar la efectividad de las acc
 
 ## 4. Tasa de inscripción de usuarios piloto
 
-El documento de usuarios piloto recoge un total de 60 personas registradas. La captación se organiza en cinco fases: una primera fase inicial, una segunda fase vinculada al Feedback Sprint 1, una tercera fase vinculada al Feedback Sprint 2, una cuarta fase vinculada al Feedback Sprint 3 y una quinta fase articulada en torno a un sorteo de descuentos.
+El documento de usuarios piloto recoge un total de 60 personas registradas. La captación se organiza en cinco fases: una primera fase inicial (DP), una segunda fase de los Sprints 1-2, una tercera fase del Sprint 3, una cuarta fase de la fase PPL y una quinta fase articulada en torno a un sorteo de descuentos.
 
 | Fase de captación | Usuarios captados | Porcentaje sobre el total | Arrendatarios | Arrendadores |
 |---|---:|---:|---:|---:|
 | Primera captación, fase inicial | 16 | 26,67 % | 6 | 10 |
-| Segunda captación, Feedback Sprint 1 | 8 | 13,33 % | 6 | 2 |
-| Tercera captación, Feedback Sprint 2 | 9 | 15,00 % | 3 | 6 |
-| Cuarta captación, Feedback Sprint 3 | 5 | 8,33 % | 3 | 2 |
-| Quinta captación, Sorteo de descuentos (PPL) | 22 | 36,67 % | 13 | 9 |
-| **Total** | **60** | **100,00 %** | **31** | **29** |
+| Segunda captación, Sprints 1-2 | 8 | 13,33 % | 6 | 2 |
+| Tercera captación, Sprint 3 | 9 | 15,00 % | 3 | 6 |
+| Cuarta captación, PPL | 5 | 8,33 % | 2 | 3 |
+| Quinta captación, Sorteo de descuentos | 22 | 36,67 % | 13 | 9 |
+| **Total** | **60** | **100,00 %** | **30** | **30** |
 
 La quinta fase (Sorteo de descuentos) es la más intensa, con 22 usuarios captados, lo que representa el 36,67 % del total. La primera fase concentra el segundo mayor volumen, con 16 usuarios (26,67 %). Las fases segunda y tercera mantienen una captación moderada, con 8 y 9 usuarios respectivamente, mientras que la cuarta fase registra 5 usuarios (8,33 %). El repunte en la quinta fase, articulada en torno a un sorteo de descuentos, ha sido especialmente efectiva para la incorporación de nuevos usuarios piloto.
 
-En términos de rol, el conjunto de usuarios piloto presenta una distribución con ligera mayoría de arrendatarios. Los arrendatarios representan el 51,67 % del total, frente al 48,33 % de arrendadores.
+En términos de rol, el conjunto de usuarios piloto presenta una distribución perfectamente equilibrada entre arrendatarios y arrendadores, con un 50,00 % de cada rol.
 
 | Rol | Usuarios | Porcentaje |
 |---|---:|---:|
-| Arrendatario | 31 | 51,67 % |
-| Arrendador | 29 | 48,33 % |
+| Arrendatario | 30 | 50,00 % |
+| Arrendador | 30 | 50,00 % |
 | **Total** | **60** | **100,00 %** |
 
 La distribución por perfiles permite observar con mayor detalle la composición de los usuarios con perfil clasificado. Los participantes de la quinta captación (Sorteo de descuentos) no disponen de perfil asignado, ya que el formulario de inscripción no era un formulario de feedback y no recogía esta información. El análisis de perfiles abarca por tanto a los usuarios de las cuatro primeras fases. Entre los arrendatarios clasificados predomina el perfil Erasmus, mientras que entre los arrendadores destaca el perfil Eco-Colaborador.
 
 | Rol | Perfil | Usuarios | Porcentaje sobre perfiles clasificados |
 |---|---|---:|---:|
-| Arrendatario | Erasmus | 10 | 26,32 % |
+| Arrendatario | Erasmus | 12 | 31,58 % |
 | Arrendatario | Nómada | 5 | 13,16 % |
-| Arrendatario | Rentabilizador | 2 | 5,26 % |
-| Arrendatario | Práctico | 1 | 2,63 % |
 | Arrendador | Eco-Colaborador | 9 | 23,68 % |
-| Arrendador | Rentabilizador | 4 | 10,53 % |
-| Arrendador | Práctico | 5 | 13,16 % |
-| Arrendador | Erasmus | 2 | 5,26 % |
+| Arrendador | Rentabilizador | 6 | 15,79 % |
+| Arrendador | Práctico | 6 | 15,79 % |
 | **Total** |  | **38** | **100,00 %** |
 
 Desde el punto de vista del marketing, estos datos son relevantes porque muestran que se están captando tanto demanda potencial, representada por arrendatarios, como oferta potencial, representada por arrendadores. Esta doble captación es especialmente importante en un modelo de plataforma, ya que la utilidad del servicio depende de mantener cierto equilibrio entre personas que necesitan alquilar objetos y personas que pueden ofrecerlos.
@@ -109,7 +106,7 @@ Si se toma como base únicamente a los usuarios incluidos en el registro de encu
 | Tercera captación | 9 | 9 | 1,00 |
 | **Total** | **33** | **39** | **1,18** |
 
-La segunda fase presenta la media más alta de encuestas por usuario, con 1,50 encuestas completadas por participante. Este dato puede interpretarse como una mayor intensidad de feedback durante el Feedback Sprint 1, posiblemente porque parte de los usuarios realizó más de una aportación o porque se les solicitó una segunda respuesta en el proceso de validación.
+La segunda fase presenta la media más alta de encuestas por usuario, con 1,50 encuestas completadas por participante. Este dato puede interpretarse como una mayor intensidad de feedback durante la segunda captación (Sprints 1-2).
 
 Sin embargo, la tasa de respuesta a encuestas difundidas por mensajería no puede calcularse de forma completa si no se conoce el número total de encuestas enviadas o invitaciones distribuidas. La fórmula adecuada sería:
 
@@ -342,8 +339,8 @@ Instagram es el canal con mayor volumen absoluto y capacidad de conversión a se
 
 | Métrica de seguimiento | Resultado actual | Interpretación |
 |---|---|---|
-| Tasa de inscripción | 60 usuarios piloto captados en cinco fases: 16 en fase inicial, 8 en Feedback Sprint 1, 9 en Feedback Sprint 2, 5 en Feedback Sprint 3 y 22 en Sorteo de descuentos | La fase de sorteo de descuentos fue la más intensa (36,67 %)|
-| Distribución por rol | 31 arrendatarios y 29 arrendadores | Distribución equilibrada (51,67 % / 48,33 %) entre demanda y oferta potencial |
+| Tasa de inscripción | 60 usuarios piloto captados en cinco fases: 16 en la primera (DP), 8 en la segunda (Sprints 1-2), 9 en la tercera (Sprint 3), 5 en la cuarta (PPL) y 22 en el Sorteo de descuentos | La fase de sorteo de descuentos fue la más intensa (36,67 %)|
+| Distribución por rol | 30 arrendatarios y 30 arrendadores | Distribución perfectamente equilibrada (50 % / 50 %) entre demanda y oferta potencial |
 | Tasa de respuesta a encuestas | 39 encuestas completadas por 33 usuarios; 100 % de usuarios documentados con al menos una encuesta | Dato positivo para validación inicial |
 | Engagement en Instagram | 299 interacciones en publicaciones y reels, 23 en historias (322 en total); 58 nuevos seguidores; tasa de engagement del 271,82 % | Alto rendimiento; el formato reel concentra el 57,6 % de las visualizaciones y es el contenido más efectivo |
 | Engagement en LinkedIn | 6 interacciones sociales, 15 visitas al perfil y 2 nuevos seguidores | Menor volumen que Instagram, pero tasas relativas de interacción y visualización del perfil elevadas |
