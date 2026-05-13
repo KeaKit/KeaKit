@@ -1,5 +1,5 @@
 name: CD - Deploy Backend to DigitalOcean
-
+#Comentario para probar el cd
 on:
   workflow_run:
     workflows: ["Backend tests CI"]
@@ -17,8 +17,10 @@ jobs:
     steps:
       - name: Ejecutar despliegue en el Droplet
         uses: appleboy/ssh-action@master
+        env:
+          APP_ENV_FILE: ${{ secrets.ENV_FILE }}
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ secrets.DROPLET_IP_PPL }}
           username: ${{ secrets.DROPLET_USERNAME }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
@@ -32,6 +34,8 @@ jobs:
             git checkout ${{ github.event.workflow_run.head_branch }}
             git pull origin ${{ github.event.workflow_run.head_branch }}
             
+            echo "$APP_ENV_FILE" > .env
+
             # 3. Reiniciar con Docker Compose
             docker compose down
             docker compose up -d --build

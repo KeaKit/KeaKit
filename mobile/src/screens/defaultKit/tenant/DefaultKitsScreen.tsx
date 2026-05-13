@@ -16,18 +16,21 @@ import {
   DefaultKitCard,
   KeakitButton,
 } from "../../../components";
+import { useNavbarOffset } from "../../../hooks/useWindowDimensions";
 
 type DefaultKitsNav = NativeStackNavigationProp<
   RootStackParamList,
   "DefaultKits"
 >;
+import { Helmet } from 'react-helmet-async'; 
+
 
 const DefaultKitsScreen: React.FC = () => {
   const { user } = useAuth();
   const token = user?.token || null;
   const isAdmin = user?.role === "ADMIN";
   const navigation = useNavigation<DefaultKitsNav>();
-
+  const navbarOffset = useNavbarOffset();
   const [kits, setDefaultKits] = useState<DefaultKit[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +88,19 @@ const DefaultKitsScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={commonStyles.containerWhite}>
+    <SafeAreaView style={[commonStyles.containerWhite, {paddingBottom: navbarOffset}]}>
+      <Helmet>
+        <title>Kits predeterminados | KeaKit</title>
+        <meta
+            name="description"
+            content={
+              isAdmin
+                ? "Consulta los detalles y productos incluidos en este kit predeterminado de KeaKit."
+                : "Consulta los productos incluidos en este kit express y personaliza tu alquiler en KeaKit."
+            }
+          />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>  
       <Header
         title={isAdmin ? "Gestión de Kits predeterminados" : "Kits Express"}
         showBack={true}

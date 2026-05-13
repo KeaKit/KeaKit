@@ -14,7 +14,7 @@ import { TextInput as PaperTextInput, Button } from "react-native-paper";
 import { Colors, commonStyles } from "../styles";
 import { createKitStyles } from "../styles/createKitStyles";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types";
+import { RootStackParamList, CatalogProduct } from "../types";
 import { useNavigation } from "@react-navigation/native";
 import { ArticleMapView } from "./ArticleMapView";
 import { useAuth } from "../context/AuthContext";
@@ -51,28 +51,6 @@ type ProductSelectionNav = NativeStackNavigationProp<
   "Home"
 >;
 
-type CatalogProduct = {
-  id: number;
-  itemType: "ARTICLE" | "SERVICE" | string;
-  title: string;
-  pricePerMonth: number;
-  status: "AVAILABLE" | "RENTED" | "INACTIVE" | "ACTIVE" | string;
-  category?: string;
-  city?: string;
-  ownerId: number;
-  ownerName?: string;
-  imageUrl?: string | null;
-  condition?: string | null;
-  totalUnits: number;
-  availableFrom?: string;
-  availableUntil?: string;
-  isAvailable?: boolean;
-  availabilityMessage?: string;
-  distanceKm?: number;
-  cityLat?: number;
-  cityLng?: number;
-};
-
 type ProductSelectionModalProps = {
   visible: boolean;
   onDismiss: () => void;
@@ -88,9 +66,7 @@ type ProductSelectionModalProps = {
   maxPrice?: string;
   onMinPriceChange?: (value: string) => void;
   onMaxPriceChange?: (value: string) => void;
-  onApplyFilters?: () => void;
   onClearFilters?: () => void;
-  filtersLoading?: boolean;
   categoryFilter?: "ALL" | string;
   onCategoryFilterChange?: (category: "ALL" | string) => void;
   categories?: string[];
@@ -106,9 +82,6 @@ type ProductSelectionModalProps = {
   onToggleAvailable: (show: boolean) => void;
   startDate?: Date | null;
   endDate?: Date | null;
-  expandedSearch: boolean;
-  onToggleExpandedSearch: () => void;
-  loadingNearby: boolean;
   targetCityCoords?: { lat: number; lng: number } | null;
   mapProducts?: {
     id: number;
@@ -139,9 +112,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   maxPrice,
   onMinPriceChange,
   onMaxPriceChange,
-  onApplyFilters,
   onClearFilters,
-  filtersLoading = false,
   categoryFilter,
   onCategoryFilterChange,
   categories,
@@ -157,9 +128,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   onToggleAvailable,
   startDate,
   endDate,
-  expandedSearch,
-  onToggleExpandedSearch,
-  loadingNearby,
   targetCityCoords,
   mapProducts = [],
 }) => {
@@ -212,8 +180,6 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     }
     return "";
   }, [minPriceValue, maxPriceValue]);
-
-  const hasPriceErrors = !!(minPriceError || maxPriceError || rangePriceError);
 
   const handleMinPriceInput = (value: string) => {
     setPriceValidationError("");
@@ -289,6 +255,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     }
   };
 
+
   const productsWithAvailability = React.useMemo(() => {
     const mapped = filteredProducts.map((p) => {
       const isAvailable = isCatalogProductAvailableForKitRange(
@@ -360,7 +327,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
     showOnlyMyCity,
     userCity,
     startDate,
-    endDate,
+    endDate
   ]);
   
   const navigateToUserReviews = (ownerId: number, ownerName: string) => {
@@ -625,6 +592,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
                 );
                 const selectedQuantity = tempSelectedQuantities[p.id] ?? 1;
                 const canBeAdded = p.isAvailable === true;
+
 
                 return (
                   <Pressable

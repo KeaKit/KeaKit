@@ -17,6 +17,8 @@ import { RootStackParamList, ArticleRecordDTO, KitStatus } from '../../types';
 import { Colors, Spacing, commonStyles } from '../../styles';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { API_ROUTES } from '../../config/api';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
+import { Helmet } from 'react-helmet-async'; 
 
 type ArticleRentals = NativeStackNavigationProp<RootStackParamList, 'ArticleRentals'>;
 type ArticleRentalsRoute = RouteProp<RootStackParamList, 'ArticleRentals'>;
@@ -24,6 +26,7 @@ type ArticleRentalsRoute = RouteProp<RootStackParamList, 'ArticleRentals'>;
 const ArticleRentalsScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<ArticleRentals>();
+  const navbarOffset = useNavbarOffset();
   const route = useRoute<ArticleRentalsRoute>();
   const { articleId, articleTitle } = route.params;
 
@@ -164,7 +167,12 @@ const loadRecords = async () => {
   }
 
   return (
-    <SafeAreaView style={commonStyles.container}>
+    <SafeAreaView style={[commonStyles.container, {paddingBottom: navbarOffset}]}>
+      <Helmet>
+        <title>Historial de alquileres | KeaKit</title>
+        <meta name="description" content="Historial de alquileres de artículos en la plataforma KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />

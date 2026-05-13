@@ -19,6 +19,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getAllIncidents } from '../../services/incidentService';
 import { Colors, Spacing, FontSizes, FontWeights, BorderRadius, commonStyles } from '../../styles';
 import { filterIncidents, computeSummary } from '../../utils/incidentFilters';
+import { Helmet } from 'react-helmet-async'; 
 
 export { filterIncidents, computeSummary };
 
@@ -189,7 +190,7 @@ const AdminIncidentsScreen: React.FC = () => {
       {/* Filtro por estado */}
       <View style={styles.filterSection}>
         <Text style={styles.filterLabel}>Estado</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+        <View style={styles.chipRow}>
           {STATUS_OPTIONS.map((option) => (
             <TouchableOpacity
               key={option.value}
@@ -210,13 +211,13 @@ const AdminIncidentsScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
       </View>
 
       {/* Filtro por tipo */}
       <View style={styles.filterSection}>
         <Text style={styles.filterLabel}>Tipo</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+        <View style={styles.chipRow}>
           {TYPE_OPTIONS.map((option) => (
             <TouchableOpacity
               key={option.value}
@@ -237,7 +238,7 @@ const AdminIncidentsScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
       </View>
 
       {/* Botón limpiar filtros */}
@@ -257,10 +258,15 @@ const AdminIncidentsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Gestión de Incidencias | KeaKit</title> 
+        <meta name="description" content="Panel de administración de KeaKit. Gestión y mediación de incidencias entre usuarios." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Cabecera */}
       <View style={commonStyles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={Colors.primary} />
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={commonStyles.headerTitle}>Incidencias</Text>
         <View style={{ width: 24 }} />
@@ -427,6 +433,7 @@ const styles = StyleSheet.create({
   },
   chipRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap', 
     gap: Spacing.sm,
   },
   chip: {

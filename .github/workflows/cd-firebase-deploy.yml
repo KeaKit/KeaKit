@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - 'release/*.*.*'
+      - fix/SEO-robots
 
 jobs:
   deploy-frontend:
@@ -32,6 +33,11 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Crear archivo .env de Expo
+        env:
+          MOBILE_ENV: ${{ secrets.MOBILE_ENV_FILE }}
+        run: echo "$MOBILE_ENV" > .env
+
       - name: Construir la web con Expo
         run: npx expo export --platform web
 
@@ -39,8 +45,8 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-          projectId: '${{ secrets.FIREBASE_PROJECT_ID }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PPL }}'
+          projectId: '${{ secrets.FIREBASE_PROJECT_ID_PPL }}'
           channelId: 'live' 
           # Esto le dice a Firebase que el comando se ejecuta desde la carpeta mobile
           entryPoint: mobile

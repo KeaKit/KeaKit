@@ -10,6 +10,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { getAllPromoCodes, updatePromoCode, PromoCodeResponse } from '../../services/promoCodeService';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
+import { Helmet } from 'react-helmet-async'; 
+
 
 type PromoCodesNav = NativeStackNavigationProp<RootStackParamList, 'PromoCodes'>;
 
@@ -35,6 +38,7 @@ const FadeIn: React.FC<{ delay?: number; children: React.ReactNode }> = ({ delay
 
 const PromoCodesScreen: React.FC = () => {
   const navigation = useNavigation<PromoCodesNav>();
+  const navbarOffset = useNavbarOffset();
   const { user } = useAuth();
 
   const [promoCodes,  setPromoCodes]  = useState<PromoCodeResponse[]>([]);
@@ -214,7 +218,13 @@ const PromoCodesScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.root, {paddingBottom: navbarOffset}]}>
+
+      <Helmet>
+        <title>Códigos Promocionales | KeaKit</title>
+        <meta name="description" content="Gestión de códigos promocionales y descuentos de la plataforma KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>

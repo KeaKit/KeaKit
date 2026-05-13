@@ -12,6 +12,8 @@ import {
   Colors,
   Spacing,
 } from "../../../styles";
+import { Helmet } from 'react-helmet-async'; 
+
 
 const DefaultKitDetailsScreen = () => {
   const { user } = useAuth();
@@ -38,10 +40,8 @@ const DefaultKitDetailsScreen = () => {
           .filter(Boolean) as ItemCatalog[];
         setItems(fetchedItems);
       } catch (error) {
-        setErrorMessage(
-          "No se pudieron cargar los detalles del kit. Error: " +
-            (error instanceof Error ? error.message : ""),
-        );
+        const msg = error instanceof Error ? error.message : "Ocurrió un error inesperado";
+        setErrorMessage(msg);
         console.error("Error en DefaultKitDetailsScreen:", error);
       } finally {
         setLoading(false);
@@ -83,6 +83,11 @@ const DefaultKitDetailsScreen = () => {
 
   return (
     <SafeAreaView style={commonStyles.containerWhite}>
+      <Helmet>
+        <title> {isAdmin ? "Gestión de kits predeterminados" : "Kits Express"} | KeaKit </title>
+        <meta name="description" content={isAdmin ? "Gestiona los kits predeterminados disponibles en la plataforma KeaKit." : "Explora kits express con productos listos para alquilar en KeaKit."}/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Header
         title={kit ? kit.name : "Detalles del Kit"}
         showBack
@@ -115,7 +120,10 @@ const DefaultKitDetailsScreen = () => {
         {errorMessage && (
           <KeakitModal
             visible={!!errorMessage}
-            onDismiss={() => { setErrorMessage(null) }}
+            onDismiss={() => { 
+              setErrorMessage(null);
+              navigation.goBack(); 
+            }}
             message={errorMessage}
             variant="error"
           />

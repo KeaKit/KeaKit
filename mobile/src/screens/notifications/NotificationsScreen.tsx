@@ -32,6 +32,8 @@ import {
   formatNotificationDateTime,
   getActivityNotificationTitle,
 } from "../../utils/activityNotifications";
+import { Helmet } from 'react-helmet-async'; 
+
 
 type NotificationsNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -151,6 +153,11 @@ const NotificationsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={commonStyles.container}>
+      <Helmet>
+        <title>Notificaciones | KeaKit</title>
+        <meta name="description" content="Consulta tus notificaciones en KeaKit."/>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>       
       <View style={commonStyles.header}>
         <TouchableOpacity
           style={componentStyles.iconButton}

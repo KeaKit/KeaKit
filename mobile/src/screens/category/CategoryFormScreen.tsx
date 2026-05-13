@@ -18,6 +18,7 @@ import {
 
 import { Colors, Spacing, commonStyles, FontSizes, FontWeights, BorderRadius } from '../../styles';
 import { categoryFormScreenStyles } from '../../styles/categoryFormScreenStyles';
+import { Helmet } from 'react-helmet-async'; 
 
 const { scrollContent, formCard, inputRow, inputLabel,
     inlineInput, statusValue ,priceInput, priceSeparator, divider, cardFooter, statsContainer, statPill, statCircle, statNumber, statLabel
@@ -161,8 +162,25 @@ const CategoryFormScreen: React.FC = () => {
 
   const isEditable = formMode !== 'view';
 
+  const getMetaDescription = () => {
+    if (formMode === 'view') {
+      return 'Consulta los detalles, estado y artículos asociados a esta categoría en KeaKit.';
+    }
+
+    if (formMode === 'edit') {
+      return 'Edita la información, estado y rango de precios de una categoría en KeaKit.';
+    }
+
+    return 'Crea una nueva categoría para organizar artículos dentro de la plataforma KeaKit.';
+  };
+
   return (
     <SafeAreaView style={commonStyles.containerWhite}>
+      <Helmet>
+        <title>{formMode === 'create' ? 'Crear Categoría' : formMode === 'edit' ? 'Editar Categoría' : 'Detalles de Categoría'} | KeaKit</title>
+        <meta name="description" content={getMetaDescription()} />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <View style={commonStyles.header}>
         <TouchableOpacity style={{ padding: Spacing.sm }} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={28} color={Colors.primary} />

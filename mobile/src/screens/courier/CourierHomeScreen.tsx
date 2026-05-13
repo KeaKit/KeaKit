@@ -18,6 +18,8 @@ import { RootStackParamList } from '../../types';
 import { getLoggedUserWallet } from '../../services';
 import { SkeletonPulse } from '../../components';
 import { Colors } from '../../styles/theme';
+import { useNavbarOffset } from '../../hooks/useWindowDimensions';
+import { Helmet } from 'react-helmet-async'; 
 
 type CourierHomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -52,6 +54,7 @@ const FadeIn: React.FC<{ delay?: number; children: React.ReactNode }> = ({ delay
 const CourierHomeScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<CourierHomeNav>();
+  const navbarOffset = useNavbarOffset();
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
 
@@ -77,7 +80,12 @@ const CourierHomeScreen: React.FC = () => {
   const firstName = user?.name?.split(' ')[0] ?? 'Repartidor';
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.root, {paddingBottom: navbarOffset}]} edges={['top', 'left', 'right']}>
+      <Helmet>
+        <title>Panel de Repartidor | KeaKit</title>
+        <meta name="description" content="Panel de gestión de logística y transporte para repartidores de KeaKit." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <ScrollView 
         contentContainerStyle={styles.scroll} 
         showsVerticalScrollIndicator={false}

@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080'
+const BASE_URL = 'https://keakitpplapi.duckdns.org'
 
 export const API_ROUTES = {
   REGISTER: `${BASE_URL}/api/users/register`,
@@ -22,6 +22,7 @@ export const API_ROUTES = {
   CREATE_KIT: `${BASE_URL}/api/kits/create`,
   GET_KITS: `${BASE_URL}/api/kits`,
   GET_KIT: (id: number) => `${BASE_URL}/api/kits/${id}`,
+  VALIDATE_KIT: (id: number) => `${BASE_URL}/api/kits/validate/${id}`,
   CONFIRM_KIT: (id: number) => `${BASE_URL}/api/kits/confirm/${id}`,
   ADD_ITEM_TO_KIT: (kitId: number, itemId: number, userId: number) =>
     `${BASE_URL}/api/kits/${kitId}/items/${itemId}?userId=${userId}`,
@@ -187,6 +188,8 @@ export const API_ROUTES = {
 
   // Insignia
   TOGGLE_FOUNDER_BADGE: (id: number) => `${BASE_URL}/api/admin/users/${id}/founder-badge`,
+
+  GET_TRANSACTION_DETAILS: (id: number) => `${BASE_URL}/api/wallet/transactions/${id}/details`,
 
 } as const;
 

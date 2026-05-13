@@ -16,6 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import { RootStackParamList } from '../../types';
 import { useLocationPicker } from '../../hooks/useLocationPicker';
 import { SelectPicker } from '../../components/SelectPicker';
+import { Helmet } from 'react-helmet-async'; 
 
 // COMPONENTE CHECKBOX PERSONALIZADO (sin expo-checkbox)
 const CustomCheckbox = ({ 
@@ -161,6 +162,11 @@ const RegisterScreen: React.FC = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <Helmet>
+        <title>Registro | KeaKit</title>
+        <meta name="description" content="Regístrate en KeaKit y accede a tus alquileres de kits de forma flexible." />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={24} color="#103a57" />
       </TouchableOpacity>
