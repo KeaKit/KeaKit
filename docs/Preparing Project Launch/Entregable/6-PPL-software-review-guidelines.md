@@ -6,7 +6,7 @@
 
 ## Enlace a la tag de la última release
 
-**Enlace:** -
+**Enlace:** https://github.com/KeaKit/KeaKit/releases/tag/v4.0.0
 
 ## Casos de uso desarrollados
 
