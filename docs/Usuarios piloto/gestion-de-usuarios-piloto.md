@@ -65,13 +65,13 @@ Si durante la fase de pruebas los usuarios piloto detectan algún bug o comporta
 
 Con el objetivo de incentivar la participación activa en el programa de usuarios piloto y reducir las barreras de entrada, se han definido una serie de beneficios orientados a recompensar la confianza temprana y facilitar la experiencia durante la fase de pruebas.
 
-Para más información, consulte el documento [incentivos](./incentivos.md).
+Para más información, consulte el documento [incentivos-y-plan-de-expansion.md](./incentivos-y-plan-de-expansion.md#2-incentivos-principales).
 
 ## 7. Plan de expansión
 
 Con el objetivo de llegar a las cifras de usuarios piloto deseadas y proporcionar una base sólida de aceptación, se han definido acciones concretas de difusión y comunicación para captar usuarios piloto. Se aprovechan los canales digitales disponibles como Instagram, LinkedIn, WhatsApp y X.
 
-Para más información, consulte el [plan de expansión](./plan-de-expansion.md).
+Para más información, consulte el [plan de expansión](./incentivos-y-plan-de-expansion.md#4-plan-de-expansión).
 
 ## 8. Historial de versiones
 
