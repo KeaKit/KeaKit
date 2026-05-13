@@ -1,350 +1,1060 @@
-# Informe de Feedback Sprint 3: NexUS y MeerKatters
+# Informe de Feedback Sprint 2: NexUS y MeerKatters
 
 ## 1. NexUS
 
-### Casos de uso antiguo revisados
+### Casos de uso probados
+
+---
+
 
 ####  Autenticación
 
-###### Edición de perfil.
+Casos de uso probados:
 
-**Revision:** Bugs anteriores revisados y arreglados, no se han detectado nuevas failure condition.
+* Registro de usuarios mediante email.
+* Inicio y cierre de sesión.
+* Recuperación de contraseña.
+* Gestión de roles.
+* Edición de perfil.
+* Manter sesión iniciada.
+
+---
+
+###### Registro de usuarios mediante email.
+
+**Funcionamiento detectado**
+* El sistema efectivamente crea al usuario y le envia el correo en caso de no haber puesto contraseña
 
 **Funcionamiento mejorable**
-* El mensaje de error "Este campo no puede tener mas de 128 caracteres" no aparece justo debajo ni encima de contraseña, sino flotante en la parte de arriba del modal de creación de nuevo residente. Por lo que si se rellenan más campos aparte de la contraseña, no se sabe exactamente cuál es "este campo" en concreto.
+* deberia haber un tamaño maximo de contraseña. me dejo poner una de mil caracteres y el correo de bienvenida deberia ser distinto al de recuperacion de contraseña o indicar que el correo que se envia no es de bienvenida sino de recuperación de contraseña
 
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### Inicio y cierre de sesión.
+
+**Funcionamiento detectado**
+* El sistema efectivamente permite iniciar y cerrar sesión.
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### Recuperación de contraseña.
+
+**Funcionamiento detectado**
+* El sistema envia en corto tiempo un correo de recuperacion de contraseña y funciona correctamente.
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* ninguna
+
+---
+###### Gestión de roles.
+
+**Funcionamiento detectado**
+* El sistema diferencia entre administrador y estudiante.
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* ninguna
+
+---
+
+###### Edición de perfil.
+
+**Funcionamiento detectado**
+* El sistema permite la edicion de perfil tanto de administrador como de estudiante.
+
+**Funcionamiento mejorable**
+* como estudiante el nombre completo pese a tener el *, no se te permite cambiar, por lo que convendria que no apareciera en la pantalla de edicion o se quitara el * que da a entender que es obligatorio 
+
+**Failure condition detectada**
+* T-12: al modificar el apodo desde estudiante y poner un apodo suuuuper largo salta un error de que no se puede guardar, deberia haber un validador de longitud
+
+---
+
+###### Edición de perfil.
+
+**Funcionamiento detectado**
+* se mantiene la sesion iniciada correctamente
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* nada
 ---
 
 #### Panel residencias
 
+Casos de uso probados:
+
+* Acceso e interacción con el panel administrativo.
+* Gestión de personal (CRUD).
+* Gestión de residentes (CRUD).
+* Filtrado y visualización de detalles de las habitaciones.
+
+
+---
+
+###### Acceso e interacción con el panel administrativo.
+
+**Funcionamiento detectado**
+* se puede interactuar con el panel
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* nada
+---
+
+###### Gestión de personal (CRUD).
+
+**Funcionamiento detectado**
+* Puedes crear, borrar, ver a una persona
+
+**Funcionamiento mejorable**
+* cuando pones muchos caracteres efectivamente tiene comprobacion de que no se superen, pero no te dice en cual campo estas violando esa restriccion, simplemente te aparece el mensaje por ahi
+
+**Failure condition detectada**
+* nada
+  
+---
+
+###### Filtrado y visualización de detalles de las habitaciones.
+
+**Funcionamiento detectado**
+* Puedes filtrar y visualizar habitaciones
+
+**Funcionamiento mejorable**
+* niguno
+
+**Failure condition detectada**
+* T12- Se contara como fallo pues aunque no sea un caso de uso explicito, los botones estan y no se ha especificado nada en la guia, al crear una habitacion y tener algun error en la validacion, pese a que la validacion salta, una vez corriges el fallo el error no desaparece y tampoco te deja presionar el boton de guardar 
+  
+---
+
 ###### Gestión de residentes (CRUD).
 
-**Revision**
-Bug anteiores revisados y arreglados, se han detectado nuevas failure condition.
+**Funcionamiento detectado**
+* Puedes crear, eliminar, leer a un estudiante
 
-**Failure condition:** T-12 al intentar eliminar un residente que ya tenga asignado una habitacion salta un error 500 en vez de un error controlado o que se borre el residente
+**Funcionamiento mejorable**
+* niguno
+
+**Failure condition detectada**
+* T12- comentado anteriormente pero al crear o editar el campo checking no se guarda
+  
+---
+
+
+#### Onboarding
+
+Casos de uso probados:
+
+* Dar de alta a nuevos residentes a través de un formulario.
+* Preinscripción a través de formulario.
+
+---
+
+###### **Dar de alta a nuevos residentes a través de un formulario**
+
+**Funcionamiento detectado**
+
+* El sistema permite crear residentes correctamente cuando los datos introducidos son válidos.
+* La edición de residentes funciona correctamente cuando los datos son válidos.
+* En caso de no introducir contraseña, se envía correctamente el correo para su establecimiento.
+* El borrado de residentes funciona correctamente:
+  * El residente se elimina del sistema.
+  * El enlace de establecimiento de contraseña deja de ser válido tras el borrado.
+
+**Funcionamiento mejorable**
+
+* El campo **fecha de check-in** presenta un problema de persistencia/visualización:
+  * Al introducir una fecha y guardar (tanto en creación como en edición), esta **no se muestra posteriormente**:
+    * Ni en el listado de residentes.
+    * Ni al volver a editar el residente (aparece como `dd/mm/aaaa`).
+  * La fecha debería reflejarse correctamente tras ser guardada.
+
+**Failure condition detectada**
+
+* **T-12:** El sistema no presenta el comportamiento esperado, ya que un dato introducido y guardado correctamente (fecha de check-in) no se persiste ni se muestra al usuario.
+
+---
+
+###### **Preinscripción a través de formulario**
+
+**Funcionamiento detectado**
+
+* El formulario funciona correctamente en todos los casos probados.
+* Se valida correctamente el envío de datos.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+#### Objetos
+
+Casos de uso probados:
+
+* Gestión de reservas de objetos (CRUD).
+* Visualización de disponibilidad de los objetos.
+
+---
+
+###### **Gestión de reservas de objetos (CRUD)**
+
+**Funcionamiento detectado**
+
+* Todas las operaciones CRUD funcionan correctamente.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+###### **Visualización de disponibilidad de los objetos**
+
+**Funcionamiento detectado**
+
+* La disponibilidad de los objetos se muestra correctamente.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+#### Matching
+
+Casos de uso probados:
+
+* Configuración del perfil biográfico y preferencias.
+* Gestión de etiquetas personales.
+
+---
+
+###### **Configuración del perfil biográfico y preferencias**
+
+**Funcionamiento detectado**
+
+* La configuración del perfil funciona correctamente.
+* Los datos se guardan y reflejan adecuadamente.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+###### **Gestión de etiquetas personales**
+
+**Funcionamiento detectado**
+
+* La gestión de etiquetas personales funciona correctamente.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+#### Paquetería
+
+Casos de uso probados:
+
+* Editar y eliminar paquetes.
+* Marcar paquetes como entregados.
+* Notificación al residente.
+
+---
+
+###### **Gestión de paquetes**
+
+**Funcionamiento detectado**
+
+* La edición y eliminación de paquetes funciona correctamente.
+* El marcado como entregado funciona correctamente.
+* Las notificaciones al residente cuando llega un paquete funcionan correctamente.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+#### Gestión de acceso
+
+Casos de uso probados:
+
+* Crear pase de invitado.
+* Listado de pases activos.
+* Historial de pases expirados.
+* Listado general de invitados.
+* Visualización de detalles.
+
+---
+
+###### **Crear pase de invitado**
+
+**Funcionamiento detectado**
+
+* Es posible crear pases correctamente con intervalo de fechas válido.
+
+**Funcionamiento mejorable**
+
+* El sistema permite crear pases con:
+  * Fecha de inicio en el pasado.
+  * Fecha de fin en el pasado.
+* Aunque el intervalo sea coherente, no debería permitirse la creación de pases en fechas pasadas según un comportamiento esperado habitual.
+
+**Failure condition detectada**
+
+* **T-13:** El sistema no valida correctamente los datos introducidos en el formulario (permite fechas inválidas desde el punto de vista del negocio).
+
+---
+
+###### **Listado de pases activos**
+
+**Funcionamiento detectado**
+
+* **Vista residente:**
+  * Se muestran correctamente los pases activos.
+  * Los pases creados en el pasado no aparecen (comportamiento correcto).
+
+* **Vista administrador:**
+  * Se muestran también los pases creados en el pasado.
+  * Estos aparecen etiquetados como **“pase activo”**, lo cual es inconsistente.
+
+**Funcionamiento mejorable**
+
+* Inconsistencia en la lógica de negocio entre vistas.
+* Los pases en el pasado no deberían considerarse activos.
+
+**Failure condition detectada**
+
+* **T-12:** El sistema muestra un comportamiento inconsistente e incorrecto al etiquetar como activos pases que ya han expirado.
+
+---
+
+###### **Historial de pases expirados**
+
+**Funcionamiento detectado**
+
+* No se ha encontrado funcionalidad para visualizar el historial de pases expirados.
+
+**Failure condition detectada**
+
+* Ninguna (posible funcionalidad no implementada).
+
+---
+
+###### **Listado general de invitados**
+
+**Funcionamiento detectado**
+
+* Funciona correctamente.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+###### **Visualización de detalles de invitados**
+
+**Funcionamiento detectado**
+
+* Funciona correctamente.
+
+**Failure condition detectada**
+
+* Ninguna.
+
+---
+
+#### Incidencias
+
+Casos de uso probados:
+
+* Gestión de incidencias (CRUD).
+* Consulta del historial de incidencias propias.
+* Consulta del listado global de incidencias con filtros.
+* Cambio de estados de incidencias.
+* Adición de notas y comentarios rápidos.
+* Añadir filtro para buscar incidencias.
+* Asignar técnicos para gestionar las incidencias.
+* Vinculación de habitaciones con las incidencias.
+* Adjuntar imágenes a las incidencias.
+* Visualizar pipeline con el estado de las incidencias.
+
+---
+
+###### **Gestión de incidencias (CRUD)**
+
+* **Estado:** Funciona correctamente.
+* Se pueden crear, visualizar, editar y gestionar incidencias sin problemas.
+
+---
+
+###### **Consulta del historial de incidencias propias**
+
+* **Estado:** Funciona correctamente.
+* Existe un botón **“Viendo mis incidencias”** que filtra correctamente las incidencias creadas por el usuario residente autenticado.
+
+---
+
+###### **Consulta del listado global de incidencias con filtros**
+
+* **Estado:** Funciona correctamente.
+* Los filtros aplican correctamente, incluyendo el filtro de prioridad con valores **Baja** y **Urgente**.
+
+---
+
+###### **Cambio de estados de incidencias**
+
+* **Estado:** Funciona correctamente.
+* Los cambios de estado se reflejan correctamente tanto en la vista del administrador como en la del residente.
+
+---
+
+###### **Adición de notas y comentarios rápidos a las incidencias**
+
+* **Estado:** Funciona correctamente.
+* Las notas y comentarios añadidos por administración se visualizan correctamente en la vista del residente.
+
+---
+
+###### **Añadir filtro para buscar incidencias**
+
+* **Estado:** Funciona correctamente.
+* La búsqueda permite localizar incidencias de forma rápida y precisa.
+
+---
+
+###### **Asignar técnicos para gestionar las incidencias**
+
+* **Estado:** Funciona correctamente.
+* La asignación ya no es libre, sino que solo permite seleccionar técnicos registrados mediante un desplegable.
+
+**Sugerencia de mejora:**
+
+* Actualmente se puede asignar una incidencia a cualquier técnico registrado, independientemente de si está **activo, ausente o de vacaciones**.
+* Sería recomendable restringir la asignación únicamente a técnicos disponibles.
+
+---
+
+###### **Vinculación de habitaciones con las incidencias**
+
+* **Estado:** Funciona correctamente.
+* La incidencia puede vincularse correctamente a una habitación.
+
+---
+
+###### **Adjuntar imágenes a las incidencias**
+
+* **Estado:** Funciona correctamente.
+* El sistema permite adjuntar imágenes y visualizarlas sin incidencias.
+
+---
+
+###### **Visualizar pipeline con el estado de las incidencias**
+
+* **Estado:** Funciona correctamente.
+* El pipeline refleja correctamente el estado actual y su evolución.
+
+---
+
+**Observación**
+
+* Las notificaciones de incidencias funcionan correctamente en la campana.
+* En la vista de administrador, al acceder a una notificación esta desaparece correctamente.
+* En la vista de residente, las notificaciones ya visualizadas **no desaparecen**, lo que provoca acumulación progresiva.
+
+---
+
+#### Avisos
+
+Casos de uso probados:
+
+* Gestión de avisos (CRUD).
+* Recepción de notificaciones de avisos.
+
+---
+
+###### **Gestión de avisos (CRUD)**
+
+* **Estado:** Funciona correctamente.
+* Todas las operaciones CRUD se ejecutan sin problemas.
+
+---
+
+###### **Recepción de notificaciones de avisos**
+
+* **Estado:** Funciona correctamente.
+* Los residentes reciben correctamente las notificaciones de avisos.
+
+---
+
+#### Reservas
+
+Casos de uso probados:
+
+* Configuración de espacios, horas y aforos.
+* Panel de gestión y visualización de reservas.
+* Consulta de disponibilidad en tiempo real y reserva de espacios.
+* Creación de reservas.
+* Cancelación de reservas propias.
+* Liberación automática de objetos.
+* Permitir múltiples reservas según aforo.
+
+---
+
+###### **Configuración de espacios, horas y aforos**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Panel de gestión y visualización de reservas**
+
+**Vista de residente**
+
+* Permite visualizar correctamente las reservas realizadas.
+
+**Vista de administrador**
+
+* Las reservas se reflejan correctamente en el panel de administración.
+
+****Failure condition detectada (T12)****
+
+* En **Gestión de espacios**, al pulsar el botón **“Ver reservas”**, no se muestran las reservas realizadas de ese espacio.
+* En su lugar, se muestran los **detalles del espacio**, lo cual no corresponde con la acción esperada.
+* En cambio, en **Gestión de objetos**, el botón **“Ver préstamos”** sí funciona correctamente.
+
+---
+
+###### **Consulta de disponibilidad en tiempo real y reserva de espacios**
+
+* **Estado:** Funciona correctamente.
+* El sistema refleja correctamente la disponibilidad en tiempo real.
+
+---
+
+###### **Creación de reservas**
+
+* **Estado:** Funciona correctamente.
+* Se validan fechas, horas y campos obligatorios.
+
+---
+
+###### **Cancelación de reservas propias**
+
+* **Estado:** Funciona correctamente.
+* El residente puede cancelar reservas y el cambio se refleja inmediatamente.
+
+---
+
+###### **Liberación automática de objetos**
+
+* **Estado:** Funciona correctamente.
+* Los espacios y objetos quedan liberados automáticamente al finalizar la reserva.
+
+---
+
+###### **Permitir múltiples reservas a la vez según el aforo del espacio**
+
+* **Estado:** Funciona correctamente.
+* El sistema respeta correctamente el aforo configurado.
+
+---
+
+#### Eventos
+
+Casos de uso probados:
+
+* Gestión de eventos (CRUD).
+* Inscripción a eventos.
+* Gestión de asistencia.
+* Crear reserva de espacios públicos al crear un evento.
+
+---
+
+###### **Gestión de eventos (CRUD)**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Inscripción a eventos**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Gestión de asistencia**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Crear reserva de espacios públicos al crear un evento en dicho espacio**
+
+* **Estado:** Funciona correctamente.
+* La reserva del espacio se genera correctamente al crear el evento.
+
+---
+
+#### Comedor
+
+Casos de uso probados:
+
+* Listado de menús semanales de prueba.
+
+---
+
+###### **Listado de menús semanales de prueba**
+
+* **Estado:** Funciona correctamente.
 
 ---
 
 #### Comunicación
 
+Casos de uso probados:
+
+* Gestión de chats (CRUD).
+* Hacer administrador del grupo a los miembros.
+* Añadir y expulsar miembros a los grupos.
+* Chats grupales y privados
+
+---
+
+###### Gestión de chats (CRUD)
+
+**Funcionamiento detectado**
+* Puedes crear, eliminar y ver chats
+
+**Funcionamiento mejorable**
+* nada, suponiendo que esta bien que los usuarios no puedan crear chats grupales y es algo que solo puede hacer el administrador
+
+**Failure condition detectada**
+* nada
+  
+---
+
 ###### Hacer administrador del grupo a los miembros.
 
-**Revision:** Bug anteiores revisados y arreglados, se han detectado nuevas failure condition.
-
-**Failure condition:** T-12 Te puedes quitar el admin a ti mismo y ya una vez sin admin, seguir modificando el chat.
-
----
-#### Onboarding
-
-###### Dar de alta a nuevos residentes / Edición
-
-**Revisión:** Bugs anteriores revisados y arreglados (el error T-12 y la visualización mejorable donde la fecha de check-in no se guardaba ni se mostraba han sido solucionados). No se han detectado nuevas failure conditions.
-
----
-
-### Nuevos casos de uso Sprint 3 
-
-#### EVENTOS
-
-###### Recomendación de eventos
-
 **Funcionamiento detectado**
-* Funciona bien.
+* Puedes poner a otros miembros como administradores del grupo
 
 **Funcionamiento mejorable**
-* Ninguno.
+* nada
 
 **Failure condition detectada**
-* Ninguna.
-
----
-
-###### Creación de chats para eventos
-
-**Funcionamiento detectado**
-* Funciona bien.
-
-**Funcionamiento mejorable**
-* Estaría bien que el administrador pueda entrar a los chats para supervisar.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### MATCHING
-
-###### Funcionalidad de likes entre matches
-
-**Funcionamiento detectado**
-* Funciona bien la acción de dar el like.
-
-**Funcionamiento mejorable**
-* Actualmente no influye en nada (por ejemplo, en el porcentaje de match) y no lo recibe ni se le notifica a la persona a quien se le da el like.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### COMEDOR
-
-###### Analíticas del comedor
-
-**Funcionamiento detectado**
-* El resto de la funcionalidad opera correctamente y muestra los datos.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* **T-13:** En los filtros, el sistema deja poner una fecha de fin anterior a la fecha de inicio.
-
----
-
-###### Borrar foto del menú, Avanzar semana y Ver menús publicados
-
-**Funcionamiento detectado**
-* Todas estas funcionalidades operan correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### GESTIÓN DE ACCESO
-
-###### Historial de pases expirados, Filtrar invitados e Introducir hora de salida
-
-**Funcionamiento detectado**
-* Estas funcionalidades operan correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-###### Generación código qr/código numérico
-
-**Funcionamiento detectado**
-* Sale un QR en la pantalla al solicitarlo.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* **T-12:** Al comparar los códigos QR de dos usuarios distintos, resulta que son iguales.
-
----
-
-#### PANEL DE RESIDENCIA
-
----
-
-###### Ver perfil de estudiante desde su habitación
-
-**Funcionamiento detectado**
-* Al entrar en las habitaciones puedes ver el perfil de los residentes 
-
-**Funcionamiento mejorable**
-* Niguno
-
-**Failure condition detectada**
-* Ninguna
-
----
-
-###### AUDITORIA DE HABITACIONES
-
-**Funcionamiento detectado**
-* cuando hay una modificación en una habitación aparece un historial de auditoría
-
-**Funcionamiento mejorable**
-* Cuando se generan muchas modificaciones al presionar el boton salen tantas que se bugea el modal visualmente, recomendacion, que apartir de x auditorias, esa sección sea scrolleable en vez de crecer indefinidamente
-
-**Failure condition detectada**
-* Ninguna
-
----
-
-###### Modificación de términos legales
-
-**Funcionamiento detectado**
-* No se entendio bien que hace esta nueva funcionalidad
-
-**Funcionamiento mejorable**
-* Explicar mejor, no se sabe si se refiere a que ahora es modificable o que se cambiaron lo de las cookies, para la evaluación de este requisito se da a entender que es la ultima
-
-**Failure condition detectada**
-* Ninguna, aunque por la forma ambigua del nombre tampoco se ha probado esta funcionalidad
-
----
-
-#### NOTIFICACIONES
-
-###### Notificación al administrador para informar de invitados fuera del horario permitido
-
-**Funcionamiento detectado**
-* Se han detectado nuevas failure conditions.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* **T-12:** El sistema permite al administrador rechazar pases aunque el período de visita ya haya finalizado.
-
----
-
-###### Notificación al residente para avisar de hora próxima de salida del invitado
-
-**Funcionamiento detectado**
-* Funciona correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-###### Descartar notificaciones para residente y administrador
-
-**Funcionamiento detectado**
-* Funciona correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### ANALÍTICAS
-
-###### Interfaz de analíticas para administrador
-
-**Funcionamiento detectado**
-* La interfaz funciona correctamente y permite visualizar los datos.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-###### Métricas de análisis (visitas, habitaciones, incidencias y paquetería)
-
-**Funcionamiento detectado**
-* Todas las métricas se muestran correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-###### Analíticas por membership (staff o residentes)
-
-**Funcionamiento detectado**
-* Funciona correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### INCIDENCIAS
-
-###### Lógica de priorización automática de incidencias
-
-**Funcionamiento detectado**
-* Funciona correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### RESERVAS
-
-###### Sistema de recordatorio automático de reservas de espacios
-
-**Funcionamiento detectado**
-* Funciona correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### ESPACIOS COMUNES
-
-###### Añadir imagen al crear/editar un espacio
-
-**Revision:** Se han detectado nuevas failure conditions.
-
-**Funcionamiento detectado**
-* Permite subir imágenes correctamente.
-
-**Funcionamiento mejorable**
-* Validar el tipo de archivo subido para evitar formatos incorrectos.
-
-**Failure condition detectada**
-* **T-12:** El sistema permite subir archivos que no son imágenes (por ejemplo, PDF) al crear o editar espacios/eventos.
-
----
----
+* T12 - puse de administrador del chat general al usuario de prueba, y a todos los usuarios creados, pero al iniciar como el usuario de prueba y hacer modificaciones en el chat, al darle guardar cambios, me dice "No tienes permisos para gestionar este grupo." lo mismo al intentar expulsar miembros que son admin o quitarle el admin a otros miembros administradores del grupo 
   
-## 2. MeerKatters 
+---
 
-### Casos de uso antiguo revisados
+###### Añadir y expulsar miembros a los grupos.
 
+**Funcionamiento detectado**
+* Como adminsitrador puedes
+
+**Funcionamiento mejorable**
+* nada
+
+**Failure condition detectada**
+* nada
+  
+---
+
+
+#### Premium
+
+Casos de uso probados:
+
+* Interfaz de customización de la imagen de marca.
+* Modificar banner e icono en el header.
+
+---
+
+###### **Interfaz de customización de la imagen de marca**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **Modificar banner e icono en el header**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+## 2. MeerKatters
+
+### Casos de uso probados
+
+---
 
 #### GESTIÓN DE USUARIOS
 
+Casos de uso probados:
+
+* UC-01 Registrar usuario
+* UC-02 Iniciar sesión
+* UC-03 Cerrar sesión
+* UC-04 Editar perfil
+* UC-05 Ver perfil
+* UC-06 Cambiar contraseña
+* UC-07 Eliminar cuenta
+
+---
+
+###### **UC-01 Registrar usuario**
+
+* **Estado:** Funciona correctamente.
+* El correo es enviando
+
+****Failure condition detectada Ninguna****
+
+---
+
 ###### **UC-02 Iniciar sesión**
 
-**Revision:** Bugs anteriores revisados y arreglados, no se han detectado nuevas failure condition.
+* **Estado:** Funciona correctamente.
+* El sistema requiere que validez la cuenta con email
+* No permite iniciar sesion si no esta validado
 
-###### UC-05 Ver perfil
+****Failure condition detectada T12****
+* Dentro del formulario de iniciar sesion si presionas ¿olvidaste la contraseña? no hace nada para recuperarla, solo te manda a otra pantalla que no es la de inicio de sesion
 
-**Revision:** Bugs anteriores revisados y no han sido arreglados, siguen con las mismas failure condition anteriores.
+---
 
-**Failure condition:** T-12 no se ha solucionado el error anteriormente marcado, al visualizar el perfil de una persona cuyo foto de perfil sean 2 letras de su nombre ej: UsuarioPrueba, la foto de perfil cambia de una U en fondo azul, a el nombre y apellido de la persona sin formato y con parte del nombre cortado por la longitud del mismo.
+###### **UC-03 Cerrar sesión**
+
+* **Estado:** Funciona correctamente.
+* El sistema efectivamente cierra la sesion
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### *** UC-04 Editar perfil**
+
+* **Estado:** Funciona correctamente.
+* El sistema efectivamente edita el perfil
+* El sistema hace caso omiso a modificaciones en los campos con "inpeccionar elemento"
+* Se tuvieron en cuenta validaciones de logitud en los campos
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-05 Ver perfil**
+
+* **Estado:** Funciona correctamente.
+* El sistema te deja ver el perfil de otras personas
+
+****Failure condition detectada T12****
+* No se si cuenta como failure condition, pero al ver el perfil de alguien que no tiene foto ej. Alejo Molina, su foto deja de ser las letras AM y se transforma en su nombre en entero en texto plano y pequeño
+
+---
+
+###### **UC-06 Cambiar contraseña**
+
+* **Estado:** Funciona correctamente.
+* El sistema valida correctamente la contraseña actual
+
+****Cosas a mejorar****
+* No se tiene la misma validacion para cambiar de contraseña que cuando se crea, para crear requiere mayuscula, minuscula, etc y para cambiar solo que sea 8 caracteres, puedes no poner ninguna mayuscula y lo acepta igualmente
+* El error de cuando la contraseña es muy larga en vez de decir algo como "contraseña muy larga" dice que no puede ser mas de 72 bytes (poco intuitivo para el usuario comun)
+
+****Failure condition detectada ninguno****
+
+---
+
+###### **UC-07 Eliminar cuenta**
+
+* **Estado:** Funciona correctamente.
+* El sistema elimina la cuenta
+
+****Failure condition detectada ninguno****
 
 ---
 
 #### COMUNIDADES
 
-###### UC-13 Gestionar miembros de comunidad
+Casos de uso probados:
 
-**Revision:** Bugs anteriores revisados y no han sido arreglados, siguen con las mismas failure condition anteriores.
-
-**Failure condition:** T-12 No se ha solucionado el error anteriormente marcado, al recibir una solicitud para entrar en un grupo privado, al presionar aceptar o rechazar el sistema no hace nada.
+* UC-08 Crear comunidad
+* UC-09 Editar comunidad
+* UC-10 Eliminar comunidad
+* UC-11 Unirse a comunidad
+* UC-12 Solicitar acceso a comunidad privada
+* UC-13 Gestionar miembros de comunidad
+* UC-14 Publicar contenido en comunidad
+* UC-15 Moderar contenido de comunidad
 
 ---
+
+###### **UC-08 Crear comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema permite crear comunidades
+
+****sugerencia de mejora:****
+* Poner limite de caracteres en las tags, puedes poner un monton y se bugea visualmente
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-09 Editar comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema permite editar el nombre y descripcion comunidades
+* valida el numero minimo de caracteres para el nombre
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-10 Eliminar comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema elimina la comunidad
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-11 Unirse a comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar a comunidades publicas y no te deja entrar directamente a comunidades privadas
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-12 Solicitar acceso a comunidad privada**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar a comunidades publicas y no te deja entrar directamente a comunidades privadas
+
+****Failure condition detectada Ninguna****
+
+---
+
+###### **UC-13 Gestionar miembros de comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar y ver a los miembros de una comunidad
+
+****Sugerencia de mejoras****
+* Que cuando das el admin a alguien puedas quitarselo
+* Que un admin no pueda expulsar a otro porque se podria "adueñar" de la comunidad al expulsar a todos los otros admin 
+
+****Failure condition detectada T12****
+* cuando recibes una solicitud de una comunidad privada cuando le das en aceptar o rechazar el sistema no hace nada
+
+---
+
+###### **UC-14 Publicar contenido en comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite igresar ver a los miembros de una comunidad
+
+****Failure condition detectada ninguno****
+
+---
+
+###### **UC-15 Moderar contenido de comunidad**
+
+* **Estado:** Funciona correctamente.
+* El sistema te permite eliminar eventos
+* 
+****sugerencia de mejora****
+* Al abrir el chat tienes que bajarle el zoom al 75% para que se pueda ver
+
+****Failure condition detectada ninguno****
+---
+
+
+#### Eventos
+
+Casos de uso probados:
+
+* UC-16 Crear evento.
+* UC-17 Configurar privacidad de evento.
+* UC-18 Especificar información del evento.
+* UC-19 Seleccionar ubicación (mapa interactivo).
+* UC-20 Ver ubicaciones recomendadas.
+* UC-21 Unirse a evento.
+* UC-22 Cancelar asistencia.
+* UC-23 Ver asistentes.
+* UC-24 Editar evento.
+* UC-25 Cancelar evento.
+
+---
+
+###### **UC-16 Crear evento**
+
+* **Estado:** Funciona correctamente.
+* El sistema no permite crear eventos con fecha pasada.
+* Tampoco permite crear eventos cuya fecha de inicio sea posterior a la fecha de fin.
+
+****Failure condition detectada (T-13)****
+
+* Al indicar la ubicación presencial de un evento, el sistema permite introducir una **dirección inventada o inexistente**.
+* Por ejemplo, si se asigna el punto **(0,0)** y se introduce como nombre una dirección ficticia, el evento se guarda igualmente.
+* La ubicación queda registrada con un valor incorrecto y se representa en coordenadas inválidas.
+
+---
+
+###### **UC-17 Configurar privacidad de evento**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-18 Especificar información del evento**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-19 Seleccionar ubicación (mapa interactivo)**
+
+* **Estado:** Funciona correctamente.
+* La ubicación seleccionada se refleja correctamente en el mapa cuando existen coordenadas válidas.
+
+---
+
+###### **UC-20 Ver ubicaciones recomendadas**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-21 Unirse a evento**
+
+* **Estado:** Funciona correctamente.
+* Aunque en la vista de comunidad, al pulsar **“Mostrar cancelados”**, siguen apareciendo eventos cancelados con el botón **“Apuntarse”**, el sistema no completa la inscripción.
+
+**Sugerencia de mejora:**
+
+* No debería mostrarse el botón **“Apuntarse”** ni el formulario de inscripción en eventos **cancelados o ya finalizados**, aunque internamente bloquee la operación.
+* Esto mejora la intuitividad de la interfaz.
+
+****Failure condition detectada (T-12)****
+
+* En **Inicio > Mis eventos > Historial**, aparecen eventos a los que el usuario **no ha asistido**.
+* Incluso se listan eventos ocurridos **antes de la creación de la cuenta**, lo que indica una inconsistencia en el filtrado histórico.
+
+---
+
+###### **UC-22 Cancelar asistencia**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-23 Ver asistentes**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-24 Editar evento**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-25 Cancelar evento**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+#### Contenido
+
+Casos de uso probados:
+
+* UC-26 Subir archivo.
+* UC-27 Visualizar archivo.
+* UC-28 Descargar archivo.
+* UC-29 Eliminar archivo.
+
+---
+
+###### **UC-26 Subir archivo**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-27 Visualizar archivo**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-28 Descargar archivo**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+###### **UC-29 Eliminar archivo**
+
+* **Estado:** Funciona correctamente.
+
+---
+
+#### Mapas y ubicación
+
+Casos de uso probados:
+
+* UC-30 Búsqueda por ubicación.
+* UC-31 Visualizar mapa de meetings.
+
+---
+
+###### **UC-30 Búsqueda por ubicación**
+
+****Failure condition detectada (T-13)****
+
+* El sistema permite introducir una **ubicación inventada en el perfil del usuario**.
+* Aunque no se hayan seleccionado coordenadas reales en el mapa del perfil, la aplicación permite utilizar esa ubicación falsa para buscar profesores cercanos.
+
+---
+
+###### **UC-31 Visualizar mapa de meetings**
+
+* **Estado:** Funciona correctamente.
+* Si el evento tiene coordenadas asociadas, la ubicación aparece correctamente representada en el mapa.
+
+---
+
+
 #### Profesores
 
 Casos de uso probados:
@@ -362,80 +1072,76 @@ Casos de uso probados:
 ###### UC-32 Crear / editar perfil de profesor.
 
 **Funcionamiento detectado**
-* La creación y edición del perfil de profesor sigue funcionando correctamente.
-* El sistema permite guardar correctamente la información del perfil cuando los datos introducidos son válidos.
+* Funciona bien, pero las validaciones de campos no son específicas; solo se muestra mensaje genérico.
 
 **Funcionamiento mejorable**
-* Las validaciones de los campos siguen siendo poco específicas.
-* Al introducir un correo electrónico con formato inválido, el sistema impide continuar, pero no muestra ningún mensaje indicando que el formato es incorrecto.
-* Al introducir texto excesivamente largo en algunos campos, el sistema tampoco informa del motivo exacto del error, limitándose a bloquear la acción.
+* Mostrar específicamente qué campo y qué error ocurre.
 
 **Failure condition detectada**
-* **T12** - El sistema no proporciona feedback claro al usuario sobre qué validación está fallando, dificultando la corrección de errores.
+* T12
 
 ---
 
 ###### UC-33 Solicitar verificación de profesor.
 
 **Funcionamiento detectado**
-* La solicitud de verificación del perfil funciona correctamente.
+* Funciona correctamente.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
 ###### UC-34 Listar profesores.
 
 **Funcionamiento detectado**
-* El listado de profesores funciona correctamente y permite visualizar los perfiles disponibles.
+* Funciona correctamente.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
 ###### UC-35 Listar profesores verificados.
 
 **Funcionamiento detectado**
-* El filtrado de profesores verificados funciona correctamente.
+* Funciona correctamente.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
 ###### UC-36 Pago para verificación / promoción.
 
 **Funcionamiento detectado**
-* El flujo de pago para la promoción o verificación del perfil de profesor funciona correctamente.
+* Funciona correctamente.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
 ###### UC-37 Valorar profesor.
 
 **Funcionamiento detectado**
-* No se ha podido validar completamente la funcionalidad.
+* No se encuentra completamente implementado; la fecha aparece en formato americano.
 
 **Funcionamiento mejorable**
-* No ha sido posible completar el flujo de valoración porque no se proporcionó una cuenta de profesor promocionado para realizar una contratación real.
-* El proceso requería verificar información personal y profesional real, lo que impedía continuar con datos de prueba.
+* Usar un formato de fecha universal.
 
 **Failure condition detectada**
-* No se ha podido comprobar el flujo completo de contratación y valoración, por falta de datos de prueba adecuados.
+* T12
 
 ---
 
 ###### UC-38 Chat con profesor.
 
 **Funcionamiento detectado**
-* El chat entre usuario y profesor funciona correctamente y permite la comunicación privada en tiempo real.
+* Funciona correctamente.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
@@ -453,45 +1159,49 @@ Casos de uso probados:
 ###### UC-39 Ver planes.
 
 **Funcionamiento detectado**
-* La visualización de planes sigue funcionando correctamente para todos los tipos de usuario.
+* Funciona correctamente para profesor, alumno e institución.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
 ###### UC-40 Suscribirse a un plan.
 
 **Funcionamiento detectado**
-* La suscripción a planes continúa funcionando correctamente.
-
-**Funcionamiento mejorable**
-* Sigue existiendo una gestión poco clara cuando un usuario tiene varios planes activos simultáneamente.
-* El sistema permite mantener suscripciones Premium y Pro activas al mismo tiempo, generando confusión sobre cuál es la suscripción principal o prioritaria.
+* Funciona correctamente para profesor y alumno, pero presenta problemas de consistencia y validaciones incompletas:  
+  - En "Tu suscripción" no aparece el plan contratado individualmente; muestra "No tienes suscripción activa".  
+  - Después de contratar un plan de institución, solo ese aparece como activo.  
+  - Validaciones de campos (nombre, email, dominio) se hacen al clicar en "Continuar el pago"; sería mejor hacerlas antes.  
+  - No se valida número de teléfono ni sitio web.  
+  - Si se cierra la ventana de pago sin completar y luego se intenta usar los mismos datos, no se permite indicando que el dominio ya existe.  
+  - No se puede retroceder después de "Continuar pago", impidiendo modificar datos.  
+  - En "Mis pagos", no aparecen los datos del plan de institución contratado, solo que hay un plan activo.  
+  - No queda claro cómo manejar la contratación de plan individual tras un plan institucional.  
+  - En planes individuales, se puede contratar un plan Pro junto con Premium; debería permitir cancelar el anterior antes de aumentar al siguiente.
 
 **Failure condition detectada**
-* **T12** - Persisten inconsistencias en la gestión de múltiples planes simultáneos.
+* T12
 
 ---
 
 ###### UC-41 Procesar pago.
 
 **Funcionamiento detectado**
-* El procesamiento de pagos continúa funcionando correctamente y el flujo de pago se completa sin incidencias.
+* Funciona correctamente para estudiante, profesor y planes de institución.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
 ###### UC-42 Cancelar suscripción.
 
 **Funcionamiento detectado**
-* La cancelación de suscripción, que anteriormente no estaba implementada, ahora funciona correctamente.
-* El sistema permite cancelar la renovación del plan de forma adecuada.
+* No se puede; parece que no está desarrollado.
 
 **Failure condition detectada**
-* Ninguna.
+* T12
 
 ---
 
@@ -509,318 +1219,57 @@ Casos de uso probados:
 ###### UC-43 Enviar notificación.
 
 **Funcionamiento detectado**
-* El envío de notificaciones sigue funcionando correctamente.
+* Funciona correctamente.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
 ###### UC-44 Recibir notificación.
 
 **Funcionamiento detectado**
-* La recepción de notificaciones en tiempo real funciona correctamente.
+* Funciona correctamente.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
 ###### UC-45 Ver historial de notificaciones.
 
 **Funcionamiento detectado**
-* El historial de notificaciones se muestra correctamente.
+* Funciona correctamente.
 
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
 ---
 
 ###### UC-46 Marcar notificación como leída.
 
 **Funcionamiento detectado**
-* El marcado de notificaciones como leídas funciona correctamente y actualiza su estado.
-
-**Failure condition detectada**
-* Ninguna.
----
-
-#### VIDEOLLAMADAS
-
-###### UC-47 Crear sala de videollamada
-
-**Revision:** Bugs anteriores revisados y no han sido arreglados, siguen con las mismas failure condition anteriores.
-
-**Failure condition:** T-12 no se han solucionado los errores anteriores, si pones en los minutos de duración de crear una reunión un numero gigante como 6000000000000000 te sale un error interno, además si presionas para escribir puedes poner que la reunión dure -45 minutos
-
----
-
-### Nuevos casos de uso Sprint 3 
-
-#### COMUNICACIÓN Y ANUNCIOS
-
-###### UC-67 Publicar anuncio en comunidad
-
-**Estado:** Funciona correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno
-
-**Failure condition detectada**
-* Ninguna
-
----
-
-###### UC-68 Comentar en anuncio
-
-**Estado:** Funciona correctamente, se puede comentar en un anuncio, pero no se ven los botones para editar.
-
-**Funcionamiento mejorable**
-* hacer la zona scrolleable, cuando un anuncio tiene muchos comentarios se van apilando y la pagina se transforma en scrollear para abajo hasta que dejen de salir comentarios.
-
-**Failure condition detectada**
-* T-12 En la guía dice que el administrador debe poder borrar comentarios en un anuncio, pero o no se encontró el botón o no esta implementado para hacerlo
-
----
-
-######  UC-69 Enviar mensaje directo (1-a-1)
-
-**Estado:** Funciona correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno
-
-**Failure condition detectada**
-* Ninguna
-
----
-
-###### UC-70: Recuperación de contraseña olvidada
-
-**Estado:** Funciona correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno
-
-**Failure condition detectada**
-* Ninguna
-
----
-
-###### UC-72: Comunicación en tiempo real (Chat de comunidad)
-
-**Estado:** Funciona correctamente, aunque en la guia dice que al presionar silenciar chat no deberia salirte notificaciones.
-
-**Funcionamiento mejorable**
-* Ninguno
-
-**Failure condition detectada**
-* T-12 En la guia dice que si presionas silenciar chat solo deberian salirte como notificaciones aquellos mensajes que sean para ti, pero con otro usuario escribi tanto mensajes generales como para mi usando el @ y en ambos casos el numero de mensajes no leidos aumentaba pese a que yo presione silenciar chat
-
----
-
-###### UC-77: Confirmación de lectura (Read Receipts) en chats de comunidad
-
-**Estado:** Funciona correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno
-
-**Failure condition detectada**
-* Ninguna
-
----
-
----
-
-#### EVENTOS
-
-Casos de uso probados:
-
-* UC-14 Publicar contenido en comunidad
-* UC-15 Moderar contenido de comunidad
-* UC-16 Crear evento
-* UC-17 Configurar privacidad de evento
-* UC-18 Especificar información del evento
-* UC-19 Seleccionar ubicación (mapa interactivo)
-* UC-20 Ver ubicaciones recomendadas
-* UC-21 Unirse a evento
-* UC-22 Cancelar asistencia
-* UC-23 Ver asistentes
-* UC-24 Editar evento
-* UC-25 Cancelar evento
-
----
-
-###### UC-20 Ver ubicaciones recomendadas
-
-**Revision:** Se han detectado nuevas failure conditions.
-
-**Failure condition:**  
-* **T-12:** En la selección de la ubicación en la creación o edición de eventos, no aparecen ubicaciones recomendadas.
-
----
-
-###### Resto de casos de uso de EVENTOS
-
-**Funcionamiento detectado**
-* Todas las funcionalidades restantes funcionan correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### CONTENIDO
-
-Casos de uso probados:
-
-* UC-26 Subir archivo
-* UC-27 Visualizar archivo
-* UC-28 Descargar archivo
-* UC-29 Eliminar archivo
-
----
-
-###### Gestión de archivos
-
-**Funcionamiento detectado**
-* Todas las funcionalidades funcionan correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### MAPAS Y UBICACIÓN
-
-Casos de uso probados:
-
-* UC-30 Búsqueda por ubicación
-* UC-31 Visualizar mapa de meetings
-
----
-
-###### Funcionalidad de mapas
-
-**Funcionamiento detectado**
-* Todas las funcionalidades funcionan correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
-
-#### CUESTIONARIOS
-
-Casos de uso probados:
-
-* UC-64 Crear cuestionario
-* UC-65 Resolver cuestionario
-* UC-66 Dar feedback o calificación a profesor
-
----
-
-###### UC-64 Crear cuestionario
-
-**Revision:** Se han detectado nuevas failure conditions.
-
-**Failure condition:**  
-* **T-12:** Permite introducir valores decimales como "0,3" en el tiempo estimado; sin embargo, tras crear el cuestionario se muestra "Tiempo estimado: - min".
-
----
-
-###### UC-65 Resolver cuestionario
-
-**Revision:** Se han detectado nuevas failure conditions.
-
-**Failure condition:**  
-* **T-12:** Una vez superado el tiempo límite del cuestionario, el sistema sigue permitiendo enviar respuestas.
-
----
-
-###### UC-66 Dar feedback o calificación a profesor
-
-**Funcionamiento detectado**
 * Funciona correctamente.
 
-**Funcionamiento mejorable**
-* Ninguno.
-
 **Failure condition detectada**
-* Ninguna.
+* ninguna
 
----
 
-#### COMUNICACIÓN Y ANUNCIOS
 
-Casos de uso probados:
 
-* UC-67 Publicar anuncio en comunidad
-* UC-68 Comentar en anuncio
-* UC-69 Enviar mensaje directo (1-a-1)
-* UC-70 Recuperación de contraseña olvidada
-* UC-71 Abandonar una comunidad voluntariamente
-* UC-72 Comunicación en tiempo real (Chat de comunidad)
-* UC-73 Edición de un mensaje propio en la comunidad
-* UC-74 Eliminación de mensajes en la comunidad
-* UC-75 Contratación de planes institucionales (Planes B2B)
-* UC-76 Cancelación de reservas por parte del estudiante
-* UC-77 Confirmación de lectura (Read Receipts)
-* UC-78 Buscar usuarios generales
-
----
-
-###### UC-68 Comentar en anuncio
-
-**Revision:** Se han detectado nuevas failure conditions.
-
-**Failure condition:**  
-* **T-12:** No permite eliminar un anuncio si este tiene comentarios, incluso cuando los comentarios son del propio usuario.
-
----
-
-###### UC-75 Contratación de planes institucionales (Planes B2B)
-
-**Revision:** Se han detectado nuevas failure conditions.
-
-**Failure condition:**  
-* **T-12:** El precio estimado no varía al modificar la cantidad de usuarios durante la contratación del plan.
-
----
-
-###### Resto de casos de uso de COMUNICACIÓN Y ANUNCIOS
-
-**Funcionamiento detectado**
-* Todas las funcionalidades restantes funcionan correctamente.
-
-**Funcionamiento mejorable**
-* Ninguno.
-
-**Failure condition detectada**
-* Ninguna.
-
----
 
 ## Historial de versiones
 
 | Versión | Fecha       | Descripción | Autor(es) |
 |---------|------------|-------------|-----------|
-| 1.0.0 | 28/04/2026 | Creación del documento y casos de uso de meerkateers y Nexus | Luis Emmanuel Chavez Malave|
-| 1.1.0 | 28/04/2026 | Feedback casos de uso Nexus y Meerkatters | Salma El Hakimy Etorabi|
-| 1.2.0 | 28/04/2026 | Feedback casos de uso Nexus y Meerkatters | Marta Aguilar Morcillo|
-
+| 1.0.0 | 05/04/2026 | Creación del documento e Integración de pruebas de casos de uso de NexUS  | Salma El Hakimy Ettorabi |
+| 1.1.0 | 05/04/2026 | Integración del resto de pruebas de casos de uso de NexUS  | Marta Aguilar Morcillo |
+| 1.2.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Marta Aguilar Morcillo |
+| 1.3.0 | 06/04/2026 | Integración de algunos casos de uso de NexUS  | Luis Emmanuel Chavez Malave |
+| 1.4.0 | 06/04/2026 | Integración de algunos casos de uso de MeerKatters  | Luis Emmanuel Chavez Malave |
+| 1.5.0 | 07/04/2026 | Integración de pruebas de casos de uso de Meerkatters  | Salma El Hakimy Ettorabi |
 ---
 
 **Redactado por:** Luis Emmanuel Chavez Malave, Marta Aguilar Morcillo y Salma El Hakimy Ettorabi
-**Fecha de redacción:** 28/04/2026
-**Versión:** 1.2.0
+**Fecha de redacción:** 06/04/2026
+**Versión:** 1.5.0

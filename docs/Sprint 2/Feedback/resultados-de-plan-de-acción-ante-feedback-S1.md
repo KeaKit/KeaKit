@@ -4,8 +4,8 @@ Tras recibir feedback sobre distintos aspectos de la app por parte de los usuari
 
 Para conocer con mayor detalle ambos feedback acceder a los siguientes documentos:
 
-- [Análisis del feedback de otros usuarios](analysis-feedback-other-groups.md)
-- [Análisis del feedback de usuarios piloto](../usuarios%20pilotos/analisis-feedback-sprint1.md)
+- [Análisis del feedback de otros usuarios](./feedback-recibido-de-otros-equipos-S1.md)
+- [Análisis del feedback de usuarios piloto](../../Usuarios%20piloto/analisis-feedback-sprint1.md)
 
 ## Tabla comparativa: Problemas detectados por usuarios piloto vs otros grupos
 
