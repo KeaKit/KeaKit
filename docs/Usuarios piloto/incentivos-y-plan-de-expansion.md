@@ -240,6 +240,7 @@ Finalmente, se enviará a cada usuario piloto la información necesaria para acc
 | 4.1.0   | 14/04/2026 | Actualización plan de expansión                                                    | Rosa María Espinosa Martínez      |
 | 5.0.0   | 12/05/2026 | Separación de incentivos y plan de expansión en dos archivos y revisión de formato | Lucía Ponce García de Sola        |
 | 6.0.0   | 13/05/2026 | Incentivos y plan de expansión vuelven a estar juntos                              | Lucía Ponce García de Sola        |
+| 7.0.0   | 13/05/2026 | Explicación de aplicación de descuentos                           | Candela Jazmín Gutiérrez González        |
 
 ---
 
