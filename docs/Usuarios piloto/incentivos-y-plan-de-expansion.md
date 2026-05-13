@@ -2,22 +2,34 @@
 
 ## Índice
 
-1. [Introducción](#1-introducción)
-2. [Incentivos principales](#2-incentivos-principales)  
-   2.1. [Insignia de "Usuario Fundador"](#21-insignia-de-usuario-fundador)  
-   2.2. [Comisión 0% al poner un kit en alquiler](#22-comisión-0-al-poner-un-kit-en-alquiler)  
-   2.3. [Descuento en el primer alquiler de un kit](#23-descuento-en-el-primer-alquiler-de-un-kit)
-3. [Impacto de los incentivos por tipo de usuario](#3-impacto-de-los-incentivos-por-tipo-de-usuario)  
-   3.1. [Beneficios para arrendadores](#31-beneficios-para-arrendadores)  
-   3.2. [Beneficios para arrendatarios](#32-beneficios-para-arrendatarios)
-4. [Plan de expansión](#4-plan-de-expansión)  
-   4.1. [Planificación por etapas](#41-planificación-por-etapas)  
-   4.2. [Estrategias por canal](#42-estrategias-por-canal)  
-   4.3. [Estrategias por perfil de usuario](#43-estrategias-por-perfil-de-usuario)  
-   4.4. [Métricas de seguimiento](#44-métricas-de-seguimiento)  
-   4.5. [Consideraciones](#45-consideraciones)  
-5. [Sistema gamificado de incentivos basados en pruebas de feedback](#5-sistema-gamificado-de-incentivos-basados-en-pruebas-de-feedback)  
-   5.1. [Funcionamiento general](#51-funcionamiento-general)
+- [Estrategia de incentivos para usuarios piloto](#estrategia-de-incentivos-para-usuarios-piloto)
+  - [Índice](#índice)
+  - [1. Introducción](#1-introducción)
+  - [2. Incentivos principales](#2-incentivos-principales)
+    - [2.1. Insignia de "Usuario Fundador"](#21-insignia-de-usuario-fundador)
+    - [2.2. Comisión 0% al poner un kit en alquiler](#22-comisión-0-al-poner-un-kit-en-alquiler)
+    - [2.3. Descuento en el primer alquiler de un kit](#23-descuento-en-el-primer-alquiler-de-un-kit)
+  - [3. Impacto de los incentivos por tipo de usuario](#3-impacto-de-los-incentivos-por-tipo-de-usuario)
+    - [3.1. Beneficios para arrendadores](#31-beneficios-para-arrendadores)
+    - [3.2. Beneficios para arrendatarios](#32-beneficios-para-arrendatarios)
+  - [4. Plan de expansión](#4-plan-de-expansión)
+    - [4.1. Planificación por etapas](#41-planificación-por-etapas)
+      - [4.1.1. Primera fase (DP, S1, S2, S3)](#411-primera-fase-dp-s1-s2-s3)
+      - [4.1.2. Segunda fase (PPL, WPL)](#412-segunda-fase-ppl-wpl)
+    - [4.2. Estrategias por canal](#42-estrategias-por-canal)
+      - [4.2.1. Instagram (@keakit\_)](#421-instagram-keakit_)
+      - [4.2.2. LinkedIn (Kea Kit)](#422-linkedin-kea-kit)
+      - [5.2.3. WhatsApp y mensajería directa](#523-whatsapp-y-mensajería-directa)
+      - [4.2.4. X (@KeaKit\_)](#424-x-keakit_)
+    - [4.3. Estrategias por perfil de usuario](#43-estrategias-por-perfil-de-usuario)
+      - [4.3.1. Arrendatarios](#431-arrendatarios)
+      - [4.3.2. Arrendadores](#432-arrendadores)
+    - [4.4. Métricas de seguimiento](#44-métricas-de-seguimiento)
+    - [4.5. Consideraciones](#45-consideraciones)
+  - [5. Sistema gamificado de incentivos basados en pruebas de feedback](#5-sistema-gamificado-de-incentivos-basados-en-pruebas-de-feedback)
+    - [5.1. Funcionamiento general](#51-funcionamiento-general)
+    - [5.2. Aplicación de descuentos](#52-aplicación-de-descuentos)
+  - [6. Historial de versiones](#6-historial-de-versiones)
 
 ## 1. Introducción
 
@@ -210,6 +222,13 @@ Cada prueba completada suma **1 punto de progreso**, es decir, desbloquea un inc
 | Arrendatarios | - Distintivo permanente. <br> - Sello de confianza.     | - 10% de descuento en el primer kit. | - 20% de descuento en el primer kit.       |
 | Arrendadores  | - Distintivo permanente. <br> - Prioridad en búsquedas. | - Comisión reducida al 10%.          | - Comisión 0%.                             |
 
+### 5.2. Aplicación de descuentos
+A lo largo de los distintos formularios enviados y publicados, se han recopilado los correos electrónicos que se utilizarán para crear las cuentas de los usuarios piloto, quienes recibirán los beneficios correspondientes según su nivel de progreso. Asimismo, se ha registrado el número de encuestas completadas por cada participante. Estos datos aparecen en el listado de usuarios piloto incluido en el entregable de la plataforma Enseñanza Virtual, con el fin de respetar la protección de datos personales.
+
+Para la creación de las cuentas se emplearán el email y el nombre proporcionados en las encuestas. El resto de la información será igual para todos los usuarios, con excepción de las contraseñas, que se generarán individualmente. Una vez creadas las cuentas, se activarán las insignias de Usuario Fundador correspondientes y se generarán los códigos promocionales que se asignarán a los usuarios piloto en función del rol en el que estén interesados: comisión reducida o descuento en el primer kit. Estos códigos podrán visualizarse desde el apartado de Códigos de descuento, y las insignias desde la edición de cada usuario tras iniciar sesión con el usuario administrador.
+
+Finalmente, se enviará a cada usuario piloto la información necesaria para acceder a su cuenta, los códigos de descuento (en caso de que les correspondan) y las indicaciones sobre los campos que deberán actualizar tras iniciar sesión.
+
 ## 6. Historial de versiones
 
 | Versión | Fecha      | Descripción                                                                        | Autor(es)                         |
@@ -221,6 +240,7 @@ Cada prueba completada suma **1 punto de progreso**, es decir, desbloquea un inc
 | 4.1.0   | 14/04/2026 | Actualización plan de expansión                                                    | Rosa María Espinosa Martínez      |
 | 5.0.0   | 12/05/2026 | Separación de incentivos y plan de expansión en dos archivos y revisión de formato | Lucía Ponce García de Sola        |
 | 6.0.0   | 13/05/2026 | Incentivos y plan de expansión vuelven a estar juntos                              | Lucía Ponce García de Sola        |
+| 7.0.0   | 13/05/2026 | Explicación de aplicación de descuentos                           | Candela Jazmín Gutiérrez González        |
 
 ---
 
