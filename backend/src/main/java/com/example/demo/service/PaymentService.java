@@ -135,7 +135,7 @@ public class PaymentService {
             processTenantPaymentWithWallet(kit.getTenantId(), paymentInfo, kitEntity);
         }
 
-        processGuarantee(paymentInfo.guarantee());
+        processGuarantee(paymentInfo.guarantee(), kitEntity);
 
         double months = kitService.calculateMonthsBetween(kitEntity.getStartDate(), kitEntity.getEndDate());
         kit.getItems().forEach(item -> processItemPaymentToOwner(item, promoCode, months));
@@ -195,9 +195,11 @@ public class PaymentService {
         transactionRepository.save(transaction);
     }
 
-    private void processGuarantee(Integer guaranteeRaw) throws ResourceNotFoundException, UserNotFoundException {
+    private void processGuarantee(Integer guaranteeRaw, Kit kit) throws ResourceNotFoundException, UserNotFoundException {
         Double guaranteeAmount = toEuros(guaranteeRaw);
         Transaction guaranteeTransaction = sendGuaranteeToKeaKit(guaranteeAmount);
+        guaranteeTransaction.setRelatedKit(kit);
+        guaranteeTransaction.setDescription("Garantía retenida - Kit: " + kit.getName());
         transactionRepository.save(guaranteeTransaction);
     }
 
@@ -479,20 +481,31 @@ public class PaymentService {
             throw new IllegalArgumentException("Condición no válida. Usa GOOD o DAMAGED.");
         }
 
-        KitPaymentDTO paymentInfo = kitService.getKitPayment(kitId);
         Kit kit = kitRepository.findById(kitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kit no encontrado"));
 
-        int guaranteeCents = paymentInfo.guarantee() != null ? paymentInfo.guarantee() : 0;
+        if (hasGuaranteeReturnAlreadyBeenProcessed(kitId)) {
+            throw new IllegalStateException("La garantía de este kit ya ha sido procesada");
+        }
+
+        int guaranteeCents = getCapturedGuaranteeCents(kitId);
+        if (guaranteeCents <= 0) {
+            return new GuaranteeReturnResult(0.0, 0.0, Map.of());
+        }
+
         Double guaranteeAmount = toEuros(guaranteeCents);
 
         Wallet keakitWallet = getKeaKitWallet();
         Transaction keakitDeduct = new Transaction(-guaranteeAmount, keakitWallet, TransactionType.GUARANTEE_REFUND);
+        keakitDeduct.setRelatedKit(kit);
+        keakitDeduct.setDescription("Garantía liberada - Kit: " + kit.getName());
         transactionRepository.save(keakitDeduct);
 
-        if (guaranteeCents <= 0 || kit.getSnapshots() == null || kit.getSnapshots().isEmpty()) {
+        if (kit.getSnapshots() == null || kit.getSnapshots().isEmpty()) {
             Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
             Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
+            tenantReceive.setRelatedKit(kit);
+            tenantReceive.setDescription("Devolución de garantía - Kit: " + kit.getName());
             transactionRepository.save(tenantReceive);
             guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
             return new GuaranteeReturnResult(guaranteeAmount, guaranteeAmount, Map.of());
@@ -522,6 +535,8 @@ public class PaymentService {
         if (totalSnapshotWeightCents <= 0 || damagedSubtotalByOwner.isEmpty()) {
             Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
             Transaction tenantReceive = new Transaction(guaranteeAmount, tenantWallet, TransactionType.GUARANTEE_REFUND);
+            tenantReceive.setRelatedKit(kit);
+            tenantReceive.setDescription("Devolución de garantía - Kit: " + kit.getName());
             transactionRepository.save(tenantReceive);
             guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
             return new GuaranteeReturnResult(guaranteeAmount, guaranteeAmount, Map.of());
@@ -540,6 +555,8 @@ public class PaymentService {
             Wallet ownerWallet = walletService.getWalletByUserId(entry.getKey());
             Double ownerPayoutAmount = toEuros(ownerGuaranteeCents);
             Transaction ownerReceive = new Transaction(ownerPayoutAmount, ownerWallet, TransactionType.PAYOUT);
+            ownerReceive.setRelatedKit(kit);
+            ownerReceive.setDescription("Compensación por garantía retenida - Kit: " + kit.getName());
             transactionRepository.save(ownerReceive);
             ownerPayouts.put(entry.getKey(), ownerPayoutAmount);
         }
@@ -550,11 +567,25 @@ public class PaymentService {
             Wallet tenantWallet = walletService.getWalletByUserId(tenantId);
             Transaction tenantReceive = new Transaction(tenantRefundAmount, tenantWallet,
                     TransactionType.GUARANTEE_REFUND);
+            tenantReceive.setRelatedKit(kit);
+            tenantReceive.setDescription("Devolución parcial de garantía - Kit: " + kit.getName());
             transactionRepository.save(tenantReceive);
             guaranteeReturnEmailService.sendGuaranteeNotification(kitId);
         }
 
         return new GuaranteeReturnResult(toEuros(retainedGuaranteeCents), tenantRefundAmount, ownerPayouts);
+    }
+
+    private int getCapturedGuaranteeCents(Long kitId) {
+        return transactionRepository.findByRelatedKitIdAndType(kitId, TransactionType.GUARANTEE_DEPOSIT).stream()
+                .filter(transaction -> transaction.getAmount() != null && transaction.getAmount() > 0)
+                .mapToInt(transaction -> toCents(transaction.getAmount()))
+                .sum();
+    }
+
+    private boolean hasGuaranteeReturnAlreadyBeenProcessed(Long kitId) {
+        return transactionRepository.findByRelatedKitIdAndType(kitId, TransactionType.GUARANTEE_REFUND).stream()
+                .anyMatch(transaction -> transaction.getAmount() != null && transaction.getAmount() < 0);
     }
 
     private Long resolvePayoutOwnerId(ItemMemento snapshot, Item currentItem, Long fallbackOwnerId) {
