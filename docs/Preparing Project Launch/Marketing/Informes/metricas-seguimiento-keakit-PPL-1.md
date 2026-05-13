@@ -1,5 +1,29 @@
 # Informe de métricas de seguimiento de marketing de KeaKit
 
+## Índice
+
+1. [Introducción](#1-introducción)
+2. [Fuentes de información y alcance del análisis](#2-fuentes-de-información-y-alcance-del-análisis)
+3. [Métricas de seguimiento definidas](#3-métricas-de-seguimiento-definidas)
+4. [Tasa de inscripción de usuarios piloto](#4-tasa-de-inscripción-de-usuarios-piloto)
+5. [Tasa de respuesta a encuestas](#5-tasa-de-respuesta-a-encuestas)
+6. [Engagement en Instagram](#6-engagement-en-instagram)
+   - 6.1. [Métricas generales](#61-métricas-generales)
+   - 6.2. [Rendimiento de publicaciones](#62-rendimiento-de-publicaciones)
+   - 6.3. [Rendimiento de historias](#63-rendimiento-de-historias)
+   - 6.4. [Navegación en historias](#64-navegación-en-historias)
+7. [Engagement en LinkedIn](#7-engagement-en-linkedin)
+   - 7.1. [Métricas generales](#71-métricas-generales)
+   - 7.2. [Métricas sobre audiencia](#72-métricas-sobre-audiencia)
+8. [Comparación entre canales](#8-comparación-entre-canales)
+9. [Cuadro consolidado de métricas de seguimiento](#9-cuadro-consolidado-de-métricas-de-seguimiento)
+10. [Conclusiones](#10-conclusiones)
+11. [Recomendaciones de mejora](#11-recomendaciones-de-mejora)
+12. [Plantilla recomendada para próximas mediciones](#12-plantilla-recomendada-para-próximas-mediciones)
+13. [Historial de versiones](#13-historial-de-versiones)
+
+---
+
 ## 1. Introducción
 
 El presente informe integra las métricas disponibles sobre las acciones de marketing digital de KeaKit y los datos de captación de usuarios piloto. Su finalidad es valorar el rendimiento inicial de la comunicación del proyecto, con especial atención a tres indicadores de seguimiento: la tasa de inscripción de usuarios piloto, la tasa de respuesta a encuestas y el engagement en redes sociales.
@@ -90,7 +114,7 @@ Por tanto, con los datos actuales puede afirmarse que existen 39 respuestas regi
 
 ## 6. Engagement en Instagram
 
-### 6.1. Métricas generales de Instagram
+### 6.1. Métricas generales
 
 La cuenta de Instagram registra 609 visualizaciones y 55 cuentas alcanzadas durante el periodo analizado. La mayor parte de las visualizaciones procede de seguidores actuales, con un 98,2 %, frente a un 1,8 % de no seguidores.
 
@@ -110,7 +134,7 @@ En relación con el tipo de contenido, las historias concentran el 93,7 % de las
 
 Entre los seguidores, el consumo se concentra también en historias. En cambio, entre los no seguidores, el 100 % de las visualizaciones procede de publicaciones. Esta diferencia es importante: las historias sirven para mantener activa a la audiencia existente, mientras que las publicaciones son el formato con mayor capacidad de exposición hacia personas que todavía no siguen la cuenta.
 
-### 6.2. Rendimiento de publicaciones de Instagram
+### 6.2. Rendimiento de publicaciones
 
 Se han analizado tres publicaciones de Instagram. En conjunto, acumulan 454 visualizaciones, 130 cuentas alcanzadas y 19 interacciones, todas ellas en forma de “me gusta”. No se registran comentarios, guardados ni compartidos.
 
@@ -141,7 +165,7 @@ También se observa una actividad limitada en el perfil derivada de las publicac
 
 Estos datos muestran que las publicaciones generan cierta derivación hacia el perfil, pero apenas producen conversión hacia acciones de mayor valor, como clics en enlaces o crecimiento directo de seguidores.
 
-### 6.3. Rendimiento de historias de Instagram
+### 6.3. Rendimiento de historias
 
 Se han analizado cuatro historias de Instagram. En conjunto, acumulan 196 visualizaciones, 125 cuentas alcanzadas y 4 interacciones. La interacción se concentra en “me gusta” y solo una historia genera un clic en enlace.
 
@@ -163,7 +187,7 @@ Se han analizado cuatro historias de Instagram. En conjunto, acumulan 196 visual
 
 La historia con mejor tasa de interacción es la de contenido contextual/Feria, aunque la más relevante desde el punto de vista de conversión es la historia con enlace a Linktree, ya que genera el único clic registrado en historias.
 
-### 6.4. Navegación en historias de Instagram
+### 6.4. Navegación en historias
 
 Las métricas de navegación muestran 176 acciones registradas. Predominan los avances a la siguiente pieza de contenido, seguidos por los abandonos.
 
@@ -178,6 +202,8 @@ Las métricas de navegación muestran 176 acciones registradas. Predominan los a
 El porcentaje de abandonos, situado en torno al 23,3 %, indica que una parte relevante de la audiencia interrumpe el consumo de historias. La tercera historia registra 10 retrocesos y 1 clic en enlace, lo que puede interpretarse como una señal de mayor atención o revisión del contenido, aunque la conversión sigue siendo reducida.
 
 ## 7. Engagement en LinkedIn
+
+### 7.1. Métricas generales
 
 La publicación analizada en LinkedIn presenta la propuesta de valor de KeaKit, vinculándola con la economía circular, la sostenibilidad, el consumo colaborativo y la creación de comunidad local. Incluye, además, una llamada a la acción para que las personas interesadas se inscriban como usuarias piloto.
 
@@ -207,6 +233,8 @@ A partir de estos datos, se obtienen los siguientes indicadores calculados.
 | Tasa de interacción sobre alcance | 4,23 % |
 
 Aunque el volumen absoluto de interacciones es reducido, LinkedIn presenta una señal de calidad relevante: 2 de las 4 personas que visitaron el perfil acabaron siguiendo la cuenta. Esto sugiere que, cuando la publicación logra derivar tráfico hacia el perfil, la propuesta de KeaKit resulta suficientemente interesante para transformar una parte de esas visitas en seguimiento.
+
+### 7.2. Métricas sobre audiencia
 
 En cuanto al perfil de audiencia, los datos disponibles muestran una presencia relevante de Sevilla y alrededores, así como de personas vinculadas al sector del desarrollo de software y perfiles en etapa inicial de carrera profesional.
 
@@ -283,3 +311,9 @@ Finalmente, resulta prioritario usar enlaces diferenciados por canal, preferible
 | Observaciones | Incidencias, hipótesis, aprendizajes o cambios aplicados |
 
 Esta plantilla permitiría relacionar visibilidad, interacción, clics, inscripciones y respuestas a encuestas en un mismo sistema de seguimiento. De este modo, las futuras decisiones de marketing podrían basarse no solo en métricas de alcance, sino también en indicadores de conversión y validación real del proyecto.
+
+## 13. Historial de versiones
+
+| Versión | Fecha       | Descripción                   | Autor(es)       |
+|---------|------------|--------------------------------|------------|
+| 1.0.0   | 29/04/2026 | Versión inicial del primer informe de métricas de seguimiento de marketing | Samuel Tamayo Balogh |
