@@ -863,6 +863,29 @@ class ArticleServiceTest {
     }
 
     @Test
+    void processReturn_activeKitBeforeEndDate_throwsWithoutUpdatingArticleOrKit() throws Exception {
+        Article a = makeArticle(27L, ArticleStatus.RENTED);
+        User tenant = new User();
+        tenant.setId(6L);
+        tenant.setEmail("future@example.com");
+        Kit activeKit = makeActiveKit(tenant);
+        activeKit.setEndDate(LocalDate.now().plusDays(1));
+
+        when(articleRepository.findById(27L)).thenReturn(Optional.of(a));
+        when(kitRepository.findActiveKitByItemId(27L, KitStatus.ACTIVE)).thenReturn(Optional.of(activeKit));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> articleService.processReturn(27L, owner.getId(), new ReturnRequest("GOOD", "")));
+
+        assertThat(ex.getMessage()).contains("No se puede procesar la devolución antes de la fecha de fin del contrato");
+        assertThat(a.getStatus()).isEqualTo(ArticleStatus.RENTED);
+        assertThat(activeKit.getStatus()).isEqualTo(KitStatus.ACTIVE);
+        verify(articleRepository, never()).save(any(Article.class));
+        verify(kitRepository, never()).save(any(Kit.class));
+        verifyNoInteractions(paymentService);
+    }
+
+    @Test
     void processReturn_goodCondition_setsArticleAvailableAndClearsUntil() throws Exception {
         Article a = makeArticle(26L, ArticleStatus.RENTED);
         a.setPricePerMonth(50.0);
