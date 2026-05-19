@@ -127,11 +127,19 @@ public class WalletService {
     @Transactional
     public void updateWalletBalance(Long userId, Double amount) throws ResourceNotFoundException {
         Wallet wallet = getWalletByUserId(userId);
+        
+        Double MIN_WITHDRAW_AMOUNT = 1.00;
+        if (amount < MIN_WITHDRAW_AMOUNT) {
+            throw new NotEnoughBalanceException(
+                String.format("La cantidad mínima de dinero para retirar es de %.2f €", MIN_WITHDRAW_AMOUNT)
+            );
+        }
+        
         if (wallet.getBalance() < amount){
             throw new NotEnoughBalanceException("Saldo insuficiente en la cartera");
         }
         if(amount <= 0.0){
-            throw new NotEnoughBalanceException("El monto debe ser positivo");
+            throw new NotEnoughBalanceException("La cantidad debe ser positiva");
         }
         Transaction transaction = new Transaction();
         transaction.setAmount(- amount);
