@@ -139,15 +139,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     color: KC.mint,
     implemented: true,
     screen: 'PromoCodes',
-  },
-  {
-    id: 'stats',
-    icon: 'bar-chart',
-    label: 'Estadísticas',
-    description: 'Métricas y datos de uso de la plataforma',
-    color: KC.lightMint,
-    implemented: false,
-  },
+  }
 ];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
