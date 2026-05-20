@@ -255,18 +255,8 @@ const HeaderNavbar: React.FC<HeaderNavbarProps> = ({ user }) => {
           { name: "Política de Privacidad", icon: "document-text", screen: "EditPolicy" },
         ],
       },
-      {
-        title: "Próximamente",
-        items: [
-          { name: "Tipos de Objetos", icon: "cube", disabled: true, badge: "Próximamente" },
-          { name: "Rangos de Precios", icon: "pricetags", disabled: true, badge: "Próximamente" },
-          { name: "Estadísticas", icon: "bar-chart", disabled: true, badge: "Próximamente" },
-        ],
-      },
       { items: [{ name: "Cerrar Sesión", icon: "log-out", danger: true, onPress: handleLogout }] },
     ];
-
-
   };
 
   const handleMenuItemPress = (item: HeaderMenuItem) => {

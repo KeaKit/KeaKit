@@ -13,6 +13,10 @@ export async function processPaymentWithWallet(
     body: JSON.stringify({ amount }),
   });
 
+  if (res.status === 500) {
+    throw new Error("SERVER_ERROR_500");
+  }
+
   return handleResponse(res);
 }
 

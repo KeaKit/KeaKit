@@ -32,10 +32,49 @@ const transactionTypeLabels: Record<string, string> = {
 
 const getTransactionLabel = (transaction: Transaction) => {
   if (transaction.type === "PAYOUT") {
+    if (transaction.payoutSubtype === "WITHDRAWAL_TO_BANK") {
+      return "Retirada a banco";
+    }
+    if (transaction.payoutSubtype === "KIT_PAYMENT") {
+      return "Pago de kit";
+    }
     return transaction.amount < 0 ? "Pago de kit" : "Ingreso";
   }
   return transactionTypeLabels[transaction.type] ?? transaction.type.replaceAll("_", " ");
 };
+
+  const formatTransactionDate = (dateStr: string): string => {
+    if (!dateStr) return "Fecha desconocida";
+    
+    try {
+      let date: Date;
+      
+      if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        date = new Date(dateStr);
+      }
+      else if (typeof dateStr === 'string' && dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+        date = new Date(dateStr);
+      }
+
+      else {
+        date = new Date(dateStr);
+      }
+      
+      if (isNaN(date.getTime())) {
+        console.warn("Invalid date:", dateStr);
+        return "Fecha no disponible";
+      }
+      
+      return date.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+    } catch (error) {
+      console.error("Error parsing date:", dateStr, error);
+      return "Fecha no disponible";
+    }
+  };
 
 const TransactionItem = ({
   item,
@@ -48,6 +87,8 @@ const TransactionItem = ({
 }) => {
   const isNegative = item.amount < 0;
   const type = getTransactionLabel(item);
+  const dateField = item.timestamp || item.createdAt;
+  const formattedDate = formatTransactionDate(dateField || "");
 
   const BASE_DELAY = 450;
   const STAGGER = 300;
@@ -62,7 +103,7 @@ const TransactionItem = ({
               {type}
             </Text>
             <Text style={commonStyles.caption}>
-              {new Date(item.createdAt).toLocaleDateString()}
+              {formattedDate}
             </Text>
           </View>
           <Text

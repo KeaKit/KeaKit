@@ -22,6 +22,7 @@ import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Category;
+import com.example.demo.model.CategoryStatus;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
@@ -123,6 +124,10 @@ public class ArticleService {
             }
         }
 
+        if (article.getId() == null) {
+            article.setStatus(ArticleStatus.AVAILABLE);
+        }
+
         if (article.getTotalUnits() == null || article.getTotalUnits() < 1)
             article.setTotalUnits(1);
 
@@ -157,7 +162,11 @@ public class ArticleService {
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
+        } else if (isArticleCurrentlyPaid(id)) {
+            throw new RuntimeException("El artículo ha sido pagado y no puede ser editado");
         }
+
+
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -254,6 +263,8 @@ public class ArticleService {
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser eliminado");
+        } else if (isArticleCurrentlyPaid(id)) {
+            throw new RuntimeException("El artículo ha sido pagado y no puede ser eliminado");
         }
 
         User owner = article.getOwner();
@@ -615,7 +626,11 @@ public class ArticleService {
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
+        } else if (isArticleCurrentlyPaid(id)) {
+            throw new RuntimeException("El artículo ha sido pagado y no puede ser editado");
         }
+
+
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -674,6 +689,9 @@ public class ArticleService {
         if (updateData.getCategory() != null && updateData.getCategory().getId() != null) {
             resolvedCategory = categoryRepository.findById(updateData.getCategory().getId())
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+            if (resolvedCategory.getStatus() == CategoryStatus.DRAFT) {
+                throw new RuntimeException("No se puede asignar una categoría en estado Borrador a un artículo");
+            }
             article.setCategory(resolvedCategory);
         }
         if (resolvedCategory != null && article.getPricePerMonth() != null) {
@@ -718,11 +736,16 @@ public class ArticleService {
     }
 
     private boolean isArticleCurrentlyRented(Long articleId) {
-    List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
-    return kits.stream().anyMatch(k -> 
-        k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE
-    );
-}
+        List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
+        return kits.stream().anyMatch(k -> 
+            k.getStatus() == KitStatus.ACTIVE
+        );
+    }
+
+    private boolean isArticleCurrentlyPaid(Long articleId) {
+        List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
+        return kits.stream().anyMatch(k -> k.getStatus() == KitStatus.PAID);
+    }
     
     @Transactional
     public void autoCloseExpiredKitItems(Kit expiredKit) {

@@ -42,6 +42,11 @@ export const withdrawToBank = async (
     body: JSON.stringify(payload),
   });
 
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Error al procesar la retirada");
+  }
+
   return handleResponse<string>(res);
 };
 

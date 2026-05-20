@@ -23,15 +23,21 @@ export const TrackingNotificationsProvider: React.FC<{ children: React.ReactNode
   const storageKey = user?.id ? `${BASE_STORAGE_KEY}_${user.id}` : null;
   
   useEffect(() => {
-    if(!storageKey) {
+    if (!storageKey) {
       setNotifications([]);
       return;
     }
+    
     (async () => {
-      const stored = await AsyncStorage.getItem(storageKey);
-      if (stored) {
-        setNotifications(JSON.parse(stored));
-      } else {
+      try {
+        const stored = await AsyncStorage.getItem(storageKey);
+        if (stored) {
+          setNotifications(JSON.parse(stored));
+        } else {
+          setNotifications([]);
+        }
+      } catch (error) {
+        console.error("Error cargando tracking notifications del storage:", error);
         setNotifications([]);
       }
     })();
