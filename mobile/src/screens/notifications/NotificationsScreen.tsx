@@ -165,7 +165,6 @@ const NotificationsScreen: React.FC = () => {
           <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
             {item.title}
           </Text>
-          <Text style={styles.cardDate}>{item.dateLabel}</Text>
         </View>
         
         {item.type === "TRACKING" ? (
