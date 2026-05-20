@@ -160,11 +160,12 @@ public class ArticleService {
             .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
-            if (isArticleCurrentlyPaid(id)) {
-                throw new RuntimeException("El artículo ha sido pagado y no puede ser editado");
-            }
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
+        } else if (isArticleCurrentlyPaid(id)) {
+            throw new RuntimeException("El artículo ha sido pagado y no puede ser editado");
         }
+
+
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -261,6 +262,8 @@ public class ArticleService {
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser eliminado");
+        } else if (isArticleCurrentlyPaid(id)) {
+            throw new RuntimeException("El artículo ha sido pagado y no puede ser eliminado");
         }
 
         User owner = article.getOwner();
@@ -621,10 +624,9 @@ public class ArticleService {
             .orElseThrow(() -> new RuntimeException("Artículo no encontrado"));
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
-            if (isArticleCurrentlyPaid(id)) {
-                throw new RuntimeException("El artículo ha sido pagado y no puede ser editado");
-            }
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
+        } else if (isArticleCurrentlyPaid(id)) {
+            throw new RuntimeException("El artículo ha sido pagado y no puede ser editado");
         }
 
 
