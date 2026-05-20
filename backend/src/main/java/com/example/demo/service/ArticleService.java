@@ -22,6 +22,7 @@ import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Category;
+import com.example.demo.model.CategoryStatus;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
@@ -678,6 +679,9 @@ public class ArticleService {
         if (updateData.getCategory() != null && updateData.getCategory().getId() != null) {
             resolvedCategory = categoryRepository.findById(updateData.getCategory().getId())
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+            if (resolvedCategory.getStatus() == CategoryStatus.DRAFT) {
+                throw new RuntimeException("No se puede asignar una categoría en estado Borrador a un artículo");
+            }
             article.setCategory(resolvedCategory);
         }
         if (resolvedCategory != null && article.getPricePerMonth() != null) {
