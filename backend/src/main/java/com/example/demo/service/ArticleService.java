@@ -123,6 +123,10 @@ public class ArticleService {
             }
         }
 
+        if (article.getId() == null) {
+            article.setStatus(ArticleStatus.AVAILABLE);
+        }
+
         if (article.getTotalUnits() == null || article.getTotalUnits() < 1)
             article.setTotalUnits(1);
 
