@@ -2,17 +2,18 @@ import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
+import { Helmet } from 'react-helmet-async'; 
 import { useAuth } from "../../context/AuthContext";
+import { useTrackingNotifications } from "../../context/TrackingNotificationContext";
 import { RootStackParamList, ActivityNotification } from "../../types";
 import {
   BorderRadius,
@@ -32,30 +33,48 @@ import {
   formatNotificationDateTime,
   getActivityNotificationTitle,
 } from "../../utils/activityNotifications";
-import { Helmet } from 'react-helmet-async'; 
 
+type NotificationsNav = NativeStackNavigationProp<RootStackParamList, "Notifications">;
 
-type NotificationsNav = NativeStackNavigationProp<
-  RootStackParamList,
-  "Notifications"
->;
+type UnifiedNotification = {
+  id: string;
+  originalId: string | number;
+  type: "TRACKING" | "ACTIVITY";
+  title: string;
+  message: string;
+  dateLabel: string;
+  read: boolean;
+};
+
+const formatTrackingDateTime = (value: string): string => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+};
 
 const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NotificationsNav>();
   const { user } = useAuth();
+  
+  const { 
+    notifications: trackingNotifications, 
+    markAllRead: markAllTrackingRead, 
+    clearAll: clearAllTracking, 
+    removeNotification: removeTrackingNotification 
+  } = useTrackingNotifications();
 
-  const [notifications, setNotifications] = useState<ActivityNotification[]>([]);
+  const [activityNotifications, setActivityNotifications] = useState<ActivityNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const unreadIds = useMemo(
-    () => notifications.filter((n) => !n.read).map((n) => n.id),
-    [notifications],
+  const unreadActivityIds = useMemo(
+    () => activityNotifications.filter((n) => !n.read).map((n) => n.id),
+    [activityNotifications],
   );
 
-  const loadNotifications = async () => {
+  const loadActivityNotifications = async () => {
     if (!user?.id || !user?.token) {
-      setNotifications([]);
+      setActivityNotifications([]);
       setLoading(false);
       setError("Debes iniciar sesión para ver notificaciones.");
       return;
@@ -65,84 +84,105 @@ const NotificationsScreen: React.FC = () => {
       setLoading(true);
       setError(null);
       const data = await getUserNotifications(user.id, user.token);
-      setNotifications(data);
+      setActivityNotifications(data);
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
-          : "No se pudieron cargar las notificaciones.";
+          : "No se pudieron cargar las notificaciones de actividad.";
       setError(message);
-      setNotifications([]);
+      setActivityNotifications([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCheckNotification = async (notificationId: number) => {
-    if (!user?.token) return;
+  useFocusEffect(
+    useCallback(() => {
+      loadActivityNotifications();
+      
+      if (trackingNotifications.some(n => !n.read)) {
+        markAllTrackingRead();
+      }
+    }, [user?.id, user?.token, trackingNotifications])
+  );
 
-    try {
-      await deleteNotification(notificationId, user.token);
-      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-    } catch (err) {
-      console.error("Error al quitar la notificación:", err);
-    }
-  };
-
-
-  const markAllRead = async () => {
-    if (!user?.token || unreadIds.length === 0) return;
+  const handleMarkAllActivityRead = async () => {
+    if (!user?.token || unreadActivityIds.length === 0) return;
 
     const results = await Promise.allSettled(
-      unreadIds.map((id) => markNotificationRead(id, user.token)),
+      unreadActivityIds.map((id) => markNotificationRead(id, user.token))
     );
 
     const hasSuccess = results.some((r) => r.status === "fulfilled");
     if (hasSuccess) {
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setActivityNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      loadNotifications();
-    }, [user?.id, user?.token]),
-  );
-
-  const handleMarkSingleRead = async (notificationId: number) => {
+  const handleCheckActivityNotification = async (notificationId: number) => {
     if (!user?.token) return;
 
     try {
-      await markNotificationRead(notificationId, user.token);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
-      );
+      await deleteNotification(notificationId, user.token);
+      setActivityNotifications((prev) => prev.filter((n) => n.id !== notificationId));
     } catch (err) {
-      console.error("Error al marcar notificación como leída:", err);
+      console.error("Error al quitar la notificación de actividad:", err);
     }
   };
 
-  const renderItem = ({ item }: { item: ActivityNotification }) => (
+  const combinedNotifications = useMemo((): UnifiedNotification[] => {
+    const uniqueTracking = Array.from(
+      new Map(trackingNotifications.map(n => [n.id, n])).values()
+    ).map((n) => ({
+      id: `tracking-${n.id}`,
+      originalId: n.id,
+      type: "TRACKING" as const,
+      title: `Kit ${n.kitName}`,
+      message: n.message,
+      dateLabel: formatTrackingDateTime(n.createdAt),
+      read: true,
+    }));
+
+    const mappedActivity = activityNotifications.map((n) => ({
+      id: `activity-${n.id}`,
+      originalId: n.id,
+      type: "ACTIVITY" as const,
+      title: getActivityNotificationTitle(n.type, n.relatedArticleId),
+      message: n.message,
+      dateLabel: formatNotificationDateTime(n.createdAt),
+      read: n.read,
+    }));
+
+    return [...uniqueTracking, ...mappedActivity];
+  }, [trackingNotifications, activityNotifications]);
+
+  const renderItem = ({ item }: { item: UnifiedNotification }) => (
     <View style={[styles.card, item.read ? styles.cardRead : styles.cardUnread]}>
       {!item.read && <View style={styles.unreadIndicator} />}
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}>
-            {getActivityNotificationTitle(item.type, item.relatedArticleId)}
+            {item.title}
           </Text>
-          <Text style={styles.cardDate}>{formatNotificationDateTime(item.createdAt)}</Text>
         </View>
-        {!item.read && (
-          <TouchableOpacity
-            style={styles.markReadButton}
-            onPress={() => handleCheckNotification(item.id)}
+        
+        {item.type === "TRACKING" ? (
+          <TouchableOpacity 
+            style={styles.actionIconButton} 
+            onPress={() => removeTrackingNotification(item.originalId as string)}
           >
-            <Ionicons 
-              name="checkmark-circle" 
-              size={24} 
-              color={Colors.primary} 
-            />
+            <Ionicons name="trash-outline" size={16} color="#d9534f" />
           </TouchableOpacity>
+        ) : (
+          !item.read && (
+            <TouchableOpacity
+              style={styles.actionIconButton}
+              onPress={() => handleCheckActivityNotification(item.originalId as number)}
+            >
+              <Ionicons name="checkmark-circle" size={22} color={Colors.primary} />
+            </TouchableOpacity>
+          )
         )}
       </View>
       <Text style={[styles.cardMessage, item.read && styles.cardMessageRead]}>
@@ -158,6 +198,7 @@ const NotificationsScreen: React.FC = () => {
         <meta name="description" content="Consulta tus notificaciones en KeaKit."/>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>       
+      
       <View style={commonStyles.header}>
         <TouchableOpacity
           style={componentStyles.iconButton}
@@ -167,9 +208,25 @@ const NotificationsScreen: React.FC = () => {
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Notificaciones</Text>
-
         <View style={componentStyles.iconButton} />
       </View>
+
+      {!loading && !error && combinedNotifications.length > 0 && (
+        <View style={styles.actionsContainer}>
+          {unreadActivityIds.length > 0 && (
+            <TouchableOpacity style={styles.actionButton} onPress={handleMarkAllActivityRead}>
+              <Ionicons name="checkmark-circle" size={18} color={Colors.primary} />
+              <Text style={styles.actionButtonTextPrimary}>Marcar todas como leídas</Text>
+            </TouchableOpacity>
+          )}
+          {trackingNotifications.length > 0 && (
+            <TouchableOpacity style={styles.actionButton} onPress={clearAllTracking}>
+              <Ionicons name="trash-outline" size={18} color="#d9534f" />
+              <Text style={styles.actionButtonTextDanger}>Borrar todas las notificaciones</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       {loading ? (
         <View style={styles.centerContent}>
@@ -179,21 +236,19 @@ const NotificationsScreen: React.FC = () => {
         <View style={styles.centerContent}>
           <Text style={commonStyles.errorText}>{error}</Text>
         </View>
-      ) : notifications.length === 0 ? (
+      ) : combinedNotifications.length === 0 ? (
         <View style={styles.centerContent}>
           <Ionicons
             name="mail-open-outline"
             size={48}
             color={Colors.textSecondary}
           />
-          <Text style={styles.emptyText}>
-            No tienes notificaciones por ahora.
-          </Text>
+          <Text style={styles.emptyText}>No tienes notificaciones por ahora.</Text>
         </View>
       ) : (
         <FlatList
-          data={notifications}
-          keyExtractor={(item) => String(item.id)}
+          data={combinedNotifications}
+          keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
         />
@@ -222,21 +277,31 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Spacing.lg,
+    paddingTop: Spacing.xs,
     gap: Spacing.sm,
   },
-  actionsRow: {
+  actionsContainer: {
     paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
+    justifyContent: "space-between"
   },
-  clearButton: {
+  actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.xs,
+    gap: 6,
   },
-  clearButtonText: {
+  actionButtonTextPrimary: {
     color: Colors.primary,
+    fontWeight: "600",
     fontSize: FontSizes.sm,
-    fontWeight: FontWeights.semibold,
+  },
+  actionButtonTextDanger: {
+    color: "#d9534f",
+    fontWeight: "600",
+    fontSize: FontSizes.sm,
   },
   card: {
     backgroundColor: Colors.backgroundWhite,
@@ -260,8 +325,7 @@ const styles = StyleSheet.create({
   },
   cardRead: {
     borderColor: Colors.border,
-    opacity: 0.7,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: Colors.backgroundWhite,
   },
   cardHeader: {
     flexDirection: "row",
@@ -282,6 +346,7 @@ const styles = StyleSheet.create({
   cardDate: {
     fontSize: FontSizes.sm,
     color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
   cardMessage: {
     fontSize: FontSizes.base,
@@ -290,7 +355,7 @@ const styles = StyleSheet.create({
   cardMessageRead: {
     opacity: 0.8,
   },
-  markReadButton: {
+  actionIconButton: {
     padding: Spacing.xs,
   },
 });
