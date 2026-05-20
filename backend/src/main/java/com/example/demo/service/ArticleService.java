@@ -22,6 +22,7 @@ import com.example.demo.model.Article;
 import com.example.demo.model.ArticleFilter;
 import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Category;
+import com.example.demo.model.CategoryStatus;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
 import com.example.demo.model.KitStatus;
@@ -671,7 +672,7 @@ public class ArticleService {
         }
 
         Category resolvedCategory = article.getCategory();
-        if (updateData.getCategory() != null && updateData.getCategory().getId() != null) {
+        if (updateData.getCategory() != null && updateData.getCategory().getId() != null && updateData.getCategory().getStatus() != CategoryStatus.DRAFT) {
             resolvedCategory = categoryRepository.findById(updateData.getCategory().getId())
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
             article.setCategory(resolvedCategory);
