@@ -60,7 +60,6 @@ import {
   removeSelectedQuantity,
   upsertSelectedQuantity,
 } from "./createKitSelection";
-import { styles } from "../../styles/uploadArticleScreenStyles";
 import { formatRentalDuration, calculateMonthsBetween } from "../../utils/duration";
 import { Helmet } from 'react-helmet-async'; 
 

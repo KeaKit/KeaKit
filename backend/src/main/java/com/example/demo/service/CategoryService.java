@@ -104,6 +104,9 @@ public class CategoryService {
         if (category.getDescription() == null || category.getDescription().isBlank()) {
             throw new IllegalArgumentException("La descripción de la categoría es obligatoria y no puede estar vacía");
         }
+        if (category.getName().length() > 100) {
+            throw new IllegalArgumentException("El nombre de la categoría no puede superar los 100 caracteres.");
+        }
         if (category.getDescription().length() > 1000) {
             throw new IllegalArgumentException("La descripción de la categoría no puede superar los 1000 caracteres.");
         }

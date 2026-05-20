@@ -15,6 +15,7 @@ public class User {
 
     @Column(nullable = false, unique = true)
     @Email
+    @Pattern(regexp = "^[^@]+@[^@]+\\.[^@]+$", message = "Email should be valid")
     private String email;
 
     @Column(nullable = false)
@@ -54,6 +55,9 @@ public class User {
 
     @Column(nullable = false)
     private int tokenVersion = 0;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private RgpdConsent rgpdConsent;
 
     public User() {}
 

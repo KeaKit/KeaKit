@@ -45,7 +45,20 @@ export const Colors = {
 
   overlay: 'rgba(45, 110, 145, 0.4)',
   shadowColor: '#2d6e91',
-  transparent: 'rgba(0, 0, 0, 0)',  
+  transparent: 'rgba(0, 0, 0, 0)',
+  
+  // MIC colors
+  cream:     '#fcfff5',
+  blue:      '#2d6e91',
+  blueDark:  '#1e526e',
+  gray:      '#595959',
+  lavender:  '#d6d0f8',
+  skyBlue:   '#8ec2db',
+  mint:      '#c3f1d1',
+  lightBlue: '#e4f1fc',
+  accentBlue: '#9bd1f1',
+  lightMint: '#e5ffee',
+  
 } as const;
 
 export const Spacing = {
