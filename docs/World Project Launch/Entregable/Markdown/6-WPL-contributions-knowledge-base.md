@@ -80,49 +80,64 @@ Este enfoque sigue facilitando:
 
 ### 2.1. Retroalimentación específica recibida (WPL)
 
-En esta entrega, la contribución principal del Grupo 6 ha consistido en documentar el feedback recibido durante el World Project Launch.
+En esta entrega, la contribución principal del Grupo 6 ha consistido en documentar el nuevo feedback recibido durante la revisión correspondiente al PPL del 14/05/2026, centrado principalmente en la mejora del enfoque comercial, la claridad narrativa y la orientación hacia inversores y clientes.
 
 Este contenido ha sido documentado en:
 
-`my-website/docs/grupo-6/world-project-launch.md`
+`my-website/docs/grupo-6/preparing-project-launch.md`
 
 #### 🟢 Fortalezas detectadas
 
-
+- Buena evolución del enfoque comercial de la presentación.
+- Mejor conexión entre narrativa audiovisual y propuesta de valor del producto.
+- Correcta adaptación del equipo al feedback recibido en revisiones anteriores.
+- Mejora general de la coherencia narrativa respecto a entregas previas.
 
 #### 🔴 Debilidades y aspectos de mejora señalados
 
-
+- Inclusión de un escenario pesimista innecesario dentro del vídeo orientado a inversores.
+- Falta de concreción sobre el destino de la inversión económica solicitada.
+- Escasa claridad visual y narrativa en el cierre del anuncio dirigido a clientes.
+- Presentación demasiado corta respecto al tiempo disponible de exposición.
+- Existencia de perfiles de usuario excesivamente ambiguos como “persona normal”.
 
 ---
 
 ### 2.2. Anotaciones sobre la retroalimentación general (WPL)
 
-El feedback recopilado durante el WPL también ha enriquecido el conocimiento compartido general mediante:
+El feedback recopilado durante esta fase también ha permitido identificar patrones comunes relacionados con las presentaciones orientadas a negocio e inversión, especialmente en aspectos vinculados con claridad narrativa, enfoque comercial y concreción de objetivos.
 
-`my-website/docs/General/world-project-launch.md`
+Este contenido ha sido añadido en:
+
+`my-website/docs/General/preparing-project-launch.md`
 
 #### Buenas prácticas identificadas
 
-
+- Mantener una narrativa claramente orientada a inversores y clientes.
+- Relacionar de forma directa el storytelling con la propuesta de valor del producto.
+- Simplificar los perfiles de usuario para hacerlos más específicos y realistas.
+- Explicar de forma visual y concreta el uso previsto de la inversión.
 
 #### Problemas comunes detectados
 
-
+- Uso de escenarios negativos o pesimistas dentro de pitches orientados a inversión.
+- Falta de claridad sobre el retorno esperado o el destino de los fondos solicitados.
+- Cierres narrativos poco claros en vídeos promocionales o demostraciones.
+- Presentaciones demasiado breves o con insuficiente profundidad de contenido.
+- Definición excesivamente genérica de usuarios objetivo.
 
 ---
 
 ## 3) Acciones de consolidación realizadas
 
-Durante el WPL se han llevado a cabo las siguientes mejoras sobre la Base de Conocimiento:
+Durante esta fase no se han realizado nuevas ampliaciones estructurales ni mejoras sobre la Base de Conocimiento común. La contribución del Grupo 6 se ha centrado exclusivamente en:
 
-1. Incorporación del nuevo feedback específico del Grupo 6 sobre la presentación WPL.
-2. Extensión del repositorio general con patrones comunes detectados en presentaciones finales.
-3. Continuidad en la separación entre feedback específico, general y transversal.
-4. Mantenimiento de la trazabilidad histórica por entregas y sprints.
+1. Incorporación del nuevo feedback específico correspondiente al PPL del 14/05/2026.
+2. Actualización de las anotaciones generales relacionadas con narrativa comercial y orientación a inversores.
+3. Mantenimiento de la organización documental y de la trazabilidad histórica entre entregas.
 
 ---
 
 ## Conclusión
 
-Durante el World Project Launch, la contribución del Grupo 6 ha reforzado la Base de Conocimiento mediante el feedback final del proyecto, consolidando el aprendizaje acumulado a lo largo de todos los sprints y entregas.
+Durante esta fase final del World Project Launch, el Grupo 6 ha continuado reforzando la Base de Conocimiento mediante la documentación del nuevo feedback recibido el 14/05/2026. Esta aportación ha permitido seguir consolidando buenas prácticas relacionadas con storytelling comercial, claridad narrativa, orientación a inversores y definición de usuarios objetivo, manteniendo la continuidad y trazabilidad del aprendizaje acumulado a lo largo del proyecto.
