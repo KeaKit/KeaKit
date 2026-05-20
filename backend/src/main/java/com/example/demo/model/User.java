@@ -56,6 +56,9 @@ public class User {
     @Column(nullable = false)
     private int tokenVersion = 0;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private RgpdConsent rgpdConsent;
+
     public User() {}
 
     public User(String email, String password, String name, UserRole role, String phone, String address, String city, String country) {
