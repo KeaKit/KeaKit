@@ -162,7 +162,11 @@ public class ArticleService {
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
+        } else if (isArticleCurrentlyPaid(id)) {
+            throw new RuntimeException("El artículo ha sido pagado y no puede ser editado");
         }
+
+
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -259,6 +263,8 @@ public class ArticleService {
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser eliminado");
+        } else if (isArticleCurrentlyPaid(id)) {
+            throw new RuntimeException("El artículo ha sido pagado y no puede ser eliminado");
         }
 
         User owner = article.getOwner();
@@ -620,7 +626,11 @@ public class ArticleService {
 
         if (article.getStatus() == ArticleStatus.RENTED || isArticleCurrentlyRented(id)) {
             throw new RuntimeException("El artículo está actualmente alquilado y no puede ser editado");
+        } else if (isArticleCurrentlyPaid(id)) {
+            throw new RuntimeException("El artículo ha sido pagado y no puede ser editado");
         }
+
+
 
         User owner = article.getOwner();
         if (owner == null || !owner.getId().equals(ownerId))
@@ -726,11 +736,16 @@ public class ArticleService {
     }
 
     private boolean isArticleCurrentlyRented(Long articleId) {
-    List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
-    return kits.stream().anyMatch(k -> 
-        k.getStatus() == KitStatus.PAID || k.getStatus() == KitStatus.ACTIVE
-    );
-}
+        List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
+        return kits.stream().anyMatch(k -> 
+            k.getStatus() == KitStatus.ACTIVE
+        );
+    }
+
+    private boolean isArticleCurrentlyPaid(Long articleId) {
+        List<Kit> kits = articleRepository.findAllKitsWhereArticleHasBeen(articleId);
+        return kits.stream().anyMatch(k -> k.getStatus() == KitStatus.PAID);
+    }
     
     @Transactional
     public void autoCloseExpiredKitItems(Kit expiredKit) {
