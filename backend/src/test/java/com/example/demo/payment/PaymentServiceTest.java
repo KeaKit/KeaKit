@@ -194,6 +194,30 @@ public class PaymentServiceTest {
         verify(emailService).sendOrderConfirmation(eq(KIT), anyDouble(), isNull());
     }
 
+    @Test
+    void processPayment_StoresGuaranteeDepositWithRelatedKit() throws Exception {
+        when(kitService.findById(KIT_ID)).thenReturn(KIT_RESPONSE);
+        when(kitService.getKitPayment(eq(KIT_ID), isNull(), isNull())).thenReturn(KIT_PAYMENT);
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+        when(walletService.getWalletByUserId(OWNER.getId())).thenReturn(OWNER_WALLET);
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+
+        paymentService.processPayment(KIT_ID, true);
+
+        ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
+        verify(transactionRepository, atLeast(3)).save(transactionCaptor.capture());
+
+        Transaction guaranteeDeposit = transactionCaptor.getAllValues().stream()
+                .filter(transaction -> transaction.getType() == TransactionType.GUARANTEE_DEPOSIT)
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(guaranteeDeposit.getAmount()).isEqualTo(40.0);
+        assertThat(guaranteeDeposit.getRelatedKit()).isSameAs(KIT);
+    }
+
     // ====== Sad Paths processPayment ======
 
     @Test
@@ -351,19 +375,16 @@ public class PaymentServiceTest {
     }
 
     @Test
-    void withdrawToBank_ShouldCreatePayoutAndUpdateWallet_WhenBalanceIsEnough() throws Exception {
+    void withdrawToBank_ShouldNotCallStripeInTestMode_WhenBalanceIsEnough() throws Exception {
         Double amount = 50.0;
         String bankAccount = "ES9121000418450200051332";
         Wallet wallet = TestDataFactory.createMockWallet(10L, TENANT, 200.0);
 
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(wallet);
 
-        Payout mockPayout = mock(Payout.class);
-        doReturn(mockPayout).when(paymentService).createStripePayout(any());
-
         assertDoesNotThrow(() -> paymentService.withdrawToBank(TENANT.getId(), amount, bankAccount));
 
-        verify(paymentService).createStripePayout(any());
+        verify(paymentService, never()).createPayout(any());
         verify(walletService).updateWalletBalance(TENANT.getId(), amount);
     }
 
@@ -465,8 +486,7 @@ public class PaymentServiceTest {
 
     @Test
     void processGuaranteeReturn_GoodCondition_RefundsTenant() throws Exception {
-        KitPaymentDTO paymentInfo = new KitPaymentDTO(12000, 8000, 2000, 999, 0);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(paymentInfo);
+        mockCapturedGuarantee(20.0);
         KIT.setStartDate(LocalDate.now().minusDays(30));
         KIT.setEndDate(LocalDate.now());
         ItemMemento snapshot = new ItemMemento();
@@ -494,8 +514,7 @@ public class PaymentServiceTest {
 
     @Test
     void processGuaranteeReturn_DamagedCondition_CompensatesOwner() throws Exception {
-        KitPaymentDTO paymentInfo = new KitPaymentDTO(12000, 8000, 2000, 999, 0);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(paymentInfo);
+        mockCapturedGuarantee(20.0);
         KIT.setStartDate(LocalDate.now().minusDays(30));
         KIT.setEndDate(LocalDate.now());
         ItemMemento snapshot = new ItemMemento();
@@ -528,8 +547,7 @@ public class PaymentServiceTest {
         secondOwner.setId(30L);
         secondOwner.setEmail("second-owner@test.com");
 
-        KitPaymentDTO paymentInfo = new KitPaymentDTO(48000, 40000, 8000, 0, 0);
-        when(kitService.getKitPayment(KIT_ID)).thenReturn(paymentInfo);
+        mockCapturedGuarantee(80.0);
 
         KIT.setStartDate(LocalDate.now().minusDays(60));
         KIT.setEndDate(LocalDate.now().minusDays(1));
@@ -596,9 +614,141 @@ public class PaymentServiceTest {
     }
 
     @Test
+    void processGuaranteeReturn_GoodCondition_RefundsCapturedGuaranteeInsteadOfRecalculatedGuarantee() throws Exception {
+        mockCapturedGuarantee(2.80);
+
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(100L);
+        snapshot.setPriceAtRental(13.99);
+        snapshot.setSelectedUnits(1);
+        KIT.setSnapshots(List.of(snapshot));
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+
+        Article article = new Article();
+        article.setId(100L);
+        article.setStatus(ArticleStatus.AVAILABLE);
+        when(articleRepository.findById(100L)).thenReturn(Optional.of(article));
+
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+        when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
+
+        Double result = paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "GOOD");
+
+        assertThat(result).isEqualTo(2.80);
+
+        ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
+        verify(transactionRepository, times(2)).save(transactionCaptor.capture());
+        List<Transaction> savedTransactions = transactionCaptor.getAllValues();
+
+        assertThat(savedTransactions.get(0).getType()).isEqualTo(TransactionType.GUARANTEE_REFUND);
+        assertThat(savedTransactions.get(0).getAmount()).isEqualTo(-2.80);
+        assertThat(savedTransactions.get(1).getType()).isEqualTo(TransactionType.GUARANTEE_REFUND);
+        assertThat(savedTransactions.get(1).getAmount()).isEqualTo(2.80);
+        verify(kitService, never()).getKitPayment(KIT_ID);
+    }
+
+    @Test
+    void processGuaranteeReturn_GoodCondition_WithoutCapturedGuaranteeDoesNotCreateRefund() throws Exception {
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+        when(transactionRepository.findByRelatedKitIdAndType(KIT_ID, TransactionType.GUARANTEE_REFUND))
+                .thenReturn(List.of());
+        when(transactionRepository.findByRelatedKitIdAndType(KIT_ID, TransactionType.GUARANTEE_DEPOSIT))
+                .thenReturn(List.of());
+
+        Double result = paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "GOOD");
+
+        assertThat(result).isEqualTo(0.0);
+        verify(transactionRepository, never()).save(any(Transaction.class));
+        verify(kitService, never()).getKitPayment(KIT_ID);
+    }
+
+    @Test
+    void processGuaranteeReturn_GoodCondition_AttachesRefundTransactionsToKitForAudit() throws Exception {
+        mockCapturedGuarantee(2.80);
+
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(100L);
+        snapshot.setPriceAtRental(13.99);
+        snapshot.setSelectedUnits(1);
+        KIT.setSnapshots(List.of(snapshot));
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+
+        Article article = new Article();
+        article.setId(100L);
+        article.setStatus(ArticleStatus.AVAILABLE);
+        when(articleRepository.findById(100L)).thenReturn(Optional.of(article));
+
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+        when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
+
+        paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "GOOD");
+
+        ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
+        verify(transactionRepository, times(2)).save(transactionCaptor.capture());
+
+        assertThat(transactionCaptor.getAllValues())
+                .allSatisfy(transaction -> assertThat(transaction.getRelatedKit()).isSameAs(KIT));
+    }
+
+    @Test
+    void processGuaranteeReturn_GoodCondition_SecondExecutionDoesNotCreateDuplicateRefunds() throws Exception {
+        when(transactionRepository.findByRelatedKitIdAndType(KIT_ID, TransactionType.GUARANTEE_DEPOSIT))
+                .thenReturn(List.of(createTransaction(2.80, TransactionType.GUARANTEE_DEPOSIT)));
+        when(transactionRepository.findByRelatedKitIdAndType(KIT_ID, TransactionType.GUARANTEE_REFUND))
+                .thenReturn(List.of())
+                .thenReturn(List.of(createTransaction(-2.80, TransactionType.GUARANTEE_REFUND)));
+
+        ItemMemento snapshot = new ItemMemento();
+        snapshot.setOriginalItemId(100L);
+        snapshot.setPriceAtRental(13.99);
+        snapshot.setSelectedUnits(1);
+        KIT.setSnapshots(List.of(snapshot));
+        when(kitRepository.findById(KIT_ID)).thenReturn(Optional.of(KIT));
+
+        Article article = new Article();
+        article.setId(100L);
+        article.setStatus(ArticleStatus.AVAILABLE);
+        when(articleRepository.findById(100L)).thenReturn(Optional.of(article));
+
+        when(userService.getUserByEmail(anyString())).thenReturn(ADMIN_RESPONSE);
+        when(walletService.getWalletByUserId(ADMIN_ID)).thenReturn(ADMIN_WALLET);
+        when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(TENANT_WALLET);
+
+        paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "GOOD");
+        assertThrows(IllegalStateException.class,
+                () -> paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "GOOD"));
+
+        ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
+        verify(transactionRepository, times(2)).save(transactionCaptor.capture());
+
+        long tenantRefunds = transactionCaptor.getAllValues().stream()
+                .filter(transaction -> transaction.getType() == TransactionType.GUARANTEE_REFUND)
+                .filter(transaction -> transaction.getAmount() > 0)
+                .count();
+
+        assertThat(tenantRefunds).isEqualTo(1);
+        verify(guaranteeReturnEmailService, times(1)).sendGuaranteeNotification(KIT_ID);
+    }
+
+    @Test
     void processGuaranteeReturn_InvalidCondition_ThrowsIllegalArgumentException() {
         assertThrows(Exception.class,
                 () -> paymentService.processGuaranteeReturn(KIT_ID, OWNER.getId(), TENANT.getId(), "INVALID"));
+    }
+
+    private void mockCapturedGuarantee(Double amount) {
+        when(transactionRepository.findByRelatedKitIdAndType(KIT_ID, TransactionType.GUARANTEE_DEPOSIT))
+                .thenReturn(List.of(createTransaction(amount, TransactionType.GUARANTEE_DEPOSIT)));
+        when(transactionRepository.findByRelatedKitIdAndType(KIT_ID, TransactionType.GUARANTEE_REFUND))
+                .thenReturn(List.of());
+    }
+
+    private Transaction createTransaction(Double amount, TransactionType type) {
+        Transaction transaction = new Transaction(amount, ADMIN_WALLET, type);
+        transaction.setRelatedKit(KIT);
+        return transaction;
     }
 
 }

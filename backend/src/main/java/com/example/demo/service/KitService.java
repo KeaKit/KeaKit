@@ -203,8 +203,12 @@ public class KitService {
     public KitPaymentDTO getKitPayment(KitCreateRequest request, String promoCode, String userEmail) {
         double months = calculateMonthsBetween(request.startDate(), request.endDate());
         double subtotalPrice = request.itemSelections().stream()
-            .mapToDouble(item -> item.pricePerMonth() * item.quantity() * months)
-            .sum();
+        .mapToDouble(itemSel -> {
+            Item realItem = itemRepository.findById(itemSel.itemId())
+                    .orElseThrow(() -> new RuntimeException("Item no encontrado: " + itemSel.itemId()));
+            return realItem.getPricePerMonth() * itemSel.quantity() * months;
+        })
+        .sum();
         double guarantee = subtotalPrice * PLATFORM_GUARANTEE_PERCENTAGE;
         double courierPrice = 0.0;
         if (request.deliveryMethod() == DeliveryMethod.COURIER) {
@@ -424,7 +428,7 @@ public class KitService {
                             selectedMethod,
                             shippingFee,
                             pickupAddress);
-                    snapshot.setPriceAtRental(sel.pricePerMonth());
+                    snapshot.setPriceAtRental(item.getPricePerMonth());
                     return snapshot;
                 })
                 .collect(Collectors.toList());

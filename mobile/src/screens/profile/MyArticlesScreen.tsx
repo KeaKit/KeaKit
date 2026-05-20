@@ -32,6 +32,21 @@ const CONDITION_OPTIONS = [
 // Constante para precio máximo razonable
 const MAX_PRICE = 999999999;
 
+const parseDateOnly = (value?: string | null): Date | null => {
+  if (!value) return null;
+  const [year, month, day] = value.split('-').map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+};
+
+const isFutureDate = (value?: string | null): boolean => {
+  const date = parseDateOnly(value);
+  if (!date) return false;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return date.getTime() > today.getTime();
+};
+
 const customTheme = {
   ...MD3LightTheme,
   colors: {
@@ -535,8 +550,11 @@ const MyArticlesScreen: React.FC = () => {
     const isDeleting = deletingId === item.id;
     const isExpanded = expandedId === item.id;
     const ownerPromoBadgeLabel = formatOwnerCommissionPromoBadgeLabel(item.ownerCommissionPromoCode);
-    const hasPaidRental =
-      item.rentals?.some((rental) => rental.status === "PAID") ?? false;
+    const hasPaidRental = item.rentals?.some(rental => rental.status === 'PAID') ?? false;
+    const hasActiveRentalBeforeEndDate = item.rentals?.some(
+      rental => rental.status === 'ACTIVE' && isFutureDate(rental.endDate)
+    ) ?? false;
+    const canEvaluateReturn = item.status === 'RENTED' && !hasPaidRental && !hasActiveRentalBeforeEndDate;
 
     return (
       <View style={styles.cardContainer}>
@@ -630,7 +648,7 @@ const MyArticlesScreen: React.FC = () => {
         </View>
 
         {/* BOTÓN DE DEVOLUCIÓN (SOLO SI ESTÁ ALQUILADO) */}
-        {item.status === "RENTED" && !hasPaidRental && (
+        {canEvaluateReturn && (
           <View style={styles.returnButtonWrapper}>
             <TouchableOpacity
               style={styles.returnButtonOutlined}
