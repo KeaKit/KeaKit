@@ -517,6 +517,14 @@ public class DatabaseSeeder {
             delivery5.setLastUpdate(LocalDateTime.now().minusDays(2));
             kitDeliveryRepo.save(delivery5);
 
+            KitDelivery delivery6 = new KitDelivery();
+            delivery6.setKit(luciaEndingTodayKit);
+            delivery6.setStatus(DeliveryStatus.DELIVERED);
+            delivery6.setEstimatedArrival(LocalDateTime.now().minusDays(7));
+            delivery6.setLastLocation("Sevilla");
+            delivery6.setLastUpdate(LocalDateTime.now().minusDays(7));
+            kitDeliveryRepo.save(delivery6);
+
             System.out.println("✅ Seeder finalizado: Datos cargados en los repositorios.");
 
         };
