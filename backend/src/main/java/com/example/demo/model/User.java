@@ -15,6 +15,7 @@ public class User {
 
     @Column(nullable = false, unique = true)
     @Email
+    @Pattern(regexp = "^[^@]+@[^@]+\\.[^@]+$", message = "Email should be valid")
     private String email;
 
     @Column(nullable = false)

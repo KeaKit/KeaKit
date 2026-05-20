@@ -11,6 +11,7 @@ public class AdminUserRequest {
 
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El formato del email no es válido")
+    @Pattern(regexp = "^[^@]+@[^@]+\\.[^@]+$", message = "El formato del email no es válido")
     @Size(max = 255, message = "El email no puede tener más de 255 caracteres")
     private String email;
     
