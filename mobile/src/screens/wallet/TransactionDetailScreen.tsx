@@ -22,10 +22,18 @@ import { Header } from "../../components";
 type TransactionDetailNav = NativeStackNavigationProp<RootStackParamList, "TransactionDetail">;
 type TransactionDetailRoute = RouteProp<RootStackParamList, "TransactionDetail">;
 
-const getTransactionTypeLabel = (type: string): string => {
+const getTransactionTypeLabel = (type: string, payoutSubtype?: string): string => {
+  if (type === "PAYOUT") {
+    if (payoutSubtype === "WITHDRAWAL_TO_BANK") {
+      return "Retirada a banco";
+    }
+    if (payoutSubtype === "KIT_PAYMENT") {
+      return "Pago de kit";
+    }
+    return "Pago";
+  }
   const labels: Record<string, string> = {
     TOP_UP: "Ingreso de dinero",
-    PAYOUT: "Pago de kit",
     FEE: "Comisión",
     GUARANTEE_DEPOSIT: "Depósito de garantía",
     GUARANTEE_REFUND: "Devolución de garantía",
@@ -126,8 +134,7 @@ export default function TransactionDetailScreen() {
     }, [transactionId, user?.token])
   );
 
-  const typeLabel = transaction?.type ? getTransactionTypeLabel(transaction.type) : getTransactionTypeLabel(transactionType);
-  const typeIcon = transaction?.type ? getTransactionTypeIcon(transaction.type) : getTransactionTypeIcon(transactionType);
+  const typeLabel = transaction?.payoutSubtype ? getTransactionTypeLabel(transaction.type, transaction.payoutSubtype) : getTransactionTypeLabel(transactionType, undefined);  const typeIcon = transaction?.type ? getTransactionTypeIcon(transaction.type) : getTransactionTypeIcon(transactionType);
   const typeColor = transaction?.type ? getTransactionTypeColor(transaction.type) : getTransactionTypeColor(transactionType);
   const isPayout = transaction?.type === "PAYOUT" || transactionType === "PAYOUT";
   const isTopUp = transaction?.type === "TOP_UP" || transactionType === "TOP_UP";

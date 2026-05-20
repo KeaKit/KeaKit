@@ -375,19 +375,16 @@ public class PaymentServiceTest {
     }
 
     @Test
-    void withdrawToBank_ShouldCreatePayoutAndUpdateWallet_WhenBalanceIsEnough() throws Exception {
+    void withdrawToBank_ShouldNotCallStripeInTestMode_WhenBalanceIsEnough() throws Exception {
         Double amount = 50.0;
         String bankAccount = "ES9121000418450200051332";
         Wallet wallet = TestDataFactory.createMockWallet(10L, TENANT, 200.0);
 
         when(walletService.getWalletByUserId(TENANT.getId())).thenReturn(wallet);
 
-        Payout mockPayout = mock(Payout.class);
-        doReturn(mockPayout).when(paymentService).createStripePayout(any());
-
         assertDoesNotThrow(() -> paymentService.withdrawToBank(TENANT.getId(), amount, bankAccount));
 
-        verify(paymentService).createStripePayout(any());
+        verify(paymentService, never()).createPayout(any());
         verify(walletService).updateWalletBalance(TENANT.getId(), amount);
     }
 

@@ -11,6 +11,7 @@ public class AdminUserRequest {
 
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El formato del email no es válido")
+    @Pattern(regexp = "^[^@]+@[^@]+\\.[^@]+$", message = "El formato del email no es válido")
     @Size(max = 255, message = "El email no puede tener más de 255 caracteres")
     private String email;
     
@@ -26,7 +27,7 @@ public class AdminUserRequest {
     private UserRole role;
     
     @NotBlank(message = "El teléfono es obligatorio")
-    @Pattern(regexp = "^[0-9\\-\\+]{9,15}$", message = "El teléfono debe tener entre 9 y 15 caracteres y puede incluir + o guiones")
+    @Pattern(regexp = "^(\\+\\d{1,3})?\\d{8,12}$", message = "Formato de teléfono inválido")
     private String phone;
 
     @NotBlank(message = "La dirección es obligatoria")
