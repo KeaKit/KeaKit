@@ -22,5 +22,9 @@ public record PromoCodeRequest(
 
     boolean pilotUserOnly,
 
-    List<@Email(message = "El email '${validatedValue}' no tiene un formato válido") String> pilotEmails
+    List<
+        @Email(message = "El email '${validatedValue}' no tiene un formato válido")
+        @Pattern(regexp = "^[^@]+@[^@]+\\.[^@]+$", message = "El email '${validatedValue}' no tiene un formato válido")
+        String
+    > pilotEmails
 ) {}
