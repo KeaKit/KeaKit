@@ -1076,6 +1076,12 @@ public class KitServiceTest {
         KitCreateRequest.ItemSelectionRequest selection1 = new KitCreateRequest.ItemSelectionRequest(100L, 2, 50.0);
         KitCreateRequest.ItemSelectionRequest selection2 = new KitCreateRequest.ItemSelectionRequest(101L, 1, 19.99);
 
+        // FIX: Mockear la base de datos para los precios reales
+        Article article1 = createTestArticle(100L, "Art1", 10, new User()); article1.setPricePerMonth(50.0);
+        Article article2 = createTestArticle(101L, "Art2", 10, new User()); article2.setPricePerMonth(19.99);
+        when(itemRepository.findById(100L)).thenReturn(Optional.of(article1));
+        when(itemRepository.findById(101L)).thenReturn(Optional.of(article2));
+
         KitCreateRequest request = new KitCreateRequest(
             "Kit Pago", "ES", "MAD",
             LocalDate.now(), LocalDate.now().plusMonths(1),
@@ -1093,9 +1099,12 @@ public class KitServiceTest {
 
     @Test
     void getKitPayment_observedRentalPrice1399_returnsGuarantee280() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(13.99);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
         KitCreateRequest.ItemSelectionRequest selection =
                 new KitCreateRequest.ItemSelectionRequest(100L, 1, 13.99);
-
+        
         KitCreateRequest request = new KitCreateRequest(
             "Kit Diagnostico", "ES", "MAD",
             LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 30),
@@ -1113,6 +1122,9 @@ public class KitServiceTest {
 
     @Test
     void getKitPayment_refund4267CorrespondsToSubtotal21335NotRentalPrice1399() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(213.35);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
         KitCreateRequest.ItemSelectionRequest selection =
                 new KitCreateRequest.ItemSelectionRequest(100L, 1, 213.35);
 
@@ -1132,6 +1144,9 @@ public class KitServiceTest {
 
     @Test
     void getKitPayment_zeroSubtotal_returnsZeroGuaranteeAndZeroTotal() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(0.0);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
         KitCreateRequest.ItemSelectionRequest selection =
                 new KitCreateRequest.ItemSelectionRequest(100L, 1, 0.0);
 
@@ -1151,6 +1166,9 @@ public class KitServiceTest {
 
     @Test
     void getKitPayment_validDiscountDoesNotReduceGuaranteeUnderCurrentRule() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(13.99);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
         when(promoCodeService.validateForTenantDiscount("MITAD", "tenant@test.com"))
                 .thenReturn(new com.example.demo.dto.PromoCodeValidationResponse(true, 0.50, "Mitad de precio"));
 
@@ -1174,6 +1192,9 @@ public class KitServiceTest {
 
     @Test
     void getKitPayment_fromRequest_meetingPoint_returnsCorrectPaymentDetailsWithZeroCourierPrice() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(10.0);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
         KitCreateRequest.ItemSelectionRequest selection = new KitCreateRequest.ItemSelectionRequest(100L, 3, 10.0);
 
         KitCreateRequest request = new KitCreateRequest(
@@ -1267,6 +1288,8 @@ public class KitServiceTest {
 
     @Test
     void getKitPayment_fromRequest_withValidPromoCode_appliesDiscount() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(50.0);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
         when(promoCodeService.validateForTenantDiscount("DESCUENTO10", "tenant@test.com"))
                 .thenReturn(new com.example.demo.dto.PromoCodeValidationResponse(true, 0.10, "Código aplicado"));
     
@@ -1288,6 +1311,9 @@ public class KitServiceTest {
     
     @Test
     void getKitPayment_fromRequest_withInvalidPromoCode_noDiscount() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(50.0);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
         when(promoCodeService.validateForTenantDiscount("INVALIDO", "tenant@test.com"))
                 .thenReturn(new com.example.demo.dto.PromoCodeValidationResponse(false, null, "Código no válido"));
     
@@ -1309,6 +1335,9 @@ public class KitServiceTest {
     
     @Test
     void getKitPayment_fromRequest_withNullPromoCode_noDiscount() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(50.0);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
         KitCreateRequest.ItemSelectionRequest selection =
                 new KitCreateRequest.ItemSelectionRequest(100L, 1, 50.0);
         KitCreateRequest request = new KitCreateRequest(
@@ -1325,6 +1354,9 @@ public class KitServiceTest {
     
     @Test
     void getKitPayment_fromRequest_withBlankPromoCode_noDiscount() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(50.0);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
         KitCreateRequest.ItemSelectionRequest selection =
                 new KitCreateRequest.ItemSelectionRequest(100L, 1, 50.0);
         KitCreateRequest request = new KitCreateRequest(
@@ -1341,6 +1373,10 @@ public class KitServiceTest {
     
     @Test
     void getKitPayment_fromRequest_noPromo_overloadCallsWithNulls() {
+        Article article = createTestArticle(100L, "Art", 1, new User()); article.setPricePerMonth(30.0);
+            when(itemRepository.findById(100L)).thenReturn(Optional.of(article));
+
+
         KitCreateRequest.ItemSelectionRequest selection =
                 new KitCreateRequest.ItemSelectionRequest(100L, 2, 30.0);
         KitCreateRequest request = new KitCreateRequest(
