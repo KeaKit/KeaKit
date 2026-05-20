@@ -326,8 +326,7 @@ const styles = StyleSheet.create({
   },
   cardRead: {
     borderColor: Colors.border,
-    opacity: 0.7,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: Colors.backgroundWhite,
   },
   cardHeader: {
     flexDirection: "row",
