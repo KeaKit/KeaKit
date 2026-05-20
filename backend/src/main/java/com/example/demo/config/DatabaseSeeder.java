@@ -479,7 +479,7 @@ public class DatabaseSeeder {
             // 10. Kit Delivery
             KitDelivery delivery1 = new KitDelivery();
             delivery1.setKit(myKit);
-            delivery1.setStatus(DeliveryStatus.DELIVERED);
+            delivery1.setStatus(DeliveryStatus.IN_TRANSIT);
             delivery1.setEstimatedArrival(LocalDateTime.now());
             delivery1.setLastLocation("Sevilla");
             delivery1.setLastUpdate(LocalDateTime.now());

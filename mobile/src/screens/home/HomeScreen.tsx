@@ -113,7 +113,7 @@ const HomeScreen: React.FC = () => {
             kitName: kit.name,
             status: tracking.status,
             message: `Tu kit "${kit.name}" ${statusLabel(tracking.status)}.`,
-            createdAt: new Date().toISOString(),
+            createdAt: lastUpdate,
             read: false,
           });
           lastUpdates[String(kit.id)] = lastUpdate;
