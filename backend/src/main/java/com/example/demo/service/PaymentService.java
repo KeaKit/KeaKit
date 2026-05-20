@@ -12,6 +12,7 @@ import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Item;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
+import com.example.demo.model.PayoutSubtype;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.KitResponse.KitItemResponse;
 import com.example.demo.exception.ResourceNotFoundException;
@@ -190,7 +191,8 @@ public class PaymentService {
         
         Transaction transaction = new Transaction(-amount, tenantWallet, TransactionType.PAYOUT);
         transaction.setRelatedKit(kit);
-        transaction.setDescription("Pago con saldo KeaKit - Kit: " + kit.getName());
+        transaction.setDescription("KIT_PAYMENT");
+        transaction.setPayoutSubtype(PayoutSubtype.KIT_PAYMENT);  // ← AÑADIR ESTA LÍNEA
         transactionRepository.save(transaction);
     }
 

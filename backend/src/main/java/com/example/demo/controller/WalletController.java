@@ -86,7 +86,10 @@ public class WalletController {
                 tx.getAmount(),
                 tx.getType(),
                 tx.getDestinationWallet().getId(),
-                tx.getTimestamp());
+                tx.getTimestamp(),
+                tx.getDescription(),
+                tx.getPayoutSubtype()
+        );
     }
 
     private WalletDTO toDTO(Wallet wallet) {

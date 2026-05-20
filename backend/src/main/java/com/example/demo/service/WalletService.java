@@ -128,6 +128,10 @@ public class WalletService {
     public void updateWalletBalance(Long userId, Double amount) throws ResourceNotFoundException {
         Wallet wallet = getWalletByUserId(userId);
         
+        if (amount <= 0.0) {
+            throw new NotEnoughBalanceException("El monto debe ser positivo");
+        }
+        
         Double MIN_WITHDRAW_AMOUNT = 1.00;
         if (amount < MIN_WITHDRAW_AMOUNT) {
             throw new NotEnoughBalanceException(
@@ -135,16 +139,16 @@ public class WalletService {
             );
         }
         
-        if (wallet.getBalance() < amount){
+        if (wallet.getBalance() < amount) {
             throw new NotEnoughBalanceException("Saldo insuficiente en la cartera");
         }
-        if(amount <= 0.0){
-            throw new NotEnoughBalanceException("La cantidad debe ser positiva");
-        }
+        
         Transaction transaction = new Transaction();
-        transaction.setAmount(- amount);
+        transaction.setAmount(-amount);
         transaction.setDestinationWallet(wallet);
         transaction.setType(TransactionType.PAYOUT);
+        transaction.setPayoutSubtype(PayoutSubtype.WITHDRAWAL_TO_BANK);
+        transaction.setDescription("Retirada a cuenta bancaria");
         transactionRepository.save(transaction);
     }
 }
