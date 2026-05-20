@@ -162,14 +162,14 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   const minPriceError = React.useMemo(() => {
     if (!minPrice || minPrice.trim().length === 0) return "";
     if (minPriceValue === undefined) return "Introduce solo numeros.";
-    if (minPriceValue < 1) return "El precio minimo debe ser al menos 1 EUR.";
+    if (minPriceValue < 0) return "El precio minimo debe ser al menos 0 EUR.";
     return "";
   }, [minPrice, minPriceValue]);
 
   const maxPriceError = React.useMemo(() => {
     if (!maxPrice || maxPrice.trim().length === 0) return "";
     if (maxPriceValue === undefined) return "Introduce solo numeros.";
-    if (maxPriceValue < 1) return "El precio maximo debe ser al menos 1 EUR.";
+    if (maxPriceValue < 0) return "El precio maximo debe ser al menos 0 EUR.";
     return "";
   }, [maxPrice, maxPriceValue]);
 

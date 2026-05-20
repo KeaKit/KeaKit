@@ -32,6 +32,10 @@ public class Transaction {
     @Column(length = 500)
     private String description;
 
+    @Column(nullable = true)
+    @Enumerated(EnumType.STRING)
+    private PayoutSubtype payoutSubtype;
+
     public Transaction() {
         this.timestamp = LocalDateTime.now();
     }
@@ -63,4 +67,7 @@ public class Transaction {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public PayoutSubtype getPayoutSubtype() { return payoutSubtype; }
+    public void setPayoutSubtype(PayoutSubtype payoutSubtype) { this.payoutSubtype = payoutSubtype; }
 }

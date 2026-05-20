@@ -5,17 +5,21 @@ import com.example.demo.model.Transaction;
 import com.example.demo.dto.TransactionDTO;
 import com.example.demo.dto.TransactionWithDetailsDTO;
 import com.example.demo.dto.WalletDTO;
+import com.example.demo.dto.ErrorResponse;
 import com.example.demo.service.WalletService;
 import com.example.demo.service.AuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.demo.exception.AccessForbiddenException;
+import com.example.demo.exception.NotEnoughBalanceException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.UnauthorizedException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
@@ -82,7 +86,10 @@ public class WalletController {
                 tx.getAmount(),
                 tx.getType(),
                 tx.getDestinationWallet().getId(),
-                tx.getTimestamp());
+                tx.getTimestamp(),
+                tx.getDescription(),
+                tx.getPayoutSubtype()
+        );
     }
 
     private WalletDTO toDTO(Wallet wallet) {
@@ -91,5 +98,21 @@ public class WalletController {
                 wallet.getBalance(),
                 wallet.getUser().getId(),
                 wallet.getCreatedAt());
+    }
+
+    @ExceptionHandler(NotEnoughBalanceException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ErrorResponse> handleNotEnoughBalance(
+            NotEnoughBalanceException ex,
+            HttpServletRequest request) {
+        
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Bad Request",
+            ex.getMessage(),
+            request.getRequestURI()
+        );
+        
+        return ResponseEntity.badRequest().body(error);
     }
 }
