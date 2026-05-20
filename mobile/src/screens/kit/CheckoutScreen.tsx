@@ -236,9 +236,18 @@ export default function CheckoutScreen({ route }: Props) {
       resetToMyKits();
     } catch (error) {
       console.error("❌ Error:", error);
-      let errorMessage =
-        "Ha ocurrido un error durante el proceso de pago.\n" +
-        (error as Error).message;
+      let errorMessage = "Ha ocurrido un error durante el proceso de pago.";
+
+      const originalMessage = (error as Error).message || "";
+      
+      const isSqlError = 
+        originalMessage.includes("SERVER_ERROR_500")
+
+      if (isSqlError) {
+        errorMessage += "\n\nNo se pudo procesar la transacción con tu saldo de KeaKit debido a un inconveniente en el servidor. Por favor, inténtalo de nuevo más tarde.";
+      } else {
+        errorMessage += `\n${originalMessage}`;
+      }
       if (errorMessage.includes("ya no está disponible") || 
           errorMessage.includes("unidades"))
         {
