@@ -12,6 +12,7 @@ import com.example.demo.model.ArticleStatus;
 import com.example.demo.model.Item;
 import com.example.demo.model.ItemMemento;
 import com.example.demo.model.Kit;
+import com.example.demo.model.PayoutSubtype;
 import com.example.demo.dto.KitResponse;
 import com.example.demo.dto.KitResponse.KitItemResponse;
 import com.example.demo.exception.ResourceNotFoundException;
@@ -190,7 +191,8 @@ public class PaymentService {
         
         Transaction transaction = new Transaction(-amount, tenantWallet, TransactionType.PAYOUT);
         transaction.setRelatedKit(kit);
-        transaction.setDescription("Pago con saldo KeaKit - Kit: " + kit.getName());
+        transaction.setDescription("KIT_PAYMENT");
+        transaction.setPayoutSubtype(PayoutSubtype.KIT_PAYMENT);
         transactionRepository.save(transaction);
     }
 
@@ -680,7 +682,7 @@ public class PaymentService {
 
     @Transactional
     public void withdrawToBank(Long userId, Double amount, String bankAccount)
-            throws ResourceNotFoundException, NotEnoughBalanceException, StripeException {
+            throws ResourceNotFoundException, NotEnoughBalanceException {
 
         if (amount == null || amount <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser mayor que 0");
@@ -695,14 +697,25 @@ public class PaymentService {
         }
 
         Wallet wallet = walletService.getWalletByUserId(userId);
-
         if (wallet.getBalance() < amount) {
             throw new NotEnoughBalanceException(
-                    "Saldo insuficiente" + " Requerido: " + amount + ", Disponible: " + wallet.getBalance());
+                    "Saldo insuficiente. Requerido: " + amount + ", Disponible: " + wallet.getBalance());
         }
 
-        Long amountInCents = (long) (amount * 100);
-        createPayout(amountInCents);
+        boolean isTestMode = stripeApiKey != null && stripeApiKey.startsWith("sk_test_");
+        
+        if (!isTestMode) {
+            try {
+                Long amountInCents = (long) (amount * 100);
+                createPayout(amountInCents);
+                System.out.println("Stripe payout exitoso para " + amount + "€");
+            } catch (StripeException e) {
+                throw new RuntimeException("Error al procesar el pago con Stripe: " + e.getMessage());
+            }
+        } else {
+            System.out.println("[TEST MODE] Retirada simulada de " + amount + "€. NO se llama a Stripe.");
+        }
+        
         walletService.updateWalletBalance(userId, amount);
     }
 

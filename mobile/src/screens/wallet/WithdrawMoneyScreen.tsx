@@ -67,38 +67,40 @@ export default function WithdrawMoneyScreen() {
   };
 
   const getFriendlyErrorMessage = (message: string) => {
-    const normalizedMessage = message.trim();
+    const normalizedMessage = message.trim().toLowerCase();
 
-    if (
-      normalizedMessage.includes("Not enough balance") ||
-      normalizedMessage.includes("Insufficient balance") ||
-      normalizedMessage.includes("Required:") ||
-      normalizedMessage.includes("Available:")
-    ) {
-      const requiredMatch = normalizedMessage.match(
-        /Required:\s*([0-9]+(?:\.[0-9]+)?)/i,
-      );
-      const availableMatch = normalizedMessage.match(
-        /Available:\s*([0-9]+(?:\.[0-9]+)?)/i,
-      );
+    if (normalizedMessage.includes("cantidad mínima de dinero") || 
+        normalizedMessage.includes("minimum amount") ||
+        (normalizedMessage.includes("no less than") && normalizedMessage.includes("€"))) {
+      const match = normalizedMessage.match(/(\d+(?:\.\d+)?)\s*€/);
+      const minAmount = match ? match[1] : "1.00";
+      return `El monto mínimo para retirar es de ${minAmount} €.`;
+    }
+
+    if (normalizedMessage.includes("not enough balance") || 
+        normalizedMessage.includes("insufficient balance") ||
+        normalizedMessage.includes("saldo insuficiente")) {
+      const requiredMatch = normalizedMessage.match(/required:\s*([0-9]+(?:\.[0-9]+)?)/i);
+      const availableMatch = normalizedMessage.match(/available:\s*([0-9]+(?:\.[0-9]+)?)/i);
 
       const required = requiredMatch?.[1];
       const available = availableMatch?.[1];
 
       if (required && available) {
-        return `No tienes saldo suficiente para realizar esta retirada. Intentas retirar ${required} EUR, pero solo tienes ${available} EUR disponibles.`;
+        return `No tienes saldo suficiente para realizar esta retirada. Intentas retirar ${required} €, pero solo tienes ${available} € disponibles.`;
       }
-
       return "No tienes saldo suficiente para realizar esta retirada.";
     }
 
-    return normalizedMessage;
+    // Para otros errores, devolver un mensaje genérico
+    return "No se pudo procesar la retirada. Por favor, inténtalo de nuevo más tarde.";
   };
 
   const validate = (): boolean => {
     const nextErrors: FormErrors = {};
     const normalizedAmount = amount.replace(",", ".");
     const parsedAmount = Number(normalizedAmount);
+    const MIN_WITHDRAW_AMOUNT = 1.00;
 
     if (!normalizedBankAccount) {
       nextErrors.bankAccount = "Introduce una cuenta bancaria.";
@@ -109,9 +111,11 @@ export default function WithdrawMoneyScreen() {
     if (!amount.trim()) {
       nextErrors.amount = "Introduce una cantidad.";
     } else if (!/^\d+([.,]\d{1,2})?$/.test(amount.trim())) {
-      nextErrors.amount = "La cantidad debe tener como maximo 2 decimales.";
+      nextErrors.amount = "Introduce un formato de cantidad válido (máximo 2 decimales).";
     } else if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      nextErrors.amount = "La cantidad debe ser mayor que 0.";
+      nextErrors.amount = `La cantidad mínima para retirar es de ${MIN_WITHDRAW_AMOUNT.toFixed(2)} €.`;
+    } else if (parsedAmount < MIN_WITHDRAW_AMOUNT) {  
+      nextErrors.amount = `La cantidad mínima para retirar es de ${MIN_WITHDRAW_AMOUNT.toFixed(2)} €.`;
     }
 
     setErrors(nextErrors);
@@ -195,7 +199,8 @@ export default function WithdrawMoneyScreen() {
               ]}
               value={amount}
               onChangeText={(value) => {
-                setAmount(value);
+                const sanitizedValue = value.replace(/^-/, '');
+                setAmount(sanitizedValue);
                 clearError("amount");
               }}
               placeholder="0,00"

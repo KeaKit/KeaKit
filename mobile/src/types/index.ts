@@ -559,12 +559,17 @@ export interface WithdrawRequest {
   amount: number;
 }
 
+export type PayoutSubtype = "WITHDRAWAL_TO_BANK" | "KIT_PAYMENT";
+
 export interface Transaction {
   id: number;
   amount: number;
   type: TransactionType;
   walletId: number;
   createdAt: string;
+  timestamp?: string;
+  description?: string;
+  payoutSubtype?: PayoutSubtype;
 }
 
 export enum TransactionType {
