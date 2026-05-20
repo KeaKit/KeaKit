@@ -1,8 +1,8 @@
 # Video con los casos de uso implementados
 ## Enlaces
  
-- **Vídeo de entrega:** 
-- **Vídeo de presentación:** 
+- **Vídeo de entrega (demo):** https://youtu.be/6rEoaU-_4I8?si=vlff13CvF83FDA4i
+- **Vídeo de la presentación:** https://youtu.be/X8fjD3qCuA8?si=TKBvQ0uu2suH0GHK
 
 ## Tiempos
 **Nota:** Debido a la complejidad de los casos de uso, algunos se explican dentro de otros, pero en youtube se han dispuesto de forma secuencial, lo que puede llegar a no ser del todo fiel a la narración e imagen. Se recomienda seguir esta línea en lugar de la aplicada a youtube.
